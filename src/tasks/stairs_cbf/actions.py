@@ -91,6 +91,7 @@ class StairCbfJointPositionAction(JointPositionAction):
     self.filter_active = torch.zeros(shape, dtype=torch.bool, device=self.device)
     self.intervention_norm = torch.zeros(shape, device=self.device)
     self.target_intervention_norm = torch.zeros(shape, device=self.device)
+    self.selected_edge_top_z = torch.zeros(shape, device=self.device)
     self.selected_foot = torch.full(shape, -1, dtype=torch.long, device=self.device)
 
   def _foot_jacobians(self, foot_pos: torch.Tensor) -> torch.Tensor:
@@ -139,7 +140,7 @@ class StairCbfJointPositionAction(JointPositionAction):
     assert terrain is not None
     edge_x = self._edge_x[terrain.terrain_levels, terrain.terrain_types]
     edge_top_z = self._edge_top_z[terrain.terrain_levels, terrain.terrain_types]
-    _, h, _, edge_active = select_active_riser(
+    _, h, selected_top_z, edge_active = select_active_riser(
       selected_pos[:, 0],
       selected_pos[:, 2],
       edge_x,
@@ -168,6 +169,7 @@ class StairCbfJointPositionAction(JointPositionAction):
     # reward/actuator stack for both experiment arms.
     self._processed_actions[:] = q + self._env.step_dt * filtered_qdot
     self.h[:] = torch.where(active, h, torch.full_like(h, torch.inf))
+    self.selected_edge_top_z[:] = selected_top_z
     self.psi_nominal[:] = torch.where(active, psi_nominal, torch.zeros_like(psi_nominal))
     self.psi_filtered[:] = torch.where(active, psi_filtered, torch.zeros_like(psi_filtered))
     self.filter_active[:] = active & self.cfg.enabled
@@ -186,4 +188,5 @@ class StairCbfJointPositionAction(JointPositionAction):
     self.filter_active[env_ids] = False
     self.intervention_norm[env_ids] = 0.0
     self.target_intervention_norm[env_ids] = 0.0
+    self.selected_edge_top_z[env_ids] = 0.0
     self.selected_foot[env_ids] = -1

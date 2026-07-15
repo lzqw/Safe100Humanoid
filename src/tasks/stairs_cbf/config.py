@@ -133,6 +133,21 @@ def g1_stairs_env_cfg(
     weight=0.25,
     params={"asset_name": "robot"},
   )
+  cfg.rewards["foot_clearance"] = RewardTermCfg(
+    func=mdp.stair_feet_clearance,
+    weight=-1.0,
+    params={
+      "action_name": "joint_pos",
+      "asset_name": "robot",
+      "default_height": 0.10,
+      "height_above_tread": 0.05,
+    },
+  )
+  cfg.rewards["swing_foot_force"] = RewardTermCfg(
+    func=mdp.swing_foot_force,
+    weight=-0.001,
+    params={"sensor_name": "feet_ground_contact"},
+  )
   cfg.rewards["cbf_dual"] = RewardTermCfg(
     func=mdp.cbf_dual_reward,
     weight=1.0 if use_cbf_reward else 0.0,
