@@ -1,0 +1,189 @@
+"""Swing-foot CBF safety filter for a straight staircase."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+import mujoco_warp as mjwarp
+import torch
+import warp as wp
+
+from mjlab.envs.mdp.actions import JointPositionAction, JointPositionActionCfg
+from mjlab.sensor import ContactSensor
+
+from .cbf_math import project_halfspace
+from .edge_detection import riser_edges_from_tread_patches, select_active_riser
+
+if TYPE_CHECKING:
+  from mjlab.envs import ManagerBasedRlEnv
+
+
+@dataclass(kw_only=True)
+class StairCbfJointPositionActionCfg(JointPositionActionCfg):
+  enabled: bool = True
+  foot_site_names: tuple[str, str] = ("left_foot", "right_foot")
+  contact_sensor_name: str = "feet_ground_contact"
+  alpha: float = 10.0
+  first_riser_offset: float = 0.60
+  step_width: float = 0.35
+  step_height: float = 0.13
+  num_steps: int = 6
+  activation_distance: float = 0.30
+  toe_margin: float = 0.08
+  top_clearance: float = 0.025
+  recovery_distance: float = 0.15
+  patch_name: str = "stair_targets"
+
+  def build(self, env: "ManagerBasedRlEnv") -> "StairCbfJointPositionAction":
+    return StairCbfJointPositionAction(self, env)
+
+
+class StairCbfJointPositionAction(JointPositionAction):
+  cfg: StairCbfJointPositionActionCfg
+
+  def __init__(self, cfg: StairCbfJointPositionActionCfg, env: "ManagerBasedRlEnv"):
+    super().__init__(cfg, env)
+    self._joint_dof_ids = self._entity.indexing.joint_v_adr[self._target_ids]
+    site_ids, _ = self._entity.find_sites(cfg.foot_site_names, preserve_order=True)
+    if len(site_ids) != 2:
+      raise RuntimeError(f"expected two foot sites, got {site_ids}")
+    self._site_local_ids = torch.tensor(site_ids, device=self.device, dtype=torch.long)
+    self._site_global_ids = self._entity.indexing.site_ids[self._site_local_ids]
+    global_site_ids = [int(v) for v in self._site_global_ids.tolist()]
+    self._body_ids = [
+      int(self._env.sim.mj_model.site_bodyid[site_id]) for site_id in global_site_ids
+    ]
+    self._contact_sensor: ContactSensor = env.scene[cfg.contact_sensor_name]
+    terrain = env.scene.terrain
+    if terrain is None or cfg.patch_name not in terrain.flat_patches:
+      raise RuntimeError(f"terrain has no flat-patch set {cfg.patch_name!r}")
+    self._edge_x, self._edge_top_z = riser_edges_from_tread_patches(
+      terrain.flat_patches[cfg.patch_name], cfg.step_width, cfg.num_steps
+    )
+
+    nworld = self.num_envs
+    nv = self._env.sim.mj_model.nv
+    self._jacp_wp = []
+    self._jacr_wp = []
+    self._points_wp = []
+    self._bodies_wp = []
+    self._jacp_torch = []
+    self._points_torch = []
+    with wp.ScopedDevice(self._env.sim.wp_device):
+      for body_id in self._body_ids:
+        jacp = wp.zeros((nworld, 3, nv), dtype=float)
+        jacr = wp.zeros((nworld, 3, nv), dtype=float)
+        points = wp.zeros(nworld, dtype=wp.vec3)
+        bodies = wp.zeros(nworld, dtype=wp.int32)
+        bodies.fill_(body_id)
+        self._jacp_wp.append(jacp)
+        self._jacr_wp.append(jacr)
+        self._points_wp.append(points)
+        self._bodies_wp.append(bodies)
+        self._jacp_torch.append(wp.to_torch(jacp))
+        self._points_torch.append(wp.to_torch(points).view(nworld, 3))
+
+    shape = (self.num_envs,)
+    self.h = torch.full(shape, torch.inf, device=self.device)
+    self.psi_nominal = torch.zeros(shape, device=self.device)
+    self.psi_filtered = torch.zeros(shape, device=self.device)
+    self.filter_active = torch.zeros(shape, dtype=torch.bool, device=self.device)
+    self.intervention_norm = torch.zeros(shape, device=self.device)
+    self.target_intervention_norm = torch.zeros(shape, device=self.device)
+    self.selected_foot = torch.full(shape, -1, dtype=torch.long, device=self.device)
+
+  def _foot_jacobians(self, foot_pos: torch.Tensor) -> torch.Tensor:
+    jacobians = []
+    with wp.ScopedDevice(self._env.sim.wp_device):
+      for foot in range(2):
+        self._points_torch[foot][:] = foot_pos[:, foot]
+        mjwarp.jac(
+          self._env.sim.wp_model,
+          self._env.sim.wp_data,
+          self._jacp_wp[foot],
+          self._jacr_wp[foot],
+          self._points_wp[foot],
+          self._bodies_wp[foot],
+        )
+        jacobians.append(self._jacp_torch[foot][:, 0, self._joint_dof_ids])
+    return torch.stack(jacobians, dim=1)
+
+  def process_actions(self, actions: torch.Tensor) -> None:
+    super().process_actions(actions)
+    nominal_target = self._processed_actions.clone()
+    q = self._entity.data.joint_pos[:, self._target_ids]
+    qdot_nominal = (nominal_target - q) / self._env.step_dt
+    foot_pos = self._entity.data.site_pos_w[:, self._site_local_ids]
+    jac_x = self._foot_jacobians(foot_pos)
+
+    found = self._contact_sensor.data.found
+    if found is None:
+      raise RuntimeError("CBF contact sensor must provide the 'found' field")
+    in_air = found <= 0
+    if in_air.ndim > 2:
+      in_air = in_air.any(dim=tuple(range(2, in_air.ndim)))
+    air_time = self._contact_sensor.data.current_air_time
+    if air_time is None:
+      scores = in_air.float()
+    else:
+      scores = torch.where(in_air, air_time, torch.full_like(air_time, -1.0))
+    foot_index = scores.argmax(dim=1)
+    has_swing = in_air.any(dim=1)
+    self.selected_foot[:] = torch.where(has_swing, foot_index, -1)
+    batch = torch.arange(self.num_envs, device=self.device)
+    selected_pos = foot_pos[batch, foot_index]
+    selected_jac = jac_x[batch, foot_index]
+
+    terrain = self._env.scene.terrain
+    assert terrain is not None
+    edge_x = self._edge_x[terrain.terrain_levels, terrain.terrain_types]
+    edge_top_z = self._edge_top_z[terrain.terrain_levels, terrain.terrain_types]
+    _, h, _, edge_active = select_active_riser(
+      selected_pos[:, 0],
+      selected_pos[:, 2],
+      edge_x,
+      edge_top_z,
+      toe_margin=self.cfg.toe_margin,
+      top_clearance=self.cfg.top_clearance,
+      activation_distance=self.cfg.activation_distance,
+      recovery_distance=self.cfg.recovery_distance,
+    )
+    active = (
+      has_swing
+      & edge_active
+    )
+    normal = -selected_jac
+    rhs = -self.cfg.alpha * h
+    filtered_qdot, psi_nominal, psi_filtered = project_halfspace(
+      qdot_nominal, normal, rhs, active=active
+    )
+    if not self.cfg.enabled:
+      filtered_qdot = qdot_nominal
+      psi_filtered = psi_nominal
+
+    # Match the upstream JointPositionAction behavior: do not add an extra
+    # target clamp here. Clipping after projection could invalidate the CBF
+    # half-space, while joint-limit handling already remains in the common
+    # reward/actuator stack for both experiment arms.
+    self._processed_actions[:] = q + self._env.step_dt * filtered_qdot
+    self.h[:] = torch.where(active, h, torch.full_like(h, torch.inf))
+    self.psi_nominal[:] = torch.where(active, psi_nominal, torch.zeros_like(psi_nominal))
+    self.psi_filtered[:] = torch.where(active, psi_filtered, torch.zeros_like(psi_filtered))
+    self.filter_active[:] = active & self.cfg.enabled
+    self.intervention_norm[:] = torch.linalg.vector_norm(
+      filtered_qdot - qdot_nominal, dim=1
+    )
+    self.target_intervention_norm[:] = torch.linalg.vector_norm(
+      self._processed_actions - nominal_target, dim=1
+    )
+
+  def reset(self, env_ids: torch.Tensor | slice | None = None) -> None:
+    super().reset(env_ids)
+    self.h[env_ids] = torch.inf
+    self.psi_nominal[env_ids] = 0.0
+    self.psi_filtered[env_ids] = 0.0
+    self.filter_active[env_ids] = False
+    self.intervention_norm[env_ids] = 0.0
+    self.target_intervention_norm[env_ids] = 0.0
+    self.selected_foot[env_ids] = -1
