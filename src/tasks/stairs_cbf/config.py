@@ -36,9 +36,9 @@ LOWER_BODY_JOINT_PATTERNS = (
 def _terrain_cfg() -> TerrainGeneratorCfg:
   stairs = ForwardStairsTerrainCfg(
     proportion=1.0,
-    # Keep the geometric height exact for the analytic CBF. Height curriculum
-    # is intentionally deferred until per-patch riser metadata is available.
-    step_height_range=(0.13, 0.13),
+    # Start near-flat and promote toward the target 13 cm stairs. The CBF reads
+    # exact per-row riser metadata recovered from the generated flat patches.
+    step_height_range=(0.02, 0.155),
     step_width=STEP_WIDTH,
     num_steps=NUM_STEPS,
     first_riser_x=FIRST_RISER_X,
@@ -56,7 +56,7 @@ def _terrain_cfg() -> TerrainGeneratorCfg:
     curriculum=True,
     size=(5.2, 4.0),
     border_width=2.0,
-    num_rows=1,
+    num_rows=5,
     num_cols=1,
     difficulty_range=(0.0, 1.0),
     sub_terrains={"forward_stairs": stairs},
