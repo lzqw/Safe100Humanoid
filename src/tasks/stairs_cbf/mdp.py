@@ -61,6 +61,25 @@ def stair_progress(env: ManagerBasedRlEnv, asset_name: str = "robot") -> torch.T
   return progress.clamp_min(0.0)
 
 
+def dont_wait(
+  env: ManagerBasedRlEnv,
+  command_name: str = "twist",
+  asset_name: str = "robot",
+  command_threshold: float = 0.2,
+  minimum_forward_speed: float = 0.1,
+) -> torch.Tensor:
+  """Hiking-style dense penalty for standing while a forward target is active."""
+  command = env.command_manager.get_command(command_name)
+  if command is None:
+    raise RuntimeError(f"command {command_name!r} is unavailable")
+  robot = env.scene[asset_name]
+  commanded = command[:, 0] > command_threshold
+  speed_deficit = torch.relu(
+    minimum_forward_speed - robot.data.root_link_lin_vel_b[:, 0]
+  ) / minimum_forward_speed
+  return speed_deficit * commanded.float()
+
+
 def stair_feet_clearance(
   env: ManagerBasedRlEnv,
   action_name: str = "joint_pos",

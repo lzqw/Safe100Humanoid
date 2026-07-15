@@ -133,6 +133,16 @@ def g1_stairs_env_cfg(
     weight=0.25,
     params={"asset_name": "robot"},
   )
+  cfg.rewards["dont_wait"] = RewardTermCfg(
+    func=mdp.dont_wait,
+    weight=-1.0,
+    params={
+      "command_name": "twist",
+      "asset_name": "robot",
+      "command_threshold": 0.2,
+      "minimum_forward_speed": 0.1,
+    },
+  )
   cfg.rewards["foot_clearance"] = RewardTermCfg(
     func=mdp.stair_feet_clearance,
     weight=-1.0,
