@@ -178,6 +178,14 @@ measures actor-mean drift. Exploration std is governed separately by clipping
 and rejection-time reduction; otherwise intentionally reducing exploration
 would incorrectly consume the entire policy-drift budget.
 
+Accepted 799-D checkpoints can be supplied with
+`--resume-online-checkpoint`. The original base checkpoint remains the D0 and
+total-drift reference. On resume, actor, critic, and checkpoint integrity are
+loaded strictly, then Adam is rebuilt: a backtracked actor's saved momentum
+belongs to the full pre-line-search step and must not leak into the next
+fractional round. The second simulated round exercised this path and was
+rolled back after its 512-episode DQ gate failed.
+
 ## Commands
 
 ```bash

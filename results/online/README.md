@@ -14,6 +14,8 @@ but this must not be interpreted as a real-robot result or filter-free safety.
   audits.
 - `runs/` contains summaries from conservative PPO, critic calibration,
   pre-intervention credit, and true-intervention safe-BC variants.
+- `evaluation/round2_rejected/` contains the large-batch evidence that rejected
+  a resumed second round and retained `accepted_round_001.pt`.
 - `smoke/` records strict checkpoint reload and GPU environment checks.
 - `videos/accepted_round1/` contains one successful and one failed deterministic
   DQ rollout from the accepted policy with the runtime CBF enabled.

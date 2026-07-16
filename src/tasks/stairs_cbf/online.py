@@ -285,6 +285,10 @@ class OnlineSafePPO(PPO):
     self.optimizer = torch.optim.Adam(groups)
     self.learning_rate = self.actor_learning_rate
 
+  def reset_online_optimizer(self) -> None:
+    """Discard momentum before a new accepted-policy refinement round."""
+    self._build_separate_optimizer()
+
   def train_mode(self) -> None:
     super().train_mode()
     # The deployment actor uses the base observation scale throughout online

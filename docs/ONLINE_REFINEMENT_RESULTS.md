@@ -121,6 +121,29 @@ base success and 46.48% accepted success. The 1.95-point difference is smaller
 than one binomial standard error but provides no evidence of filter-free
 improvement. Runtime CBF remains mandatory in this prototype.
 
+## Second-round rollback
+
+A second round resumed the accepted 405/799 checkpoint, rebuilt Adam to avoid
+using full-step momentum at a backtracked parameter point, recalibrated the
+critic for four rollouts, and collected another 24,576 DQ transitions. Its
+small 32-episode gate appeared favorable, so it proceeded to the same large
+audit rather than being accepted immediately.
+
+The large audit rejected it:
+
+| Domain | Episodes | Round-1 accepted success | Round-2 candidate success | Round-1 fall | Round-2 fall |
+|---|---:|---:|---:|---:|---:|
+| D0 | 128 | 96.88% | 98.44% | 3.13% | 1.56% |
+| DQ | 512 | 48.05% | 45.51% | 51.95% | 54.49% |
+| DQN | 128 | 39.06% | 51.56% | 60.94% | 48.44% |
+
+Although DQ intervention/riser fell from 1.009 to 0.993 and the other domains
+improved, target success regressed and target fall rate increased. The machine
+gate returned `decision: rollback` with exactly those two reasons, so round 1
+remains the deployed policy. This is the intended continual-learning behavior:
+new data permits another attempt, but no round is accepted merely because one
+safety statistic or a small screen improves.
+
 ## Final GPU validation and videos
 
 The final clean regression used the RTX 4080 SUPER and produced:
@@ -147,6 +170,7 @@ results/online/runs/
 results/online/smoke/
 results/online/checkpoints/accepted_round_001.pt
 results/online/evaluation/accepted_round1/final_candidate_gate.json
+results/online/evaluation/round2_rejected/round2_gate.json
 results/online/videos/accepted_round1/
 ```
 

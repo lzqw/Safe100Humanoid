@@ -132,6 +132,11 @@ def main() -> None:
   parser = argparse.ArgumentParser()
   parser.add_argument("--repo", type=Path, required=True)
   parser.add_argument("--base-checkpoint", type=Path, required=True)
+  parser.add_argument(
+    "--resume-online-checkpoint",
+    type=Path,
+    help="Accepted 799-D checkpoint to refine; base checkpoint remains the KL/retention reference.",
+  )
   parser.add_argument("--output-dir", type=Path, required=True)
   parser.add_argument("--num-envs", type=int, default=8)
   parser.add_argument("--rollout-steps", type=int, default=256)
@@ -201,11 +206,38 @@ def main() -> None:
   if runner_cls is None:
     raise RuntimeError("online refinement task has no custom runner")
   runner = runner_cls(env, asdict(agent_cfg), log_dir=None, device=args.device)
-  warm_start = runner.load_base_checkpoint(
-    str(args.base_checkpoint), map_location=args.device
-  )
+  if args.resume_online_checkpoint is None:
+    warm_start = runner.load_base_checkpoint(
+      str(args.base_checkpoint), map_location=args.device
+    )
+  else:
+    runner.load(
+      str(args.resume_online_checkpoint.resolve()),
+      load_cfg={"actor": True, "critic": True, "optimizer": True},
+      strict=True,
+      map_location=args.device,
+    )
+    # A backtracked candidate's saved Adam moments correspond to the full PPO
+    # step, not the accepted fractional parameter point. Start each accepted
+    # round with the configured conservative optimizer instead.
+    runner.alg.reset_online_optimizer()
+    warm_start = {
+      "resume_online_checkpoint": str(args.resume_online_checkpoint.resolve()),
+      "expanded_critic_width": runner.alg.critic.obs_dim,
+      "optimizer_reset": True,
+    }
   obs, _ = env.reset()
-  base_actor_state = _actor_state(runner.alg.actor)
+  current_actor_state = _actor_state(runner.alg.actor)
+  base_payload = torch.load(
+    args.base_checkpoint.resolve(), map_location=args.device, weights_only=False
+  )
+  from src.tasks.stairs_cbf.online import backtrack_actor_state
+
+  # Keep the accepted bounded std and frozen normalizer, but use the original
+  # base MLP as the cross-round drift/retention reference.
+  base_actor_state = backtrack_actor_state(
+    base_payload["actor_state_dict"], current_actor_state, 0.0
+  )
   output_dir = args.output_dir.resolve()
   output_dir.mkdir(parents=True, exist_ok=True)
 

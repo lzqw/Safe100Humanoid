@@ -58,6 +58,9 @@ retaining DQ success while reducing CBF intervention and correction. This is a
 modest simulation result; filter-free performance did not improve. Curated GPU
 artifacts, the accepted and rollback checkpoints, and successful and failed DQ
 videos are under `results/online/`.
+A resumed second round improved D0/DQN but regressed 512-episode DQ success and
+was therefore rolled back, demonstrating that acceptance remains transactional
+across rounds.
 
 ## One-seed result
 

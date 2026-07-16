@@ -1,0 +1,38 @@
+{
+  "checkpoint": "<SERVER_RUN_ROOT>/artifacts/online_refine_dq_round2/candidate_round_001.pt",
+  "conditional_failure_hazard": {
+    "1": 0.0,
+    "2": 0.0,
+    "3": 0.005859375,
+    "4": 0.011787819253438114,
+    "5": 0.013916500994035786,
+    "6": 0.018145161290322582,
+    "7": 0.03696098562628337,
+    "8": 0.0511727078891258,
+    "9": 0.10786516853932585
+  },
+  "correction_mean": 0.002827093213121433,
+  "fall_rate": 0.544921875,
+  "intervention_per_riser": 0.9931997269886779,
+  "mean_reached_riser": 8.45703125,
+  "minimum_cbf_h": -0.1499638557434082,
+  "num_envs": 64,
+  "num_episodes": 512,
+  "num_risers": 9,
+  "runtime_filter": true,
+  "seed": 42,
+  "success_rate": 0.455078125,
+  "survival_curve": {
+    "1": 1.0,
+    "2": 1.0,
+    "3": 0.994140625,
+    "4": 0.982421875,
+    "5": 0.96875,
+    "6": 0.951171875,
+    "7": 0.916015625,
+    "8": 0.869140625,
+    "9": 0.775390625
+  },
+  "task": "Unitree-G1-Stairs-Online-DQ",
+  "timeout_rate": 0.0
+}

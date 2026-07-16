@@ -204,3 +204,6 @@ def test_actor_backtracking_only_interpolates_trainable_mlp() -> None:
   assert torch.equal(midpoint["mlp.0.weight"], torch.tensor([2.0, 4.0]))
   assert torch.equal(midpoint["obs_normalizer._mean"], candidate["obs_normalizer._mean"])
   assert torch.equal(midpoint["distribution.std_param"], candidate["distribution.std_param"])
+  reference = backtrack_actor_state(base, candidate, 0.0)
+  assert torch.equal(reference["mlp.0.weight"], base["mlp.0.weight"])
+  assert torch.equal(reference["distribution.std_param"], candidate["distribution.std_param"])
