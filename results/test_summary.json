@@ -1,0 +1,26 @@
+{
+  "checkpoint_roundtrip_paper": {
+    "action_finite": true,
+    "action_shape": [1, 12],
+    "observation_finite": true,
+    "passed": true
+  },
+  "integration_smoke_paper": {
+    "action_dim": 12,
+    "actor_shape": [4, 405],
+    "critic_shape": [4, 283],
+    "finite": true,
+    "nominal_adversarial_margin": -29.166748046875,
+    "filtered_adversarial_margin": 0.000001087784767150879,
+    "passed": true
+  },
+  "paper_reward_training_smoke": {
+    "iterations": 5,
+    "bounded_dual_reward_observed": true,
+    "passed": true
+  },
+  "unit": {
+    "passed": 5,
+    "failed": 0
+  }
+}

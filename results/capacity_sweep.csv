@@ -1,0 +1,6 @@
+num_envs,iterations,returncode,oom,elapsed_s,peak_gpu_used_mib,mean_steps_per_second,last_steps_per_second,log
+32,2,0,False,12.425,7035,340.0,285,<original-run-root>/logs/capacity/capacity_32.log
+128,2,0,False,8.745,8225,4118.5,5183,<original-run-root>/logs/capacity/capacity_128.log
+256,2,0,False,9.459,14181,5937.5,6555,<original-run-root>/logs/capacity/capacity_256.log
+512,2,0,False,10.117,14363,11190.0,13386,<original-run-root>/logs/capacity/capacity_512.log
+1024,2,0,False,11.155,14517,20772.5,26540,<original-run-root>/logs/capacity/capacity_1024.log

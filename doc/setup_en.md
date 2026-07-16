@@ -2,9 +2,9 @@
 
 ## System Requirements
 
-- **Operating System**: Recommended Ubuntu 22.04 
-- **GPU**: Nvidia GPU  
-- **Driver Version**: Recommended version 550 or later  
+- **Operating System**: Recommended Ubuntu 22.04
+- **GPU**: Nvidia GPU
+- **Driver Version**: Recommended version 550 or later
 
 ---
 

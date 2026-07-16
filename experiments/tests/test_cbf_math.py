@@ -1,0 +1,82 @@
+from __future__ import annotations
+
+import torch
+
+from src.tasks.stairs_cbf.cbf_math import (
+  dual_cbf_reward,
+  next_riser,
+  project_halfspace,
+  stair_barrier,
+)
+from src.tasks.stairs_cbf.edge_detection import (
+  riser_edges_from_tread_patches,
+  select_active_riser,
+)
+
+
+def test_halfspace_projection_repairs_violation():
+  nominal = torch.tensor([[2.0, -1.0], [0.2, 0.4]])
+  normal = torch.tensor([[-1.0, 0.0], [1.0, 0.0]])
+  rhs = torch.tensor([-0.5, 0.0])
+  projected, before, after = project_halfspace(nominal, normal, rhs)
+  assert before[0] < 0
+  assert torch.all(after >= -1.0e-6)
+  assert torch.allclose(projected[0], torch.tensor([0.5, -1.0]))
+  assert torch.allclose(projected[1], nominal[1])
+
+
+def test_inactive_constraint_is_identity():
+  nominal = torch.tensor([[2.0, 3.0]])
+  normal = torch.tensor([[-1.0, 0.0]])
+  projected, _, _ = project_halfspace(
+    nominal, normal, torch.tensor([0.0]), active=torch.tensor([False])
+  )
+  assert torch.equal(projected, nominal)
+
+
+def test_stair_geometry_sign_and_next_edge():
+  foot_x = torch.tensor([0.8, 1.1, 1.45])
+  origin_x = torch.tensor([0.5, 0.5, 0.5])
+  index, edge_x, top_z, valid = next_riser(
+    foot_x, origin_x, 0.6, 0.35, 0.13, 6
+  )
+  assert index.tolist() == [0, 0, 1]
+  assert torch.allclose(edge_x, torch.tensor([1.1, 1.1, 1.45]))
+  assert torch.allclose(top_z, torch.tensor([0.13, 0.13, 0.26]))
+  assert valid.all()
+  h = stair_barrier(foot_x, edge_x, toe_margin=0.08)
+  assert h[0] > 0 and h[1] < 0
+
+
+def test_riser_extraction_and_selection():
+  patches = torch.tensor(
+    [[[1.275, 0.0, 0.13], [1.625, 0.0, 0.26], [1.975, 0.0, 0.39]]]
+  )
+  edges, tops = riser_edges_from_tread_patches(patches, 0.35, 3)
+  assert torch.allclose(edges, torch.tensor([[1.10, 1.45, 1.80]]))
+  index, h, top, active = select_active_riser(
+    torch.tensor([1.03]),
+    torch.tensor([0.05]),
+    edges,
+    tops,
+    toe_margin=0.08,
+    top_clearance=0.025,
+    activation_distance=0.30,
+    recovery_distance=0.15,
+  )
+  assert active.item() and index.item() == 0
+  assert h.item() < 0 and torch.allclose(top, torch.tensor([0.13]))
+
+
+def test_dual_reward_matches_paper_and_is_bounded_without_violation():
+  margin = torch.tensor([-0.25, 0.10, -4.0])
+  intervention = torch.tensor([0.5, 0.0, 10.0])
+  active = torch.tensor([True, True, False])
+  reward = dual_cbf_reward(margin, intervention, active, sigma=0.5)
+  expected_first = -0.25 + torch.exp(torch.tensor(-1.0)) - 1.0
+  assert torch.allclose(reward[0], expected_first)
+  assert reward[1] == 0.0
+  assert reward[2] == 0.0
+  assert -1.0 <= float(dual_cbf_reward(
+    torch.tensor([0.1]), torch.tensor([100.0]), torch.tensor([True]), sigma=0.5
+  )[0]) <= 0.0

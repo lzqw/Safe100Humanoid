@@ -12,3 +12,16 @@ deploy/robots/r1/build
 deploy/robots/a2/build
 src/assets/motions/g1/dance1_subject2.npz
 simulate/build
+# Python and local environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+workspace/
+conda_env/
+
+# Local experiment outputs (curated results are tracked under results/)
+*.log
+*.tmp
+.DS_Store

@@ -1,0 +1,8 @@
+*.pt binary
+*.onnx binary
+*.mp4 binary
+*.STL binary
+*.stl binary
+*.obj binary
+*.gif binary
+*.tfevents.* binary

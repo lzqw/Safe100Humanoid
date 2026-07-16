@@ -1,0 +1,25 @@
+{
+  "checkpoint": "<original-run-root>/third_party/unitree_rl_mjlab/logs/rsl_rl/g1_stairs_cbf/2026-07-16_00-00-11_paper_dual_curriculum_seed42_1024/model_1500.pt",
+  "fall_rate": 0.046875,
+  "fixed_step_height_m": 0.13,
+  "label": "curriculum_cbf_iter1500_exact13_filter_on",
+  "means": {
+    "cbf_active_fraction": 0.07552827714243904,
+    "cbf_intervention_integral": 16.972480012685992,
+    "cbf_target_intervention_integral": 0.339488011826802,
+    "cbf_violation_events": 3.640625,
+    "cbf_violation_integral": 9.745074015343562,
+    "max_progress_m": 3.309495019726455,
+    "min_root_height_m": 0.7536595861893147,
+    "return": 19.63610765337944,
+    "steps": 967.8359375
+  },
+  "num_envs": 128,
+  "num_episodes": 128,
+  "seed": 42,
+  "success_rate": 0.953125,
+  "success_threshold_progress_m": 2.65,
+  "task": "Unitree-G1-Stairs-CBF",
+  "terrain_level": -1,
+  "timeout_rate": 0.953125
+}

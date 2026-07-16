@@ -1,238 +1,209 @@
-# Unitree RL Mjlab
+# Safe100Humanoid
 
+Safe reinforcement learning for Unitree G1 stair climbing, built on
+`unitree_rl_mjlab`, MJLab, MuJoCo-Warp, and RSL-RL PPO.
 
-## ✳️ Overview
-Unitree RL Mjlab is a reinforcement learning project built upon the
-[mjlab](https://github.com/mujocolab/mjlab.git), using MuJoCo as its 
-physics simulation backend, currently supporting Unitree Go2, A2, As2, G1, R1, H1_2 and H2.
+This repository combines:
 
-Mjlab combines [Isaac Lab](https://github.com/isaac-sim/IsaacLab)'s proven API
-with best-in-class [MuJoCo](https://github.com/google-deepmind/mujoco_warp)
-physics to provide lightweight, modular abstractions for RL robotics research
-and sim-to-real deployment.
+- the training-time safety filtering and dual reward design from
+  **CBF-RL: Safety Filtering Reinforcement Learning in Training with Control
+  Barrier Functions**;
+- Flat Patch target selection, position-based velocity commands, and terrain
+  edge safety ideas inspired by **Hiking in the Wild**;
+- the Unitree G1 model and locomotion stack from `unitree_rl_mjlab`;
+- GPU-parallel simulation through MJLab and MuJoCo-Warp;
+- PPO optimization through RSL-RL.
 
-<div align="center">
+The implementation is simulation-only. It does not contain or run real-robot
+control, networking, or sim-to-real deployment.
 
-| <div align="center">  MuJoCo </div>                                                                                                                                           | <div align="center"> Physical </div>                                                                                                                                               |
-|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| <div style="width:250px; height:150px; overflow:hidden;"><img src="doc/gif/g1-velocity.gif" style="width:100%; height:100%; object-fit:cover; object-position:center;"></div> | <div style="width:250px; height:150px; overflow:hidden;"><img src="doc/gif/g1-velocity-real.gif" style="width:100%; height:100%; object-fit:cover; object-position:center;"></div> |
+## Method
 
-</div>
+The selected stair barrier prevents the swing toe from entering the next stair
+riser while the foot is below the tread:
 
-
-## 📦 Installation and Configuration
-
-Please refer to [setup.md](doc/setup_en.md) for installation and configuration steps.
-
-
-## 🔁 Process Overview
-
-The basic workflow for using reinforcement learning to achieve motion control is:
-
-`Train` → `Play` → `Sim2Real`
-
-- **Train**: The agent interacts with the MuJoCo simulation and optimizes policies through reward maximization.
-- **Play**: Replay trained policies to verify expected behavior.
-- **Sim2Real**: Deploy trained policies to physical Unitree robots for real-world execution.
-
-
-## 🛠️ Usage Guide
-
-### 1. Velocity Tracking Training
-
-Run the following command to train a velocity tracking policy:
-
-```bash
-python scripts/train.py Unitree-G1-Flat --env.scene.num-envs=4096
+```text
+h(q) = x_riser - (x_swing_foot(q) + toe_margin)
+psi(q, qdot) = -Jx_swing(q) qdot + alpha h(q) >= 0
 ```
 
-Multi-GPU Training: Scale to multiple GPUs using --gpu-ids:
+The nominal 12-DoF lower-body position target is converted to joint velocity,
+projected onto the single CBF half-space with a closed-form Euclidean QP, then
+converted back to a safe position target. During training, the policy also
+receives the bounded dual reward:
 
-```bash
-python scripts/train.py Unitree-G1-Flat \
-  --gpu-ids 0 1 \
-  --env.scene.num-envs=4096
+```text
+min(psi_nominal, 0)
++ exp(-||q_target_policy - q_target_safe||^2 / sigma^2) - 1
 ```
 
-- The first argument (e.g., Mjlab-Velocity-Flat-Unitree-G1) specifies the training task.
-Available velocity tracking tasks:
-  - Unitree-Go2-Flat
-  - Unitree-G1-Flat
-  - Unitree-G1-23Dof-Flat
-  - Unitree-H1_2-Flat
-  - Unitree-A2-Flat
-  - Unitree-R1-Flat
+The actor uses 405 observations: five frames of proprioception, a gait phase,
+the 3-D velocity command, and previous actions. The asymmetric critic uses one
+283-D frame that additionally contains a privileged terrain height scan,
+base linear velocity, and foot state.
 
-> [!NOTE]
-> For more details, refer to the mjlab documentation:
-> [mjlab documentation](https://mujocolab.github.io/mjlab/index.html).
+See [the training framework summary](docs/TRAINING_FRAMEWORK_SUMMARY.md) and
+[the implementation report](docs/ALGORITHM_IMPLEMENTATION_REPORT.md) for the
+full observation, action, reward, curriculum, and CBF definitions.
 
-### 2. Motion Imitation Training
+## One-seed result
 
-Train a Unitree G1 to mimic reference motion sequences.
+Evaluation uses a fixed 13 cm six-step staircase, 128 deterministic episodes,
+and seed 42.
 
-<div style="margin-left: 20px;">
+| Method | Runtime filter | Success | Fall | Mean max progress | CBF violation integral |
+|---|---:|---:|---:|---:|---:|
+| CBF-trained | on | 95.31% | 4.69% | 3.309 m | 9.75 |
+| CBF-trained | off | **95.31%** | **4.69%** | **3.315 m** | **7.56** |
+| Equal-budget nominal | off | 0% | 34.38% | 0.748 m | 1006.18 |
 
-#### 2.1 Prepare Motion Files
+This is a one-seed method-level result, not a multi-seed statistical claim or
+a numerical reproduction of the paper. The evaluation policy retains 95.31%
+success without the runtime filter, which is evidence of safety internalization
+for this experiment.
 
-Prepare csv motion files in mjlab/motions/g1/ and convert them to npz format:
+The exact aggregate and per-episode outputs are under `results/evaluation/`.
+A successful filter-free rollout is provided at
+[`results/videos/g1-stairs-cbf-filter-off-seed42-step-0.mp4`](results/videos/g1-stairs-cbf-filter-off-seed42-step-0.mp4).
 
-```bash
-python scripts/csv_to_npz.py \
---input-file src/assets/motions/g1/dance1_subject2.csv \
---output-name dance1_subject2.npz \
---input-fps 30 \
---output-fps 50 \
---robot g1 # g1 or g1_23dof
+## Repository layout
+
+```text
+src/tasks/stairs_cbf/       Stair terrain, commands, CBF, rewards, and configs
+experiments/scripts/        Smoke, evaluation, capacity, and video scripts
+experiments/tests/          Pure tensor CBF tests
+docs/                       Method, training, evaluation, and assumption reports
+results/evaluation/         Aggregate JSON/CSV and per-episode CSV
+results/models/             Final CBF and nominal PT/ONNX artifacts
+results/tensorboard/        Final TensorBoard event files
+results/videos/             Deterministic stair-climbing rollout
 ```
 
-**npz files will be stored at:**：`src/motions/g1/...`
+The remaining `src/`, assets, and runner code are the pinned
+`unitree_rl_mjlab` base needed to run the task.
 
-#### 2.2 Training
+## Environment
 
-After generating the NPZ file, launch imitation training:
+The verified environment uses:
 
-```bash
-python scripts/train.py Unitree-G1-Tracking-No-State-Estimation --motion_file=src/assets/motions/g1/dance1_subject2.npz --env.scene.num-envs=4096
+```text
+Python 3.11.15
+PyTorch 2.7.0+cu128
+MJLab 1.2.0
+MuJoCo 3.5.0
+MuJoCo-Warp 3.5.0
+Warp 1.12.0
+RSL-RL 5.0.1
 ```
 
-Available tasks:
-  - Unitree-G1-Tracking-No-State-Estimation
-  - Unitree-G1-23Dof-Tracking-No-State-Estimation
-
-</div>
-
-> [!NOTE]
-> For detailed motion imitation instructions, refer to the BeyondMimic documentation:
-> [BeyondMimic documentation](https://github.com/HybridRobotics/whole_body_tracking/blob/main/README.md#motion-preprocessing--registry-setup).
-
-#### ⚙️  Parameter Description
-- `--env.scene`: simulation scene configuration (e.g., num_envs, dt, ground type, gravity, disturbances)
-- `--env.observations`: observation space configuration (e.g., joint state, IMU, commands, etc.)
-- `--env.rewards`: reward terms used for policy optimization
-- `--env.commands`: task commands (e.g., velocity, pose, or motion targets)
-- `--env.terminations`: termination conditions for each episode
-- `--agent.seed`: random seed for reproducibility
-- `--agent.resume`: resume from the last saved checkpoint when enabled
-- `--agent.policy`: policy network architecture configuration
-- `--agent.algorithm`: reinforcement learning algorithm configuration (PPO, hyperparameters, etc.)
-
-**Training results are stored at**：`logs/rsl_rl/<robot>_(velocity | tracking)/<date_time>/model_<iteration>.pt`
-
-### 3. Simulation Validation
-
-To visualize policy behavior in MuJoCo:
-
-Velocity tracking:
-```bash
-python scripts/play.py Unitree-G1-Flat --checkpoint_file=logs/rsl_rl/g1_velocity/2026-xx-xx_xx-xx-xx/model_xx.pt
-```
-
-Motion imitation:
-```bash
-python scripts/play.py Unitree-G1-Tracking-No-State-Estimation --motion_file=src/assets/motions/g1/dance1_subject2.npz --checkpoint_file=logs/rsl_rl/g1_tracking/2026-xx-xx_xx-xx-xx/model_xx.pt
-```
-
-**Note**：
-
-- During training, policy.onnx and policy.onnx.data are also exported for deployment onto physical robots.
-
-**Visualization**：
-
-| Go2                              | G1                             | H1_2                               | G1_mimic                          |
-|----------------------------------|--------------------------------|------------------------------------|-----------------------------------|
-| ![go2](doc/gif/go2-velocity.gif) | ![g1](doc/gif/g1-velocity.gif) | ![h1_2](doc/gif/h1_2-velocity.gif) | ![g1_mimic](doc/gif/g1-mimic.gif) |
-
-### 4. Real Deployment
-
-Before deployment, install the required communication tools:
-- [cyclonedds](https://github.com/eclipse-cyclonedds/cyclonedds.git)
-- [unitree_sdk2](https://github.com/unitreerobotics/unitree_sdk2.git)
-
-<div style="margin-left: 20px;">
-
-#### 4.1 Power On the Robot
-Start the robot in suspended state and wait until it enters `zero-torque` mode.
-
-#### 4.2 Enable Debug Mode
-While in `zero-torque` mode, press `L2 + R2` on the controller. The robot will enter `debug mode` with joint damping enabled.
-
-#### 4.3 Connect to the Robot
-Connect your PC to the robot via Ethernet. Configure the network as:
-- Address：`192.168.123.222`
-- Netmask：`255.255.255.0`
-
-Use `ifconfig` to determine the Ethernet device name for deployment.
-
-#### 4.4 Compilation
-
-Example: Unitree G1 velocity control.
-Place `policy.onnx` and `policy.onnx.data` into: `deploy/robots/g1/config/policy/velocity/v0/exported`.
-Then compile:
+Install into an isolated Python 3.11 environment. The exact package snapshot is
+in `requirements-lock.txt`; installation may require a PyTorch/CUDA index
+appropriate for the host:
 
 ```bash
-cd deploy/robots/g1
-mkdir build && cd build
-cmake .. && make
+python -m pip install -r requirements-lock.txt
 ```
 
-#### 4.5 Deployment
-
-## 4.5.1 Simulation Deployment
-
-Before deploying on the real robot, it is recommended to perform simulation deployment using [unitree_mujoco](https://github.com/unitreerobotics/unitree_mujoco)
-to prevent abnormal behaviors on the physical robot. This framework has already integrated it.
-
-Build unitree_mujoco：
+For a smaller setup based on the package metadata:
 
 ```bash
-cd simulate
-mkdir build && cd build
-cmake .. && make -j8
+python -m pip install "torch==2.7.0" "rsl-rl-lib==5.0.1"
+python -m pip install -e .
 ```
 
-Launch the simulator (note that a gamepad must be connected):
+## Tests
+
+Pure tensor tests:
 
 ```bash
-./simulate/build/unitree_mujoco
+pytest -q experiments/tests/test_cbf_math.py
 ```
 
-You can select the corresponding robot in `simulate/config`
-
-Launch the simulation control program:
+GPU environment smoke:
 
 ```bash
-cd deploy/robots/g1/build
-./g1_ctrl --network=lo
+python experiments/scripts/smoke_stairs_cbf.py \
+  --repo . \
+  --task Unitree-G1-Stairs-CBF \
+  --num-envs 4 \
+  --steps 200 \
+  --seed 42 \
+  --expected-actions 12 \
+  --output results/smoke.json
 ```
 
-## 4.5.2 Real-Robot Deployment
+The verified migration test produced a real MuJoCo-Warp adversarial nominal
+margin of about `-29.16`, repaired by the filter to approximately `+1.1e-6`.
 
-Launch the control program on the real robot:
+## Training
+
+The effective CBF run used 1024 environments, 24 steps per environment, seed
+42, and 1500 PPO updates:
 
 ```bash
-cd deploy/robots/g1/build
-./g1_ctrl --network=enp5s0
+python scripts/train.py Unitree-G1-Stairs-CBF \
+  --env.scene.num-envs 1024 \
+  --agent.max-iterations 1500 \
+  --agent.save-interval 500 \
+  --agent.seed 42 \
+  --agent.logger tensorboard \
+  --agent.run-name paper_dual_curriculum_seed42_1024 \
+  --enable-nan-guard True
 ```
 
-**Arguments**：
-- `network`: The network interface used to connect to the robot. Use `lo` for simulation deployment, and `enp5s0` for the real robot(You can check it using the `ifconfig` command) 
+Portable wrappers are available in `experiments/train_cbf_1500.sh` and
+`experiments/train_nominal_1500.sh`.
 
-</div>
+## Models and evaluation
 
-**Deployment Results**：
+Final checkpoints:
 
-| Go2                                                    | G1                                                    | H1_2           | G1_mimic                                           |
-|--------------------------------------------------------|-------------------------------------------------------|----------------|----------------------------------------------------|
-| <img src="doc/gif/go2-velocity-real.gif" width="300"/> | <img src="doc/gif/g1-velocity-real.gif" width="300"/> | <img src="doc/gif/h1_2-velocity-real.gif" width="300"/> | <img src="doc/gif/g1-mimic-real.gif" width="300"/> |
+```text
+results/models/cbf/model_1500.pt
+results/models/cbf/policy.onnx
+results/models/nominal/model_1499.pt
+results/models/nominal/policy.onnx
+```
 
+`model_1499.pt` is the nominal runner's zero-based filename after 1500 PPO
+updates.
 
-## 🎉  Acknowledgements
+Run a fixed-height evaluation with:
 
-This project would not be possible without the contributions of the following repositories:
+```bash
+python experiments/scripts/evaluate_stairs.py \
+  --repo . \
+  --task Unitree-G1-Stairs-CBF \
+  --checkpoint results/models/cbf/model_1500.pt \
+  --label cbf_exact13 \
+  --num-envs 128 \
+  --num-episodes 128 \
+  --seed 42 \
+  --fixed-step-height 0.13 \
+  --output-json results/evaluation/cbf_exact13.json \
+  --output-csv results/evaluation/cbf_exact13.csv
+```
 
-- [mjlab](https://github.com/mujocolab/mjlab.git): training and execution framework
-- [whole_body_tracking](https://github.com/HybridRobotics/whole_body_tracking.git): versatile humanoid motion tracking framework
-- [rsl_rl](https://github.com/leggedrobotics/rsl_rl.git): reinforcement learning algorithm implementation
-- [mujoco_warp](https://github.com/google-deepmind/mujoco_warp.git): GPU-accelerated rendering and simulation interface
-- [mujoco](https://github.com/google-deepmind/mujoco.git): high-fidelity rigid-body physics engine
+## Scope and attribution
+
+- The humanoid stair source code and author parameters from CBF-RL are not
+  public; the documented toe margin, class-K gain, activation band, noise-free
+  stair geometry, and reward coefficients are engineering assumptions.
+- Hiking in the Wild informed the navigation and terrain-edge representation;
+  this repository does not include InstinctLab code, depth policies, MoE,
+  AMP/WASABI, or Foot Volume Points.
+- The project inherits and preserves the Apache-2.0 license of
+  `unitree_rl_mjlab`. See `THIRD_PARTY_NOTICES.md` for dependency and research
+  attribution.
+
+## References
+
+- Yang et al., [CBF-RL: Safety Filtering Reinforcement Learning in Training
+  with Control Barrier Functions](https://arxiv.org/abs/2510.14959).
+- Zhu et al., [Hiking in the Wild: A Scalable Perceptive Parkour Framework for
+  Humanoids](https://arxiv.org/abs/2601.07718).
+- Zakka et al., [mjlab: A Lightweight Framework for GPU-Accelerated Robot
+  Learning](https://arxiv.org/abs/2601.22074).
+- Schulman et al., [Proximal Policy Optimization Algorithms](https://arxiv.org/abs/1707.06347).
+- [unitreerobotics/unitree_rl_mjlab](https://github.com/unitreerobotics/unitree_rl_mjlab).
+- [leggedrobotics/rsl_rl](https://github.com/leggedrobotics/rsl_rl).

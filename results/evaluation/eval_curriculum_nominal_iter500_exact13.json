@@ -1,0 +1,25 @@
+{
+  "checkpoint": "<original-run-root>/third_party/unitree_rl_mjlab/logs/rsl_rl/g1_stairs_nominal/2026-07-16_00-22-14_paper_nominal_curriculum_seed42_1024_1500/model_500.pt",
+  "fall_rate": 1.0,
+  "fixed_step_height_m": 0.13,
+  "label": "curriculum_nominal_iter500_exact13",
+  "means": {
+    "cbf_active_fraction": 0.3885818221606314,
+    "cbf_intervention_integral": 0.0,
+    "cbf_target_intervention_integral": 5.453339717576e-06,
+    "cbf_violation_events": 27.0546875,
+    "cbf_violation_integral": 292.37965762615204,
+    "max_progress_m": 1.0547209307551384,
+    "min_root_height_m": 0.6631838888861239,
+    "return": -3.776477551087737,
+    "steps": 104.59375
+  },
+  "num_envs": 128,
+  "num_episodes": 128,
+  "seed": 42,
+  "success_rate": 0.0,
+  "success_threshold_progress_m": 2.65,
+  "task": "Unitree-G1-Stairs-Nominal",
+  "terrain_level": -1,
+  "timeout_rate": 0.0
+}
