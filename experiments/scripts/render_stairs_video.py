@@ -19,7 +19,7 @@ def main() -> None:
   parser.add_argument("--output-dir", type=Path, required=True)
   parser.add_argument("--output-json", type=Path, required=True)
   parser.add_argument("--seed", type=int, default=42)
-  parser.add_argument("--step-height", type=float, default=0.13)
+  parser.add_argument("--step-height", type=float)
   parser.add_argument("--max-steps", type=int, default=1000)
   parser.add_argument("--width", type=int, default=854)
   parser.add_argument("--height", type=int, default=480)
@@ -45,7 +45,10 @@ def main() -> None:
   if terrain_cfg is None or terrain_cfg.terrain_generator is None:
     raise RuntimeError("task has no generated staircase terrain")
   stairs_cfg = terrain_cfg.terrain_generator.sub_terrains["forward_stairs"]
-  stairs_cfg.step_height_range = (args.step_height, args.step_height)
+  if args.step_height is not None:
+    stairs_cfg.step_height_range = (args.step_height, args.step_height)
+    if hasattr(stairs_cfg, "step_height_profile"):
+      stairs_cfg.step_height_profile = None
   terrain_cfg.terrain_generator.num_rows = 1
   terrain_cfg.max_init_terrain_level = 0
   env_cfg.actions["joint_pos"].enabled = args.runtime_filter == "on"
@@ -56,7 +59,8 @@ def main() -> None:
   env_cfg.viewer.elevation = -10.0
 
   base_env = ManagerBasedRlEnv(env_cfg, device=device, render_mode="rgb_array")
-  prefix = f"g1-stairs-cbf-filter-{args.runtime_filter}-seed{args.seed}"
+  task_slug = args.task.lower().replace("unitree-g1-stairs-", "").replace("-", "_")
+  prefix = f"g1-stairs-{task_slug}-filter-{args.runtime_filter}-seed{args.seed}"
   recorded_env = VideoRecorder(
     base_env,
     video_folder=args.output_dir,
@@ -87,6 +91,8 @@ def main() -> None:
   fell = False
   timed_out = False
   steps = 0
+  max_riser = 0
+  reached_top = False
 
   try:
     with torch.inference_mode():
@@ -107,10 +113,24 @@ def main() -> None:
         violation_integral += violation
         violation_events += int(active and float(action_term.psi_nominal[0]) < -1.0e-5)
         intervention_integral += float(action_term.intervention_norm[0])
+        if hasattr(action_term, "_edge_x"):
+          terrain = base_env.scene.terrain
+          assert terrain is not None
+          risers = action_term._edge_x[
+            terrain.terrain_levels, terrain.terrain_types
+          ]
+          current_riser = int(
+            torch.sum(robot.data.root_link_pos_w[:, 0:1] >= risers, dim=1)[0]
+          )
+          max_riser = max(max_riser, current_riser)
         steps = step + 1
         if bool(done[0]):
           fell = bool(base_env.termination_manager.get_term("fell_over")[0])
           timed_out = bool(base_env.termination_manager.get_term("time_out")[0])
+          if "reached_top" in base_env.termination_manager.active_terms:
+            reached_top = bool(
+              base_env.termination_manager.get_term("reached_top")[0]
+            )
           break
   finally:
     env.close()
@@ -127,7 +147,8 @@ def main() -> None:
     "return": episode_return,
     "max_progress_m": max_progress,
     "min_root_height_m": min_root_height,
-    "success": max_progress >= 2.65,
+    "max_riser": max_riser,
+    "success": reached_top if "Online" in args.task else max_progress >= 2.65,
     "fell": fell,
     "timed_out": timed_out,
     "cbf_violation_events": violation_events,

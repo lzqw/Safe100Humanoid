@@ -1,0 +1,35 @@
+{
+  "action_dim": 12,
+  "adversarial_filter_check": {
+    "active": true,
+    "filter_enabled": true,
+    "filtered_margin_min": -1.5497207641601562e-06,
+    "intervention_norm_mean": 38.057884216308594,
+    "nominal_margin_min": -29.166690826416016
+  },
+  "cbf_active_count": 0,
+  "filtered_margin_min": null,
+  "finite": true,
+  "first_tread_top_z_by_level": [
+    0.14499999582767487
+  ],
+  "nominal_violation_count": 0,
+  "num_envs": 1,
+  "observation_shapes": {
+    "actor": [
+      1,
+      405
+    ],
+    "critic": [
+      1,
+      283
+    ],
+    "online_privileged": [
+      1,
+      111
+    ]
+  },
+  "reward_std_mean": 0.0,
+  "steps": 100,
+  "task": "Unitree-G1-Stairs-Online-D4"
+}

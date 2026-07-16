@@ -46,6 +46,17 @@ See [the training framework summary](docs/TRAINING_FRAMEWORK_SUMMARY.md) and
 [the implementation report](docs/ALGORITHM_IMPLEMENTATION_REPORT.md) for the
 full observation, action, reward, curriculum, and CBF definitions.
 
+The repository also contains a simulation prototype for CBF-protected online
+safe refinement under long-stair and joystick-command OOD shifts. It adds a
+799-D full privileged critic, conservative single-clipped PPO, temporal credit
+for actual CBF interventions, and transactional candidate rollback. See
+[the online refinement report](docs/ONLINE_SAFE_REFINEMENT.md).
+Measured OOD calibration and candidate rollback evidence are summarized in
+[the online refinement results](docs/ONLINE_REFINEMENT_RESULTS.md).
+All tested online candidates were rejected by the robust safety gate; no
+online-improvement claim is made. Curated GPU artifacts, the rollback
+checkpoint, and successful and failed DQ videos are under `results/online/`.
+
 ## One-seed result
 
 Evaluation uses a fixed 13 cm six-step staircase, 128 deterministic episodes,
@@ -69,11 +80,12 @@ A successful filter-free rollout is provided at
 ## Repository layout
 
 ```text
-src/tasks/stairs_cbf/       Stair terrain, commands, CBF, rewards, and configs
-experiments/scripts/        Smoke, evaluation, capacity, and video scripts
-experiments/tests/          Pure tensor CBF tests
+src/tasks/stairs_cbf/       Stair terrain, CBF, online PPO, rewards, and configs
+experiments/scripts/        Smoke, evaluation, online refinement, and video scripts
+experiments/tests/          Pure tensor CBF and online-refinement tests
 docs/                       Method, training, evaluation, and assumption reports
 results/evaluation/         Aggregate JSON/CSV and per-episode CSV
+results/online/             Online gate audits, rollback checkpoint, and videos
 results/models/             Final CBF and nominal PT/ONNX artifacts
 results/tensorboard/        Final TensorBoard event files
 results/videos/             Deterministic stair-climbing rollout
@@ -117,6 +129,8 @@ Pure tensor tests:
 
 ```bash
 pytest -q experiments/tests/test_cbf_math.py
+pytest -q experiments/tests/test_cbf_math.py \
+  experiments/tests/test_online_refinement.py
 ```
 
 GPU environment smoke:

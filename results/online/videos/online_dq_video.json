@@ -1,0 +1,19 @@
+{
+  "cbf_intervention_integral": 70.27210503816605,
+  "cbf_violation_events": 11,
+  "cbf_violation_integral": 43.60235768556595,
+  "checkpoint": "<SERVER_RUN_ROOT>/artifacts/online_refine_robust_rollback/accepted_after_candidate_rejection.pt",
+  "fell": true,
+  "max_progress_m": 2.3195011615753174,
+  "max_riser": 5,
+  "min_root_height_m": 0.7583686113357544,
+  "return": 2.7504950941656716,
+  "runtime_filter": "on",
+  "seed": 42,
+  "step_height_m": null,
+  "steps": 409,
+  "success": false,
+  "task": "Unitree-G1-Stairs-Online-DQ",
+  "timed_out": false,
+  "video": "<SERVER_RUN_ROOT>/videos/online_dq/g1-stairs-online_dq-filter-on-seed42-step-0.mp4"
+}

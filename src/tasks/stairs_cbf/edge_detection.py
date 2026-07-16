@@ -22,6 +22,18 @@ def riser_edges_from_tread_patches(
   return treads[..., 0] - 0.5 * step_width, treads[..., 2]
 
 
+def riser_edges_from_metadata(
+  risers: torch.Tensor, num_steps: int
+) -> tuple[torch.Tensor, torch.Tensor]:
+  """Read exact riser planes and top heights emitted by the terrain generator."""
+  if risers.shape[-1] != 3:
+    raise ValueError(f"riser metadata must end in xyz, got {risers.shape}")
+  if risers.shape[-2] < num_steps:
+    raise ValueError(f"need {num_steps} risers, got {risers.shape[-2]}")
+  selected = risers[..., :num_steps, :]
+  return selected[..., 0], selected[..., 2]
+
+
 def select_active_riser(
   foot_x: torch.Tensor,
   foot_z: torch.Tensor,

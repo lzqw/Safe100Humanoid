@@ -1,0 +1,37 @@
+{
+  "checkpoint": "<SERVER_RUN_ROOT>/artifacts/online_refine_gpu_gate/candidate_round_001.pt",
+  "conditional_failure_hazard": {
+    "1": 0.0,
+    "2": 0.0,
+    "3": 0.015625,
+    "4": 0.0,
+    "5": 0.007936507936507936,
+    "6": 0.016,
+    "7": 0.024390243902439025,
+    "8": 0.08333333333333333,
+    "9": 0.11818181818181818
+  },
+  "correction_mean": 0.002856998861321902,
+  "fall_rate": 0.4609375,
+  "intervention_per_riser": 1.1613808477995917,
+  "mean_reached_riser": 8.4609375,
+  "minimum_cbf_h": -0.14969384670257568,
+  "num_envs": 32,
+  "num_episodes": 128,
+  "num_risers": 9,
+  "seed": 42,
+  "success_rate": 0.5390625,
+  "survival_curve": {
+    "1": 1.0,
+    "2": 1.0,
+    "3": 0.984375,
+    "4": 0.984375,
+    "5": 0.9765625,
+    "6": 0.9609375,
+    "7": 0.9375,
+    "8": 0.859375,
+    "9": 0.7578125
+  },
+  "task": "Unitree-G1-Stairs-Online-DQN",
+  "timeout_rate": 0.0
+}

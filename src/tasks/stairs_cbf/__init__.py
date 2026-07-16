@@ -4,7 +4,13 @@ from mjlab.tasks.registry import register_mjlab_task
 
 from src.tasks.velocity.rl import VelocityOnPolicyRunner
 
-from .config import g1_stairs_env_cfg, g1_stairs_runner_cfg
+from .config import (
+  g1_online_stairs_env_cfg,
+  g1_online_stairs_runner_cfg,
+  g1_stairs_env_cfg,
+  g1_stairs_runner_cfg,
+)
+from .online import OnlineSafeRefinementRunner
 
 
 register_mjlab_task(
@@ -14,6 +20,16 @@ register_mjlab_task(
   rl_cfg=g1_stairs_runner_cfg("g1_stairs_nominal"),
   runner_cls=VelocityOnPolicyRunner,
 )
+
+
+for _domain in ("D0", "D1", "D2", "D3", "D4", "D5", "DQ", "DQN"):
+  register_mjlab_task(
+    task_id=f"Unitree-G1-Stairs-Online-{_domain}",
+    env_cfg=g1_online_stairs_env_cfg(_domain),
+    play_env_cfg=g1_online_stairs_env_cfg(_domain, play=True),
+    rl_cfg=g1_online_stairs_runner_cfg(),
+    runner_cls=OnlineSafeRefinementRunner,
+  )
 
 # Frozen task shapes for evaluating the initial 29-DoF engineering pre-run.
 register_mjlab_task(

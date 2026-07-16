@@ -1,0 +1,36 @@
+{
+  "actor_obs_dim": 405,
+  "credit": {
+    "cbf_correction_mean": 5.0715506461074256e-08,
+    "cbf_intervention_fraction": 0.0,
+    "pre_intervention_cost_max": 0.0,
+    "pre_intervention_cost_mean": 0.0
+  },
+  "critic_obs_dim": 799,
+  "finite": true,
+  "loss": {
+    "action_saturation_fraction": 0.2643229365348816,
+    "action_std_mean": 0.20713762938976288,
+    "actor_learning_rate": 1e-05,
+    "cbf_correction_mean": 5.0715506461074256e-08,
+    "cbf_intervention_fraction": 0.0,
+    "clip_fraction": 0.08203125,
+    "entropy": -2.000462055206299,
+    "mean_kl": 0.00030315411277115345,
+    "pre_intervention_cost_max": 0.0,
+    "pre_intervention_cost_mean": 0.0,
+    "safe_bc_loss": 0.0,
+    "safe_bc_weight": 0.05,
+    "surrogate": 4.470348358154297e-08,
+    "value": 0.06310770660638809
+  },
+  "num_envs": 4,
+  "steps": 64,
+  "task": "Unitree-G1-Stairs-Online-DQ",
+  "warm_start": {
+    "expanded_critic_width": 799,
+    "legacy_critic_offset": 405,
+    "legacy_critic_width": 283,
+    "source_iteration": 1500
+  }
+}

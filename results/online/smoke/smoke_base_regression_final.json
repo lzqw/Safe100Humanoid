@@ -1,0 +1,35 @@
+{
+  "action_dim": 12,
+  "adversarial_filter_check": {
+    "active": true,
+    "filter_enabled": true,
+    "filtered_margin_min": 1.087784767150879e-06,
+    "intervention_norm_mean": 38.05672836303711,
+    "nominal_margin_min": -29.16492462158203
+  },
+  "cbf_active_count": 0,
+  "filtered_margin_min": null,
+  "finite": true,
+  "first_tread_top_z_by_level": [
+    0.040896814316511154,
+    0.05884971842169762,
+    0.09718214720487595,
+    0.11982893943786621,
+    0.1305427849292755
+  ],
+  "nominal_violation_count": 0,
+  "num_envs": 1,
+  "observation_shapes": {
+    "actor": [
+      1,
+      405
+    ],
+    "critic": [
+      1,
+      283
+    ]
+  },
+  "reward_std_mean": 0.0,
+  "steps": 100,
+  "task": "Unitree-G1-Stairs-CBF"
+}

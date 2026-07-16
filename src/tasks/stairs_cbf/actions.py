@@ -13,7 +13,11 @@ from mjlab.envs.mdp.actions import JointPositionAction, JointPositionActionCfg
 from mjlab.sensor import ContactSensor
 
 from .cbf_math import project_halfspace
-from .edge_detection import riser_edges_from_tread_patches, select_active_riser
+from .edge_detection import (
+  riser_edges_from_metadata,
+  riser_edges_from_tread_patches,
+  select_active_riser,
+)
 
 if TYPE_CHECKING:
   from mjlab.envs import ManagerBasedRlEnv
@@ -34,6 +38,9 @@ class StairCbfJointPositionActionCfg(JointPositionActionCfg):
   top_clearance: float = 0.025
   recovery_distance: float = 0.15
   patch_name: str = "stair_targets"
+  riser_patch_name: str = "stair_risers"
+  intervention_epsilon: float = 1.0e-5
+  intervention_norm_scale: float = 0.05
 
   def build(self, env: "ManagerBasedRlEnv") -> "StairCbfJointPositionAction":
     return StairCbfJointPositionAction(self, env)
@@ -58,9 +65,16 @@ class StairCbfJointPositionAction(JointPositionAction):
     terrain = env.scene.terrain
     if terrain is None or cfg.patch_name not in terrain.flat_patches:
       raise RuntimeError(f"terrain has no flat-patch set {cfg.patch_name!r}")
-    self._edge_x, self._edge_top_z = riser_edges_from_tread_patches(
-      terrain.flat_patches[cfg.patch_name], cfg.step_width, cfg.num_steps
-    )
+    if cfg.riser_patch_name in terrain.flat_patches:
+      self._edge_x, self._edge_top_z = riser_edges_from_metadata(
+        terrain.flat_patches[cfg.riser_patch_name], cfg.num_steps
+      )
+    else:
+      # Backward compatibility for checkpoints/configs generated before exact
+      # riser metadata was introduced.
+      self._edge_x, self._edge_top_z = riser_edges_from_tread_patches(
+        terrain.flat_patches[cfg.patch_name], cfg.step_width, cfg.num_steps
+      )
 
     nworld = self.num_envs
     nv = self._env.sim.mj_model.nv
@@ -89,10 +103,19 @@ class StairCbfJointPositionAction(JointPositionAction):
     self.psi_nominal = torch.zeros(shape, device=self.device)
     self.psi_filtered = torch.zeros(shape, device=self.device)
     self.filter_active = torch.zeros(shape, dtype=torch.bool, device=self.device)
+    self.geometric_active = torch.zeros(shape, dtype=torch.bool, device=self.device)
+    self.intervened = torch.zeros(shape, dtype=torch.bool, device=self.device)
     self.intervention_norm = torch.zeros(shape, device=self.device)
     self.target_intervention_norm = torch.zeros(shape, device=self.device)
+    self.intervention_count = torch.zeros(shape, device=self.device)
     self.selected_edge_top_z = torch.zeros(shape, device=self.device)
     self.selected_foot = torch.full(shape, -1, dtype=torch.long, device=self.device)
+    self.nominal_target = torch.zeros(
+      self.num_envs, self.action_dim, device=self.device
+    )
+    self.safe_target = torch.zeros_like(self.nominal_target)
+    self.nominal_raw_action = torch.zeros_like(self.nominal_target)
+    self.safe_raw_action = torch.zeros_like(self.nominal_target)
 
   def _foot_jacobians(self, foot_pos: torch.Tensor) -> torch.Tensor:
     jacobians = []
@@ -113,6 +136,8 @@ class StairCbfJointPositionAction(JointPositionAction):
   def process_actions(self, actions: torch.Tensor) -> None:
     super().process_actions(actions)
     nominal_target = self._processed_actions.clone()
+    self.nominal_target[:] = nominal_target
+    self.nominal_raw_action[:] = actions
     q = self._entity.data.joint_pos[:, self._target_ids]
     qdot_nominal = (nominal_target - q) / self._env.step_dt
     foot_pos = self._entity.data.site_pos_w[:, self._site_local_ids]
@@ -168,10 +193,15 @@ class StairCbfJointPositionAction(JointPositionAction):
     # half-space, while joint-limit handling already remains in the common
     # reward/actuator stack for both experiment arms.
     self._processed_actions[:] = q + self._env.step_dt * filtered_qdot
+    self.safe_target[:] = self._processed_actions
+    self.safe_raw_action[:] = (
+      (self._processed_actions - self.offset) / self.scale
+    )
     self.h[:] = torch.where(active, h, torch.full_like(h, torch.inf))
     self.selected_edge_top_z[:] = selected_top_z
     self.psi_nominal[:] = torch.where(active, psi_nominal, torch.zeros_like(psi_nominal))
     self.psi_filtered[:] = torch.where(active, psi_filtered, torch.zeros_like(psi_filtered))
+    self.geometric_active[:] = active
     self.filter_active[:] = active & self.cfg.enabled
     self.intervention_norm[:] = torch.linalg.vector_norm(
       filtered_qdot - qdot_nominal, dim=1
@@ -179,6 +209,15 @@ class StairCbfJointPositionAction(JointPositionAction):
     self.target_intervention_norm[:] = torch.linalg.vector_norm(
       self._processed_actions - nominal_target, dim=1
     )
+    self.intervened[:] = (
+      active
+      & self.cfg.enabled
+      & (
+        (self.psi_nominal < -self.cfg.intervention_epsilon)
+        | (self.target_intervention_norm > self.cfg.intervention_epsilon)
+      )
+    )
+    self.intervention_count += self.intervened.float()
 
   def reset(self, env_ids: torch.Tensor | slice | None = None) -> None:
     super().reset(env_ids)
@@ -186,7 +225,14 @@ class StairCbfJointPositionAction(JointPositionAction):
     self.psi_nominal[env_ids] = 0.0
     self.psi_filtered[env_ids] = 0.0
     self.filter_active[env_ids] = False
+    self.geometric_active[env_ids] = False
+    self.intervened[env_ids] = False
     self.intervention_norm[env_ids] = 0.0
     self.target_intervention_norm[env_ids] = 0.0
+    self.intervention_count[env_ids] = 0.0
     self.selected_edge_top_z[env_ids] = 0.0
     self.selected_foot[env_ids] = -1
+    self.nominal_target[env_ids] = 0.0
+    self.safe_target[env_ids] = 0.0
+    self.nominal_raw_action[env_ids] = 0.0
+    self.safe_raw_action[env_ids] = 0.0
