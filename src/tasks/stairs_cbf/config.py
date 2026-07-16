@@ -413,8 +413,14 @@ def g1_online_stairs_env_cfg(
     params={"action_name": "joint_pos", "sigma": 0.5},
   )
   # The generic termination penalty would incorrectly punish successful top
-  # completion.  Falls remain terminated and are reported explicitly.
+  # completion.  Replace it with an explicit fall-only event instead of
+  # silently removing the principal rare-failure learning signal.
   cfg.rewards["is_terminated"].weight = 0.0
+  cfg.rewards["fall_termination"] = RewardTermCfg(
+    func=mdp.fall_termination,
+    weight=-200.0,
+    params={"termination_name": "fell_over"},
+  )
   cfg.terminations["reached_top"] = TerminationTermCfg(
     func=mdp.reached_stair_top,
     params={

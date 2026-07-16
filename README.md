@@ -53,9 +53,11 @@ for actual CBF interventions, and transactional candidate rollback. See
 [the online refinement report](docs/ONLINE_SAFE_REFINEMENT.md).
 Measured OOD calibration and candidate rollback evidence are summarized in
 [the online refinement results](docs/ONLINE_REFINEMENT_RESULTS.md).
-All tested online candidates were rejected by the robust safety gate; no
-online-improvement claim is made. Curated GPU artifacts, the rollback
-checkpoint, and successful and failed DQ videos are under `results/online/`.
+One fall-aware, backtracked PPO candidate passed the robust safety gate by
+retaining DQ success while reducing CBF intervention and correction. This is a
+modest simulation result; filter-free performance did not improve. Curated GPU
+artifacts, the accepted and rollback checkpoints, and successful and failed DQ
+videos are under `results/online/`.
 
 ## One-seed result
 

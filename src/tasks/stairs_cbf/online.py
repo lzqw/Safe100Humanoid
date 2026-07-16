@@ -148,6 +148,36 @@ def candidate_precheck(
   return reasons
 
 
+def backtrack_actor_state(
+  base_state: dict[str, torch.Tensor],
+  candidate_state: dict[str, torch.Tensor],
+  fraction: float,
+) -> dict[str, torch.Tensor]:
+  """Return a conservative point on one accepted PPO update direction.
+
+  Only trainable actor MLP tensors are interpolated.  Frozen observation
+  normalization and bounded distribution-variance state come from the
+  candidate checkpoint unchanged.  This is a policy line search, not a new
+  optimizer objective or a residual controller.
+  """
+  if not 0.0 <= fraction <= 1.0:
+    raise ValueError(f"line-search fraction must be in [0, 1], got {fraction}")
+  if base_state.keys() != candidate_state.keys():
+    missing = sorted(base_state.keys() ^ candidate_state.keys())
+    raise ValueError(f"actor state keys differ: {missing}")
+  output = {key: value.detach().clone() for key, value in candidate_state.items()}
+  for key, candidate in candidate_state.items():
+    if not key.startswith("mlp."):
+      continue
+    base = base_state[key].to(device=candidate.device, dtype=candidate.dtype)
+    if base.shape != candidate.shape:
+      raise ValueError(
+        f"actor state shape differs for {key}: {base.shape} != {candidate.shape}"
+      )
+    output[key] = torch.lerp(base, candidate, fraction)
+  return output
+
+
 @dataclass
 class OnlineSafePpoAlgorithmCfg(RslRlPpoAlgorithmCfg):
   """Small-step PPO defaults for a warm-started humanoid policy."""
@@ -212,6 +242,7 @@ class OnlineSafePPO(PPO):
     self.nominal_targets = torch.zeros(t, n, action_dim, device=self.device)
     self.safe_targets = torch.zeros_like(self.nominal_targets)
     self.safe_raw_actions = torch.zeros_like(self.nominal_targets)
+    self.fall_events = torch.zeros(t, n, dtype=torch.bool, device=self.device)
     self.pre_intervention_cost = torch.zeros(t, n, device=self.device)
     self.last_update_metrics: dict[str, float] = {}
 
@@ -323,6 +354,7 @@ class OnlineSafePPO(PPO):
       nominal = extras.get("cbf_nominal_target")
       safe = extras.get("cbf_safe_target")
       safe_raw = extras.get("cbf_safe_raw_action")
+      fell = extras.get("online_fell")
       if intervened is not None:
         self.cbf_intervened[step].copy_(intervened)
       if magnitude is not None:
@@ -333,6 +365,8 @@ class OnlineSafePPO(PPO):
         self.safe_targets[step].copy_(safe)
       if safe_raw is not None:
         self.safe_raw_actions[step].copy_(safe_raw)
+      if fell is not None:
+        self.fall_events[step].copy_(fell)
     super().process_env_step(obs, rewards, dones, extras)
 
   def relabel_pre_intervention_costs(self) -> dict[str, float]:
@@ -353,6 +387,8 @@ class OnlineSafePPO(PPO):
       "cbf_correction_mean": float(self.cbf_magnitude.mean()),
       "pre_intervention_cost_mean": float(credit.mean()),
       "pre_intervention_cost_max": float(credit.max()),
+      "fall_event_count": float(self.fall_events.sum()),
+      "fall_event_fraction": float(self.fall_events.float().mean()),
     }
     self.last_update_metrics.update(metrics)
     return metrics
@@ -377,18 +413,10 @@ class OnlineSafePPO(PPO):
     )
     rollout_metrics = dict(self.last_update_metrics)
     losses = super().update()
-    safe_bc_loss = torch.zeros((), device=self.device)
-    intervention_mask = self.cbf_intervened.flatten()
-    if self.safe_bc_weight > 0.0 and torch.any(intervention_mask):
-      predicted_mean = self.actor(observations)
-      safe_actions = self.safe_raw_actions.flatten(0, 1)
-      safe_bc_loss = torch.mean(
-        (predicted_mean[intervention_mask] - safe_actions[intervention_mask].detach()) ** 2
-      )
-      self.optimizer.zero_grad()
-      (self.safe_bc_weight * safe_bc_loss).backward()
-      torch.nn.utils.clip_grad_norm_(self.actor.parameters(), self.max_grad_norm)
-      self.optimizer.step()
+    safe_bc = self.apply_safe_bc_auxiliary(
+      observations=observations,
+      learning_rate=self.actor_learning_rate * self.safe_bc_weight,
+    )
     self.clamp_online_std()
     with torch.inference_mode():
       self.actor(observations, stochastic_output=True)
@@ -404,8 +432,10 @@ class OnlineSafePPO(PPO):
       "action_saturation_fraction": float(action_saturation),
       "actor_learning_rate": float(self.actor_learning_rate),
       "action_std_mean": float(self.actor.output_std.mean()),
-      "safe_bc_loss": float(safe_bc_loss),
+      "safe_bc_loss": safe_bc["loss"],
       "safe_bc_weight": float(self.safe_bc_weight),
+      "safe_bc_effective_learning_rate": safe_bc["learning_rate"],
+      "safe_bc_gradient_norm": safe_bc["gradient_norm"],
       "explained_variance_before_update": float(explained_variance),
       "return_value_correlation_before_update": float(return_value_correlation),
     }
@@ -414,12 +444,58 @@ class OnlineSafePPO(PPO):
     self.last_update_metrics = {}
     return losses
 
+  def apply_safe_bc_auxiliary(
+    self,
+    *,
+    observations=None,
+    learning_rate: float,
+  ) -> dict[str, float]:
+    """Apply one explicitly scaled SGD step on true CBF interventions.
+
+    A separate Adam step makes a nominal loss coefficient nearly ineffective
+    on its first update because Adam normalizes the gradient magnitude.  This
+    auxiliary deliberately uses a stateless layer-wise SGD micro-step, so a
+    smaller coefficient produces a proportionally smaller policy change.  It
+    does not update the Gaussian variance or critic and is never used as a
+    policy-gradient objective.
+    """
+    result = {"loss": 0.0, "learning_rate": float(learning_rate), "gradient_norm": 0.0}
+    intervention_mask = self.cbf_intervened.flatten()
+    if learning_rate <= 0.0 or not torch.any(intervention_mask):
+      return result
+    if observations is None:
+      observations = self.storage.observations.flatten(0, 1)
+    predicted_mean = self.actor(observations)
+    safe_actions = self.safe_raw_actions.flatten(0, 1)
+    loss = torch.mean(
+      (predicted_mean[intervention_mask] - safe_actions[intervention_mask].detach())
+      ** 2
+    )
+    self.actor.zero_grad(set_to_none=True)
+    loss.backward()
+    gradient_norm = torch.nn.utils.clip_grad_norm_(
+      self.actor.parameters(), self.max_grad_norm
+    )
+    layers = [module for module in self.actor.mlp if isinstance(module, torch.nn.Linear)]
+    with torch.no_grad():
+      for layer, multiplier in zip(layers, self.actor_layer_multipliers, strict=True):
+        for parameter in layer.parameters():
+          if parameter.grad is not None:
+            parameter.add_(
+              parameter.grad,
+              alpha=-learning_rate * multiplier,
+            )
+    self.actor.zero_grad(set_to_none=True)
+    result.update(loss=float(loss), gradient_norm=float(gradient_norm))
+    return result
+
   def clear_cbf_rollout(self) -> None:
     self.cbf_intervened.zero_()
     self.cbf_magnitude.zero_()
     self.nominal_targets.zero_()
     self.safe_targets.zero_()
     self.safe_raw_actions.zero_()
+    self.fall_events.zero_()
     self.pre_intervention_cost.zero_()
 
 

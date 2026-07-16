@@ -189,6 +189,25 @@ def reached_stair_top(
   return crossed_all & on_top
 
 
+def fall_termination(
+  env: ManagerBasedRlEnv,
+  termination_name: str = "fell_over",
+) -> torch.Tensor:
+  """Return only the fall termination indicator.
+
+  Online stairs also terminate successfully at the top.  The generic
+  ``is_terminated`` reward therefore cannot distinguish a fall from a success
+  and was previously disabled, accidentally removing the explicit failure
+  penalty from the online PPO signal.  Keeping this term action-independent
+  and tied to the named termination preserves the successful-top bonus while
+  restoring the same fall-event scale used by the base locomotion task.
+  """
+  fell = env.termination_manager.get_term(termination_name).float()
+  env.extras["log"]["Online/fall_termination_fraction"] = fell.mean()
+  env.extras["online_fell"] = fell.detach().bool().clone()
+  return fell
+
+
 def online_privileged_state(
   env: ManagerBasedRlEnv,
   action_name: str = "joint_pos",

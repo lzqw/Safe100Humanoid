@@ -1,0 +1,15 @@
+{
+  "action_shape": [
+    1,
+    12
+  ],
+  "actor_obs_dim": 405,
+  "checkpoint": "<SERVER_RUN_ROOT>/artifacts/online_refine_dq_fall_reward_v1/accepted/accepted_round_001_public.pt",
+  "critic_obs_dim": 799,
+  "finite": true,
+  "task": "Unitree-G1-Stairs-Online-DQ",
+  "value_shape": [
+    1,
+    1
+  ]
+}

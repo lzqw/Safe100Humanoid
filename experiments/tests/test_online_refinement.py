@@ -12,10 +12,12 @@ from src.tasks.stairs_cbf.config import (
 )
 from src.tasks.stairs_cbf.online import (
   CandidateGateThresholds,
+  backtrack_actor_state,
   backward_intervention_credit,
   candidate_gate,
   candidate_precheck,
 )
+from src.tasks.stairs_cbf import mdp
 from src.tasks.stairs_cbf.terrain import ForwardStairsTerrainCfg
 
 
@@ -164,3 +166,41 @@ def test_online_domain_and_ppo_config_are_conservative() -> None:
   quick = g1_online_stairs_env_cfg("DQ")
   quick_stairs = quick.scene.terrain.terrain_generator.sub_terrains["forward_stairs"]
   assert quick_stairs.num_steps == 9
+  assert d4.rewards["is_terminated"].weight == 0.0
+  assert d4.rewards["fall_termination"].weight == -200.0
+
+
+def test_fall_reward_does_not_penalize_successful_top_termination() -> None:
+  class _TerminationManager:
+    def __init__(self, fell: torch.Tensor):
+      self.fell = fell
+
+    def get_term(self, name: str) -> torch.Tensor:
+      assert name == "fell_over"
+      return self.fell
+
+  class _Env:
+    def __init__(self):
+      # env 0 fell; env 1 represents a reached-top-only termination.
+      self.termination_manager = _TerminationManager(torch.tensor([True, False]))
+      self.extras = {"log": {}}
+
+  result = mdp.fall_termination(_Env())
+  assert torch.equal(result, torch.tensor([1.0, 0.0]))
+
+
+def test_actor_backtracking_only_interpolates_trainable_mlp() -> None:
+  base = {
+    "mlp.0.weight": torch.tensor([0.0, 2.0]),
+    "obs_normalizer._mean": torch.tensor([10.0]),
+    "distribution.std_param": torch.tensor([0.6]),
+  }
+  candidate = {
+    "mlp.0.weight": torch.tensor([4.0, 6.0]),
+    "obs_normalizer._mean": torch.tensor([11.0]),
+    "distribution.std_param": torch.tensor([0.2]),
+  }
+  midpoint = backtrack_actor_state(base, candidate, 0.5)
+  assert torch.equal(midpoint["mlp.0.weight"], torch.tensor([2.0, 4.0]))
+  assert torch.equal(midpoint["obs_normalizer._mean"], candidate["obs_normalizer._mean"])
+  assert torch.equal(midpoint["distribution.std_param"], candidate["distribution.std_param"])

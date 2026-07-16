@@ -61,6 +61,14 @@ and add a fixed riser-crossing event reward and top-completion event bonus.
 Success is derived from the actual number of risers and final platform
 metadata. There is no six-step 2.65 m constant in the online evaluator.
 
+Because both a fall and reaching the top are non-timeout terminations, the
+generic termination reward cannot distinguish them. Online tasks therefore
+use a dedicated `fall_termination` term with the base task's `-200` weight
+(a fixed `-4` event after MJLab `dt=0.02` scaling). Successful completion is
+never charged this penalty. Removing this distinction in the first prototype
+silently removed the principal rare-failure signal; the accepted run includes
+the corrected fall-only term.
+
 ## Shielded on-policy data
 
 At each step the behavior actor samples `a_policy`. RSL-RL stores this original
@@ -90,8 +98,7 @@ r_online = r_task + r_dual - lambda_pre * pre_intervention_cost
 
 The only policy-gradient objective remains the single clipped PPO surrogate.
 
-After dual reward plus temporal credit failed the large-batch safety gate, an
-optional low-weight safe-action auxiliary was enabled for a second experiment:
+An optional safe-action auxiliary can be enabled on true interventions:
 
 ```text
 L_safeBC = E[I_t ||mu_theta(o_t) - stopgrad(a_safe_raw)||^2]
@@ -99,8 +106,12 @@ L_safeBC = E[I_t ||mu_theta(o_t) - stopgrad(a_safe_raw)||^2]
 
 It uses only actual projection states, never geometric activation alone. This
 is a supervised auxiliary, not an additional policy-gradient objective. It is
-disabled by default because the local CBF correction need not be long-horizon
-optimal and the actor does not receive every privileged geometric feature.
+applied as one stateless layer-wise SGD micro-step whose effective learning
+rate is logged. This avoids a separate Adam step making small loss weights
+produce nearly full-size first updates. It remains disabled by default because
+the local correction need not be long-horizon optimal and the actor does not
+receive every privileged geometric feature. The accepted round did not use
+this auxiliary.
 
 ## Full privileged critic
 
@@ -133,7 +144,7 @@ online refinement; the full critic normalizer may update.
 | target KL | 0.003 |
 | entropy coefficient | 0 |
 | max grad norm | 0.5 |
-| rollout | 256 steps/env |
+| rollout | 256 steps/env default; 768 in accepted round |
 
 Actor linear layers use LR multipliers `(0.10, 0.25, 0.50, 1.0)`. The base
 standard deviation is scaled by 0.35 and clipped to `[0.05, 0.35]`; its
@@ -150,6 +161,13 @@ Each accepted actor is snapshotted before a round. After one candidate update:
    D0 retention, and bounded deterministic-mean KL from the base actor;
 4. accept the candidate or atomically restore actor, critic, and optimizer;
 5. after rejection halve actor LR and scale exploration std by 0.8.
+
+The accepted experiment additionally uses a conservative backtracking line
+search along the same PPO update direction. Only trainable actor MLP tensors
+are interpolated; frozen normalization, bounded variance, critic, and PPO
+objective are unchanged. Fractions 0.25, 0.50, 0.75, and 1.0 were screened;
+the 0.50 point was the only one taken to the final large-batch gate. This is a
+proximal step-size selection, not residual control or a second RL objective.
 
 GPU MuJoCo-Warp contact solving is not bitwise deterministic. The GPU gate
 therefore aggregates multiple fixed-seed batches and records replicate

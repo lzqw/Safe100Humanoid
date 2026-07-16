@@ -1,0 +1,44 @@
+{
+  "actor_obs_dim": 405,
+  "credit": {
+    "cbf_correction_mean": 0.012287257239222527,
+    "cbf_intervention_fraction": 0.05859375,
+    "fall_event_count": 11.0,
+    "fall_event_fraction": 0.0017903646221384406,
+    "pre_intervention_cost_max": 4.46312952041626,
+    "pre_intervention_cost_mean": 0.23871342837810516
+  },
+  "critic_obs_dim": 799,
+  "finite": true,
+  "loss": {
+    "action_saturation_fraction": 0.3108045756816864,
+    "action_std_mean": 0.20713762938976288,
+    "actor_learning_rate": 1e-05,
+    "cbf_correction_mean": 0.012287257239222527,
+    "cbf_intervention_fraction": 0.05859375,
+    "clip_fraction": 0.0768229216337204,
+    "entropy": -2.000462055206299,
+    "explained_variance_before_update": 0.46212637424468994,
+    "fall_event_count": 11.0,
+    "fall_event_fraction": 0.0017903646221384406,
+    "mean_kl": 0.00037171211442910135,
+    "pre_intervention_cost_max": 4.46312952041626,
+    "pre_intervention_cost_mean": 0.23871342837810516,
+    "return_value_correlation_before_update": 0.7004253268241882,
+    "safe_bc_effective_learning_rate": 5.000000000000001e-07,
+    "safe_bc_gradient_norm": 0.8187344074249268,
+    "safe_bc_loss": 0.07727870345115662,
+    "safe_bc_weight": 0.05,
+    "surrogate": -2.7318796114172983e-08,
+    "value": 3.3416433334350586
+  },
+  "num_envs": 8,
+  "steps": 768,
+  "task": "Unitree-G1-Stairs-Online-DQ",
+  "warm_start": {
+    "expanded_critic_width": 799,
+    "legacy_critic_offset": 405,
+    "legacy_critic_width": 283,
+    "source_iteration": 1500
+  }
+}

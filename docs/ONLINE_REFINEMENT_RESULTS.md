@@ -2,9 +2,10 @@
 
 ## Status
 
-This report covers one RTX 4080 SUPER, seed 42, simulation only. It validates
-the online-refinement framework and difficulty calibration; it is not a
-real-robot result or a multi-seed claim.
+This report covers one RTX 4080 SUPER, training seed 42, simulation only. One
+fall-aware, backtracked PPO candidate passed the transactional D0/DQ/DQN gate.
+It is not a real-robot result, a multi-training-seed claim, or evidence that the
+policy can remove its runtime CBF.
 
 ## OOD decomposition
 
@@ -78,28 +79,65 @@ intervention/riser from 0.936 to 1.035, so the gate again rolled back.
 
 A final 32-environment run with safe-action BC weight 0.02 also failed the
 gate: DQ success changed from 56.25% to 40.63%, while intervention/riser rose
-from 0.892 to 1.041. Across all completed variants, no candidate passed the
-robust D0/DQ/DQN safety gate. The correct result is therefore a validated
-transactional refinement framework with negative candidate updates, not a
-claim of online policy improvement.
+from 0.892 to 1.041. These experiments all preceded the fall-only reward fix
+below and remain rejected evidence.
+
+## Accepted fall-aware round
+
+The online environment originally disabled the generic termination penalty so
+that successful top completion was not punished. That also removed the
+explicit fall penalty. The corrected task adds a fall-only reward with weight
+`-200`, leaving successful termination untouched. An 8-env, 768-step GPU
+smoke observed nine real falls and verified that the signal entered storage.
+
+The accepted candidate used 32 environments, 768 steps/environment (24,576
+transitions), eight critic-only calibration rounds, and one two-epoch PPO
+update. The update rollout contained 42 falls and 4.55% true CBF intervention.
+Critic explained variance was 0.619 and return/value correlation was 0.809.
+PPO mean KL was 0.000659 and clip fraction 0.155, below the configured 0.003
+and 0.30 precheck limits. A policy line search selected fraction 0.50 of this
+single PPO direction.
+
+The machine-readable gate returned `accepted: true` with no rejection reasons:
+
+| Domain | Episodes | Base success | Accepted success | Base fall | Accepted fall | Base intervention/riser | Accepted intervention/riser |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| D0 | 128 | 97.66% | 96.88% | 2.34% | 3.13% | 0.262 | 0.224 |
+| DQ | 512 | 48.05% | 48.05% | 51.95% | 51.95% | 1.034 | 1.009 |
+| DQN | 128 | 40.63% | 39.06% | 59.38% | 60.94% | 1.147 | 1.113 |
+
+DQ task success and fall rate were retained while intervention/riser fell
+2.42% and mean correction fell 9.46% (`0.002798` to `0.002533`). D0 and DQN
+success changes remained inside their predeclared two-percentage-point bounds.
+This is a modest safety-internalization improvement, not evidence that rare
+falls were eliminated.
+
+An optional corrected safe-action SGD auxiliary was tested after PPO. Its
+0.10 line-search point looked favorable in 64 episodes but regressed DQ in a
+larger audit; the final accepted actor therefore uses PPO backtracking only.
+
+With the runtime filter disabled, a separate 256-episode audit measured 48.44%
+base success and 46.48% accepted success. The 1.95-point difference is smaller
+than one binomial standard error but provides no evidence of filter-free
+improvement. Runtime CBF remains mandatory in this prototype.
 
 ## Final GPU validation and videos
 
 The final clean regression used the RTX 4080 SUPER and produced:
 
-- 12/12 pure tensor and gate tests passing;
-- strict reload of actor, 799-D critic, and optimizer from the retained
+- 14/14 pure tensor and gate tests passing;
+- strict reload of actor, 799-D critic, and optimizer from the accepted
   checkpoint, with finite 12-D action and value outputs;
 - an unchanged upstream six-riser task smoke of 100 GPU steps;
 - an adversarial CBF check that repaired nominal margin `-29.1649` to filtered
   margin `+1.09e-6`;
-- two deterministic DQ videos from the same retained actor and runtime CBF.
+- two deterministic DQ videos from the accepted actor and runtime CBF.
 
-The videos deliberately include both outcomes. Seed 43 reaches 9/9 risers in
-506 steps without falling and has CBF intervention integral 0.590. Seed 42
-falls after reaching riser 5 at step 409 and has intervention integral 70.272.
-This paired evidence illustrates the residual rare-failure target without
-hiding unsuccessful episodes.
+The accepted-policy videos deliberately include both outcomes. Seed 43 reaches
+9/9 risers in 557 steps without falling. Seed 42 reaches riser 7 and then
+falls at step 438. The previous base videos remain available for comparison;
+single videos are qualitative evidence and are not substituted for the
+512-episode DQ audit.
 
 ## Curated repository evidence
 
@@ -107,11 +145,12 @@ hiding unsuccessful episodes.
 results/online/evaluation/
 results/online/runs/
 results/online/smoke/
-results/online/checkpoints/accepted_after_candidate_rejection.pt
-results/online/videos/g1-stairs-online_dq-filter-on-seed42-step-0.mp4
-results/online/videos/g1-stairs-online_dq-filter-on-seed43-step-0.mp4
+results/online/checkpoints/accepted_round_001.pt
+results/online/evaluation/accepted_round1/final_candidate_gate.json
+results/online/videos/accepted_round1/
 ```
 
-The retained checkpoint is the rolled-back base actor plus calibrated full
-critic. It is not an accepted improved actor. Its SHA-256 and video hashes are
-recorded in `results/online/SHA256SUMS`.
+The older rollback checkpoint is retained as negative transactional evidence.
+The accepted checkpoint contains the backtracked actor, calibrated full critic,
+and optimizer plus a portable acceptance manifest. Hashes are recorded in
+`results/online/SHA256SUMS`.

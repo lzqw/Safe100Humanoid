@@ -52,6 +52,15 @@ method-level reproduction assumptions rather than claimed author parameters.
   `1e-4`, two PPO epochs, ten-step CBF backward credit with decay 0.8, and
   explicitly reported credit weights. They are conservative engineering
   starting points informed by the supplied design, not claimed RL-100 values.
+- Online success and fall are both non-timeout terminations. The generic
+  locomotion termination penalty is therefore disabled and replaced by a
+  fall-only term with weight `-200`, matching the base task's event scale after
+  MJLab's `dt` reward scaling. Successful top completion receives no terminal
+  penalty.
+- The optional safe-action BC auxiliary is applied only on true CBF projection
+  states using one stateless layer-wise SGD micro-step. Its effective learning
+  rate is logged explicitly. This replaces a separate Adam step whose loss
+  coefficient did not reliably bound the first parameter update.
 - DQ/DQN are nine-riser GPU development targets introduced only after D3/D4
   measured zero base success. They validate rare-failure refinement mechanics;
   D4/D5 remain the formal 18-riser target and neighbor.
