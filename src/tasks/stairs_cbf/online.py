@@ -1443,8 +1443,14 @@ class OnlineSafeRefinementRunner(VelocityOnPolicyRunner):
       self.alg.optimizer.load_state_dict(state["optimizer"])
 
   def reduce_after_rejection(self) -> None:
+    """Back off the actor step size while preserving the anchored distribution.
+
+    Scaling exploration here would move the policy away from the frozen base
+    distribution even though the transactional actor state was restored.  It
+    also contributes a large constant to the KL anchor that cannot be repaired
+    when log-std is frozen.  Rejections therefore reduce only the actor LR.
+    """
     self.alg.scale_actor_learning_rate(0.5)
-    self.alg.scale_exploration_std(0.8)
 
   def parameters_are_finite(self) -> bool:
     return all(

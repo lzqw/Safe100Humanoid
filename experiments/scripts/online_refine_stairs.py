@@ -375,8 +375,11 @@ def main() -> None:
   parser.add_argument(
     "--adaptive-std",
     action=argparse.BooleanOptionalAction,
-    default=True,
-    help="Adapt accepted-policy exploration from actual CBF interventions/riser.",
+    default=False,
+    help=(
+      "Legacy exploration adaptation. This is disabled by default and cannot "
+      "be combined with a non-zero frozen base-policy KL anchor."
+    ),
   )
   parser.add_argument("--target-intervention-per-riser", type=float, default=0.10)
   parser.add_argument("--std-adaptation-rate", type=float, default=0.10)
@@ -439,6 +442,15 @@ def main() -> None:
     default=["D0", "D1", "D2", "D3", "D4", "D5", "DQ", "DQN"],
   )
   args = parser.parse_args()
+  if args.adaptive_std and args.base_anchor_weight > 0.0:
+    raise ValueError(
+      "--adaptive-std changes the action distribution independently of the "
+      "frozen base policy; use --no-adaptive-std with a non-zero KL anchor"
+    )
+  if args.resume_std_scale != 1.0 and args.base_anchor_weight > 0.0:
+    raise ValueError(
+      "--resume-std-scale must remain 1.0 with a non-zero base-policy KL anchor"
+    )
   repo = args.repo.resolve()
   sys.path.insert(0, str(repo))
 

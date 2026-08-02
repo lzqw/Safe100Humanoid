@@ -14,6 +14,7 @@ from src.tasks.stairs_cbf.online import (
   CandidateGateThresholds,
   CbfIndependenceThresholds,
   OnlineSafePPO,
+  OnlineSafeRefinementRunner,
   SafeImprovementScoreWeights,
   backtrack_actor_state,
   backward_intervention_credit,
@@ -556,6 +557,25 @@ def test_adaptive_std_reduces_shield_demand_and_falls() -> None:
   assert 0.80 <= high_demand < 1.0
   assert 1.0 < low_demand <= 1.05
   assert after_fall == 0.80
+
+
+def test_rejection_preserves_anchored_exploration_distribution() -> None:
+  class AlgorithmStub:
+    def __init__(self) -> None:
+      self.actor_lr_scales: list[float] = []
+      self.std_scales: list[float] = []
+
+    def scale_actor_learning_rate(self, factor: float) -> None:
+      self.actor_lr_scales.append(factor)
+
+    def scale_exploration_std(self, factor: float) -> None:
+      self.std_scales.append(factor)
+
+  runner = object.__new__(OnlineSafeRefinementRunner)
+  runner.alg = AlgorithmStub()
+  runner.reduce_after_rejection()
+  assert runner.alg.actor_lr_scales == [0.5]
+  assert runner.alg.std_scales == []
 
 
 def test_hard_case_bank_prioritizes_and_roundtrips() -> None:

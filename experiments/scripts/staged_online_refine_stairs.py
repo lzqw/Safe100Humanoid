@@ -95,6 +95,7 @@ def _run_stage(
     "1e-4",
     "--base-anchor-weight",
     "0.01",
+    "--no-adaptive-std",
     "--intervention-advantage-weight",
     "0.075",
     "--pre-intervention-weight",
