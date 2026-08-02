@@ -105,8 +105,13 @@ class StairCbfJointPositionAction(JointPositionAction):
     self.filter_active = torch.zeros(shape, dtype=torch.bool, device=self.device)
     self.geometric_active = torch.zeros(shape, dtype=torch.bool, device=self.device)
     self.intervened = torch.zeros(shape, dtype=torch.bool, device=self.device)
+    self.would_intervene = torch.zeros(shape, dtype=torch.bool, device=self.device)
     self.intervention_norm = torch.zeros(shape, device=self.device)
     self.target_intervention_norm = torch.zeros(shape, device=self.device)
+    self.counterfactual_intervention_norm = torch.zeros(shape, device=self.device)
+    self.counterfactual_target_intervention_norm = torch.zeros(
+      shape, device=self.device
+    )
     self.intervention_count = torch.zeros(shape, device=self.device)
     self.selected_edge_top_z = torch.zeros(shape, device=self.device)
     self.selected_foot = torch.full(shape, -1, dtype=torch.long, device=self.device)
@@ -116,6 +121,7 @@ class StairCbfJointPositionAction(JointPositionAction):
     self.safe_target = torch.zeros_like(self.nominal_target)
     self.nominal_raw_action = torch.zeros_like(self.nominal_target)
     self.safe_raw_action = torch.zeros_like(self.nominal_target)
+    self.executed_raw_action = torch.zeros_like(self.nominal_target)
 
   def _foot_jacobians(self, foot_pos: torch.Tensor) -> torch.Tensor:
     jacobians = []
@@ -181,42 +187,55 @@ class StairCbfJointPositionAction(JointPositionAction):
     )
     normal = -selected_jac
     rhs = -self.cfg.alpha * h
-    filtered_qdot, psi_nominal, psi_filtered = project_halfspace(
+    projected_qdot, psi_nominal, psi_projected = project_halfspace(
       qdot_nominal, normal, rhs, active=active
     )
-    if not self.cfg.enabled:
-      filtered_qdot = qdot_nominal
-      psi_filtered = psi_nominal
+    projected_target = q + self._env.step_dt * projected_qdot
+    projected_raw_action = (projected_target - self.offset) / self.scale
+    counterfactual_qdot_norm = torch.linalg.vector_norm(
+      projected_qdot - qdot_nominal, dim=1
+    )
+    counterfactual_target_norm = torch.linalg.vector_norm(
+      projected_target - nominal_target, dim=1
+    )
+    would_intervene = active & (
+      (psi_nominal < -self.cfg.intervention_epsilon)
+      | (counterfactual_target_norm > self.cfg.intervention_epsilon)
+    )
+    executed_qdot = projected_qdot if self.cfg.enabled else qdot_nominal
+    psi_executed = psi_projected if self.cfg.enabled else psi_nominal
 
     # Match the upstream JointPositionAction behavior: do not add an extra
     # target clamp here. Clipping after projection could invalidate the CBF
     # half-space, while joint-limit handling already remains in the common
     # reward/actuator stack for both experiment arms.
-    self._processed_actions[:] = q + self._env.step_dt * filtered_qdot
-    self.safe_target[:] = self._processed_actions
-    self.safe_raw_action[:] = (
-      (self._processed_actions - self.offset) / self.scale
+    self._processed_actions[:] = q + self._env.step_dt * executed_qdot
+    # ``safe_*`` is the counterfactual CBF projection even when execution is
+    # unshielded.  This lets training observe what the filter would have done
+    # without claiming that the action was actually changed.
+    self.safe_target[:] = projected_target
+    self.safe_raw_action[:] = projected_raw_action
+    self.executed_raw_action[:] = (
+      projected_raw_action if self.cfg.enabled else actions
     )
     self.h[:] = torch.where(active, h, torch.full_like(h, torch.inf))
     self.selected_edge_top_z[:] = selected_top_z
     self.psi_nominal[:] = torch.where(active, psi_nominal, torch.zeros_like(psi_nominal))
-    self.psi_filtered[:] = torch.where(active, psi_filtered, torch.zeros_like(psi_filtered))
+    self.psi_filtered[:] = torch.where(
+      active, psi_executed, torch.zeros_like(psi_executed)
+    )
     self.geometric_active[:] = active
     self.filter_active[:] = active & self.cfg.enabled
     self.intervention_norm[:] = torch.linalg.vector_norm(
-      filtered_qdot - qdot_nominal, dim=1
+      executed_qdot - qdot_nominal, dim=1
     )
     self.target_intervention_norm[:] = torch.linalg.vector_norm(
       self._processed_actions - nominal_target, dim=1
     )
-    self.intervened[:] = (
-      active
-      & self.cfg.enabled
-      & (
-        (self.psi_nominal < -self.cfg.intervention_epsilon)
-        | (self.target_intervention_norm > self.cfg.intervention_epsilon)
-      )
-    )
+    self.counterfactual_intervention_norm[:] = counterfactual_qdot_norm
+    self.counterfactual_target_intervention_norm[:] = counterfactual_target_norm
+    self.would_intervene[:] = would_intervene
+    self.intervened[:] = self.cfg.enabled & would_intervene
     self.intervention_count += self.intervened.float()
 
   def reset(self, env_ids: torch.Tensor | slice | None = None) -> None:
@@ -227,8 +246,11 @@ class StairCbfJointPositionAction(JointPositionAction):
     self.filter_active[env_ids] = False
     self.geometric_active[env_ids] = False
     self.intervened[env_ids] = False
+    self.would_intervene[env_ids] = False
     self.intervention_norm[env_ids] = 0.0
     self.target_intervention_norm[env_ids] = 0.0
+    self.counterfactual_intervention_norm[env_ids] = 0.0
+    self.counterfactual_target_intervention_norm[env_ids] = 0.0
     self.intervention_count[env_ids] = 0.0
     self.selected_edge_top_z[env_ids] = 0.0
     self.selected_foot[env_ids] = -1
@@ -236,3 +258,4 @@ class StairCbfJointPositionAction(JointPositionAction):
     self.safe_target[env_ids] = 0.0
     self.nominal_raw_action[env_ids] = 0.0
     self.safe_raw_action[env_ids] = 0.0
+    self.executed_raw_action[env_ids] = 0.0

@@ -82,6 +82,8 @@ def main() -> None:
   obs, _ = env.reset()
   robot = base_env.scene["robot"]
   action_term = base_env.action_manager.get_term("joint_pos")
+  command_term = base_env.command_manager.get_term("twist")
+  stair_half_width = float(getattr(command_term.cfg, "stair_half_width", 1.20))
   max_progress = 0.0
   min_root_height = float("inf")
   violation_integral = 0.0
@@ -93,6 +95,12 @@ def main() -> None:
   steps = 0
   max_riser = 0
   reached_top = False
+  centerline_error_integral = 0.0
+  max_abs_centerline_error = 0.0
+  max_abs_heading_error = 0.0
+  min_root_edge_clearance = float("inf")
+  min_foot_edge_clearance = float("inf")
+  operator_correction_steps = 0
 
   try:
     with torch.inference_mode():
@@ -113,6 +121,30 @@ def main() -> None:
         violation_integral += violation
         violation_events += int(active and float(action_term.psi_nominal[0]) < -1.0e-5)
         intervention_integral += float(action_term.intervention_norm[0])
+        centerline_error = abs(float(command_term.centerline_error[0]))
+        heading_error = abs(float(command_term.heading_error[0]))
+        centerline_error_integral += centerline_error
+        max_abs_centerline_error = max(
+          max_abs_centerline_error, centerline_error
+        )
+        max_abs_heading_error = max(max_abs_heading_error, heading_error)
+        min_root_edge_clearance = min(
+          min_root_edge_clearance, stair_half_width - centerline_error
+        )
+        patches = base_env.scene.terrain.flat_patches["stair_targets"]
+        patches = patches[
+          base_env.scene.terrain.terrain_levels,
+          base_env.scene.terrain.terrain_types,
+        ]
+        center_y = patches[0, 0, 1]
+        foot_y = robot.data.site_pos_w[0, action_term._site_local_ids, 1]
+        foot_clearance = stair_half_width - float(
+          torch.max(torch.abs(foot_y - center_y))
+        )
+        min_foot_edge_clearance = min(
+          min_foot_edge_clearance, foot_clearance
+        )
+        operator_correction_steps += int(command_term.correction_active[0])
         if hasattr(action_term, "_edge_x"):
           terrain = base_env.scene.terrain
           assert terrain is not None
@@ -154,6 +186,17 @@ def main() -> None:
     "cbf_violation_events": violation_events,
     "cbf_violation_integral": violation_integral,
     "cbf_intervention_integral": intervention_integral,
+    "mean_abs_centerline_error_m": (
+      centerline_error_integral / max(1, steps)
+    ),
+    "max_abs_centerline_error_m": max_abs_centerline_error,
+    "max_abs_heading_error_rad": max_abs_heading_error,
+    "minimum_root_edge_clearance_m": min_root_edge_clearance,
+    "minimum_foot_edge_clearance_m": min_foot_edge_clearance,
+    "operator_correction_fraction": operator_correction_steps / max(1, steps),
+    "side_edge_breach": (
+      min_root_edge_clearance < 0.0 or min_foot_edge_clearance < 0.0
+    ),
   }
   args.output_json.parent.mkdir(parents=True, exist_ok=True)
   args.output_json.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")

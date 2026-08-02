@@ -12,6 +12,8 @@ from mjlab.entity import Entity
 from mjlab.managers.command_manager import CommandTerm, CommandTermCfg
 from mjlab.utils.lab_api.math import quat_apply_inverse
 
+from .teleop_math import centerline_feedback_command
+
 if TYPE_CHECKING:
   from mjlab.envs import ManagerBasedRlEnv
 
@@ -156,9 +158,24 @@ class JoystickVelocityCommand(CommandTerm):
     self._released = torch.zeros(
       self.num_envs, dtype=torch.bool, device=self.device
     )
+    self.centerline_error = torch.zeros(self.num_envs, device=self.device)
+    self.heading_error = torch.zeros(self.num_envs, device=self.device)
+    self.operator_correction = torch.zeros_like(self.raw_command)
+    self.correction_active = torch.zeros(
+      self.num_envs, dtype=torch.bool, device=self.device
+    )
     self.metrics["error_vel_xy"] = torch.zeros(self.num_envs, device=self.device)
     self.metrics["error_vel_yaw"] = torch.zeros(self.num_envs, device=self.device)
     self.metrics["delay_steps"] = torch.zeros(self.num_envs, device=self.device)
+    self.metrics["abs_centerline_error"] = torch.zeros(
+      self.num_envs, device=self.device
+    )
+    self.metrics["abs_heading_error"] = torch.zeros(
+      self.num_envs, device=self.device
+    )
+    self.metrics["operator_correction_fraction"] = torch.zeros(
+      self.num_envs, device=self.device
+    )
 
   @property
   def command(self) -> torch.Tensor:
@@ -198,6 +215,10 @@ class JoystickVelocityCommand(CommandTerm):
     self._pulse_value[env_ids] = 0.0
     self._release_countdown[env_ids] = -1
     self._released[env_ids] = False
+    self.centerline_error[env_ids] = 0.0
+    self.heading_error[env_ids] = 0.0
+    self.operator_correction[env_ids] = 0.0
+    self.correction_active[env_ids] = False
 
   def _update_metrics(self) -> None:
     max_steps = max(
@@ -211,6 +232,53 @@ class JoystickVelocityCommand(CommandTerm):
       self.delivered_command[:, 2] - self.robot.data.root_link_ang_vel_b[:, 2]
     ) / max_steps
     self.metrics["delay_steps"] += self.delay_steps.float() / max_steps
+    self.metrics["abs_centerline_error"] += (
+      torch.abs(self.centerline_error) / max_steps
+    )
+    self.metrics["abs_heading_error"] += torch.abs(self.heading_error) / max_steps
+    self.metrics["operator_correction_fraction"] += (
+      self.correction_active.float() / max_steps
+    )
+
+  def _centerline_feedback(self) -> torch.Tensor:
+    """Compute a visual-feedback-like joystick correction on the GPU.
+
+    The flat-patch centers define the stair centerline.  A look-ahead point is
+    transformed to the base frame, exactly as a human would turn toward a
+    visually selected point farther up the staircase.  Only the resulting
+    joystick command is exposed to the actor; centerline geometry remains in
+    the command generator and diagnostics.
+    """
+    env_ids = torch.arange(self.num_envs, device=self.device)
+    patches = self._env_patches(env_ids)
+    root_position = self.robot.data.root_link_pos_w
+    center_y = patches[:, 0, 1]
+    self.centerline_error[:] = root_position[:, 1] - center_y
+
+    lookahead_w = torch.zeros_like(root_position)
+    lookahead_w[:, 0] = self.cfg.centerline_lookahead_distance
+    lookahead_w[:, 1] = center_y - root_position[:, 1]
+    lookahead_b = quat_apply_inverse(
+      self.robot.data.root_link_quat_w, lookahead_w
+    )
+    self.heading_error[:] = torch.atan2(lookahead_b[:, 1], lookahead_b[:, 0])
+    correction = centerline_feedback_command(
+      self.raw_command[:, 0],
+      lookahead_b[:, 1],
+      self.heading_error,
+      lateral_gain=self.cfg.centerline_lateral_gain,
+      heading_gain=self.cfg.centerline_heading_gain,
+      lateral_deadband=self.cfg.centerline_lateral_deadband,
+      heading_deadband=self.cfg.centerline_heading_deadband,
+      max_lateral_velocity=self.cfg.centerline_max_lateral_velocity,
+      max_yaw_velocity=self.cfg.centerline_max_yaw_velocity,
+    )
+    self.operator_correction[:] = correction
+    self.operator_correction[:, 0] = 0.0
+    self.correction_active[:] = (
+      torch.abs(correction[:, 1]) > self.cfg.correction_epsilon
+    ) | (torch.abs(correction[:, 2]) > self.cfg.correction_epsilon)
+    return correction
 
   def _update_pulses(self) -> None:
     active = self._pulse_steps_left > 0
@@ -261,8 +329,17 @@ class JoystickVelocityCommand(CommandTerm):
     self._pulse_value[self._released] = 0.0
 
   def _update_command(self) -> None:
-    self._update_pulses()
-    self.raw_command[:, 1:] = self._pulse_value[:, 1:]
+    if self.cfg.closed_loop_centering:
+      correction = self._centerline_feedback()
+      self.raw_command[:, 1:] = correction[:, 1:]
+    else:
+      # Preserve the original open-loop teleoperation benchmark.  It injects
+      # random stick pulses but deliberately has no knowledge of drift.
+      self._update_pulses()
+      self.raw_command[:, 1:] = self._pulse_value[:, 1:]
+      self._centerline_feedback()
+      self.operator_correction[:, 1:] = self._pulse_value[:, 1:]
+      self.correction_active[:] = self._pulse_steps_left > 0
     self._update_release()
 
     previous = self.delivered_command.clone()
@@ -296,6 +373,16 @@ class JoystickVelocityCommandCfg(CommandTermCfg):
   low_pass_time_constant_s: float = 0.08
   release_delay_range_s: tuple[float, float] = (0.10, 0.40)
   release_position_tolerance: float = 0.15
+  closed_loop_centering: bool = False
+  stair_half_width: float = 1.20
+  centerline_lookahead_distance: float = 1.00
+  centerline_lateral_gain: float = 0.80
+  centerline_heading_gain: float = 1.40
+  centerline_lateral_deadband: float = 0.04
+  centerline_heading_deadband: float = 0.03
+  centerline_max_lateral_velocity: float = 0.16
+  centerline_max_yaw_velocity: float = 0.45
+  correction_epsilon: float = 1.0e-5
 
   def build(self, env: "ManagerBasedRlEnv") -> JoystickVelocityCommand:
     return JoystickVelocityCommand(self, env)

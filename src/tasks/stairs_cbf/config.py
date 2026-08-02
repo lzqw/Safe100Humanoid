@@ -254,26 +254,45 @@ def g1_online_stairs_env_cfg(
   play: bool = False,
 ) -> ManagerBasedRlEnvCfg:
   """Build one controlled member of the D0--D5 deployment-shift matrix."""
-  if domain not in {"D0", "D1", "D2", "D3", "D4", "D5", "DQ", "DQN"}:
+  human_domain = {
+    "D2H": "D2",
+    "D3H": "D3",
+    "D4H": "D4",
+    "D5H": "D5",
+    "DQH": "DQ",
+    "DQNH": "DQN",
+    "DQMH": "DQM",
+  }
+  closed_loop_centering = domain in human_domain
+  base_domain = human_domain.get(domain, domain)
+  if base_domain not in {
+    "D0", "D1", "D2", "D3", "D4", "D5", "DQ", "DQN", "DQM"
+  }:
     raise ValueError(f"unknown online stair domain {domain!r}")
-  long_stairs = domain in {"D1", "D3", "D4", "D5", "DQ", "DQN"}
-  joystick = domain in {"D2", "D3", "D4", "D5", "DQ", "DQN"}
-  num_steps = 9 if domain in {"DQ", "DQN"} else (18 if long_stairs else NUM_STEPS)
+  long_stairs = base_domain in {
+    "D1", "D3", "D4", "D5", "DQ", "DQN", "DQM"
+  }
+  joystick = base_domain in {"D2", "D3", "D4", "D5", "DQ", "DQN", "DQM"}
+  num_steps = (
+    9
+    if base_domain in {"DQ", "DQN", "DQM"}
+    else (18 if long_stairs else NUM_STEPS)
+  )
   step_width = STEP_WIDTH
   height_range = (0.13, 0.13)
   rise_profile = None
   tread_profile = None
-  if domain == "D4":
+  if base_domain == "D4":
     step_width = 0.33
     height_range = (0.145, 0.145)
     rise_profile = TARGET_RISE_PROFILE
     tread_profile = TARGET_TREAD_PROFILE
-  elif domain == "D5":
+  elif base_domain == "D5":
     step_width = 0.335
     height_range = (0.147, 0.147)
     rise_profile = NEIGHBOR_RISE_PROFILE
     tread_profile = NEIGHBOR_TREAD_PROFILE
-  elif domain == "DQN":
+  elif base_domain == "DQN":
     step_width = 0.355
     height_range = (0.132, 0.132)
 
@@ -285,6 +304,25 @@ def g1_online_stairs_env_cfg(
     step_height_profile=rise_profile,
     step_width_profile=tread_profile,
   )
+  if base_domain == "DQM":
+    # One rollout contains both calibrated quick domains.  All per-riser
+    # consumers read generated metadata, so no nominal width is leaked into
+    # the actor, reward, CBF, or success condition.
+    dq_stairs = terrain_generator.sub_terrains["forward_stairs"]
+    terrain_generator.sub_terrains = {
+      "dq_stairs": replace(dq_stairs, proportion=0.5),
+      "dqn_stairs": replace(
+        dq_stairs,
+        proportion=0.5,
+        step_height_range=(0.132, 0.132),
+        step_width=0.355,
+      ),
+    }
+    terrain_generator.num_cols = 2
+    terrain_generator.size = (
+      FIRST_RISER_X + num_steps * 0.355 + 1.5,
+      terrain_generator.size[1],
+    )
   cfg.scene.terrain = TerrainEntityCfg(
     terrain_type="generator",
     terrain_generator=terrain_generator,
@@ -292,7 +330,9 @@ def g1_online_stairs_env_cfg(
   )
   cfg.scene.extent = 5.0 if long_stairs else 3.0
   cfg.episode_length_s = (
-    35.0 if domain in {"DQ", "DQN"} else (50.0 if long_stairs else 20.0)
+    35.0
+    if base_domain in {"DQ", "DQN", "DQM"}
+    else (50.0 if long_stairs else 20.0)
   )
   if long_stairs:
     # Eighteen independently represented stair boxes create more initial
@@ -322,6 +362,7 @@ def g1_online_stairs_env_cfg(
           "action_name": "joint_pos",
           "command_name": "twist",
           "asset_name": "robot",
+          "delay_queue_length": 9,
         },
       )
     },
@@ -336,6 +377,8 @@ def g1_online_stairs_env_cfg(
       resampling_time_range=(60.0, 60.0),
       debug_vis=False,
       patch_name="stair_targets",
+      closed_loop_centering=closed_loop_centering,
+      stair_half_width=1.20,
     )
   else:
     cfg.commands["twist"] = StairTargetCommandCfg(
