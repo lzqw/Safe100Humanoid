@@ -145,7 +145,11 @@ def main() -> None:
       generator = torch.Generator(device="cpu")
       generator.manual_seed(args.seed + 100003)
       obs, start_metrics = reset_rollout_with_hard_cases(
-        env, bank, hard_case_fraction=0.5, generator=generator
+        env,
+        bank,
+        hard_case_fraction=0.25,
+        neighbor_command_fraction=0.25,
+        generator=generator,
       )
       _assert_observation_finite(obs)
       obs, reward, done, _ = env.step(policy(obs))
@@ -176,6 +180,7 @@ def main() -> None:
     float(result["restore_max_abs_error"]) > 1.0e-6
     or int(result["bank_size"]) < 1
     or int(result["hard_start_metrics"]["hard_case_start_count"]) < 1
+    or int(result["hard_start_metrics"]["neighbor_command_start_count"]) < 1
     or not result["post_restore_step_finite"]
   ):
     raise SystemExit(2)

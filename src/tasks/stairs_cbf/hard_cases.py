@@ -38,6 +38,10 @@ _ACTION_TERM_ATTRS = (
   "nominal_raw_action",
   "safe_raw_action",
   "executed_raw_action",
+  "barrier_derivative",
+  "predicted_h",
+  "h_history",
+  "correction_history",
 )
 _COMMAND_ATTRS = (
   "time_left",
@@ -420,15 +424,122 @@ def hard_case_destination_ids(
   generator: torch.Generator | None = None,
 ) -> torch.Tensor:
   """Select a reproducible subset of environments for hard-case starts."""
-  if not 0.0 <= fraction <= 1.0:
-    raise ValueError("hard-case fraction must be in [0, 1]")
-  count = min(num_envs, int(round(num_envs * fraction)))
-  if count == 0:
-    return torch.empty(0, dtype=torch.long, device=device)
-  # Generate on CPU so a persisted CPU generator is independent of CUDA graph
-  # capture and can be serialized/replayed exactly.
-  permutation = torch.randperm(num_envs, generator=generator)[:count]
-  return permutation.to(device=device)
+  hard_ids, _ = curriculum_destination_ids(
+    num_envs,
+    hard_case_fraction=fraction,
+    neighbor_command_fraction=0.0,
+    device=device,
+    generator=generator,
+  )
+  return hard_ids
+
+
+def curriculum_destination_ids(
+  num_envs: int,
+  *,
+  hard_case_fraction: float,
+  neighbor_command_fraction: float,
+  device: str | torch.device,
+  generator: torch.Generator | None = None,
+) -> tuple[torch.Tensor, torch.Tensor]:
+  """Select disjoint hard-case and neighboring-command start subsets.
+
+  The remaining environments keep their ordinary bottom reset.  Sampling is
+  performed on CPU so the persisted curriculum generator is independent of
+  CUDA graph capture and exactly reproducible across resumed online rounds.
+  """
+  fractions = torch.tensor(
+    [hard_case_fraction, neighbor_command_fraction], dtype=torch.float64
+  )
+  if not bool(torch.isfinite(fractions).all()):
+    raise ValueError("curriculum fractions must be finite")
+  if hard_case_fraction < 0.0 or neighbor_command_fraction < 0.0:
+    raise ValueError("curriculum fractions must be non-negative")
+  if hard_case_fraction + neighbor_command_fraction > 1.0 + 1.0e-12:
+    raise ValueError("hard-case and neighboring-command fractions exceed one")
+  if num_envs < 0:
+    raise ValueError("num_envs must be non-negative")
+
+  hard_count = min(num_envs, int(round(num_envs * hard_case_fraction)))
+  neighbor_count = min(
+    num_envs - hard_count,
+    int(round(num_envs * neighbor_command_fraction)),
+  )
+  permutation = torch.randperm(num_envs, generator=generator)
+  hard_ids = permutation[:hard_count].to(device=device)
+  neighbor_ids = permutation[
+    hard_count : hard_count + neighbor_count
+  ].to(device=device)
+  return hard_ids, neighbor_ids
+
+
+def perturb_joystick_command_state(
+  env,
+  env_ids: torch.Tensor,
+  *,
+  generator: torch.Generator | None = None,
+  command_name: str = "twist",
+  forward_scale_range: tuple[float, float] = (0.90, 1.10),
+  delay_step_offset_range: tuple[int, int] = (-2, 2),
+) -> dict[str, float]:
+  """Apply a bounded neighboring command condition after a bottom reset.
+
+  Geometry remains the fixed deployment target.  Only the operator trace is
+  moved locally by scaling the held forward stick and shifting its delivery
+  delay.  The actor still observes only the delivered command, and all future
+  actions are freshly sampled by the behavior policy, preserving on-policy
+  rollouts under the changed initial-state distribution.
+  """
+  if env_ids.ndim != 1:
+    raise ValueError("neighbor command env_ids must be one-dimensional")
+  low_scale, high_scale = forward_scale_range
+  low_delay, high_delay = delay_step_offset_range
+  if not 0.0 < low_scale <= high_scale:
+    raise ValueError("neighbor forward scale range must be positive and ordered")
+  if low_delay > high_delay:
+    raise ValueError("neighbor delay offset range must be ordered")
+  if len(env_ids) == 0:
+    return {
+      "neighbor_forward_scale_mean": 1.0,
+      "neighbor_delay_step_offset_mean": 0.0,
+    }
+
+  command = env.command_manager.get_term(command_name)
+  required = ("raw_command", "delivered_command", "command_derivative", "delay_steps")
+  missing = [
+    name
+    for name in required
+    if not isinstance(getattr(command, name, None), torch.Tensor)
+  ]
+  if missing:
+    raise TypeError(
+      f"neighbor command curriculum requires joystick state tensors: {missing}"
+    )
+  scales_cpu = low_scale + (high_scale - low_scale) * torch.rand(
+    len(env_ids), generator=generator
+  )
+  offsets_cpu = torch.randint(
+    low_delay,
+    high_delay + 1,
+    (len(env_ids),),
+    generator=generator,
+  )
+  scales = scales_cpu.to(command.raw_command.device)
+  offsets = offsets_cpu.to(command.delay_steps.device)
+  command.raw_command[env_ids, 0] *= scales
+  maximum_delay = int(getattr(command, "_max_delay_steps", 0))
+  command.delay_steps[env_ids] = (
+    command.delay_steps[env_ids] + offsets
+  ).clamp(0, maximum_delay)
+  command.delivered_command[env_ids] = 0.0
+  command.command_derivative[env_ids] = 0.0
+  delay_queue = getattr(command, "_delay_queue", None)
+  if isinstance(delay_queue, torch.Tensor):
+    delay_queue[env_ids] = 0.0
+  return {
+    "neighbor_forward_scale_mean": float(scales_cpu.mean()),
+    "neighbor_delay_step_offset_mean": float(offsets_cpu.float().mean()),
+  }
 
 
 def reset_rollout_with_hard_cases(
@@ -436,9 +547,12 @@ def reset_rollout_with_hard_cases(
   bank: HardCaseStateBank,
   *,
   hard_case_fraction: float,
+  neighbor_command_fraction: float = 0.0,
+  neighbor_forward_scale_range: tuple[float, float] = (0.90, 1.10),
+  neighbor_delay_step_offset_range: tuple[int, int] = (-2, 2),
   generator: torch.Generator | None = None,
 ):
-  """Reset all envs at the bottom, then replace a subset with bank states."""
+  """Create bottom/hard-case/neighbor-command on-policy rollout starts."""
   env = vec_env.unwrapped
   all_ids = torch.arange(env.num_envs, device=env.device, dtype=torch.long)
   env._reset_idx(all_ids)
@@ -448,9 +562,10 @@ def reset_rollout_with_hard_cases(
   # Initialize valid bottom-state histories for every environment first.
   env.observation_manager.compute(update_history=True)
 
-  requested_ids = hard_case_destination_ids(
+  requested_ids, neighbor_ids = curriculum_destination_ids(
     env.num_envs,
-    hard_case_fraction,
+    hard_case_fraction=hard_case_fraction,
+    neighbor_command_fraction=neighbor_command_fraction,
     device=env.device,
     generator=generator,
   )
@@ -464,12 +579,23 @@ def reset_rollout_with_hard_cases(
     for sensor in env.scene.sensors.values():
       sensor._invalidate_cache()
     env.sim.sense()
+  neighbor_metrics = perturb_joystick_command_state(
+    env,
+    neighbor_ids,
+    generator=generator,
+    forward_scale_range=neighbor_forward_scale_range,
+    delay_step_offset_range=neighbor_delay_step_offset_range,
+  )
   env.observation_manager._obs_buffer = None
   obs = env.observation_manager.compute(update_history=False)
   env.obs_buf = obs
   return vec_env.get_observations(), {
     "hard_case_bank_size": len(bank),
+    "hard_case_start_requested_count": len(requested_ids),
     "hard_case_start_count": hard_count,
     "hard_case_start_fraction": hard_count / max(1, env.num_envs),
-    "bottom_start_count": env.num_envs - hard_count,
+    "neighbor_command_start_count": len(neighbor_ids),
+    "neighbor_command_start_fraction": len(neighbor_ids) / max(1, env.num_envs),
+    "bottom_start_count": env.num_envs - hard_count - len(neighbor_ids),
+    **neighbor_metrics,
   }

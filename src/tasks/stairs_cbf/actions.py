@@ -41,6 +41,8 @@ class StairCbfJointPositionActionCfg(JointPositionActionCfg):
   riser_patch_name: str = "stair_risers"
   intervention_epsilon: float = 1.0e-5
   intervention_norm_scale: float = 0.05
+  safety_history_length: int = 5
+  safety_prediction_steps: int = 5
 
   def build(self, env: "ManagerBasedRlEnv") -> "StairCbfJointPositionAction":
     return StairCbfJointPositionAction(self, env)
@@ -122,6 +124,14 @@ class StairCbfJointPositionAction(JointPositionAction):
     self.nominal_raw_action = torch.zeros_like(self.nominal_target)
     self.safe_raw_action = torch.zeros_like(self.nominal_target)
     self.executed_raw_action = torch.zeros_like(self.nominal_target)
+    if cfg.safety_history_length < 1 or cfg.safety_prediction_steps < 1:
+      raise ValueError("CBF safety history and prediction horizon must be positive")
+    self.barrier_derivative = torch.zeros(shape, device=self.device)
+    self.predicted_h = torch.ones(shape, device=self.device)
+    self.h_history = torch.ones(
+      self.num_envs, cfg.safety_history_length, device=self.device
+    )
+    self.correction_history = torch.zeros_like(self.h_history)
 
   def _foot_jacobians(self, foot_pos: torch.Tensor) -> torch.Tensor:
     jacobians = []
@@ -140,6 +150,7 @@ class StairCbfJointPositionAction(JointPositionAction):
     return torch.stack(jacobians, dim=1)
 
   def process_actions(self, actions: torch.Tensor) -> None:
+    previous_h = self.h.clone()
     super().process_actions(actions)
     nominal_target = self._processed_actions.clone()
     self.nominal_target[:] = nominal_target
@@ -237,6 +248,27 @@ class StairCbfJointPositionAction(JointPositionAction):
     self.would_intervene[:] = would_intervene
     self.intervened[:] = self.cfg.enabled & would_intervene
     self.intervention_count += self.intervened.float()
+    current_h = torch.where(active, h, torch.ones_like(h)).clamp(-1.0, 1.0)
+    derivative_valid = active & torch.isfinite(previous_h)
+    self.barrier_derivative[:] = torch.where(
+      derivative_valid,
+      (current_h - previous_h.clamp(-1.0, 1.0)) / self._env.step_dt,
+      torch.zeros_like(current_h),
+    )
+    self.predicted_h[:] = torch.where(
+      active,
+      (
+        current_h
+        + self.cfg.safety_prediction_steps
+        * self._env.step_dt
+        * self.barrier_derivative
+      ).clamp(-1.0, 1.0),
+      torch.ones_like(current_h),
+    )
+    self.h_history[:, 1:] = self.h_history[:, :-1].clone()
+    self.h_history[:, 0] = current_h
+    self.correction_history[:, 1:] = self.correction_history[:, :-1].clone()
+    self.correction_history[:, 0] = self.target_intervention_norm
 
   def reset(self, env_ids: torch.Tensor | slice | None = None) -> None:
     super().reset(env_ids)
@@ -259,3 +291,7 @@ class StairCbfJointPositionAction(JointPositionAction):
     self.nominal_raw_action[env_ids] = 0.0
     self.safe_raw_action[env_ids] = 0.0
     self.executed_raw_action[env_ids] = 0.0
+    self.barrier_derivative[env_ids] = 0.0
+    self.predicted_h[env_ids] = 1.0
+    self.h_history[env_ids] = 1.0
+    self.correction_history[env_ids] = 0.0

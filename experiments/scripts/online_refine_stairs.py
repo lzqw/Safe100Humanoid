@@ -168,14 +168,19 @@ def _evaluate_state(
   return output
 
 
-def _total_actor_kl(runner, base_state: dict[str, torch.Tensor]) -> float:
+def _total_actor_kl(
+  runner,
+  base_state: dict[str, torch.Tensor],
+  actor_state: dict[str, torch.Tensor] | None = None,
+) -> float:
   obs = runner.alg.storage.observations.flatten(0, 1)
-  candidate_state = _actor_state(runner.alg.actor)
+  current_state = _actor_state(runner.alg.actor)
+  evaluated_state = current_state if actor_state is None else actor_state
   with torch.no_grad():
     runner.alg.actor.load_state_dict(base_state, strict=True)
     base_mean = runner.alg.actor(obs).detach().clone()
     base_std = runner.alg.actor.distribution.std_param.detach().clone()
-    runner.alg.actor.load_state_dict(candidate_state, strict=True)
+    runner.alg.actor.load_state_dict(evaluated_state, strict=True)
     candidate_mean = runner.alg.actor(obs).detach()
     # Cross-round drift constrains the deterministic deployment behavior.  A
     # separately bounded/reduced exploration std must not by itself exhaust
@@ -184,6 +189,7 @@ def _total_actor_kl(runner, base_state: dict[str, torch.Tensor]) -> float:
       ((candidate_mean - base_mean) / base_std.clamp_min(1.0e-6)) ** 2,
       dim=-1,
     ).mean()
+    runner.alg.actor.load_state_dict(current_state, strict=True)
   return float(kl)
 
 
@@ -194,6 +200,9 @@ def _collect_and_update(
   critic_only: bool,
   hard_case_bank,
   hard_case_fraction: float,
+  neighbor_command_fraction: float,
+  neighbor_forward_scale_range: tuple[float, float],
+  neighbor_delay_step_offset_range: tuple[int, int],
   hard_case_pre_steps: int,
   hard_case_generator: torch.Generator,
 ):
@@ -211,6 +220,9 @@ def _collect_and_update(
     runner.env,
     hard_case_bank,
     hard_case_fraction=hard_case_fraction,
+    neighbor_command_fraction=neighbor_command_fraction,
+    neighbor_forward_scale_range=neighbor_forward_scale_range,
+    neighbor_delay_step_offset_range=neighbor_delay_step_offset_range,
     generator=hard_case_generator,
   )
   state_history = deque(maxlen=hard_case_pre_steps + 1)
@@ -265,8 +277,10 @@ def _collect_and_update(
       runner.alg.process_env_step(obs, rewards, dones, extras)
     credit_metrics = runner.alg.relabel_pre_intervention_costs()
     runner.alg.compute_returns(obs)
+    advantage_metrics = runner.alg.shape_intervention_advantages()
   losses = runner.alg.update()
   losses.update(credit_metrics)
+  losses.update(advantage_metrics)
   losses.update(start_metrics)
   losses.update(
     {
@@ -308,20 +322,54 @@ def main() -> None:
     type=Path,
     help="Accepted 799-D checkpoint to refine; base checkpoint remains the KL/retention reference.",
   )
+  parser.add_argument(
+    "--resume-hard-case-bank",
+    action=argparse.BooleanOptionalAction,
+    default=True,
+    help="Restore hard cases only when resuming within the same target domain.",
+  )
   parser.add_argument("--output-dir", type=Path, required=True)
   parser.add_argument("--num-envs", type=int, default=8)
   parser.add_argument("--rollout-steps", type=int, default=256)
   parser.add_argument("--critic-burn-in-rounds", type=int, default=2)
+  parser.add_argument("--critic-burn-in-max-rounds", type=int, default=4)
+  parser.add_argument(
+    "--critic-min-explained-variance", type=float, default=0.50
+  )
   parser.add_argument("--online-rounds", type=int, default=2)
   parser.add_argument("--eval-num-envs", type=int, default=8)
   parser.add_argument("--eval-num-episodes", type=int, default=8)
   parser.add_argument("--seed", type=int, default=42)
-  parser.add_argument("--actor-learning-rate", type=float, default=1.0e-5)
+  parser.add_argument("--actor-learning-rate", type=float, default=5.0e-6)
   parser.add_argument("--critic-learning-rate", type=float, default=1.0e-4)
   parser.add_argument("--pre-intervention-weight", type=float, default=0.20)
   parser.add_argument("--std-scale-from-base", type=float, default=0.35)
   parser.add_argument("--safe-bc-weight", type=float, default=0.0)
-  parser.add_argument("--hard-case-fraction", type=float, default=0.25)
+  parser.add_argument("--hard-case-fraction", type=float, default=0.20)
+  parser.add_argument("--base-anchor-weight", type=float, default=0.01)
+  parser.add_argument(
+    "--intervention-advantage-weight", type=float, default=0.075
+  )
+  parser.add_argument(
+    "--neighbor-command-fraction",
+    type=float,
+    default=0.15,
+    help="Fraction of bottom starts with bounded neighboring joystick speed/delay.",
+  )
+  parser.add_argument(
+    "--neighbor-forward-scale-range",
+    nargs=2,
+    type=float,
+    default=(0.90, 1.10),
+    metavar=("LOW", "HIGH"),
+  )
+  parser.add_argument(
+    "--neighbor-delay-step-offset-range",
+    nargs=2,
+    type=int,
+    default=(-2, 2),
+    metavar=("LOW", "HIGH"),
+  )
   parser.add_argument("--hard-case-pre-steps", type=int, default=10)
   parser.add_argument("--hard-case-capacity", type=int, default=256)
   parser.add_argument(
@@ -332,6 +380,18 @@ def main() -> None:
   )
   parser.add_argument("--target-intervention-per-riser", type=float, default=0.10)
   parser.add_argument("--std-adaptation-rate", type=float, default=0.10)
+  parser.add_argument(
+    "--maximum-target-fall-rate",
+    type=float,
+    default=0.0,
+    help="Hard candidate safety gate; formal shielded refinement defaults to zero falls.",
+  )
+  parser.add_argument(
+    "--independence-audit",
+    action=argparse.BooleanOptionalAction,
+    default=True,
+    help="Evaluate the final actor with and without the CBF in simulation.",
+  )
   parser.add_argument(
     "--resume-std-scale",
     type=float,
@@ -393,13 +453,23 @@ def main() -> None:
     candidate_gate,
     candidate_gate_intervals,
     candidate_precheck,
+    cbf_independence_gate,
+    safe_improvement_score,
   )
   from src.tasks.stairs_cbf.hard_cases import HardCaseStateBank
 
   if not 0.0 <= args.hard_case_fraction <= 1.0:
     raise ValueError("--hard-case-fraction must be in [0, 1]")
+  if not 0.0 <= args.neighbor_command_fraction <= 1.0:
+    raise ValueError("--neighbor-command-fraction must be in [0, 1]")
+  if args.hard_case_fraction + args.neighbor_command_fraction > 1.0:
+    raise ValueError("hard-case and neighboring-command fractions exceed one")
+  if not 0.0 <= args.maximum_target_fall_rate <= 1.0:
+    raise ValueError("--maximum-target-fall-rate must be in [0, 1]")
   if args.hard_case_pre_steps < 1:
     raise ValueError("--hard-case-pre-steps must be positive")
+  if not 0 <= args.critic_burn_in_rounds <= args.critic_burn_in_max_rounds:
+    raise ValueError("critic burn-in minimum/max rounds are inconsistent")
 
   task = f"Unitree-G1-Stairs-Online-{args.train_domain}"
   env_cfg = load_env_cfg(task)
@@ -414,6 +484,10 @@ def main() -> None:
   agent_cfg.algorithm.actor_learning_rate = args.actor_learning_rate
   agent_cfg.algorithm.critic_learning_rate = args.critic_learning_rate
   agent_cfg.algorithm.pre_intervention_weight = args.pre_intervention_weight
+  agent_cfg.algorithm.base_anchor_weight = args.base_anchor_weight
+  agent_cfg.algorithm.intervention_advantage_weight = (
+    args.intervention_advantage_weight
+  )
   agent_cfg.algorithm.std_scale_from_base = args.std_scale_from_base
   agent_cfg.algorithm.safe_bc_weight = args.safe_bc_weight
   agent_cfg.algorithm.use_counterfactual_cbf_credit = (
@@ -448,9 +522,9 @@ def main() -> None:
     resume_payload = torch.load(
       args.resume_online_checkpoint.resolve(), map_location="cpu", weights_only=False
     )
-    if "hard_case_bank" in resume_payload:
+    if args.resume_hard_case_bank and "hard_case_bank" in resume_payload:
       hard_case_bank.load_state_dict(resume_payload["hard_case_bank"])
-    if "hard_case_generator_state" in resume_payload:
+    if args.resume_hard_case_bank and "hard_case_generator_state" in resume_payload:
       hard_case_generator.set_state(resume_payload["hard_case_generator_state"])
   obs, _ = env.reset()
   current_actor_state = _actor_state(runner.alg.actor)
@@ -458,6 +532,10 @@ def main() -> None:
     args.base_checkpoint.resolve(), map_location=args.device, weights_only=False
   )
   from src.tasks.stairs_cbf.online import backtrack_actor_state
+
+  # The anchor always points to the original pretrained mean policy, including
+  # when this run resumes a later accepted online checkpoint.
+  runner.alg.set_base_actor_reference(base_payload["actor_state_dict"])
 
   # Keep the accepted bounded std and frozen normalizer, but use the original
   # base MLP as the cross-round drift/retention reference.
@@ -482,22 +560,51 @@ def main() -> None:
     json.dumps(baseline_eval, indent=2, sort_keys=True) + "\n"
   )
 
-  burn_in: list[dict[str, float]] = []
-  for _ in range(args.critic_burn_in_rounds):
+  burn_in: list[dict[str, Any]] = []
+  while (
+    len(burn_in) < args.critic_burn_in_rounds
+    or (
+      bool(burn_in)
+      and burn_in[-1]["explained_variance_before_update"]
+      < args.critic_min_explained_variance
+      and len(burn_in) < args.critic_burn_in_max_rounds
+    )
+  ):
     obs, metrics = _collect_and_update(
       runner,
       obs,
       critic_only=True,
       hard_case_bank=hard_case_bank,
       hard_case_fraction=args.hard_case_fraction,
+      neighbor_command_fraction=args.neighbor_command_fraction,
+      neighbor_forward_scale_range=tuple(args.neighbor_forward_scale_range),
+      neighbor_delay_step_offset_range=tuple(
+        args.neighbor_delay_step_offset_range
+      ),
       hard_case_pre_steps=args.hard_case_pre_steps,
       hard_case_generator=hard_case_generator,
     )
     burn_in.append(metrics)
+    (output_dir / "critic_burn_in.json").write_text(
+      json.dumps(burn_in, indent=2, sort_keys=True) + "\n"
+    )
+  if (
+    burn_in
+    and burn_in[-1]["explained_variance_before_update"]
+    < args.critic_min_explained_variance
+  ):
+    raise RuntimeError(
+      "critic calibration did not reach the explained-variance threshold: "
+      f"{burn_in[-1]['explained_variance_before_update']:.4f} < "
+      f"{args.critic_min_explained_variance:.4f}"
+    )
   runner.alg.set_critic_only(False)
 
-  thresholds = CandidateGateThresholds()
+  thresholds = CandidateGateThresholds(
+    maximum_target_fall_rate=args.maximum_target_fall_rate
+  )
   accepted_state = runner.snapshot_candidate_state()
+  accepted_total_kl = _total_actor_kl(runner, base_actor_state)
   rounds: list[dict[str, Any]] = []
   for round_index in range(1, args.online_rounds + 1):
     before = runner.snapshot_candidate_state()
@@ -508,11 +615,21 @@ def main() -> None:
       critic_only=False,
       hard_case_bank=hard_case_bank,
       hard_case_fraction=args.hard_case_fraction,
+      neighbor_command_fraction=args.neighbor_command_fraction,
+      neighbor_forward_scale_range=tuple(args.neighbor_forward_scale_range),
+      neighbor_delay_step_offset_range=tuple(
+        args.neighbor_delay_step_offset_range
+      ),
       hard_case_pre_steps=args.hard_case_pre_steps,
       hard_case_generator=hard_case_generator,
     )
     candidate_actor_state = _actor_state(runner.alg.actor)
-    total_kl = _total_actor_kl(runner, base_actor_state)
+    old_total_kl = _total_actor_kl(
+      runner, base_actor_state, actor_state=old_actor_state
+    )
+    total_kl = _total_actor_kl(
+      runner, base_actor_state, actor_state=candidate_actor_state
+    )
     precheck_reasons = candidate_precheck(
       update_metrics=update_metrics,
       total_kl_from_base=total_kl,
@@ -538,6 +655,7 @@ def main() -> None:
     old_eval: dict[str, dict[str, Any]] = {}
     candidate_eval: dict[str, dict[str, Any]] = {}
     gate_intervals: dict[str, tuple[float, float, float]] = {}
+    gate_scores: dict[str, dict[str, float]] = {}
     accepted = False
     reasons = list(precheck_reasons)
     if not reasons:
@@ -568,6 +686,7 @@ def main() -> None:
         old_eval=old_eval,
         candidate_eval=candidate_eval,
         base_d0_success=baseline_eval["D0"]["success_rate"],
+        old_total_kl_from_base=old_total_kl,
         total_kl_from_base=total_kl,
         parameters_finite=runner.parameters_are_finite(),
         thresholds=thresholds,
@@ -581,7 +700,19 @@ def main() -> None:
         thresholds=thresholds,
         target_domain=args.train_domain,
         neighbor_domain=args.neighbor_domain,
+        old_total_kl_from_base=old_total_kl,
+        total_kl_from_base=total_kl,
       )
+      gate_scores = {
+        "old": safe_improvement_score(
+          old_eval[args.train_domain],
+          total_kl_from_base=old_total_kl,
+        ),
+        "candidate": safe_improvement_score(
+          candidate_eval[args.train_domain],
+          total_kl_from_base=total_kl,
+        ),
+      }
 
     adaptive_std_factor = 1.0
     if accepted:
@@ -594,6 +725,7 @@ def main() -> None:
         )
         runner.alg.scale_exploration_std(adaptive_std_factor)
       accepted_state = runner.snapshot_candidate_state()
+      accepted_total_kl = total_kl
       accepted_path = output_dir / f"accepted_round_{round_index:03d}.pt"
       _save_checkpoint(
         runner,
@@ -622,9 +754,11 @@ def main() -> None:
       "rejection_reasons": reasons,
       "update_metrics": update_metrics,
       "total_kl_from_base": total_kl,
+      "old_total_kl_from_base": old_total_kl,
       "old_eval": old_eval,
       "candidate_eval": candidate_eval,
       "gate_intervals": gate_intervals,
+      "safe_improvement_scores": gate_scores,
       "adaptive_std_factor": adaptive_std_factor,
       "candidate_checkpoint": str(candidate_path),
     }
@@ -645,6 +779,53 @@ def main() -> None:
     repeats=args.gate_repeats,
     runtime_filter=args.gate_runtime_filter == "on",
   )
+  independence_audit: dict[str, Any] | None = None
+  if args.independence_audit:
+    final_actor_state = _actor_state(runner.alg.actor)
+    if args.gate_runtime_filter == "on":
+      filter_on = final_eval[args.train_domain]
+      filter_off = _evaluate_state(
+        runner,
+        final_actor_state,
+        domains=(args.train_domain,),
+        num_envs=args.eval_num_envs,
+        num_episodes=args.eval_num_episodes,
+        seed=args.seed,
+        device=args.gate_device,
+        repeats=args.gate_repeats,
+        runtime_filter=False,
+      )[args.train_domain]
+    else:
+      filter_off = final_eval[args.train_domain]
+      filter_on = _evaluate_state(
+        runner,
+        final_actor_state,
+        domains=(args.train_domain,),
+        num_envs=args.eval_num_envs,
+        num_episodes=args.eval_num_episodes,
+        seed=args.seed,
+        device=args.gate_device,
+        repeats=args.gate_repeats,
+        runtime_filter=True,
+      )[args.train_domain]
+    independent, independence_reasons = cbf_independence_gate(
+      filter_on_eval=filter_on,
+      filter_off_eval=filter_off,
+    )
+    if (
+      filter_on["initial_state_signatures"]
+      != filter_off["initial_state_signatures"]
+    ):
+      independent = False
+      independence_reasons.append(
+        "CBF-on/off paired initial-state signature differs"
+      )
+    independence_audit = {
+      "passed": independent,
+      "reasons": independence_reasons,
+      "filter_on": filter_on,
+      "filter_off": filter_off,
+    }
   final_path = output_dir / "accepted_final.pt"
   result = {
     "task": task,
@@ -655,19 +836,27 @@ def main() -> None:
     "gate_runtime_filter": args.gate_runtime_filter,
     "counterfactual_cbf_credit": args.train_runtime_filter == "off",
     "hard_case_fraction": args.hard_case_fraction,
+    "neighbor_command_fraction": args.neighbor_command_fraction,
+    "neighbor_forward_scale_range": args.neighbor_forward_scale_range,
+    "neighbor_delay_step_offset_range": args.neighbor_delay_step_offset_range,
     "hard_case_pre_steps": args.hard_case_pre_steps,
     "hard_case_bank_size": len(hard_case_bank),
     "hard_case_bank_total_events": hard_case_bank.total_added,
     "adaptive_std": args.adaptive_std,
     "target_intervention_per_riser": args.target_intervention_per_riser,
+    "maximum_target_fall_rate": args.maximum_target_fall_rate,
     "paired_interval_method": "bootstrap",
     "fall_penalty_weight": env_cfg.rewards["fall_termination"].weight,
     "warm_start": warm_start,
     "base_checkpoint": str(args.base_checkpoint),
+    "resume_hard_case_bank": args.resume_hard_case_bank,
     "critic_burn_in": burn_in,
+    "critic_min_explained_variance": args.critic_min_explained_variance,
     "baseline_eval": baseline_eval,
     "rounds": rounds,
+    "accepted_total_kl_from_base": accepted_total_kl,
     "final_eval": final_eval,
+    "final_cbf_independence_audit": independence_audit,
     "final_checkpoint": str(final_path),
   }
   _save_checkpoint(

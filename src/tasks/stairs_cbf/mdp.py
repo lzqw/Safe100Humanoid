@@ -350,6 +350,15 @@ def online_privileged_state(
     ],
     dim=1,
   )
+  safety_history = torch.cat(
+    [
+      term.barrier_derivative.clamp(-20.0, 20.0).unsqueeze(1),
+      term.predicted_h.clamp(-1.0, 1.0).unsqueeze(1),
+      term.h_history.clamp(-1.0, 1.0),
+      term.correction_history.clamp(0.0, 2.0),
+    ],
+    dim=1,
+  )
   # Append the queue after the historical 111-D block.  This preserves the
   # exact prefix layout of existing 799-D online critics, allowing their first
   # layer and normalization statistics to be expanded with zero/identity
@@ -365,6 +374,7 @@ def online_privileged_state(
       cbf,
       episode,
       delay_queue.flatten(1),
+      safety_history,
     ],
     dim=1,
   )

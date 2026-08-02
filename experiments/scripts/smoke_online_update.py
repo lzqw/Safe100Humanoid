@@ -72,6 +72,7 @@ def main() -> None:
       runner.alg.process_env_step(obs, reward, done, extras)
     credit = runner.alg.relabel_pre_intervention_costs()
     runner.alg.compute_returns(obs)
+    advantage = runner.alg.shape_intervention_advantages()
   losses = runner.alg.update()
   result = {
     "task": args.task,
@@ -82,6 +83,7 @@ def main() -> None:
     "critic_obs_dim": runner.alg.critic.obs_dim,
     "warm_start": warm_start,
     "credit": credit,
+    "advantage": advantage,
     "loss": losses,
     "finite": runner.parameters_are_finite(),
   }
@@ -92,11 +94,12 @@ def main() -> None:
   if (
     not result["finite"]
     or result["actor_obs_dim"] != 405
-    or result["critic_obs_dim"] != 826
+    or result["critic_obs_dim"] != 838
     or result["credit"]["policy_storage_max_abs_error"] > 1.0e-6
     or result["credit"]["executed_action_routing_max_abs_error"] > 1.0e-5
     or result["loss"]["policy_old_log_prob_max_abs_error"] > 2.0e-4
     or result["loss"]["policy_old_distribution_param_max_abs_error"] > 1.0e-5
+    or not torch.isfinite(torch.tensor(result["loss"]["base_anchor_kl_after_update"]))
   ):
     raise SystemExit(2)
 
