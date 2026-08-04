@@ -25,8 +25,10 @@ from src.tasks.velocity.rl import VelocityOnPolicyRunner
 # the identical reduction over a larger flattened GPU rollout can differ by a
 # few ULPs even though every distribution parameter and sampled action is
 # unchanged.  Keep this far below PPO-scale changes while avoiding false
-# failures observed at 7.15e-5 on a 32 x 512 rollout.
-BEHAVIOR_LOG_PROB_ATOL = 2.0e-4
+# failures observed at 2.57e-4 on a 64 x 1024 rollout.  Distribution
+# parameters remain guarded independently at 1e-5, and the rollout audit
+# still requires bitwise-identical stored policy actions.
+BEHAVIOR_LOG_PROB_ATOL = 5.0e-4
 BEHAVIOR_DISTRIBUTION_PARAM_ATOL = 1.0e-5
 
 
@@ -105,6 +107,122 @@ class SafeImprovementScoreWeights:
   fall: float = 2.0
   intervention_per_riser: float = 0.05
   policy_drift: float = 1.0
+
+
+@dataclass(frozen=True)
+class BriefPpoGateThresholds:
+  """Point-estimate gates used during brief PPO, not final paper evidence."""
+
+  maximum_kl: float = 0.01
+  maximum_target_fall_increase: float = 0.03
+  d0_success_tolerance: float = 0.05
+
+
+def brief_dual_reward_weight(round_index: int) -> float:
+  """Task-first scalar-reward schedule from the v14 protocol."""
+  if round_index < 1:
+    raise ValueError("online round index must be positive")
+  return 0.0 if round_index <= 2 else 0.02
+
+
+def brief_target_score(result: dict[str, Any]) -> dict[str, float]:
+  """Return ``SR - FR - 0.01 * CBF interventions/riser`` and components."""
+  components = {
+    "success": float(result.get("success_rate", float("nan"))),
+    "fall": -float(result.get("fall_rate", float("nan"))),
+    "intervention_per_riser": -0.01 * safety_demand_per_riser(result),
+  }
+  if not all(math.isfinite(value) for value in components.values()):
+    raise ValueError("brief target score contains missing or non-finite values")
+  return {**components, "total": sum(components.values())}
+
+
+def brief_candidate_precheck(
+  *,
+  update_metrics: dict[str, Any],
+  parameters_finite: bool,
+  thresholds: BriefPpoGateThresholds = BriefPpoGateThresholds(),
+) -> list[str]:
+  """Apply only the numerical-health checks required before target evaluation."""
+  reasons: list[str] = []
+  if not parameters_finite:
+    reasons.append("non-finite model parameters")
+  kl = float(update_metrics.get("mean_kl", float("nan")))
+  if not math.isfinite(kl):
+    reasons.append("update KL is missing or non-finite")
+  elif kl >= thresholds.maximum_kl:
+    reasons.append("update KL is not below 0.01")
+  return reasons
+
+
+def brief_candidate_gate(
+  *,
+  update_metrics: dict[str, Any],
+  old_eval: dict[str, Any],
+  candidate_eval: dict[str, Any],
+  parameters_finite: bool,
+  thresholds: BriefPpoGateThresholds = BriefPpoGateThresholds(),
+) -> tuple[bool, list[str], dict[str, dict[str, float]]]:
+  """Accept a finite small-KL update with better target point estimate.
+
+  Initial-state signatures are checked only to prove the advertised paired
+  protocol.  No confidence interval, source-domain, or neighboring-domain
+  performance condition is applied here.
+  """
+  reasons = brief_candidate_precheck(
+    update_metrics=update_metrics,
+    parameters_finite=parameters_finite,
+    thresholds=thresholds,
+  )
+  old_signature = old_eval.get("initial_state_signatures")
+  candidate_signature = candidate_eval.get("initial_state_signatures")
+  if old_signature is None or candidate_signature is None:
+    reasons.append("paired target initial-state signature missing")
+  elif old_signature != candidate_signature:
+    reasons.append("paired target initial-state signature differs")
+  try:
+    old_score = brief_target_score(old_eval)
+    candidate_score = brief_target_score(candidate_eval)
+  except (KeyError, TypeError, ValueError):
+    reasons.append("target evaluation is missing or non-finite")
+    old_score = {"total": float("nan")}
+    candidate_score = {"total": float("nan")}
+  if math.isfinite(old_score["total"]) and math.isfinite(
+    candidate_score["total"]
+  ):
+    if candidate_score["total"] <= old_score["total"]:
+      reasons.append("target point-estimate score did not improve")
+    old_fall = float(old_eval["fall_rate"])
+    candidate_fall = float(candidate_eval["fall_rate"])
+    if candidate_fall > old_fall + thresholds.maximum_target_fall_increase:
+      reasons.append("target fall rate increased by more than 3 percentage points")
+  return len(reasons) == 0, reasons, {
+    "old": old_score,
+    "candidate": candidate_score,
+  }
+
+
+def brief_d0_retention_gate(
+  *,
+  baseline_eval: dict[str, Any],
+  candidate_eval: dict[str, Any],
+  thresholds: BriefPpoGateThresholds = BriefPpoGateThresholds(),
+) -> tuple[bool, list[str]]:
+  """Apply the periodic source check: candidate D0 SR >= baseline SR - 5 pp."""
+  reasons: list[str] = []
+  baseline_success = float(baseline_eval.get("success_rate", float("nan")))
+  candidate_success = float(candidate_eval.get("success_rate", float("nan")))
+  if not math.isfinite(baseline_success) or not math.isfinite(candidate_success):
+    reasons.append("D0 success rate is missing or non-finite")
+  elif candidate_success < baseline_success - thresholds.d0_success_tolerance:
+    reasons.append("D0 success is more than 5 percentage points below baseline")
+  baseline_signature = baseline_eval.get("initial_state_signatures")
+  candidate_signature = candidate_eval.get("initial_state_signatures")
+  if baseline_signature is None or candidate_signature is None:
+    reasons.append("paired D0 initial-state signature missing")
+  elif baseline_signature != candidate_signature:
+    reasons.append("paired D0 initial-state signature differs")
+  return len(reasons) == 0, reasons
 
 
 def safe_improvement_score(
@@ -1002,6 +1120,8 @@ class OnlineSafePpoAlgorithmCfg(RslRlPpoAlgorithmCfg):
   safe_bc_weight: float = 0.0
   use_counterfactual_cbf_credit: bool = False
   task_first_constrained: bool = False
+  brief_ppo_refinement: bool = False
+  kl_early_stopping: bool = False
   initial_fall_multiplier: float = 0.0
   initial_intervention_multiplier: float = 0.0
   fall_multiplier_learning_rate: float = 1.0
@@ -1046,6 +1166,8 @@ class OnlineSafePPO(PPO):
     safe_bc_weight: float = 0.0,
     use_counterfactual_cbf_credit: bool = False,
     task_first_constrained: bool = False,
+    brief_ppo_refinement: bool = False,
+    kl_early_stopping: bool = False,
     initial_fall_multiplier: float = 0.0,
     initial_intervention_multiplier: float = 0.0,
     fall_multiplier_learning_rate: float = 1.0,
@@ -1087,6 +1209,8 @@ class OnlineSafePPO(PPO):
     self.safe_bc_weight = safe_bc_weight
     self.use_counterfactual_cbf_credit = use_counterfactual_cbf_credit
     self.task_first_constrained = task_first_constrained
+    self.brief_ppo_refinement = brief_ppo_refinement
+    self.kl_early_stopping = kl_early_stopping
     self.fall_multiplier = float(initial_fall_multiplier)
     self.intervention_multiplier = float(initial_intervention_multiplier)
     self.fall_multiplier_learning_rate = fall_multiplier_learning_rate
@@ -1162,6 +1286,54 @@ class OnlineSafePPO(PPO):
       raise ValueError("initial retention anchor weight exceeds its maximum")
     if self.retention_anchor_batch_size < 1:
       raise ValueError("retention anchor batch size must be positive")
+    if self.task_first_constrained and self.brief_ppo_refinement:
+      raise ValueError("brief PPO cannot enable task-first constrained heads")
+    if self.kl_early_stopping and (
+      self.desired_kl is None or self.desired_kl <= 0.0
+    ):
+      raise ValueError("KL early stopping requires a positive desired_kl")
+    if self.brief_ppo_refinement:
+      disabled_terms = {
+        "pre_intervention_weight": self.pre_intervention_weight,
+        "intervention_advantage_weight": self.intervention_advantage_weight,
+        "base_anchor_weight": self.base_anchor_weight,
+        "d0_retention_anchor_weight": self.d0_retention_anchor_weight,
+        "neighbor_retention_anchor_weight": self.neighbor_retention_anchor_weight,
+        "safe_bc_weight": self.safe_bc_weight,
+        "correction_distillation_weight": self.correction_distillation_weight,
+        "log_std_learning_rate": self.log_std_learning_rate,
+      }
+      enabled = [name for name, value in disabled_terms.items() if value != 0.0]
+      if enabled:
+        raise ValueError(
+          "brief PPO requires all auxiliary policy losses/anchors disabled: "
+          + ", ".join(enabled)
+        )
+      if self.num_learning_epochs != 1:
+        raise ValueError("brief PPO requires exactly one learning epoch")
+      if not math.isclose(self.clip_param, 0.05, rel_tol=0.0, abs_tol=1.0e-12):
+        raise ValueError("brief PPO requires PPO clip 0.05")
+      if not math.isclose(
+        float(self.desired_kl or 0.0), 0.005, rel_tol=0.0, abs_tol=1.0e-12
+      ):
+        raise ValueError("brief PPO requires target KL 0.005")
+      if not self.kl_early_stopping:
+        raise ValueError("brief PPO requires target-KL early stopping")
+      if not math.isclose(
+        self.actor_learning_rate, 2.0e-6, rel_tol=0.0, abs_tol=1.0e-15
+      ):
+        raise ValueError("brief PPO requires actor learning rate 2e-6")
+      if any(
+        not math.isclose(value, 1.0, rel_tol=0.0, abs_tol=1.0e-12)
+        for value in self.actor_layer_multipliers
+      ):
+        raise ValueError("brief PPO requires the full actor at the configured LR")
+      if not 0.25 <= self.std_scale_from_base <= 0.50:
+        raise ValueError("brief PPO exploration std scale must be in [0.25, 0.50]")
+      if not math.isclose(
+        self.hard_case_policy_weight, 0.5, rel_tol=0.0, abs_tol=1.0e-12
+      ):
+        raise ValueError("brief PPO requires hard-case actor weight 0.5")
 
     # The task critic retains the pretrained value representation.  Cost and
     # short-horizon risk heads are distinct modules so safety cannot silently
@@ -1637,6 +1809,13 @@ class OnlineSafePPO(PPO):
     )
 
   def constraint_state_dict(self) -> dict[str, Any]:
+    if self.brief_ppo_refinement:
+      # The brief checkpoint deliberately carries no auxiliary critic,
+      # multiplier, policy anchor, or retention-bank state.
+      return {
+        "task_first_constrained": False,
+        "brief_ppo_refinement": True,
+      }
     output: dict[str, Any] = {
       "task_first_constrained": self.task_first_constrained,
       "fall_multiplier": self.fall_multiplier,
@@ -1672,6 +1851,10 @@ class OnlineSafePPO(PPO):
 
   def load_constraint_state_dict(self, payload: dict[str, Any]) -> bool:
     """Load v12 heads if present; return false for a legacy v11 checkpoint."""
+    if self.brief_ppo_refinement:
+      # A v14 run may warm-start from a v12/v13 accepted actor and task critic,
+      # but none of the old online constraint state is part of the new method.
+      return False
     retention = payload.get("retention_anchor_state")
     if isinstance(retention, dict):
       self.d0_retention_anchor_weight = float(
@@ -1830,6 +2013,8 @@ class OnlineSafePPO(PPO):
 
   def prepare_constrained_advantages(self) -> dict[str, float]:
     """Build ``A_R - lambda_F A_F - lambda_I A_I`` for one PPO surrogate."""
+    if self.brief_ppo_refinement:
+      return self.prepare_brief_advantages()
     if not self.task_first_constrained:
       return self.shape_intervention_advantages()
     task = self.task_advantages
@@ -1861,6 +2046,28 @@ class OnlineSafePPO(PPO):
       "constrained_advantage_std": float(constrained.std()),
       "fall_multiplier": self.fall_multiplier,
       "intervention_multiplier": self.intervention_multiplier,
+      "hard_case_policy_weight": self.hard_case_policy_weight,
+      "hard_case_transition_fraction": float(
+        self.hard_case_transitions.float().mean()
+      ),
+    }
+    self.last_update_metrics.update(metrics)
+    return metrics
+
+  def prepare_brief_advantages(self) -> dict[str, float]:
+    """Weight hard-case samples in the same single-reward PPO surrogate."""
+    before = self.storage.advantages.squeeze(-1).clone()
+    sample_weights = torch.where(
+      self.hard_case_transitions,
+      torch.full_like(before, self.hard_case_policy_weight),
+      torch.ones_like(before),
+    )
+    weighted = before * sample_weights
+    self.storage.advantages.copy_(weighted.unsqueeze(-1))
+    metrics = {
+      "brief_single_reward_advantage": 1.0,
+      "brief_advantage_mean_before_weighting": float(before.mean()),
+      "brief_advantage_mean_after_weighting": float(weighted.mean()),
       "hard_case_policy_weight": self.hard_case_policy_weight,
       "hard_case_transition_fraction": float(
         self.hard_case_transitions.float().mean()
@@ -2231,7 +2438,7 @@ class OnlineSafePPO(PPO):
     }
 
   def update(self) -> dict[str, Any]:
-    """Run one exact single-clipped PPO update with a base-policy KL anchor."""
+    """Run one exact single-clipped PPO update with optional legacy anchors."""
     if self.rnd or self.symmetry:
       raise RuntimeError("online safe PPO does not support RND or symmetry losses")
     if self.actor.is_recurrent or self.critic.is_recurrent:
@@ -2332,6 +2539,10 @@ class OnlineSafePPO(PPO):
     mean_neighbor_retention_anchor_kl = 0.0
     maximum_actor_gradient_norm = 0.0
     maximum_critic_gradient_norm = 0.0
+    completed_updates = 0
+    attempted_batches = 0
+    kl_early_stopped = False
+    maximum_preupdate_kl = 0.0
     generator = self.storage.mini_batch_generator(
       self.num_mini_batches, self.num_learning_epochs
     )
@@ -2347,6 +2558,18 @@ class OnlineSafePPO(PPO):
       values = self.critic(batch.observations)
       current_params = tuple(self.actor.output_distribution_params)
       entropy = self.actor.output_entropy
+      attempted_batches += 1
+      if self.kl_early_stopping and not self._critic_only:
+        with torch.inference_mode():
+          preupdate_kl = self.actor.get_kl_divergence(
+            batch.old_distribution_params, current_params
+          ).mean()
+        if not bool(torch.isfinite(preupdate_kl)):
+          raise RuntimeError("pre-update PPO KL is non-finite")
+        maximum_preupdate_kl = max(maximum_preupdate_kl, float(preupdate_kl))
+        if completed_updates > 0 and preupdate_kl > float(self.desired_kl):
+          kl_early_stopped = True
+          break
 
       ratio = torch.exp(actions_log_prob - batch.old_actions_log_prob.squeeze(-1))
       surrogate = -batch.advantages.squeeze(-1) * ratio
@@ -2409,6 +2632,7 @@ class OnlineSafePPO(PPO):
         self.critic.parameters(), self.max_grad_norm
       )
       self.optimizer.step()
+      completed_updates += 1
 
       mean_value_loss += float(value_loss)
       mean_surrogate_loss += float(surrogate_loss)
@@ -2425,7 +2649,9 @@ class OnlineSafePPO(PPO):
         maximum_critic_gradient_norm, float(critic_gradient_norm)
       )
 
-    num_updates = self.num_learning_epochs * self.num_mini_batches
+    if completed_updates < 1:
+      raise RuntimeError("PPO update completed no minibatches")
+    num_updates = completed_updates
     losses: dict[str, Any] = {
       "value": mean_value_loss / num_updates,
       "surrogate": mean_surrogate_loss / num_updates,
@@ -2437,6 +2663,10 @@ class OnlineSafePPO(PPO):
       "neighbor_retention_anchor_kl_loss": (
         mean_neighbor_retention_anchor_kl / num_updates
       ),
+      "ppo_minibatches_attempted": attempted_batches,
+      "ppo_minibatches_completed": completed_updates,
+      "target_kl_early_stopped": kl_early_stopped,
+      "maximum_preupdate_minibatch_kl": maximum_preupdate_kl,
     }
     task_first_heads = self._train_task_first_heads(observations)
     safe_bc = self.apply_safe_bc_auxiliary(
@@ -2713,7 +2943,8 @@ class OnlineSafeRefinementRunner(VelocityOnPolicyRunner):
     )
     self.alg.initialize_task_first_heads_from_critic()
     self.alg.initialize_online_std()
-    self.alg.set_base_actor_reference()
+    if not self.alg.brief_ppo_refinement:
+      self.alg.set_base_actor_reference()
     self.current_learning_iteration = 0
     return expansion | {
       "source_iteration": int(loaded.get("iter", -1)),
@@ -2734,7 +2965,8 @@ class OnlineSafeRefinementRunner(VelocityOnPolicyRunner):
     # Standalone evaluators/smokes must never reach an anchored update without
     # a frozen reference.  The full refinement entrypoint replaces this
     # temporary accepted-policy reference with the original pretrained actor.
-    self.alg.set_base_actor_reference()
+    if not self.alg.brief_ppo_refinement:
+      self.alg.set_base_actor_reference()
     # A new optimizer is mandatory after an input expansion and is also the
     # intended online protocol after every accepted/backtracked checkpoint.
     self.alg.reset_online_optimizer()

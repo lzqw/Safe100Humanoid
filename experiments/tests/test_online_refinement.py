@@ -14,6 +14,7 @@ from src.tasks.stairs_cbf.config import (
   g1_online_stairs_runner_cfg,
 )
 from src.tasks.stairs_cbf.online import (
+  BriefPpoGateThresholds,
   CandidateGateThresholds,
   CbfIndependenceThresholds,
   OnlineSafePPO,
@@ -21,6 +22,11 @@ from src.tasks.stairs_cbf.online import (
   SafeImprovementScoreWeights,
   backtrack_actor_state,
   backward_intervention_credit,
+  brief_candidate_gate,
+  brief_candidate_precheck,
+  brief_d0_retention_gate,
+  brief_dual_reward_weight,
+  brief_target_score,
   candidate_gate,
   candidate_gate_intervals,
   candidate_precheck,
@@ -103,6 +109,124 @@ def test_credit_does_not_cross_episode_boundary() -> None:
     magnitude_scale=0.05,
   )
   assert torch.allclose(credit[:, 0], torch.tensor([0.0, 0.0, 0.0, 0.8, 1.0]))
+
+
+def test_brief_dual_reward_schedule_is_task_first() -> None:
+  assert [brief_dual_reward_weight(index) for index in range(1, 6)] == [
+    0.0,
+    0.0,
+    0.02,
+    0.02,
+    0.02,
+  ]
+  with pytest.raises(ValueError, match="positive"):
+    brief_dual_reward_weight(0)
+
+
+def test_brief_target_gate_uses_only_point_score_fall_and_small_kl() -> None:
+  old = {
+    "success_rate": 0.50,
+    "fall_rate": 0.10,
+    "intervention_per_riser": 0.20,
+    "initial_state_signatures": ["paired-seed"],
+  }
+  candidate = {
+    "success_rate": 0.53,
+    "fall_rate": 0.11,
+    "intervention_per_riser": 0.10,
+    "initial_state_signatures": ["paired-seed"],
+  }
+  score = brief_target_score(candidate)
+  assert score == pytest.approx(
+    {
+      "success": 0.53,
+      "fall": -0.11,
+      "intervention_per_riser": -0.001,
+      "total": 0.419,
+    }
+  )
+  accepted, reasons, scores = brief_candidate_gate(
+    update_metrics={"mean_kl": 0.005},
+    old_eval=old,
+    candidate_eval=candidate,
+    parameters_finite=True,
+  )
+  assert accepted
+  assert reasons == []
+  assert scores["candidate"]["total"] > scores["old"]["total"]
+
+  rejected, reasons, _ = brief_candidate_gate(
+    update_metrics={"mean_kl": 0.005},
+    old_eval=old,
+    candidate_eval={**candidate, "fall_rate": 0.131},
+    parameters_finite=True,
+  )
+  assert not rejected
+  assert any("3 percentage points" in reason for reason in reasons)
+
+
+def test_brief_precheck_requires_strict_kl_below_one_percent() -> None:
+  thresholds = BriefPpoGateThresholds()
+  assert brief_candidate_precheck(
+    update_metrics={"mean_kl": 0.009999},
+    parameters_finite=True,
+    thresholds=thresholds,
+  ) == []
+  assert brief_candidate_precheck(
+    update_metrics={"mean_kl": 0.01},
+    parameters_finite=True,
+    thresholds=thresholds,
+  ) == ["update KL is not below 0.01"]
+  assert brief_candidate_precheck(
+    update_metrics={"mean_kl": 0.001},
+    parameters_finite=False,
+    thresholds=thresholds,
+  ) == ["non-finite model parameters"]
+
+
+def test_brief_d0_gate_checks_baseline_minus_five_points_periodically() -> None:
+  baseline = {
+    "success_rate": 0.80,
+    "initial_state_signatures": ["d0-pair"],
+  }
+  passed, reasons = brief_d0_retention_gate(
+    baseline_eval=baseline,
+    candidate_eval={
+      "success_rate": 0.75,
+      "initial_state_signatures": ["d0-pair"],
+    },
+  )
+  assert passed
+  assert reasons == []
+  passed, reasons = brief_d0_retention_gate(
+    baseline_eval=baseline,
+    candidate_eval={
+      "success_rate": 0.749,
+      "initial_state_signatures": ["d0-pair"],
+    },
+  )
+  assert not passed
+  assert any("5 percentage points" in reason for reason in reasons)
+
+
+def test_brief_hard_cases_weight_the_same_single_reward_advantage() -> None:
+  class _Storage:
+    advantages = torch.tensor([[[1.0], [2.0]], [[-3.0], [4.0]]])
+
+  algorithm = object.__new__(OnlineSafePPO)
+  algorithm.storage = _Storage()
+  algorithm.hard_case_transitions = torch.tensor(
+    [[False, True], [True, False]]
+  )
+  algorithm.hard_case_policy_weight = 0.5
+  algorithm.last_update_metrics = {}
+  metrics = algorithm.prepare_brief_advantages()
+  assert torch.equal(
+    algorithm.storage.advantages.squeeze(-1),
+    torch.tensor([[1.0, 1.0], [-1.5, 4.0]]),
+  )
+  assert metrics["brief_single_reward_advantage"] == 1.0
+  assert metrics["hard_case_transition_fraction"] == 0.5
 
 
 def test_cost_gae_is_separate_and_stops_at_episode_boundaries() -> None:
@@ -1090,11 +1214,11 @@ def test_rollout_action_dataflow_detects_safe_action_in_ppo_storage() -> None:
 
 def test_behavior_log_prob_tolerance_accepts_float32_reduction_noise() -> None:
   stored = torch.tensor([-12.0, -3.0], dtype=torch.float32)
-  recomputed = stored + torch.tensor([1.2e-4, -1.5e-4])
+  recomputed = stored + torch.tensor([2.7e-4, -3.5e-4])
   error = validate_behavior_log_prob(stored, recomputed)
-  assert 1.0e-4 < error < 2.0e-4
+  assert 2.0e-4 < error < 5.0e-4
 
-  invalid = stored + torch.tensor([3.0e-4, 0.0])
+  invalid = stored + torch.tensor([6.0e-4, 0.0])
   try:
     validate_behavior_log_prob(stored, invalid)
   except RuntimeError as exc:

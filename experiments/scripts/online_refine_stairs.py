@@ -274,11 +274,14 @@ def _collect_and_update(
   neighbor_delay_step_offset_range: tuple[int, int],
   hard_case_pre_steps: int,
   hard_case_generator: torch.Generator,
+  persistent_hard_case_slots: bool = False,
 ):
   from rsl_rl.utils import check_nan
   from src.tasks.stairs_cbf.hard_cases import (
     capture_hard_case_state,
+    hard_case_state_shape_mismatches,
     reset_rollout_with_hard_cases,
+    restore_hard_case_state,
   )
 
   del obs
@@ -312,6 +315,7 @@ def _collect_and_update(
     hard_active[hard_ids] = True
   if len(neighbor_ids) > 0:
     neighbor_active[neighbor_ids] = True
+  hard_slots = hard_active.clone()
   normal_active = ~(hard_active | neighbor_active)
   normal_completed = 0
   normal_falls = 0
@@ -324,6 +328,7 @@ def _collect_and_update(
     runner.env.num_envs, dtype=torch.bool, device=runner.env.device
   )
   bank_added = 0
+  hard_case_restart_count = 0
   # Use no_grad rather than inference_mode because critic normalization is
   # intentionally updated and must remain rollback-compatible.
   with torch.no_grad():
@@ -364,6 +369,37 @@ def _collect_and_update(
       normal_completed += int(completed_normal.sum())
       normal_falls += int((completed_normal & fell).sum())
       normal_successes += int((completed_normal & ~fell).sum())
+      if persistent_hard_case_slots:
+        restart_ids = (done_mask & hard_slots).nonzero(as_tuple=False).flatten()
+        if len(restart_ids) > 0:
+          if len(hard_case_bank) < len(restart_ids):
+            raise RuntimeError("hard-case bank cannot refill persistent slots")
+          replay = hard_case_bank.sample(
+            len(restart_ids),
+            device=runner.env.device,
+            generator=hard_case_generator,
+          )
+          unwrapped = runner.env.unwrapped
+          mismatches = hard_case_state_shape_mismatches(
+            capture_hard_case_state(unwrapped), replay
+          )
+          if mismatches:
+            raise RuntimeError(
+              "persistent hard-case replay became incompatible: "
+              + "; ".join(mismatches[:5])
+            )
+          restore_hard_case_state(unwrapped, replay, restart_ids)
+          unwrapped.scene.write_data_to_sim()
+          unwrapped.sim.forward()
+          for sensor in unwrapped.scene.sensors.values():
+            sensor._invalidate_cache()
+          unwrapped.sim.sense()
+          unwrapped.observation_manager._obs_buffer = None
+          unwrapped.obs_buf = unwrapped.observation_manager.compute(
+            update_history=False
+          )
+          obs = runner.env.get_observations()
+          hard_case_restart_count += len(restart_ids)
       previous_intervention = torch.where(
         done_mask,
         torch.zeros_like(previous_intervention),
@@ -378,13 +414,20 @@ def _collect_and_update(
       rewards = rewards.to(runner.device)
       dones = dones.to(runner.device)
       runner.alg.process_env_step(obs, rewards, dones, extras)
-      # Auto-reset episodes following any termination are ordinary bottom
-      # starts.  Only the initial restored segment remains hard-case data.
-      hard_active &= ~done_mask
+      # v14 keeps fixed hard-case slots throughout the rollout so the actor
+      # batch has the advertised 80/20 transition mixture. Legacy protocols
+      # keep their original one-shot hard reset semantics.
+      if persistent_hard_case_slots:
+        hard_active.copy_(hard_slots)
+      else:
+        hard_active &= ~done_mask
       neighbor_active &= ~done_mask
-      normal_active = torch.where(
-        done_mask, torch.ones_like(normal_active), normal_active
-      )
+      if persistent_hard_case_slots:
+        normal_active = ~(hard_active | neighbor_active)
+      else:
+        normal_active = torch.where(
+          done_mask, torch.ones_like(normal_active), normal_active
+        )
     credit_metrics = runner.alg.relabel_pre_intervention_costs()
     completion_metrics = {
       "normal_start_completed_episode_count": normal_completed,
@@ -413,6 +456,8 @@ def _collect_and_update(
       "hard_case_bank_size_after_rollout": len(hard_case_bank),
       "hard_case_bank_total_events": hard_case_bank.total_added,
       "hard_case_pre_steps": hard_case_pre_steps,
+      "persistent_hard_case_slots": persistent_hard_case_slots,
+      "hard_case_restart_count": hard_case_restart_count,
     }
   )
   return obs, losses
