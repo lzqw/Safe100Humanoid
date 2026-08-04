@@ -252,6 +252,45 @@ def main() -> None:
   intervals: dict[str, Any] = {}
   metrics = ("success_rate", "fall_rate", "intervention_per_riser")
   bootstrap_seed = args.audit_seed + 900000
+  paired_episode_path = output_dir / "paired_episode_metrics.csv"
+  with paired_episode_path.open("w", newline="") as handle:
+    fieldnames = [
+      "training_seed",
+      "domain",
+      "pair_index",
+      "baseline_success",
+      "final_success",
+      "baseline_fell",
+      "final_fell",
+      "baseline_intervention_per_riser",
+      "final_intervention_per_riser",
+    ]
+    writer = csv.DictWriter(handle, fieldnames=fieldnames)
+    writer.writeheader()
+    for domain in protocol:
+      for seed_index, training_seed in enumerate(args.training_seeds):
+        baseline_rows = rows_by_domain[domain]["baseline"][seed_index]
+        final_rows = rows_by_domain[domain]["final"][seed_index]
+        for pair_index, (baseline, final) in enumerate(
+          zip(baseline_rows, final_rows, strict=True)
+        ):
+          writer.writerow(
+            {
+              "training_seed": training_seed,
+              "domain": domain,
+              "pair_index": pair_index,
+              "baseline_success": int(baseline["success"] == "True"),
+              "final_success": int(final["success"] == "True"),
+              "baseline_fell": int(baseline["fell"] == "True"),
+              "final_fell": int(final["fell"] == "True"),
+              "baseline_intervention_per_riser": baseline[
+                "intervention_per_riser"
+              ],
+              "final_intervention_per_riser": final[
+                "intervention_per_riser"
+              ],
+            }
+          )
   for domain_index, domain in enumerate(protocol):
     intervals[domain] = {}
     for metric_index, metric in enumerate(metrics):
@@ -318,6 +357,15 @@ def main() -> None:
       "seed": bootstrap_seed,
     },
     "interval_tuple_order": ["mean", "lower_95", "upper_95"],
+    "paired_episode_metrics": {
+      "path": str(paired_episode_path),
+      "sha256": _sha256(paired_episode_path),
+      "row_count": sum(
+        domain_cfg["episodes_per_training_seed"]
+        for domain_cfg in protocol.values()
+      )
+      * len(args.training_seeds),
+    },
     "confidence_intervals": intervals,
     "final_target_success_claim": {
       "criterion": "LCB95[SR_DQH(final) - SR_DQH(pi0)] > 0",

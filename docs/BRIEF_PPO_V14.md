@@ -116,3 +116,14 @@ bash experiments/scripts/run_final_audit_v14.sh
 
 The training summary explicitly labels its small final evaluation as a
 diagnostic. `final_audit_summary.json` is the independent evidence artifact.
+
+## Formal result
+
+The complete three-training-seed evidence is published in
+[`results/online/brief_ppo_v14/`](../results/online/brief_ppo_v14/README.md).
+The DQH success point estimate changed from 89.388% to 89.974%, but the paired
+95% interval for the `+0.586` percentage-point delta was
+`[-1.174, +2.474]` percentage points. The required positive lower-bound gate
+did not pass, so v14 does not claim a statistically supported DQH success
+improvement. D0 success improved by `+3.646` percentage points with a paired
+95% interval of `[+0.521, +7.292]` percentage points.
