@@ -22,6 +22,7 @@ from online_refine_stairs import (
   _actor_state,
   _collect_and_update,
   _evaluate_state,
+  _file_sha256,
   _policy_step_metrics,
   _save_checkpoint,
 )
@@ -140,6 +141,20 @@ def _parse_args() -> argparse.Namespace:
     action="store_true",
     help="Enable the frozen-context, redistributed-fall, late-failure v15 protocol.",
   )
+  parser.add_argument(
+    "--dominant-failure-type",
+    choices=("mixed", "lateral_heading_drift"),
+    default="mixed",
+    help=(
+      "Freeze a single Branch-B failure class for hard-bank insertion. "
+      "The mixed default exactly preserves v15."
+    ),
+  )
+  parser.add_argument(
+    "--failure-classification",
+    type=Path,
+    help="Auditable baseline-only classification that freezes the dominant type.",
+  )
   parser.add_argument("--deployment-context", type=Path)
   parser.add_argument("--train-domain", default="DQH")
   parser.add_argument("--neighbor-domain", default="DQNH")
@@ -182,6 +197,13 @@ def _parse_args() -> argparse.Namespace:
 def main() -> None:
   args = _parse_args()
   v15 = args.failure_focused_v15
+  v16 = v15 and args.dominant_failure_type != "mixed"
+  if args.dominant_failure_type != "mixed" and not v15:
+    raise ValueError("dominant-failure refinement requires --failure-focused-v15")
+  if v16 and args.failure_classification is None:
+    raise ValueError("dominant-failure v16 requires --failure-classification")
+  if not v16 and args.failure_classification is not None:
+    raise ValueError("a failure classification is valid only for dominant-failure v16")
   if not args.smoke and args.online_rounds != 5:
     raise ValueError("the formal brief PPO protocol requires exactly five rounds")
   required_fractions = (0.5, 1.0, 1.5) if v15 else (0.5, 1.0)
@@ -226,6 +248,11 @@ def main() -> None:
         "candidate_num_episodes": (args.candidate_num_episodes, 128),
         "d0_check_num_episodes": (args.d0_check_num_episodes, 128),
       }
+      if v16:
+        formal_values["failure_discovery_max_rollouts"] = (
+          args.failure_discovery_max_rollouts,
+          8,
+        )
       mismatches = {
         name: {"actual": actual, "required": required}
         for name, (actual, required) in formal_values.items()
@@ -267,7 +294,13 @@ def main() -> None:
     load_calibrated_deployment_context,
     load_frozen_deployment_context,
   )
-  from src.tasks.stairs_cbf.hard_cases import HardCaseStateBank
+  from src.tasks.stairs_cbf.hard_cases import (
+    HIGH_CBF_CORRECTION_THRESHOLD,
+    HardCaseStateBank,
+    LATERAL_CENTERLINE_WIDTH_FRACTION,
+    LATERAL_HEADING_DRIFT_FAILURE_TYPE,
+    LATERAL_HEADING_THRESHOLD_RAD,
+  )
   from src.tasks.stairs_cbf.online import (
     BriefPpoGateThresholds,
     FailureFocusedGateThresholds,
@@ -283,6 +316,83 @@ def main() -> None:
   )
 
   task = f"Unitree-G1-Stairs-Online-{args.train_domain}"
+  dominant_failure_type = (
+    args.dominant_failure_type if v16 else None
+  )
+  failure_classification = None
+  if v16:
+    assert args.failure_classification is not None
+    classification_path = args.failure_classification.resolve()
+    failure_classification_payload = json.loads(classification_path.read_text())
+    counts = failure_classification_payload.get("failure_type_counts", {})
+    ordered_counts = sorted(counts.items(), key=lambda item: (-item[1], item[0]))
+    if (
+      failure_classification_payload.get("source_method")
+      != "Failure-Focused Brief PPO v15"
+      or failure_classification_payload.get("source_policy_role")
+      != "online-start baseline"
+      or failure_classification_payload.get("source_training_seeds")
+      != [42, 142, 242]
+      or failure_classification_payload.get("source_episode_count") != 1536
+      or failure_classification_payload.get("source_fall_count") != 265
+      or failure_classification_payload.get(
+        "adapted_v16_policy_evaluations_used"
+      )
+      is not False
+      or failure_classification_payload.get("selected_dominant_failure_type")
+      != LATERAL_HEADING_DRIFT_FAILURE_TYPE
+      or len(ordered_counts) < 2
+      or ordered_counts[0][0] != LATERAL_HEADING_DRIFT_FAILURE_TYPE
+      or ordered_counts[0][1] <= ordered_counts[1][1]
+      or not math.isclose(
+        float(
+          failure_classification_payload.get("thresholds", {}).get(
+            "centerline_width_fraction", -1.0
+          )
+        ),
+        LATERAL_CENTERLINE_WIDTH_FRACTION,
+      )
+      or not math.isclose(
+        float(
+          failure_classification_payload.get("thresholds", {}).get(
+            "heading_error_rad", -1.0
+          )
+        ),
+        LATERAL_HEADING_THRESHOLD_RAD,
+      )
+      or not math.isclose(
+        float(
+          failure_classification_payload.get("thresholds", {}).get(
+            "high_cbf_correction", -1.0
+          )
+        ),
+        HIGH_CBF_CORRECTION_THRESHOLD,
+      )
+      or not math.isclose(
+        float(
+          failure_classification_payload.get("thresholds", {}).get(
+            "stair_half_width_m", -1.0
+          )
+        ),
+        1.2,
+      )
+    ):
+      raise ValueError(
+        "failure classification does not attest a unique baseline-only "
+        "lateral/heading dominant type"
+      )
+    failure_classification = {
+      "path": str(classification_path),
+      "sha256": _file_sha256(classification_path),
+      "selected_dominant_failure_type": dominant_failure_type,
+      "source_episode_count": failure_classification_payload.get(
+        "source_episode_count"
+      ),
+      "source_fall_count": failure_classification_payload.get(
+        "source_fall_count"
+      ),
+      "failure_type_counts": counts,
+    }
   env_cfg = load_env_cfg(task)
   deployment_context = (
     (
@@ -360,6 +470,7 @@ def main() -> None:
       if deployment_context is not None
       else None
     ),
+    dominant_failure_type=dominant_failure_type,
   )
   hard_case_generator = torch.Generator(device="cpu")
   hard_case_generator.manual_seed(args.seed + 100003)
@@ -440,6 +551,7 @@ def main() -> None:
         late_failure_minimum_steps=args.late_failure_minimum_steps,
         late_failure_maximum_steps=args.late_failure_maximum_steps,
         late_failure_minimum_riser=late_failure_minimum_riser,
+        dominant_failure_type=dominant_failure_type,
       )
       # Discovery may fit the critic internally, but no discovery update is
       # retained. Only target-fall states survive into the formal protocol.
@@ -465,6 +577,8 @@ def main() -> None:
       or bank_audit["steps_before_fall_max"] > args.late_failure_maximum_steps
       or bank_audit["riser_index_min"] < late_failure_minimum_riser
       or bank_audit["successful_crossing_exclusion_passed"] is not True
+      or bank_audit["dominant_failure_type"] != dominant_failure_type
+      or bank_audit["dominant_failure_type_purity_passed"] is not True
     ):
       raise RuntimeError(f"late-failure bank purity invariant failed: {bank_audit}")
     (output_dir / "failure_discovery.json").write_text(
@@ -490,6 +604,7 @@ def main() -> None:
       late_failure_minimum_steps=args.late_failure_minimum_steps,
       late_failure_maximum_steps=args.late_failure_maximum_steps,
       late_failure_minimum_riser=late_failure_minimum_riser,
+      dominant_failure_type=dominant_failure_type,
     )
     burn_in.append(metrics)
 
@@ -518,6 +633,7 @@ def main() -> None:
       late_failure_minimum_steps=args.late_failure_minimum_steps,
       late_failure_maximum_steps=args.late_failure_maximum_steps,
       late_failure_minimum_riser=late_failure_minimum_riser,
+      dominant_failure_type=dominant_failure_type,
     )
     if (
       full_update_metrics["hard_case_start_count"]
@@ -713,7 +829,9 @@ def main() -> None:
   final_path = output_dir / "accepted_final.pt"
   result = {
     "method": (
-      "Failure-Focused Brief PPO v15"
+      "Dominant-Failure Brief PPO v16"
+      if v16
+      else "Failure-Focused Brief PPO v15"
       if v15
       else "CBF-Guided Brief PPO Refinement v14"
     ),
@@ -764,6 +882,17 @@ def main() -> None:
       thresholds.maximum_cbf_demand_ratio if v15 else None
     ),
     "deployment_context": context_metadata,
+    "dominant_failure_type": dominant_failure_type,
+    "failure_classification": failure_classification,
+    "dominant_failure_bank_design": (
+      {
+        "only_admitted_failure_type": dominant_failure_type,
+        "late_state_selector": "v15_exact_priority_window_and_thresholds",
+        "selector_hyperparameters_changed_from_v15": False,
+      }
+      if v16
+      else None
+    ),
     "failure_discovery": failure_discovery,
     "late_failure_bank": hard_case_bank.audit_metadata(),
     "structural_checks": structural_checks,

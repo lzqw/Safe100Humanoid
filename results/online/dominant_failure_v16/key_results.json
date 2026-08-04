@@ -1,0 +1,236 @@
+{
+  "method": "Dominant-Failure Brief PPO v16",
+  "protocol_version": "v16",
+  "evidence_status": "completed_negative_result",
+  "supported_claim": "Dominant-failure bank filtering was implemented and audited with protocol integrity, but did not establish a statistically supported target success improvement.",
+  "change_from_v15": {
+    "only_change": "admit only the frozen dominant target-failure type to the late-state bank",
+    "only_admitted_failure_type": "lateral_heading_drift",
+    "late_state_selector": "v15_exact_priority_window_and_thresholds",
+    "selector_hyperparameters_changed_from_v15": false,
+    "network_reward_ppo_gates_runtime_cbf_changed_from_v15": false
+  },
+  "failure_classification": {
+    "source_method": "Failure-Focused Brief PPO v15",
+    "source_policy_role": "online-start baseline",
+    "adapted_v16_policy_evaluations_used": false,
+    "source_episode_count": 1536,
+    "source_fall_count": 265,
+    "counts": {
+      "lateral_heading_drift": 146,
+      "non_lateral_high_cbf_demand": 72,
+      "non_lateral_balance_or_phase": 47
+    },
+    "fractions": {
+      "lateral_heading_drift": 0.5509433962264151,
+      "non_lateral_high_cbf_demand": 0.27169811320754716,
+      "non_lateral_balance_or_phase": 0.17735849056603772
+    },
+    "selected_dominant_failure_type": "lateral_heading_drift",
+    "thresholds": {
+      "stair_half_width_m": 1.2,
+      "centerline_width_fraction": 0.6666666666666666,
+      "centerline_threshold_m": 0.8,
+      "heading_error_degrees": 90,
+      "high_cbf_correction": 0.5
+    }
+  },
+  "formal_training": {
+    "training_seeds": [
+      42,
+      142,
+      242
+    ],
+    "rounds_total": 15,
+    "accepted_policy_changes": 11,
+    "maximum_attempted_minibatch_kl": 0.002841831650584936,
+    "per_seed": {
+      "42": {
+        "accepted_candidate_fractions": [
+          1.0,
+          1.0,
+          0.5,
+          0.5,
+          1.0
+        ],
+        "accepted_policy_changes": 5,
+        "maximum_attempted_minibatch_kl": 0.001833055866882205,
+        "failure_discovery_rollouts": 3,
+        "final_bank_size": 256,
+        "final_bank_steps_before_fall_min_max": [
+          50,
+          75
+        ],
+        "final_bank_riser_min_max": [
+          11,
+          11
+        ],
+        "checkpoint_sha256": "81df4311c09e68e508a97beec2b6f50ef6984cc6fa74f715be845dc6e592fd46"
+      },
+      "142": {
+        "accepted_candidate_fractions": [
+          null,
+          1.5,
+          0.5,
+          1.5,
+          0.5
+        ],
+        "accepted_policy_changes": 4,
+        "maximum_attempted_minibatch_kl": 0.002841831650584936,
+        "failure_discovery_rollouts": 2,
+        "final_bank_size": 256,
+        "final_bank_steps_before_fall_min_max": [
+          50,
+          65
+        ],
+        "final_bank_riser_min_max": [
+          11,
+          11
+        ],
+        "checkpoint_sha256": "038de0c695d127996124d075f9bb6df6b44040a76e0868a4b199b4053a4f7a50"
+      },
+      "242": {
+        "accepted_candidate_fractions": [
+          1.0,
+          null,
+          1.0,
+          null,
+          null
+        ],
+        "accepted_policy_changes": 2,
+        "maximum_attempted_minibatch_kl": 0.002671599853783846,
+        "failure_discovery_rollouts": 1,
+        "final_bank_size": 256,
+        "final_bank_steps_before_fall_min_max": [
+          50,
+          73
+        ],
+        "final_bank_riser_min_max": [
+          11,
+          11
+        ],
+        "checkpoint_sha256": "5f0278c3b8a21ba724ceccbb8348ba1c22c20b60edc29769afe0627c11da87c7"
+      }
+    },
+    "integrity": {
+      "final_banks_pure_dominant_type": true,
+      "final_bank_size_each": 256,
+      "successful_crossing_exclusion_passed": true,
+      "hard_transition_fraction_each_round": 0.15625,
+      "online_dual_cbf_reward_exactly_zero": true,
+      "raw_policy_storage_max_abs_error": 0.0,
+      "executed_safe_action_routing_max_abs_error": 0.0,
+      "fall_redistribution_exact": true,
+      "periodic_d0_checks_passed": 6,
+      "hard_kl_gate": 0.01
+    }
+  },
+  "independent_final_audit": {
+    "audit_seed": 1700000,
+    "audit_seed_disjoint": true,
+    "paired_episode_row_count": 3072,
+    "bootstrap": {
+      "method": "hierarchical paired bootstrap over adaptation seeds and episodes",
+      "samples": 10000,
+      "confidence_level": 0.95
+    },
+    "episodes_per_training_seed": {
+      "DQHMED_target": 512,
+      "D0_retention": 256,
+      "DQNHMED_neighbor_report_only": 256
+    },
+    "target": {
+      "baseline_success_rate": 0.8196614583333334,
+      "final_success_rate": 0.8268229166666666,
+      "paired_success_delta_mean_lcb95_ucb95": [
+        0.007161458333333333,
+        -0.022786458333333332,
+        0.038411458333333336
+      ],
+      "baseline_fall_rate": 0.18033854166666666,
+      "final_fall_rate": 0.17317708333333334,
+      "paired_fall_delta_mean_lcb95_ucb95": [
+        -0.007161458333333333,
+        -0.037760416666666664,
+        0.022786458333333332
+      ],
+      "intervention_per_riser_delta_mean_lcb95_ucb95": [
+        -0.02489506350442146,
+        -0.11206015497834111,
+        0.050954923803025486
+      ],
+      "per_training_seed_success_delta": {
+        "42": 0.0078125,
+        "142": 0.03125,
+        "242": -0.017578125
+      }
+    },
+    "d0_retention": {
+      "baseline_success_rate": 0.9088541666666666,
+      "final_success_rate": 0.91015625,
+      "paired_success_delta_mean_lcb95_ucb95": [
+        0.0013020833333333333,
+        -0.026041666666666668,
+        0.03125
+      ],
+      "baseline_fall_rate": 0.024739583333333332,
+      "final_fall_rate": 0.013020833333333334,
+      "paired_fall_delta_mean_lcb95_ucb95": [
+        -0.01171875,
+        -0.029947916666666668,
+        0.00390625
+      ]
+    },
+    "neighbor_report_only": {
+      "baseline_success_rate": 0.80859375,
+      "final_success_rate": 0.7825520833333334,
+      "paired_success_delta_mean_lcb95_ucb95": [
+        -0.026041666666666668,
+        -0.059895833333333336,
+        0.010416666666666666
+      ]
+    },
+    "promotion_gates": {
+      "target_success_improvement": false,
+      "d0_success_noninferiority_with_0_05_margin": true,
+      "target_fall_increase_cap_0_03": true,
+      "all_passed": false
+    },
+    "target_failure_mode_report_only": {
+      "baseline_counts": {
+        "lateral_heading_drift": 161,
+        "non_lateral_balance_or_phase": 55,
+        "non_lateral_high_cbf_demand": 61,
+        "success": 1259
+      },
+      "final_counts": {
+        "lateral_heading_drift": 150,
+        "non_lateral_balance_or_phase": 59,
+        "non_lateral_high_cbf_demand": 57,
+        "success": 1270
+      },
+      "lateral_to_success": 114,
+      "success_to_lateral": 97
+    }
+  },
+  "post_v16_decision": {
+    "branch": "B2",
+    "interpretation": "lateral/heading-only refinement was not statistically established",
+    "next_step": "do not add mechanisms; compare paired failure-type transitions before another design"
+  },
+  "validation": {
+    "focused_tests": "55 passed in 9.40s",
+    "gpu_filter_only_smoke": "passed",
+    "candidate_protocol_checks_passed": 72,
+    "candidate_protocol_checks_total": 72
+  },
+  "artifact_sha256": {
+    "classification_json": "a98895ba4c7f8bdfc700888f36f6ab92833d401b20442284c585eb7f73623552",
+    "classified_baseline_falls_csv": "84b458ec7a07afbc016f25ccb077b3622cdb5f8efd83318bdddd16350492be9e",
+    "train_seed42_summary_json": "22cc404fadb486b2f9f7aa72728751c18a204fcda66227f942d0de31857b76db",
+    "train_seed142_summary_json": "0a4a42271cc15db309abcecdf619e5f0b00e6498ea8babbdb483c7ac16e5c92c",
+    "train_seed242_summary_json": "244da91cab146361a3ae6204a7431fcb9f83ad4b8e62930b123b1c4792d8e978",
+    "final_audit_summary_json": "a1da337349388d3dc71e5f2085b457e31639ec5bcb26d7c69830a5fdff839b20",
+    "paired_episode_metrics_csv": "353b04936a540bb773633b3139f5638e51560dda896ad47ef35c654060927ea5"
+  }
+}

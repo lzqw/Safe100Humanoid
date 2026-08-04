@@ -1,4 +1,4 @@
-"""Disjoint hierarchical paired audit for Failure-Focused Brief PPO v15."""
+"""Disjoint paired audit for failure-focused v15 and dominant-failure v16."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ import argparse
 import csv
 from dataclasses import asdict
 import json
+import math
 from pathlib import Path
 import sys
 from typing import Any
@@ -29,6 +30,10 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--candidate-template", required=True)
   parser.add_argument("--deployment-context", type=Path, required=True)
   parser.add_argument(
+    "--protocol-version", choices=("v15", "v16"), default="v15"
+  )
+  parser.add_argument("--failure-classification", type=Path)
+  parser.add_argument(
     "--training-seeds", nargs="+", type=int, default=(42, 142, 242)
   )
   parser.add_argument("--output-dir", type=Path, required=True)
@@ -40,13 +45,24 @@ def _parse_args() -> argparse.Namespace:
 
 
 def _verify_candidate_metadata(
-  payload: dict[str, Any], *, training_seed: int, context_sha256: str
+  payload: dict[str, Any],
+  *,
+  training_seed: int,
+  context_sha256: str,
+  protocol_version: str = "v15",
+  classification_sha256: str | None = None,
 ) -> dict[str, Any]:
   metadata = payload.get("infos", {}).get("online_refinement")
   if not isinstance(metadata, dict):
-    raise ValueError("v15 checkpoint lacks online-refinement metadata")
+    raise ValueError(f"{protocol_version} checkpoint lacks online-refinement metadata")
+  expected_method = (
+    "Dominant-Failure Brief PPO v16"
+    if protocol_version == "v16"
+    else "Failure-Focused Brief PPO v15"
+  )
   checks = {
-    "method": metadata.get("method") == "Failure-Focused Brief PPO v15",
+    "method": metadata.get("method") == expected_method,
+    "formal_protocol": metadata.get("formal_protocol") is True,
     "seed": metadata.get("seed") == training_seed,
     "train_domain": metadata.get("train_domain") == "DQHMED",
     "neighbor_domain": metadata.get("neighbor_domain") == "DQNHMED",
@@ -65,9 +81,117 @@ def _verify_candidate_metadata(
       float(round_record.get("dual_cbf_reward_weight", -1.0)) == 0.0
       for round_record in metadata.get("rounds", [])
     ),
+    "hard_transition_fraction_all_rounds": all(
+      math.isclose(
+        float(
+          round_record.get("full_update_metrics", {}).get(
+            "hard_case_transition_fraction", -1.0
+          )
+        ),
+        10.0 / 64.0,
+      )
+      for round_record in metadata.get("rounds", [])
+    ),
+    "raw_policy_storage_exact_all_rounds": all(
+      float(
+        round_record.get("full_update_metrics", {}).get(
+          "policy_storage_max_abs_error", -1.0
+        )
+      )
+      == 0.0
+      for round_record in metadata.get("rounds", [])
+    ),
+    "safe_action_routing_exact_all_rounds": all(
+      float(
+        round_record.get("full_update_metrics", {}).get(
+          "executed_action_routing_max_abs_error", -1.0
+        )
+      )
+      == 0.0
+      for round_record in metadata.get("rounds", [])
+    ),
+    "fall_redistribution_exact_all_rounds": all(
+      math.isclose(
+        float(
+          round_record.get("full_update_metrics", {}).get(
+            "fall_redistribution_total", -1.0
+          )
+        ),
+        2.0
+        * float(
+          round_record.get("full_update_metrics", {}).get(
+            "fall_event_count", -1.0
+          )
+        ),
+      )
+      for round_record in metadata.get("rounds", [])
+    ),
+    "hard_kl_gate_all_rounds": all(
+      0.0
+      <= float(
+        round_record.get("full_update_metrics", {}).get(
+          "maximum_preupdate_minibatch_kl", -1.0
+        )
+      )
+      < 0.01
+      for round_record in metadata.get("rounds", [])
+    ),
   }
+  if protocol_version == "v16":
+    checks.update(
+      dominant_failure_type=(
+        metadata.get("dominant_failure_type") == "lateral_heading_drift"
+      ),
+      classification_hash=(
+        metadata.get("failure_classification", {}).get("sha256")
+        == classification_sha256
+      ),
+      filter_only_bank_design=(
+        metadata.get("dominant_failure_bank_design")
+        == {
+          "only_admitted_failure_type": "lateral_heading_drift",
+          "late_state_selector": "v15_exact_priority_window_and_thresholds",
+          "selector_hyperparameters_changed_from_v15": False,
+        }
+      ),
+      bounded_restored_failure_discovery=(
+        1 <= len(metadata.get("failure_discovery", [])) <= 8
+        and all(
+          rollout.get("parameters_restored_after_discovery") is True
+          for rollout in metadata.get("failure_discovery", [])
+        )
+      ),
+      dominant_bank_purity=(
+        metadata.get("late_failure_bank", {}).get(
+          "dominant_failure_type_purity_passed"
+        )
+        is True
+        and metadata.get("late_failure_bank", {}).get(
+          "dominant_failure_type"
+        )
+        == "lateral_heading_drift"
+        and metadata.get("late_failure_bank", {}).get(
+          "late_failure_entry_count", 0
+        )
+        > 0
+        and metadata.get("late_failure_bank", {}).get(
+          "failure_type_counts"
+        )
+        == {
+          "lateral_heading_drift": metadata.get(
+            "late_failure_bank", {}
+          ).get("late_failure_entry_count")
+        }
+      ),
+    )
+  else:
+    checks["dominant_failure_type_absent"] = (
+      metadata.get("dominant_failure_type") is None
+    )
   if not all(checks.values()):
-    raise ValueError(f"candidate is not a conforming v15 checkpoint: {checks}")
+    raise ValueError(
+      f"candidate is not a conforming {protocol_version} checkpoint: {checks}"
+    )
   return checks
 
 
@@ -77,6 +201,7 @@ def _decision_branch(
   d0_noninferiority: bool,
   target_fall_safe: bool,
   cbf_demand_increased: bool,
+  dominant_failure_attempted: bool = False,
 ) -> dict[str, str]:
   if not target_fall_safe:
     return {
@@ -85,6 +210,12 @@ def _decision_branch(
       "next_step": "do not promote; inspect paired target falls before another adaptation design",
     }
   if not target_improvement:
+    if dominant_failure_attempted:
+      return {
+        "branch": "B2",
+        "interpretation": "lateral/heading-only refinement was not statistically established",
+        "next_step": "do not add mechanisms; compare paired failure-type transitions before another design",
+      }
     return {
       "branch": "B",
       "interpretation": "target success improvement was not statistically established",
@@ -109,17 +240,46 @@ def _decision_branch(
   }
 
 
+def _failure_type_from_row(row: dict[str, str], classifier) -> str:
+  if row["fell"] != "True":
+    return (
+      "success"
+      if row.get("success") == "True"
+      else "timeout_or_other_nonfall"
+    )
+  return classifier(
+    side_edge_breach=row["side_edge_breach"] == "True",
+    max_abs_centerline_error=float(row["max_abs_centerline_error"]),
+    max_abs_heading_error=float(row["max_abs_heading_error"]),
+    correction_max=float(row["correction_max"]),
+  )
+
+
 def main() -> None:
   args = _parse_args()
+  protocol_version = args.protocol_version
+  if protocol_version == "v16" and args.failure_classification is None:
+    raise ValueError("formal v16 audit requires --failure-classification")
+  if protocol_version == "v15" and args.failure_classification is not None:
+    raise ValueError("v15 audit does not use a dominant-failure classification")
   training_seeds = list(args.training_seeds)
   if training_seeds != [42, 142, 242]:
-    raise ValueError("formal v15 audit requires adaptation seeds 42, 142, and 242")
+    raise ValueError(
+      f"formal {protocol_version} audit requires adaptation seeds 42, 142, and 242"
+    )
   if args.eval_batch_size != 128:
-    raise ValueError("formal v15 audit uses 128 independent environments per batch")
+    raise ValueError(
+      f"formal {protocol_version} audit uses 128 independent environments per batch"
+    )
   if args.bootstrap_samples < 1000:
     raise ValueError("formal audit requires at least 1000 bootstrap samples")
   if args.audit_seed in training_seeds or 1000 <= args.audit_seed <= 1019:
     raise ValueError("final audit seed must be disjoint from calibration and adaptation")
+  expected_audit_seed = 1700000 if protocol_version == "v16" else 1500000
+  if args.audit_seed != expected_audit_seed:
+    raise ValueError(
+      f"formal {protocol_version} audit seed is frozen at {expected_audit_seed}"
+    )
 
   repo = args.repo.resolve()
   sys.path.insert(0, str(repo))
@@ -132,10 +292,57 @@ def main() -> None:
     apply_frozen_deployment_context,
     load_calibrated_deployment_context,
   )
+  from src.tasks.stairs_cbf.hard_cases import classify_target_failure_mode
 
   context_path = args.deployment_context.resolve()
   context = load_calibrated_deployment_context(context_path)
   context_sha256 = context["parameters_sha256"]
+  classification_path = (
+    args.failure_classification.resolve()
+    if args.failure_classification is not None
+    else None
+  )
+  classification_sha256 = (
+    _sha256(classification_path) if classification_path is not None else None
+  )
+  classification_payload = (
+    json.loads(classification_path.read_text())
+    if classification_path is not None
+    else None
+  )
+  if classification_payload is not None:
+    failure_counts = classification_payload.get("failure_type_counts", {})
+    ordered_counts = sorted(
+      failure_counts.items(), key=lambda item: (-item[1], item[0])
+    )
+    thresholds = classification_payload.get("thresholds", {})
+    if (
+      classification_payload.get("source_method")
+      != "Failure-Focused Brief PPO v15"
+      or classification_payload.get("source_policy_role")
+      != "online-start baseline"
+      or classification_payload.get("source_training_seeds")
+      != [42, 142, 242]
+      or classification_payload.get("source_episode_count") != 1536
+      or classification_payload.get("source_fall_count") != 265
+      or classification_payload.get("selected_dominant_failure_type")
+      != "lateral_heading_drift"
+      or classification_payload.get("adapted_v16_policy_evaluations_used")
+      is not False
+      or len(ordered_counts) < 2
+      or ordered_counts[0][0] != "lateral_heading_drift"
+      or ordered_counts[0][1] <= ordered_counts[1][1]
+      or not math.isclose(
+        float(thresholds.get("centerline_width_fraction", -1.0)),
+        2.0 / 3.0,
+      )
+      or not math.isclose(
+        float(thresholds.get("heading_error_rad", -1.0)), math.pi / 2.0
+      )
+      or not math.isclose(float(thresholds.get("high_cbf_correction", -1.0)), 0.5)
+      or not math.isclose(float(thresholds.get("stair_half_width_m", -1.0)), 1.2)
+    ):
+      raise ValueError("v16 audit classification attestation is invalid")
   baseline_path = args.baseline_checkpoint.resolve()
   baseline_payload = torch.load(
     baseline_path, map_location="cpu", weights_only=False
@@ -183,6 +390,8 @@ def main() -> None:
         candidate_payload,
         training_seed=training_seed,
         context_sha256=context_sha256,
+        protocol_version=protocol_version,
+        classification_sha256=classification_sha256,
       )
       first_eval_seed = args.audit_seed + 10000 * seed_index
       seed_output = output_dir / f"train_seed{training_seed}"
@@ -267,6 +476,8 @@ def main() -> None:
       "baseline_intervention_per_riser",
       "final_intervention_per_riser",
     ]
+    if protocol_version == "v16":
+      fieldnames.extend(("baseline_failure_type", "final_failure_type"))
     writer = csv.DictWriter(handle, fieldnames=fieldnames)
     writer.writeheader()
     for domain in protocol:
@@ -276,23 +487,72 @@ def main() -> None:
         for pair_index, (baseline, final) in enumerate(
           zip(baseline_rows, final_rows, strict=True)
         ):
-          writer.writerow(
-            {
-              "training_seed": training_seed,
-              "domain": domain,
-              "pair_index": pair_index,
-              "baseline_success": int(baseline["success"] == "True"),
-              "final_success": int(final["success"] == "True"),
-              "baseline_fell": int(baseline["fell"] == "True"),
-              "final_fell": int(final["fell"] == "True"),
-              "baseline_intervention_per_riser": baseline[
-                "intervention_per_riser"
-              ],
-              "final_intervention_per_riser": final[
-                "intervention_per_riser"
-              ],
-            }
-          )
+          paired_record = {
+            "training_seed": training_seed,
+            "domain": domain,
+            "pair_index": pair_index,
+            "baseline_success": int(baseline["success"] == "True"),
+            "final_success": int(final["success"] == "True"),
+            "baseline_fell": int(baseline["fell"] == "True"),
+            "final_fell": int(final["fell"] == "True"),
+            "baseline_intervention_per_riser": baseline[
+              "intervention_per_riser"
+            ],
+            "final_intervention_per_riser": final[
+              "intervention_per_riser"
+            ],
+          }
+          if protocol_version == "v16":
+            paired_record.update(
+              baseline_failure_type=(
+                _failure_type_from_row(baseline, classify_target_failure_mode)
+                if domain == "DQHMED"
+                else "not_applicable"
+              ),
+              final_failure_type=(
+                _failure_type_from_row(final, classify_target_failure_mode)
+                if domain == "DQHMED"
+                else "not_applicable"
+              ),
+            )
+          writer.writerow(paired_record)
+
+  target_failure_mode_report = None
+  if protocol_version == "v16":
+    baseline_counts: dict[str, int] = {}
+    final_counts: dict[str, int] = {}
+    transitions: dict[str, dict[str, int]] = {}
+    for baseline_group, final_group in zip(
+      rows_by_domain["DQHMED"]["baseline"],
+      rows_by_domain["DQHMED"]["final"],
+      strict=True,
+    ):
+      for baseline_row, final_row in zip(
+        baseline_group, final_group, strict=True
+      ):
+        baseline_type = _failure_type_from_row(
+          baseline_row, classify_target_failure_mode
+        )
+        final_type = _failure_type_from_row(
+          final_row, classify_target_failure_mode
+        )
+        baseline_counts[baseline_type] = baseline_counts.get(baseline_type, 0) + 1
+        final_counts[final_type] = final_counts.get(final_type, 0) + 1
+        row_transitions = transitions.setdefault(baseline_type, {})
+        row_transitions[final_type] = row_transitions.get(final_type, 0) + 1
+    if (
+      sum(baseline_counts.values()) != 1536
+      or sum(final_counts.values()) != 1536
+    ):
+      raise RuntimeError("v16 target failure report must cover all 1,536 pairs")
+    target_failure_mode_report = {
+      "role": "report only; never a training or promotion gate",
+      "classification_sha256": classification_sha256,
+      "episode_count": sum(baseline_counts.values()),
+      "baseline_counts": baseline_counts,
+      "final_counts": final_counts,
+      "paired_transition_counts": transitions,
+    }
 
   intervals: dict[str, Any] = {}
   metrics = ("success_rate", "fall_rate", "intervention_per_riser")
@@ -377,7 +637,12 @@ def main() -> None:
     },
   }
   result = {
-    "method": "Failure-Focused Brief PPO v15",
+    "method": (
+      "Dominant-Failure Brief PPO v16"
+      if protocol_version == "v16"
+      else "Failure-Focused Brief PPO v15"
+    ),
+    "protocol_version": protocol_version,
     "claim_scope": "one fixed training-unseen and algorithm-hidden composite deployment context",
     "evidence_role": "independent final audit; never used by training or context selection",
     "runtime_cbf": True,
@@ -391,6 +656,15 @@ def main() -> None:
       "parameters_sha256": context_sha256,
       "calibration": context["calibration"],
     },
+    "failure_classification": (
+      {
+        "path": str(classification_path),
+        "sha256": classification_sha256,
+        "selected_dominant_failure_type": "lateral_heading_drift",
+      }
+      if classification_path is not None
+      else None
+    ),
     "baseline_checkpoint": str(baseline_path),
     "baseline_checkpoint_sha256": _sha256(baseline_path),
     "candidate_checkpoint_template": args.candidate_template,
@@ -421,11 +695,17 @@ def main() -> None:
       "mean_increased": cbf_demand_increased,
       "promotion_gate": False,
     },
-    "post_v15_decision": _decision_branch(
+    "target_failure_mode_report": target_failure_mode_report,
+    (
+      "post_v16_decision"
+      if protocol_version == "v16"
+      else "post_v15_decision"
+    ): _decision_branch(
       target_improvement=target_improvement,
       d0_noninferiority=d0_noninferiority,
       target_fall_safe=target_fall_safe,
       cbf_demand_increased=cbf_demand_increased,
+      dominant_failure_attempted=protocol_version == "v16",
     ),
     "raw_evaluations": raw,
   }

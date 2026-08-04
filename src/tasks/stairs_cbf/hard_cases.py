@@ -10,9 +10,67 @@ keeping the actor interface unchanged.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 from typing import Any
 
 import torch
+
+
+MIXED_FAILURE_TYPE = "mixed"
+LATERAL_HEADING_DRIFT_FAILURE_TYPE = "lateral_heading_drift"
+NON_LATERAL_HIGH_CBF_FAILURE_TYPE = "non_lateral_high_cbf_demand"
+NON_LATERAL_BALANCE_FAILURE_TYPE = "non_lateral_balance_or_phase"
+TARGET_FAILURE_TYPES = (
+  LATERAL_HEADING_DRIFT_FAILURE_TYPE,
+  NON_LATERAL_HIGH_CBF_FAILURE_TYPE,
+  NON_LATERAL_BALANCE_FAILURE_TYPE,
+)
+LATERAL_CENTERLINE_WIDTH_FRACTION = 2.0 / 3.0
+LATERAL_HEADING_THRESHOLD_RAD = math.pi / 2.0
+HIGH_CBF_CORRECTION_THRESHOLD = 0.5
+
+
+def classify_target_failure_mode(
+  *,
+  side_edge_breach: bool,
+  max_abs_centerline_error: float,
+  max_abs_heading_error: float,
+  correction_max: float,
+  stair_half_width: float = 1.2,
+) -> str:
+  """Assign one deterministic, mutually exclusive target-fall class.
+
+  The lateral class uses geometry-derived thresholds: a root/foot edge breach,
+  root drift beyond two thirds of the stair half-width, or heading error of at
+  least 90 degrees. The remaining failures are split by high runtime-CBF
+  demand. This classifier is used only for Branch-B diagnosis and hard-bank
+  selection; it never changes the reward or promotion gates.
+  """
+  values = torch.tensor(
+    [
+      max_abs_centerline_error,
+      max_abs_heading_error,
+      correction_max,
+      stair_half_width,
+    ],
+    dtype=torch.float64,
+  )
+  if not bool(torch.isfinite(values).all()):
+    raise ValueError("failure classification inputs must be finite")
+  if stair_half_width <= 0.0:
+    raise ValueError("stair half-width must be positive")
+  if min(max_abs_centerline_error, max_abs_heading_error, correction_max) < 0.0:
+    raise ValueError("failure classification magnitudes must be non-negative")
+  if (
+    side_edge_breach
+    or max_abs_centerline_error
+    >= LATERAL_CENTERLINE_WIDTH_FRACTION * stair_half_width
+    or max_abs_heading_error >= LATERAL_HEADING_THRESHOLD_RAD
+  ):
+    return LATERAL_HEADING_DRIFT_FAILURE_TYPE
+  if correction_max >= HIGH_CBF_CORRECTION_THRESHOLD:
+    return NON_LATERAL_HIGH_CBF_FAILURE_TYPE
+  return NON_LATERAL_BALANCE_FAILURE_TYPE
 
 
 _ACTION_MANAGER_ATTRS = ("_action", "_prev_action", "_prev_prev_action")
@@ -327,6 +385,7 @@ class HardCaseEntry:
   heading_drift_fraction: float = 0.0
   large_correction_fraction: float = 0.0
   no_subsequent_riser_crossing: bool = False
+  failure_type: str = MIXED_FAILURE_TYPE
 
 
 @dataclass(frozen=True)
@@ -339,6 +398,7 @@ class LateFailureCandidate:
   large_correction_fraction: float
   priority: float
   no_subsequent_riser_crossing: bool = True
+  failure_type: str = MIXED_FAILURE_TYPE
 
 
 def select_late_failure_candidate(
@@ -353,8 +413,14 @@ def select_late_failure_candidate(
   lateral_threshold: float = 0.18,
   heading_threshold: float = 0.25,
   correction_threshold: float = 0.01,
+  failure_type: str = MIXED_FAILURE_TYPE,
 ) -> LateFailureCandidate | None:
   """Choose one late-riser state from the window preceding a target fall."""
+  if (
+    failure_type != MIXED_FAILURE_TYPE
+    and failure_type not in TARGET_FAILURE_TYPES
+  ):
+    raise ValueError(f"unsupported target failure type: {failure_type}")
   tensors = (
     riser_history,
     centerline_error_history,
@@ -379,7 +445,8 @@ def select_late_failure_candidate(
     suffix = slice(index, len(riser_history))
     # A state followed by another normal riser crossing was not the boundary
     # that decided this fall. Excluding it also prevents ordinary CBF
-    # interventions on otherwise successful stair transitions entering v15.
+    # interventions on otherwise successful stair transitions entering the
+    # failure-focused protocols.
     if bool(torch.any(riser_history[index + 1 :] > riser)):
       continue
     lateral_fraction = float(
@@ -412,6 +479,7 @@ def select_late_failure_candidate(
         large_correction_fraction=correction_fraction,
         priority=priority,
         no_subsequent_riser_crossing=True,
+        failure_type=failure_type,
       )
     )
   return max(candidates, key=lambda candidate: candidate.priority, default=None)
@@ -427,6 +495,7 @@ class HardCaseStateBank:
     bank_kind: str = "general_intervention",
     source_domain: str | None = None,
     context_sha256: str | None = None,
+    dominant_failure_type: str | None = None,
   ) -> None:
     if capacity < 1:
       raise ValueError("hard-case capacity must be positive")
@@ -434,6 +503,14 @@ class HardCaseStateBank:
     self.bank_kind = bank_kind
     self.source_domain = source_domain
     self.context_sha256 = context_sha256
+    if (
+      dominant_failure_type is not None
+      and dominant_failure_type not in TARGET_FAILURE_TYPES
+    ):
+      raise ValueError(
+        f"unsupported dominant target failure type: {dominant_failure_type}"
+      )
+    self.dominant_failure_type = dominant_failure_type
     self.entries: list[HardCaseEntry] = []
     self.total_added = 0
 
@@ -453,6 +530,10 @@ class HardCaseStateBank:
     priorities: torch.Tensor,
     riser_indices: torch.Tensor,
   ) -> int:
+    if self.dominant_failure_type is not None:
+      raise ValueError(
+        "a dominant-failure bank accepts only labeled late-failure entries"
+      )
     if not (
       env_ids.ndim == priorities.ndim == riser_indices.ndim == 1
       and len(env_ids) == len(priorities) == len(riser_indices)
@@ -492,6 +573,14 @@ class HardCaseStateBank:
     """Insert one state selected only after its target episode ended in a fall."""
     if self.bank_kind != "target_late_failure":
       raise ValueError("late failures require a target_late_failure bank")
+    if (
+      self.dominant_failure_type is not None
+      and candidate.failure_type != self.dominant_failure_type
+    ):
+      raise ValueError(
+        "late-failure candidate does not match the frozen dominant failure "
+        f"type: {candidate.failure_type} != {self.dominant_failure_type}"
+      )
     selected = torch.tensor([env_id], device=next(iter(state.values())).device)
     individual = {
       key: value.index_select(0, selected).detach().cpu()
@@ -508,6 +597,7 @@ class HardCaseStateBank:
       heading_drift_fraction=candidate.heading_drift_fraction,
       large_correction_fraction=candidate.large_correction_fraction,
       no_subsequent_riser_crossing=candidate.no_subsequent_riser_crossing,
+      failure_type=candidate.failure_type,
     )
     added = 0
     if len(self.entries) < self.capacity:
@@ -557,6 +647,7 @@ class HardCaseStateBank:
       "bank_kind": self.bank_kind,
       "source_domain": self.source_domain,
       "context_sha256": self.context_sha256,
+      "dominant_failure_type": self.dominant_failure_type,
       "entries": [
         {
           "state": entry.state,
@@ -568,6 +659,7 @@ class HardCaseStateBank:
           "heading_drift_fraction": entry.heading_drift_fraction,
           "large_correction_fraction": entry.large_correction_fraction,
           "no_subsequent_riser_crossing": entry.no_subsequent_riser_crossing,
+          "failure_type": entry.failure_type,
         }
         for entry in self.entries
       ],
@@ -579,6 +671,12 @@ class HardCaseStateBank:
     self.bank_kind = str(payload.get("bank_kind", "general_intervention"))
     self.source_domain = payload.get("source_domain")
     self.context_sha256 = payload.get("context_sha256")
+    self.dominant_failure_type = payload.get("dominant_failure_type")
+    if (
+      self.dominant_failure_type is not None
+      and self.dominant_failure_type not in TARGET_FAILURE_TYPES
+    ):
+      raise ValueError("serialized bank has an unsupported dominant failure type")
     self.entries = [
       HardCaseEntry(
         state=item["state"],
@@ -598,20 +696,43 @@ class HardCaseStateBank:
         no_subsequent_riser_crossing=bool(
           item.get("no_subsequent_riser_crossing", False)
         ),
+        failure_type=str(item.get("failure_type", MIXED_FAILURE_TYPE)),
       )
       for item in payload.get("entries", [])
     ]
     if len(self.entries) > self.capacity:
       raise ValueError("serialized hard-case bank exceeds capacity")
+    if self.dominant_failure_type is not None and any(
+      entry.failure_type != self.dominant_failure_type
+      for entry in self.entries
+    ):
+      raise ValueError(
+        "serialized bank contains entries outside its dominant failure type"
+      )
 
   def audit_metadata(self) -> dict[str, Any]:
     late_entries = [
       entry for entry in self.entries if entry.steps_before_fall is not None
     ]
+    failure_type_counts = {
+      failure_type: sum(
+        entry.failure_type == failure_type for entry in late_entries
+      )
+      for failure_type in sorted({entry.failure_type for entry in late_entries})
+    }
     return {
       "bank_kind": self.bank_kind,
       "source_domain": self.source_domain,
       "context_sha256": self.context_sha256,
+      "dominant_failure_type": self.dominant_failure_type,
+      "failure_type_counts": failure_type_counts,
+      "dominant_failure_type_purity_passed": (
+        self.dominant_failure_type is None
+        or all(
+          entry.failure_type == self.dominant_failure_type
+          for entry in late_entries
+        )
+      ),
       "size": len(self.entries),
       "capacity": self.capacity,
       "total_added": self.total_added,

@@ -309,11 +309,14 @@ def _collect_and_update(
   late_failure_minimum_steps: int = 50,
   late_failure_maximum_steps: int = 150,
   late_failure_minimum_riser: int = 5,
+  dominant_failure_type: str | None = None,
 ):
   from rsl_rl.utils import check_nan
   from src.tasks.stairs_cbf.hard_cases import (
     capture_hard_case_state,
+    classify_target_failure_mode,
     hard_case_state_shape_mismatches,
+    MIXED_FAILURE_TYPE,
     reset_rollout_with_hard_cases,
     restore_hard_case_state,
     select_late_failure_candidate,
@@ -365,6 +368,16 @@ def _collect_and_update(
   centerline_history = deque(maxlen=history_steps + 1)
   heading_history = deque(maxlen=history_steps + 1)
   correction_history = deque(maxlen=history_steps + 1)
+  episode_side_edge_breach = torch.zeros(
+    runner.env.num_envs, dtype=torch.bool, device=runner.env.device
+  )
+  episode_max_abs_centerline_error = torch.zeros(
+    runner.env.num_envs, device=runner.env.device
+  )
+  episode_max_abs_heading_error = torch.zeros_like(
+    episode_max_abs_centerline_error
+  )
+  episode_correction_max = torch.zeros_like(episode_max_abs_centerline_error)
   valid_steps = torch.zeros(
     runner.env.num_envs, dtype=torch.long, device=runner.env.device
   )
@@ -373,6 +386,8 @@ def _collect_and_update(
   )
   bank_added = 0
   target_falls_seen = 0
+  target_failure_type_counts: dict[str, int] = {}
+  dominant_failure_type_rejected = 0
   late_failure_candidates_found = 0
   hard_case_restart_count = 0
   # Use no_grad rather than inference_mode because critic normalization is
@@ -407,6 +422,31 @@ def _collect_and_update(
       correction_history.append(
         action_term.target_intervention_norm.detach().clone()
       )
+      centerline_error = centerline_history[-1]
+      heading_error = heading_history[-1]
+      abs_centerline_error = centerline_error.abs()
+      episode_max_abs_centerline_error = torch.maximum(
+        episode_max_abs_centerline_error, abs_centerline_error
+      )
+      episode_max_abs_heading_error = torch.maximum(
+        episode_max_abs_heading_error, heading_error.abs()
+      )
+      stair_half_width = float(
+        getattr(command_term.cfg, "stair_half_width", 1.20)
+      )
+      patches = terrain.flat_patches["stair_targets"][
+        terrain.terrain_levels, terrain.terrain_types
+      ]
+      center_y = patches[:, 0, 1]
+      foot_y = unwrapped.scene["robot"].data.site_pos_w[
+        :, action_term._site_local_ids, 1
+      ]
+      foot_edge_breach = torch.max(
+        torch.abs(foot_y - center_y.unsqueeze(1)), dim=1
+      ).values >= stair_half_width
+      episode_side_edge_breach |= (
+        abs_centerline_error >= stair_half_width
+      ) | foot_edge_breach
       actions = runner.alg.act(obs)
       obs, rewards, dones, extras = runner.env.step(actions.to(runner.env.device))
       check_nan(obs, rewards, dones)
@@ -415,6 +455,10 @@ def _collect_and_update(
       actual_intervention = extras.get("cbf_intervened")
       magnitude = extras.get("cbf_intervention_magnitude")
       riser_index = extras.get("online_stair_index")
+      if magnitude is not None:
+        episode_correction_max = torch.maximum(
+          episode_correction_max, magnitude
+        )
       if (
         not late_failure_hard_cases
         and
@@ -450,6 +494,26 @@ def _collect_and_update(
           heading = list(heading_history)
           corrections = list(correction_history)
           for env_id in fall_ids.tolist():
+            failure_type = classify_target_failure_mode(
+              side_edge_breach=bool(episode_side_edge_breach[env_id]),
+              max_abs_centerline_error=float(
+                episode_max_abs_centerline_error[env_id]
+              ),
+              max_abs_heading_error=float(
+                episode_max_abs_heading_error[env_id]
+              ),
+              correction_max=float(episode_correction_max[env_id]),
+              stair_half_width=stair_half_width,
+            )
+            target_failure_type_counts[failure_type] = (
+              target_failure_type_counts.get(failure_type, 0) + 1
+            )
+            if (
+              dominant_failure_type is not None
+              and failure_type != dominant_failure_type
+            ):
+              dominant_failure_type_rejected += 1
+              continue
             episode_steps = min(int(valid_steps[env_id]) + 1, len(states))
             if episode_steps <= late_failure_minimum_steps:
               continue
@@ -462,6 +526,11 @@ def _collect_and_update(
               minimum_steps_before_fall=late_failure_minimum_steps,
               maximum_steps_before_fall=late_failure_maximum_steps,
               minimum_riser=late_failure_minimum_riser,
+              failure_type=(
+                dominant_failure_type
+                if dominant_failure_type is not None
+                else MIXED_FAILURE_TYPE
+              ),
             )
             if candidate is None:
               continue
@@ -514,6 +583,10 @@ def _collect_and_update(
       valid_steps = torch.where(
         done_mask, torch.zeros_like(valid_steps), valid_steps + 1
       )
+      episode_side_edge_breach[done_mask] = False
+      episode_max_abs_centerline_error[done_mask] = 0.0
+      episode_max_abs_heading_error[done_mask] = 0.0
+      episode_correction_max[done_mask] = 0.0
       obs = obs.to(runner.device)
       rewards = rewards.to(runner.device)
       dones = dones.to(runner.device)
@@ -570,6 +643,9 @@ def _collect_and_update(
       "hard_case_restart_count": hard_case_restart_count,
       "late_failure_hard_cases": late_failure_hard_cases,
       "late_failure_target_falls_seen": target_falls_seen,
+      "target_failure_type_counts": target_failure_type_counts,
+      "dominant_failure_type": dominant_failure_type,
+      "dominant_failure_type_rejected": dominant_failure_type_rejected,
       "late_failure_candidates_found": late_failure_candidates_found,
       "late_failure_minimum_steps": late_failure_minimum_steps,
       "late_failure_maximum_steps": late_failure_maximum_steps,

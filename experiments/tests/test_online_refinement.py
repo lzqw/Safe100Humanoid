@@ -55,7 +55,11 @@ from src.tasks.stairs_cbf.online import (
 )
 from src.tasks.stairs_cbf.hard_cases import (
   HardCaseStateBank,
+  LATERAL_HEADING_DRIFT_FAILURE_TYPE,
   LateFailureCandidate,
+  NON_LATERAL_BALANCE_FAILURE_TYPE,
+  NON_LATERAL_HIGH_CBF_FAILURE_TYPE,
+  classify_target_failure_mode,
   curriculum_destination_ids,
   hard_case_destination_ids,
   hard_case_state_shape_mismatches,
@@ -259,6 +263,91 @@ def test_late_failure_selector_and_bank_are_target_failure_only() -> None:
       0,
       LateFailureCandidate(0, 50, 5, 0.0, 0.0, 0.0, 5.0),
     )
+
+
+def test_branch_b_failure_classifier_and_bank_freeze_one_dominant_type() -> None:
+  assert classify_target_failure_mode(
+    side_edge_breach=True,
+    max_abs_centerline_error=0.1,
+    max_abs_heading_error=0.1,
+    correction_max=0.1,
+  ) == LATERAL_HEADING_DRIFT_FAILURE_TYPE
+  assert classify_target_failure_mode(
+    side_edge_breach=False,
+    max_abs_centerline_error=0.8,
+    max_abs_heading_error=0.1,
+    correction_max=0.1,
+  ) == LATERAL_HEADING_DRIFT_FAILURE_TYPE
+  assert classify_target_failure_mode(
+    side_edge_breach=False,
+    max_abs_centerline_error=0.1,
+    max_abs_heading_error=0.1,
+    correction_max=0.5,
+  ) == NON_LATERAL_HIGH_CBF_FAILURE_TYPE
+  assert classify_target_failure_mode(
+    side_edge_breach=False,
+    max_abs_centerline_error=0.1,
+    max_abs_heading_error=0.1,
+    correction_max=0.49,
+  ) == NON_LATERAL_BALANCE_FAILURE_TYPE
+
+  length = 170
+  risers = torch.full((length,), 10, dtype=torch.long)
+  lateral = torch.linspace(0.0, 1.0, length)
+  candidate = select_late_failure_candidate(
+    risers,
+    lateral,
+    torch.zeros(length),
+    torch.full((length,), 0.2),
+    failure_type=LATERAL_HEADING_DRIFT_FAILURE_TYPE,
+  )
+  mixed_candidate = select_late_failure_candidate(
+    risers,
+    lateral,
+    torch.zeros(length),
+    torch.full((length,), 0.2),
+  )
+  assert candidate is not None
+  assert mixed_candidate is not None
+  assert candidate.failure_type == LATERAL_HEADING_DRIFT_FAILURE_TYPE
+  assert candidate.history_index == mixed_candidate.history_index
+  assert candidate.priority == mixed_candidate.priority
+  bank = HardCaseStateBank(
+    capacity=2,
+    bank_kind="target_late_failure",
+    source_domain="DQHMED",
+    dominant_failure_type=LATERAL_HEADING_DRIFT_FAILURE_TYPE,
+  )
+  state = {"terrain/type": torch.tensor([0]), "dummy": torch.ones(1, 2)}
+  assert bank.add_late_failure(state, 0, candidate) == 1
+  audit = bank.audit_metadata()
+  assert audit["dominant_failure_type_purity_passed"] is True
+  assert audit["failure_type_counts"] == {
+    LATERAL_HEADING_DRIFT_FAILURE_TYPE: 1
+  }
+  wrong_type = LateFailureCandidate(
+    0,
+    50,
+    10,
+    0.0,
+    0.0,
+    1.0,
+    10.0,
+    failure_type=NON_LATERAL_HIGH_CBF_FAILURE_TYPE,
+  )
+  with pytest.raises(ValueError, match="frozen dominant failure"):
+    bank.add_late_failure(state, 0, wrong_type)
+  with pytest.raises(ValueError, match="only labeled late-failure"):
+    bank.add_batched(
+      state,
+      torch.tensor([0]),
+      torch.tensor([1.0]),
+      torch.tensor([10]),
+    )
+  serialized = bank.state_dict()
+  serialized["entries"][0]["failure_type"] = NON_LATERAL_HIGH_CBF_FAILURE_TYPE
+  with pytest.raises(ValueError, match="outside its dominant failure"):
+    HardCaseStateBank().load_state_dict(serialized)
 
 
 def test_failure_focused_context_is_deterministic_hidden_and_calibration_auditable() -> None:
