@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import copy
+
 import pytest
 import torch
 
@@ -46,6 +48,16 @@ from src.tasks.stairs_cbf.hard_cases import (
   hard_case_destination_ids,
   hard_case_state_shape_mismatches,
   perturb_joystick_command_state,
+)
+from src.tasks.stairs_cbf.retention import (
+  RETENTION_BANK_KIND,
+  RETENTION_BANK_SCHEMA_VERSION,
+  actor_observation_sha256,
+  balanced_stage_quotas,
+  cyclic_retention_batch,
+  increase_anchor_weight_on_budget_violation,
+  interleave_stage_observations,
+  validate_retention_observation_bank,
 )
 from src.tasks.stairs_cbf import mdp
 from src.tasks.stairs_cbf.terrain import ForwardStairsTerrainCfg
@@ -122,6 +134,137 @@ def test_projected_dual_update_respects_budget_and_bounds() -> None:
   assert projected_lagrange_update(
     0.9, 1.0, 0.0, learning_rate=2.0, maximum=1.0
   ) == 1.0
+
+
+def test_stage_balanced_retention_bank_is_actor_only_and_round_robin() -> None:
+  quotas = balanced_stage_quotas(20_003, 6)
+  assert sum(quotas) == 20_003
+  assert max(quotas) - min(quotas) == 1
+  stages = [
+    torch.stack(
+      (
+        torch.full((count,), float(stage)),
+        torch.arange(count, dtype=torch.float32),
+      ),
+      dim=1,
+    )
+    for stage, count in enumerate(quotas)
+  ]
+  bank = interleave_stage_observations(
+    stages, generator=torch.Generator().manual_seed(12)
+  )
+  # Every complete group of six is exactly stage-balanced. Stage labels are
+  # used only in this construction test; production payloads store no labels.
+  for start in range(0, 120, 6):
+    assert set(bank[start : start + 6, 0].tolist()) == set(range(6))
+  payload = {
+    "schema_version": RETENTION_BANK_SCHEMA_VERSION,
+    "kind": RETENTION_BANK_KIND,
+    "domain": "D0",
+    "task": "Unitree-G1-Stairs-Online-D0",
+    "seed": 17,
+    "runtime_filter": True,
+    "policy_mode": "deterministic_mean",
+    "actor_observation_key": "actor",
+    "actor_observation_dim": 2,
+    "contains_privileged_observations": False,
+    "num_stages": 6,
+    "stage_counts": list(quotas),
+    "ordering": "stage_round_robin_v1",
+    "checkpoint_sha256": "abc",
+    "observation_sha256": actor_observation_sha256(bank),
+    "observations": bank,
+  }
+  validated, metadata = validate_retention_observation_bank(
+    payload, expected_actor_dim=2, expected_domain="D0"
+  )
+  assert torch.equal(validated, bank)
+  assert metadata["contains_privileged_observations"] is False
+  assert set(metadata).isdisjoint({"observations", "online_privileged"})
+  privileged = dict(payload, contains_privileged_observations=True)
+  with pytest.raises(ValueError, match="exclude privileged"):
+    validate_retention_observation_bank(privileged)
+
+
+def test_retention_bank_cyclic_batch_and_budget_adaptation_are_deterministic() -> None:
+  observations = torch.arange(15, dtype=torch.float32).reshape(5, 3)
+  batch, cursor = cyclic_retention_batch(
+    observations, cursor=4, batch_size=3
+  )
+  assert torch.equal(batch, observations[torch.tensor([4, 0, 1])])
+  assert cursor == 2
+  assert increase_anchor_weight_on_budget_violation(
+    0.02, 0.001, 0.002, learning_rate=10.0, maximum=0.2
+  ) == 0.02
+  assert abs(
+    increase_anchor_weight_on_budget_violation(
+      0.02, 0.004, 0.002, learning_rate=10.0, maximum=0.2
+    )
+    - 0.04
+  ) < 1.0e-12
+  assert increase_anchor_weight_on_budget_violation(
+    0.19, 0.2, 0.0, learning_rate=10.0, maximum=0.2
+  ) == 0.2
+
+
+def test_retention_anchor_gradient_does_not_advance_policy_rng() -> None:
+  class _Actor(torch.nn.Module):
+    obs_groups = ("actor",)
+    obs_dim = 2
+
+    def __init__(self):
+      super().__init__()
+      self.mlp = torch.nn.Linear(2, 1, bias=False)
+      self._params = None
+
+    def forward(self, obs, stochastic_output=False):
+      mean = self.mlp(obs["actor"])
+      std = torch.full_like(mean, 0.2)
+      self._params = (mean, std)
+      if stochastic_output:
+        return mean + std * torch.randn_like(mean)
+      return mean
+
+    @property
+    def output_distribution_params(self):
+      return self._params
+
+    @staticmethod
+    def get_kl_divergence(old_params, new_params):
+      old_mean, old_std = old_params
+      new_mean, new_std = new_params
+      return (
+        torch.log(new_std / old_std)
+        + (old_std.square() + (old_mean - new_mean).square())
+        / (2.0 * new_std.square())
+        - 0.5
+      ).sum(dim=-1)
+
+  algorithm = object.__new__(OnlineSafePPO)
+  algorithm.actor = _Actor()
+  algorithm.retention_actor_reference = copy.deepcopy(algorithm.actor)
+  for parameter in algorithm.retention_actor_reference.parameters():
+    parameter.requires_grad_(False)
+  with torch.no_grad():
+    algorithm.actor.mlp.weight.add_(0.1)
+  algorithm.device = "cpu"
+  algorithm.retention_anchor_banks = {
+    "d0": torch.arange(40, dtype=torch.float32).reshape(20, 2) / 40.0
+  }
+  algorithm.retention_anchor_cursors = {"d0": 0, "neighbor": 0}
+  algorithm.retention_anchor_batch_size = 8
+
+  torch.manual_seed(99)
+  before = torch.get_rng_state().clone()
+  loss = algorithm._retention_anchor_loss("d0")
+  assert torch.equal(torch.get_rng_state(), before)
+  assert loss > 0.0
+  loss.backward()
+  assert algorithm.actor.mlp.weight.grad is not None
+  assert float(algorithm.actor.mlp.weight.grad.abs().sum()) > 0.0
+  before = torch.get_rng_state().clone()
+  assert algorithm._full_retention_anchor_kl("d0") > 0.0
+  assert torch.equal(torch.get_rng_state(), before)
 
 
 def test_future_risk_and_success_gates_do_not_cross_resets() -> None:
@@ -475,6 +618,9 @@ def test_online_domain_and_ppo_config_are_conservative() -> None:
   assert runner.algorithm.num_learning_epochs == 1
   assert runner.algorithm.desired_kl == 0.003
   assert runner.algorithm.base_anchor_weight == 0.01
+  assert runner.algorithm.d0_retention_anchor_weight == 0.0
+  assert runner.algorithm.neighbor_retention_anchor_weight == 0.0
+  assert runner.algorithm.retention_anchor_batch_size == 4096
   assert runner.algorithm.intervention_advantage_weight == 0.075
   assert runner.algorithm.use_counterfactual_cbf_credit is False
   assert runner.obs_groups["critic"] == (
@@ -1016,3 +1162,37 @@ def test_base_actor_reference_replaces_only_pretrained_mean_network() -> None:
   assert torch.equal(reference.mlp[0].weight, torch.ones(1, 2))
   assert torch.equal(reference.distribution.weight, torch.full((1, 1), 7.0))
   assert all(not parameter.requires_grad for parameter in reference.parameters())
+
+
+def test_retention_reference_restore_ignores_transient_inference_distribution() -> None:
+  class _Distribution(torch.nn.Module):
+    def __init__(self):
+      super().__init__()
+      self._distribution = None
+
+  class _Actor(torch.nn.Module):
+    def __init__(self):
+      super().__init__()
+      self.mlp = torch.nn.Sequential(torch.nn.Linear(2, 1, bias=False))
+      self.distribution = _Distribution()
+
+  algorithm = object.__new__(OnlineSafePPO)
+  algorithm.actor = _Actor()
+  algorithm.retention_actor_reference = None
+  with torch.inference_mode():
+    cached = algorithm.actor.mlp[0].weight.view(-1)
+    algorithm.actor.distribution._distribution = cached
+  with torch.no_grad():
+    algorithm.actor.mlp[0].weight.add_(1.0)
+  state = {
+    key: value.detach().clone()
+    for key, value in algorithm.actor.state_dict().items()
+  }
+  algorithm._set_retention_actor_reference(state)
+  reference = algorithm.retention_actor_reference
+  assert reference is not None
+  assert algorithm.actor.distribution._distribution is cached
+  assert all(not parameter.requires_grad for parameter in reference.parameters())
+  identity = id(reference)
+  algorithm._set_retention_actor_reference(state)
+  assert id(algorithm.retention_actor_reference) == identity

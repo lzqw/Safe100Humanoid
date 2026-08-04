@@ -13,6 +13,11 @@ from rsl_rl.algorithms import PPO
 
 from mjlab.rl import RslRlPpoAlgorithmCfg
 
+from src.tasks.stairs_cbf.retention import (
+  cyclic_retention_batch,
+  increase_anchor_weight_on_budget_violation,
+  validate_retention_observation_bank,
+)
 from src.tasks.velocity.rl import VelocityOnPolicyRunner
 
 
@@ -986,6 +991,13 @@ class OnlineSafePpoAlgorithmCfg(RslRlPpoAlgorithmCfg):
   pre_intervention_weight: float = 0.20
   intervention_magnitude_scale: float = 0.05
   base_anchor_weight: float = 0.01
+  d0_retention_anchor_weight: float = 0.0
+  neighbor_retention_anchor_weight: float = 0.0
+  d0_retention_anchor_kl_budget: float = 0.002
+  neighbor_retention_anchor_kl_budget: float = 0.002
+  retention_anchor_adaptation_rate: float = 10.0
+  maximum_retention_anchor_weight: float = 0.20
+  retention_anchor_batch_size: int = 4096
   intervention_advantage_weight: float = 0.075
   safe_bc_weight: float = 0.0
   use_counterfactual_cbf_credit: bool = False
@@ -1023,6 +1035,13 @@ class OnlineSafePPO(PPO):
     pre_intervention_weight: float = 0.20,
     intervention_magnitude_scale: float = 0.05,
     base_anchor_weight: float = 0.01,
+    d0_retention_anchor_weight: float = 0.0,
+    neighbor_retention_anchor_weight: float = 0.0,
+    d0_retention_anchor_kl_budget: float = 0.002,
+    neighbor_retention_anchor_kl_budget: float = 0.002,
+    retention_anchor_adaptation_rate: float = 10.0,
+    maximum_retention_anchor_weight: float = 0.20,
+    retention_anchor_batch_size: int = 4096,
     intervention_advantage_weight: float = 0.075,
     safe_bc_weight: float = 0.0,
     use_counterfactual_cbf_credit: bool = False,
@@ -1055,6 +1074,15 @@ class OnlineSafePPO(PPO):
     self.pre_intervention_weight = pre_intervention_weight
     self.intervention_magnitude_scale = intervention_magnitude_scale
     self.base_anchor_weight = base_anchor_weight
+    self.d0_retention_anchor_weight = d0_retention_anchor_weight
+    self.neighbor_retention_anchor_weight = neighbor_retention_anchor_weight
+    self.d0_retention_anchor_kl_budget = d0_retention_anchor_kl_budget
+    self.neighbor_retention_anchor_kl_budget = (
+      neighbor_retention_anchor_kl_budget
+    )
+    self.retention_anchor_adaptation_rate = retention_anchor_adaptation_rate
+    self.maximum_retention_anchor_weight = maximum_retention_anchor_weight
+    self.retention_anchor_batch_size = retention_anchor_batch_size
     self.intervention_advantage_weight = intervention_advantage_weight
     self.safe_bc_weight = safe_bc_weight
     self.use_counterfactual_cbf_credit = use_counterfactual_cbf_credit
@@ -1089,6 +1117,13 @@ class OnlineSafePPO(PPO):
         float(self.risk_horizon),
         self.strong_intervention_fraction,
         self.risk_loss_coef,
+        self.base_anchor_weight,
+        self.d0_retention_anchor_weight,
+        self.neighbor_retention_anchor_weight,
+        self.d0_retention_anchor_kl_budget,
+        self.neighbor_retention_anchor_kl_budget,
+        self.retention_anchor_adaptation_rate,
+        self.maximum_retention_anchor_weight,
       ],
       dtype=torch.float64,
     )
@@ -1104,6 +1139,29 @@ class OnlineSafePPO(PPO):
       raise ValueError("correction/risk horizons must be positive")
     if not 0.0 < self.strong_intervention_fraction <= 1.0:
       raise ValueError("strong intervention fraction must be in (0, 1]")
+    if self.base_anchor_weight < 0.0:
+      raise ValueError("base anchor weight must be non-negative")
+    if (
+      self.d0_retention_anchor_weight < 0.0
+      or self.neighbor_retention_anchor_weight < 0.0
+    ):
+      raise ValueError("retention anchor weights must be non-negative")
+    if (
+      self.d0_retention_anchor_kl_budget < 0.0
+      or self.neighbor_retention_anchor_kl_budget < 0.0
+    ):
+      raise ValueError("retention anchor KL budgets must be non-negative")
+    if self.retention_anchor_adaptation_rate < 0.0:
+      raise ValueError("retention anchor adaptation rate must be non-negative")
+    if self.maximum_retention_anchor_weight <= 0.0:
+      raise ValueError("maximum retention anchor weight must be positive")
+    if max(
+      self.d0_retention_anchor_weight,
+      self.neighbor_retention_anchor_weight,
+    ) > self.maximum_retention_anchor_weight:
+      raise ValueError("initial retention anchor weight exceeds its maximum")
+    if self.retention_anchor_batch_size < 1:
+      raise ValueError("retention anchor batch size must be positive")
 
     # The task critic retains the pretrained value representation.  Cost and
     # short-horizon risk heads are distinct modules so safety cannot silently
@@ -1120,6 +1178,10 @@ class OnlineSafePPO(PPO):
     self._critic_only = False
     self._std_initialized = False
     self.base_actor_reference = None
+    self.retention_actor_reference = None
+    self.retention_anchor_banks: dict[str, torch.Tensor] = {}
+    self.retention_anchor_bank_metadata: dict[str, dict[str, Any]] = {}
+    self.retention_anchor_cursors = {"d0": 0, "neighbor": 0}
     self._build_separate_optimizer()
 
     t = self.storage.num_transitions_per_env
@@ -1274,6 +1336,226 @@ class OnlineSafePPO(PPO):
       parameter.requires_grad_(False)
     self.base_actor_reference = reference
 
+  def _set_retention_actor_reference(
+    self, state: dict[str, torch.Tensor] | None = None
+  ) -> None:
+    """Freeze the deployed pre-adaptation actor used by both fixed banks."""
+    if self.retention_actor_reference is None:
+      # GaussianDistribution caches the latest Normal, whose mean may be an
+      # inference-mode view. It is transient and absent from state_dict; do
+      # not ask deepcopy to traverse it during checkpoint restoration.
+      distribution = getattr(self.actor, "distribution", None)
+      has_cached_distribution = hasattr(distribution, "_distribution")
+      cached_distribution = (
+        distribution._distribution if has_cached_distribution else None
+      )
+      if has_cached_distribution:
+        distribution._distribution = None
+      try:
+        reference = copy.deepcopy(self.actor)
+      finally:
+        if has_cached_distribution:
+          distribution._distribution = cached_distribution
+    else:
+      reference = self.retention_actor_reference
+      distribution = getattr(reference, "distribution", None)
+      if hasattr(distribution, "_distribution"):
+        distribution._distribution = None
+    if state is not None:
+      reference.load_state_dict(state, strict=True)
+    reference.eval()
+    for parameter in reference.parameters():
+      parameter.requires_grad_(False)
+    self.retention_actor_reference = reference
+
+  @staticmethod
+  def _retention_bank_identity(metadata: dict[str, Any]) -> tuple[Any, ...]:
+    return (
+      metadata.get("domain"),
+      metadata.get("size"),
+      metadata.get("actor_observation_dim"),
+      metadata.get("checkpoint_sha256"),
+      metadata.get("observation_sha256"),
+    )
+
+  def set_retention_anchor_banks(
+    self,
+    *,
+    d0_payload: dict[str, Any] | None,
+    neighbor_payload: dict[str, Any] | None,
+    neighbor_domain: str = "DQNH",
+  ) -> dict[str, dict[str, Any]]:
+    """Install fixed actor-only D0/neighbor banks on host memory.
+
+    The reference actor is captured once from the deployed policy before any
+    actor update. A resumed v13 checkpoint restores that reference separately,
+    while the bank checksums prevent silently swapping the fixed state sets.
+    """
+    actor_groups = tuple(getattr(self.actor, "obs_groups", ()))
+    if actor_groups != ("actor",):
+      raise RuntimeError(
+        "retention anchors require an actor that consumes only the actor group"
+      )
+    expected_actor_dim = int(getattr(self.actor, "obs_dim", -1))
+    if expected_actor_dim < 1:
+      raise RuntimeError("actor observation dimension is unavailable")
+    payloads = {"d0": d0_payload, "neighbor": neighbor_payload}
+    expected_domains = {"d0": "D0", "neighbor": neighbor_domain}
+    weights = {
+      "d0": self.d0_retention_anchor_weight,
+      "neighbor": self.neighbor_retention_anchor_weight,
+    }
+    installed: dict[str, torch.Tensor] = {}
+    installed_metadata: dict[str, dict[str, Any]] = {}
+    for name, payload in payloads.items():
+      if payload is None:
+        if weights[name] > 0.0:
+          raise ValueError(f"{name} retention anchor weight requires a bank")
+        continue
+      observations, metadata = validate_retention_observation_bank(
+        payload,
+        expected_actor_dim=expected_actor_dim,
+        expected_domain=expected_domains[name],
+      )
+      previous = self.retention_anchor_bank_metadata.get(name)
+      if previous is not None and self._retention_bank_identity(
+        previous
+      ) != self._retention_bank_identity(metadata):
+        raise ValueError(f"{name} retention bank differs from resumed checkpoint")
+      installed[name] = observations.detach().cpu().contiguous()
+      installed_metadata[name] = metadata
+    if installed_metadata:
+      checkpoint_hashes = {
+        metadata["checkpoint_sha256"] for metadata in installed_metadata.values()
+      }
+      if len(checkpoint_hashes) != 1 or "" in checkpoint_hashes:
+        raise ValueError("retention banks must share one non-empty policy checkpoint")
+      if self.retention_actor_reference is None:
+        self._set_retention_actor_reference()
+    self.retention_anchor_banks = installed
+    self.retention_anchor_bank_metadata = installed_metadata
+    for name, observations in installed.items():
+      self.retention_anchor_cursors[name] %= observations.shape[0]
+    return copy.deepcopy(installed_metadata)
+
+  def _retention_anchor_loss(self, name: str) -> torch.Tensor:
+    if self.retention_actor_reference is None:
+      raise RuntimeError("retention actor reference is not frozen")
+    observations = self.retention_anchor_banks.get(name)
+    if observations is None:
+      raise RuntimeError(f"{name} retention anchor bank is not installed")
+    batch, cursor = cyclic_retention_batch(
+      observations,
+      cursor=self.retention_anchor_cursors[name],
+      batch_size=self.retention_anchor_batch_size,
+    )
+    self.retention_anchor_cursors[name] = cursor
+    actor_observations = {"actor": batch.to(self.device)}
+    actor_device = torch.device(self.device)
+    rng_devices = [actor_device] if actor_device.type == "cuda" else []
+    # MLPModel currently exposes distribution parameters only after a
+    # stochastic forward, which also samples an unused action. Restore both
+    # CPU/CUDA RNG afterward so the anchor cannot perturb future rollouts or
+    # PPO minibatch permutations independently of its gradient.
+    with torch.random.fork_rng(devices=rng_devices):
+      self.actor(actor_observations, stochastic_output=True)
+      current_params = tuple(self.actor.output_distribution_params)
+      with torch.no_grad():
+        self.retention_actor_reference(
+          actor_observations, stochastic_output=True
+        )
+        reference_params = tuple(
+          parameter.detach()
+          for parameter in (
+            self.retention_actor_reference.output_distribution_params
+          )
+        )
+    return self.actor.get_kl_divergence(
+      current_params, reference_params
+    ).mean()
+
+  def _full_retention_anchor_kl(self, name: str) -> float:
+    if self.retention_actor_reference is None:
+      raise RuntimeError("retention actor reference is not frozen")
+    observations = self.retention_anchor_banks.get(name)
+    if observations is None:
+      raise RuntimeError(f"{name} retention anchor bank is not installed")
+    total = 0.0
+    diagnostic_batch_size = max(1, self.retention_anchor_batch_size)
+    actor_device = torch.device(self.device)
+    rng_devices = [actor_device] if actor_device.type == "cuda" else []
+    with torch.inference_mode():
+      for start in range(0, observations.shape[0], diagnostic_batch_size):
+        actor_observations = {
+          "actor": observations[
+            start : start + diagnostic_batch_size
+          ].to(self.device)
+        }
+        with torch.random.fork_rng(devices=rng_devices):
+          self.actor(actor_observations, stochastic_output=True)
+          current_params = tuple(self.actor.output_distribution_params)
+          self.retention_actor_reference(
+            actor_observations, stochastic_output=True
+          )
+          reference_params = tuple(
+            self.retention_actor_reference.output_distribution_params
+          )
+        kl = self.actor.get_kl_divergence(current_params, reference_params)
+        total += float(kl.sum())
+    return total / observations.shape[0]
+
+  def retention_anchor_kl_metrics(self) -> dict[str, float]:
+    """Evaluate exact mean KL on every installed fixed bank."""
+    metrics: dict[str, float] = {}
+    for name in ("d0", "neighbor"):
+      if name in self.retention_anchor_banks:
+        metrics[f"{name}_retention_anchor_kl"] = (
+          self._full_retention_anchor_kl(name)
+        )
+    return metrics
+
+  def adapt_retention_anchor_weights(
+    self,
+    *,
+    d0_kl: float | None = None,
+    neighbor_kl: float | None = None,
+  ) -> dict[str, float]:
+    """Increase independent anchor weights after selecting a candidate."""
+    observed = {"d0": d0_kl, "neighbor": neighbor_kl}
+    budgets = {
+      "d0": self.d0_retention_anchor_kl_budget,
+      "neighbor": self.neighbor_retention_anchor_kl_budget,
+    }
+    attributes = {
+      "d0": "d0_retention_anchor_weight",
+      "neighbor": "neighbor_retention_anchor_weight",
+    }
+    metrics: dict[str, float] = {}
+    for name in ("d0", "neighbor"):
+      if name not in self.retention_anchor_banks:
+        continue
+      kl = observed[name]
+      if kl is None:
+        kl = self._full_retention_anchor_kl(name)
+      before = float(getattr(self, attributes[name]))
+      after = increase_anchor_weight_on_budget_violation(
+        before,
+        float(kl),
+        budgets[name],
+        learning_rate=self.retention_anchor_adaptation_rate,
+        maximum=self.maximum_retention_anchor_weight,
+      )
+      setattr(self, attributes[name], after)
+      metrics.update(
+        {
+          f"{name}_retention_anchor_kl": float(kl),
+          f"{name}_retention_anchor_kl_budget": float(budgets[name]),
+          f"{name}_retention_anchor_weight_before_adaptation": before,
+          f"{name}_retention_anchor_weight_after_adaptation": after,
+        }
+      )
+    return metrics
+
   def clamp_online_std(self) -> None:
     distribution = self.actor.distribution
     with torch.no_grad():
@@ -1361,7 +1643,22 @@ class OnlineSafePPO(PPO):
       "intervention_multiplier": self.intervention_multiplier,
       "fall_cost_budget": self.fall_cost_budget,
       "intervention_cost_budget": self.intervention_cost_budget,
+      "retention_anchor_state": {
+        "d0_weight": self.d0_retention_anchor_weight,
+        "neighbor_weight": self.neighbor_retention_anchor_weight,
+        "d0_kl_budget": self.d0_retention_anchor_kl_budget,
+        "neighbor_kl_budget": self.neighbor_retention_anchor_kl_budget,
+        "adaptation_rate": self.retention_anchor_adaptation_rate,
+        "maximum_weight": self.maximum_retention_anchor_weight,
+        "batch_size": self.retention_anchor_batch_size,
+        "cursors": dict(self.retention_anchor_cursors),
+        "bank_metadata": copy.deepcopy(self.retention_anchor_bank_metadata),
+      },
     }
+    if self.retention_actor_reference is not None:
+      output["retention_actor_reference_state_dict"] = (
+        self.retention_actor_reference.state_dict()
+      )
     if self.task_first_constrained:
       assert self.fall_critic is not None
       assert self.intervention_critic is not None
@@ -1375,6 +1672,73 @@ class OnlineSafePPO(PPO):
 
   def load_constraint_state_dict(self, payload: dict[str, Any]) -> bool:
     """Load v12 heads if present; return false for a legacy v11 checkpoint."""
+    retention = payload.get("retention_anchor_state")
+    if isinstance(retention, dict):
+      self.d0_retention_anchor_weight = float(
+        retention.get("d0_weight", self.d0_retention_anchor_weight)
+      )
+      self.neighbor_retention_anchor_weight = float(
+        retention.get("neighbor_weight", self.neighbor_retention_anchor_weight)
+      )
+      self.d0_retention_anchor_kl_budget = float(
+        retention.get("d0_kl_budget", self.d0_retention_anchor_kl_budget)
+      )
+      self.neighbor_retention_anchor_kl_budget = float(
+        retention.get(
+          "neighbor_kl_budget", self.neighbor_retention_anchor_kl_budget
+        )
+      )
+      self.retention_anchor_adaptation_rate = float(
+        retention.get(
+          "adaptation_rate", self.retention_anchor_adaptation_rate
+        )
+      )
+      self.maximum_retention_anchor_weight = float(
+        retention.get("maximum_weight", self.maximum_retention_anchor_weight)
+      )
+      self.retention_anchor_batch_size = int(
+        retention.get("batch_size", self.retention_anchor_batch_size)
+      )
+      cursors = retention.get("cursors", {})
+      if isinstance(cursors, dict):
+        for name in ("d0", "neighbor"):
+          cursor = int(cursors.get(name, self.retention_anchor_cursors[name]))
+          if cursor < 0:
+            raise ValueError("retention anchor cursor cannot be negative")
+          self.retention_anchor_cursors[name] = cursor
+      metadata = retention.get("bank_metadata", {})
+      if not isinstance(metadata, dict):
+        raise ValueError("retention anchor bank metadata must be a dictionary")
+      self.retention_anchor_bank_metadata = copy.deepcopy(metadata)
+      validation_values = torch.tensor(
+        [
+          self.d0_retention_anchor_weight,
+          self.neighbor_retention_anchor_weight,
+          self.d0_retention_anchor_kl_budget,
+          self.neighbor_retention_anchor_kl_budget,
+          self.retention_anchor_adaptation_rate,
+          self.maximum_retention_anchor_weight,
+        ],
+        dtype=torch.float64,
+      )
+      if not bool(torch.isfinite(validation_values).all()):
+        raise ValueError("checkpoint retention anchor state is non-finite")
+      if bool((validation_values[:5] < 0.0).any()):
+        raise ValueError("checkpoint retention anchor state is negative")
+      if (
+        self.maximum_retention_anchor_weight <= 0.0
+        or max(
+          self.d0_retention_anchor_weight,
+          self.neighbor_retention_anchor_weight,
+        ) > self.maximum_retention_anchor_weight
+        or self.retention_anchor_batch_size < 1
+      ):
+        raise ValueError("checkpoint retention anchor bounds are inconsistent")
+    reference_state = payload.get("retention_actor_reference_state_dict")
+    if reference_state is not None:
+      if not isinstance(reference_state, dict):
+        raise ValueError("retention actor reference state must be a dictionary")
+      self._set_retention_actor_reference(reference_state)
     if not self.task_first_constrained:
       return False
     required = (
@@ -1876,6 +2240,17 @@ class OnlineSafePPO(PPO):
       raise RuntimeError("online safe PPO requires a fixed learning-rate schedule")
     if self.base_anchor_weight > 0.0 and self.base_actor_reference is None:
       raise RuntimeError("base actor reference must be frozen before online PPO")
+    retention_weights = {
+      "d0": self.d0_retention_anchor_weight,
+      "neighbor": self.neighbor_retention_anchor_weight,
+    }
+    for name, weight in retention_weights.items():
+      if weight > 0.0 and name not in self.retention_anchor_banks:
+        raise RuntimeError(f"{name} retention anchor bank must be installed")
+    if any(weight > 0.0 for weight in retention_weights.values()) and (
+      self.retention_actor_reference is None
+    ):
+      raise RuntimeError("retention actor reference must be frozen before PPO")
 
     # Keep references: RolloutStorage.clear() only resets the cursor.
     observations = self.storage.observations.flatten(0, 1)
@@ -1903,6 +2278,7 @@ class OnlineSafePPO(PPO):
         anchor_kl_before = self.actor.get_kl_divergence(
           current_params, base_params
         ).mean()
+      retention_kl_before = self.retention_anchor_kl_metrics()
       if self.task_first_constrained:
         assert self.risk_head is not None
         risk_before = binary_risk_metrics(
@@ -1952,6 +2328,8 @@ class OnlineSafePPO(PPO):
     mean_surrogate_loss = 0.0
     mean_entropy = 0.0
     mean_anchor_kl = 0.0
+    mean_d0_retention_anchor_kl = 0.0
+    mean_neighbor_retention_anchor_kl = 0.0
     maximum_actor_gradient_norm = 0.0
     maximum_critic_gradient_norm = 0.0
     generator = self.storage.mini_batch_generator(
@@ -2000,6 +2378,16 @@ class OnlineSafePPO(PPO):
           current_params, base_params
         ).mean()
 
+      d0_retention_anchor_kl = torch.zeros((), device=self.device)
+      neighbor_retention_anchor_kl = torch.zeros((), device=self.device)
+      if not self._critic_only:
+        if self.d0_retention_anchor_weight > 0.0:
+          d0_retention_anchor_kl = self._retention_anchor_loss("d0")
+        if self.neighbor_retention_anchor_weight > 0.0:
+          neighbor_retention_anchor_kl = self._retention_anchor_loss(
+            "neighbor"
+          )
+
       if self._critic_only:
         loss = self.value_loss_coef * value_loss
       else:
@@ -2008,6 +2396,9 @@ class OnlineSafePPO(PPO):
           + self.value_loss_coef * value_loss
           - self.entropy_coef * entropy.mean()
           + self.base_anchor_weight * anchor_kl
+          + self.d0_retention_anchor_weight * d0_retention_anchor_kl
+          + self.neighbor_retention_anchor_weight
+          * neighbor_retention_anchor_kl
         )
       self.optimizer.zero_grad(set_to_none=True)
       loss.backward()
@@ -2023,6 +2414,10 @@ class OnlineSafePPO(PPO):
       mean_surrogate_loss += float(surrogate_loss)
       mean_entropy += float(entropy.mean())
       mean_anchor_kl += float(anchor_kl)
+      mean_d0_retention_anchor_kl += float(d0_retention_anchor_kl)
+      mean_neighbor_retention_anchor_kl += float(
+        neighbor_retention_anchor_kl
+      )
       maximum_actor_gradient_norm = max(
         maximum_actor_gradient_norm, float(actor_gradient_norm)
       )
@@ -2036,6 +2431,12 @@ class OnlineSafePPO(PPO):
       "surrogate": mean_surrogate_loss / num_updates,
       "entropy": mean_entropy / num_updates,
       "base_anchor_kl_loss": mean_anchor_kl / num_updates,
+      "d0_retention_anchor_kl_loss": (
+        mean_d0_retention_anchor_kl / num_updates
+      ),
+      "neighbor_retention_anchor_kl_loss": (
+        mean_neighbor_retention_anchor_kl / num_updates
+      ),
     }
     task_first_heads = self._train_task_first_heads(observations)
     safe_bc = self.apply_safe_bc_auxiliary(
@@ -2069,6 +2470,7 @@ class OnlineSafePPO(PPO):
         anchor_kl_after = self.actor.get_kl_divergence(
           new_params, base_params
         ).mean()
+      retention_kl_after = self.retention_anchor_kl_metrics()
     diagnostics: dict[str, Any] = {
       "mean_kl": float(kl),
       "clip_fraction": float(clip_fraction),
@@ -2078,6 +2480,25 @@ class OnlineSafePPO(PPO):
       "base_anchor_weight": float(self.base_anchor_weight),
       "base_anchor_kl_before_update": float(anchor_kl_before),
       "base_anchor_kl_after_update": float(anchor_kl_after),
+      "d0_retention_anchor_weight": float(
+        self.d0_retention_anchor_weight
+      ),
+      "neighbor_retention_anchor_weight": float(
+        self.neighbor_retention_anchor_weight
+      ),
+      "d0_retention_anchor_kl_budget": float(
+        self.d0_retention_anchor_kl_budget
+      ),
+      "neighbor_retention_anchor_kl_budget": float(
+        self.neighbor_retention_anchor_kl_budget
+      ),
+      "retention_anchor_adaptation_rate": float(
+        self.retention_anchor_adaptation_rate
+      ),
+      "maximum_retention_anchor_weight": float(
+        self.maximum_retention_anchor_weight
+      ),
+      "retention_anchor_batch_size": self.retention_anchor_batch_size,
       "actor_gradient_norm_pre_clip_max": maximum_actor_gradient_norm,
       "critic_gradient_norm_pre_clip_max": maximum_critic_gradient_norm,
       "safe_bc_loss": safe_bc["loss"],
@@ -2104,6 +2525,10 @@ class OnlineSafePPO(PPO):
       ),
       "risk_prediction_before_update": risk_before,
     }
+    for name, value in retention_kl_before.items():
+      diagnostics[f"{name}_before_update"] = value
+    for name, value in retention_kl_after.items():
+      diagnostics[f"{name}_after_update"] = value
     diagnostics.update(task_first_heads)
     diagnostics.update(rollout_metrics)
     losses.update(diagnostics)

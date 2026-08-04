@@ -1,0 +1,32 @@
+{
+  "actor_observation_dim": 405,
+  "actor_observation_key": "actor",
+  "bank_file": "/home/carla/LZQW/SAFE100/humanoid/artifacts/retention_v13/banks/D0_actor_observations.pt",
+  "bank_file_sha256": "51a4012c4a61d25da158ab8b9b448d84f761e5f8f564d72236a1653c8144bfd0",
+  "bank_size": 24000,
+  "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/online_framework_v2/online_dqh_offgate_round5_v7c/accepted_final.pt",
+  "checkpoint_sha256": "cc27f228809a4a5b9862119eded31e81588c95ad066168b77a77232d035620a5",
+  "collection_environment_transitions": 55584,
+  "collection_steps": 3474,
+  "contains_privileged_observations": false,
+  "created_utc": "2026-08-04T03:12:15.920986+00:00",
+  "domain": "D0",
+  "kind": "actor_observation_retention_bank",
+  "num_stages": 6,
+  "observation_sha256": "49685396180c50dfdbb17094a5badd70af437c253dc1e7fbc692e9e7754bb8a3",
+  "ordering": "stage_round_robin_v1",
+  "policy_mode": "deterministic_mean",
+  "runtime_filter": true,
+  "schema_version": 1,
+  "seed": 17001,
+  "size": 24000,
+  "stage_counts": [
+    4000,
+    4000,
+    4000,
+    4000,
+    4000,
+    4000
+  ],
+  "task": "Unitree-G1-Stairs-Online-D0"
+}

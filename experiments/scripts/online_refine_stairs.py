@@ -6,6 +6,7 @@ import argparse
 from collections import deque
 from contextlib import nullcontext
 from dataclasses import asdict
+import hashlib
 import json
 import math
 from pathlib import Path
@@ -19,6 +20,14 @@ import torch
 
 def _actor_state(actor) -> dict[str, torch.Tensor]:
   return {key: value.detach().clone() for key, value in actor.state_dict().items()}
+
+
+def _file_sha256(path: Path) -> str:
+  digest = hashlib.sha256()
+  with path.open("rb") as handle:
+    for block in iter(lambda: handle.read(1024 * 1024), b""):
+      digest.update(block)
+  return digest.hexdigest()
 
 
 def _evaluate_state(
@@ -248,6 +257,7 @@ def _policy_step_metrics(
         (runner.alg.actor.output_mean.abs() > 0.95).float().mean()
       ),
     )
+    metrics.update(runner.alg.retention_anchor_kl_metrics())
     runner.alg.actor.load_state_dict(current_state, strict=True)
   return metrics
 
@@ -494,6 +504,25 @@ def main() -> None:
   parser.add_argument("--risk-loss-coef", type=float, default=1.0)
   parser.add_argument("--hard-case-fraction", type=float, default=0.20)
   parser.add_argument("--base-anchor-weight", type=float, default=0.01)
+  parser.add_argument("--d0-retention-bank", type=Path)
+  parser.add_argument("--neighbor-retention-bank", type=Path)
+  parser.add_argument("--d0-retention-anchor-weight", type=float, default=0.0)
+  parser.add_argument(
+    "--neighbor-retention-anchor-weight", type=float, default=0.0
+  )
+  parser.add_argument(
+    "--d0-retention-anchor-kl-budget", type=float, default=0.002
+  )
+  parser.add_argument(
+    "--neighbor-retention-anchor-kl-budget", type=float, default=0.002
+  )
+  parser.add_argument(
+    "--retention-anchor-adaptation-rate", type=float, default=10.0
+  )
+  parser.add_argument(
+    "--maximum-retention-anchor-weight", type=float, default=0.20
+  )
+  parser.add_argument("--retention-anchor-batch-size", type=int, default=4096)
   parser.add_argument(
     "--intervention-advantage-weight", type=float, default=0.075
   )
@@ -604,15 +633,25 @@ def main() -> None:
     nargs="+",
     default=["D0", "D1", "D2", "D3", "D4", "D5", "DQ", "DQN"],
   )
+  parser.add_argument(
+    "--reuse-baseline-eval",
+    type=Path,
+    help="Reuse a matched-arm baseline JSON after strict protocol validation.",
+  )
   args = parser.parse_args()
-  if args.adaptive_std and args.base_anchor_weight > 0.0:
+  any_anchor_weight = max(
+    args.base_anchor_weight,
+    args.d0_retention_anchor_weight,
+    args.neighbor_retention_anchor_weight,
+  ) > 0.0
+  if args.adaptive_std and any_anchor_weight:
     raise ValueError(
       "--adaptive-std changes the action distribution independently of the "
-      "frozen base policy; use --no-adaptive-std with a non-zero KL anchor"
+      "frozen reference policy; use --no-adaptive-std with KL anchors"
     )
-  if args.resume_std_scale != 1.0 and args.base_anchor_weight > 0.0:
+  if args.resume_std_scale != 1.0 and any_anchor_weight:
     raise ValueError(
-      "--resume-std-scale must remain 1.0 with a non-zero base-policy KL anchor"
+      "--resume-std-scale must remain 1.0 with a non-zero policy KL anchor"
     )
   repo = args.repo.resolve()
   sys.path.insert(0, str(repo))
@@ -661,6 +700,39 @@ def main() -> None:
     raise ValueError("candidate fractions must be unique")
   if args.candidate_screen_num_envs < 1 or args.candidate_screen_repeats < 1:
     raise ValueError("candidate screen environment/repeat counts must be positive")
+  retention_values = torch.tensor(
+    [
+      args.d0_retention_anchor_weight,
+      args.neighbor_retention_anchor_weight,
+      args.d0_retention_anchor_kl_budget,
+      args.neighbor_retention_anchor_kl_budget,
+      args.retention_anchor_adaptation_rate,
+      args.maximum_retention_anchor_weight,
+    ],
+    dtype=torch.float64,
+  )
+  if not bool(torch.isfinite(retention_values).all()):
+    raise ValueError("retention anchor arguments must be finite")
+  if bool((retention_values[:5] < 0.0).any()):
+    raise ValueError("retention anchor weights, budgets, and rate are non-negative")
+  if args.maximum_retention_anchor_weight <= 0.0:
+    raise ValueError("maximum retention anchor weight must be positive")
+  if max(
+    args.d0_retention_anchor_weight,
+    args.neighbor_retention_anchor_weight,
+  ) > args.maximum_retention_anchor_weight:
+    raise ValueError("initial retention anchor weight exceeds its maximum")
+  if args.retention_anchor_batch_size < 1:
+    raise ValueError("retention anchor batch size must be positive")
+  if args.d0_retention_anchor_weight > 0.0 and args.d0_retention_bank is None:
+    raise ValueError("--d0-retention-anchor-weight requires --d0-retention-bank")
+  if (
+    args.neighbor_retention_anchor_weight > 0.0
+    and args.neighbor_retention_bank is None
+  ):
+    raise ValueError(
+      "--neighbor-retention-anchor-weight requires --neighbor-retention-bank"
+    )
 
   task = f"Unitree-G1-Stairs-Online-{args.train_domain}"
   env_cfg = load_env_cfg(task)
@@ -683,6 +755,27 @@ def main() -> None:
     0.0 if args.task_first_constrained else args.pre_intervention_weight
   )
   agent_cfg.algorithm.base_anchor_weight = args.base_anchor_weight
+  agent_cfg.algorithm.d0_retention_anchor_weight = (
+    args.d0_retention_anchor_weight
+  )
+  agent_cfg.algorithm.neighbor_retention_anchor_weight = (
+    args.neighbor_retention_anchor_weight
+  )
+  agent_cfg.algorithm.d0_retention_anchor_kl_budget = (
+    args.d0_retention_anchor_kl_budget
+  )
+  agent_cfg.algorithm.neighbor_retention_anchor_kl_budget = (
+    args.neighbor_retention_anchor_kl_budget
+  )
+  agent_cfg.algorithm.retention_anchor_adaptation_rate = (
+    args.retention_anchor_adaptation_rate
+  )
+  agent_cfg.algorithm.maximum_retention_anchor_weight = (
+    args.maximum_retention_anchor_weight
+  )
+  agent_cfg.algorithm.retention_anchor_batch_size = (
+    args.retention_anchor_batch_size
+  )
   agent_cfg.algorithm.intervention_advantage_weight = (
     0.0
     if args.task_first_constrained
@@ -757,6 +850,54 @@ def main() -> None:
   # when this run resumes a later accepted online checkpoint.
   runner.alg.set_base_actor_reference(base_payload["actor_state_dict"])
 
+  retention_bank_metadata: dict[str, dict[str, Any]] = {}
+  d0_retention_payload = None
+  neighbor_retention_payload = None
+  if args.d0_retention_bank is not None:
+    d0_bank_path = args.d0_retention_bank.resolve()
+    d0_retention_payload = torch.load(
+      d0_bank_path, map_location="cpu", weights_only=False
+    )
+  else:
+    d0_bank_path = None
+  if args.neighbor_retention_bank is not None:
+    neighbor_bank_path = args.neighbor_retention_bank.resolve()
+    neighbor_retention_payload = torch.load(
+      neighbor_bank_path, map_location="cpu", weights_only=False
+    )
+  else:
+    neighbor_bank_path = None
+  if d0_retention_payload is not None or neighbor_retention_payload is not None:
+    resumed_retention_reference = runner.alg.retention_actor_reference is not None
+    retention_bank_metadata = runner.alg.set_retention_anchor_banks(
+      d0_payload=d0_retention_payload,
+      neighbor_payload=neighbor_retention_payload,
+      neighbor_domain=args.neighbor_domain,
+    )
+    if not resumed_retention_reference:
+      start_checkpoint = (
+        args.resume_online_checkpoint.resolve()
+        if args.resume_online_checkpoint is not None
+        else args.base_checkpoint.resolve()
+      )
+      start_checkpoint_sha256 = _file_sha256(start_checkpoint)
+      bank_checkpoint_sha256 = {
+        metadata["checkpoint_sha256"]
+        for metadata in retention_bank_metadata.values()
+      }
+      if bank_checkpoint_sha256 != {start_checkpoint_sha256}:
+        raise ValueError(
+          "retention banks were not collected from the deployed start checkpoint"
+        )
+    for name, path in (
+      ("d0", d0_bank_path),
+      ("neighbor", neighbor_bank_path),
+    ):
+      if name in retention_bank_metadata and path is not None:
+        retention_bank_metadata[name].update(
+          path=str(path), file_sha256=_file_sha256(path)
+        )
+
   # Keep the accepted bounded std and frozen normalizer, but use the original
   # base MLP as the cross-round drift/retention reference.
   base_actor_state = backtrack_actor_state(
@@ -765,17 +906,42 @@ def main() -> None:
   output_dir = args.output_dir.resolve()
   output_dir.mkdir(parents=True, exist_ok=True)
 
-  baseline_eval = _evaluate_state(
-    runner,
-    current_actor_state,
-    domains=tuple(args.baseline_domains),
-    num_envs=args.eval_num_envs,
-    num_episodes=args.eval_num_episodes,
-    seed=args.seed,
-    device=args.device,
-    repeats=args.gate_repeats,
-    runtime_filter=args.gate_runtime_filter == "on",
-  )
+  baseline_eval_source: dict[str, Any] | None = None
+  if args.reuse_baseline_eval is None:
+    baseline_eval = _evaluate_state(
+      runner,
+      current_actor_state,
+      domains=tuple(args.baseline_domains),
+      num_envs=args.eval_num_envs,
+      num_episodes=args.eval_num_episodes,
+      seed=args.seed,
+      device=args.device,
+      repeats=args.gate_repeats,
+      runtime_filter=args.gate_runtime_filter == "on",
+    )
+  else:
+    reused_path = args.reuse_baseline_eval.resolve()
+    baseline_eval = json.loads(reused_path.read_text())
+    if set(baseline_eval) != set(args.baseline_domains):
+      raise ValueError("reused baseline domains differ from --baseline-domains")
+    expected_seeds = [args.seed + repeat for repeat in range(args.gate_repeats)]
+    expected_episodes = args.eval_num_episodes * args.gate_repeats
+    for domain in args.baseline_domains:
+      result = baseline_eval[domain]
+      if (
+        result.get("task") != f"Unitree-G1-Stairs-Online-{domain}"
+        or int(result.get("num_episodes", -1)) != expected_episodes
+        or int(result.get("repeats", -1)) != args.gate_repeats
+        or result.get("seeds") != expected_seeds
+        or result.get("runtime_filter")
+        is not (args.gate_runtime_filter == "on")
+        or result.get("paired_one_initial_episode_per_env") is not True
+      ):
+        raise ValueError(f"reused {domain} baseline protocol differs")
+    baseline_eval_source = {
+      "path": str(reused_path),
+      "sha256": _file_sha256(reused_path),
+    }
   (output_dir / "baseline_ood_matrix.json").write_text(
     json.dumps(baseline_eval, indent=2, sort_keys=True) + "\n"
   )
@@ -985,6 +1151,12 @@ def main() -> None:
       precheck_reasons: list[str] = []
       selected_fraction: float | None = float(selected_variant["fraction"])
       runner.alg.actor.load_state_dict(candidate_actor_state, strict=True)
+      update_metrics.update(
+        runner.alg.adapt_retention_anchor_weights(
+          d0_kl=update_metrics.get("d0_retention_anchor_kl"),
+          neighbor_kl=update_metrics.get("neighbor_retention_anchor_kl"),
+        )
+      )
     else:
       candidate_actor_state = full_candidate_actor_state
       total_kl = _total_actor_kl(
@@ -1225,6 +1397,33 @@ def main() -> None:
     "fall_multiplier_final": runner.alg.fall_multiplier,
     "intervention_multiplier_final": runner.alg.intervention_multiplier,
     "intervention_budget_slack": args.intervention_budget_slack,
+    "base_anchor_weight": args.base_anchor_weight,
+    "d0_retention_anchor_weight_initial": args.d0_retention_anchor_weight,
+    "neighbor_retention_anchor_weight_initial": (
+      args.neighbor_retention_anchor_weight
+    ),
+    "d0_retention_anchor_weight_final": (
+      runner.alg.d0_retention_anchor_weight
+    ),
+    "neighbor_retention_anchor_weight_final": (
+      runner.alg.neighbor_retention_anchor_weight
+    ),
+    "d0_retention_anchor_kl_budget": (
+      runner.alg.d0_retention_anchor_kl_budget
+    ),
+    "neighbor_retention_anchor_kl_budget": (
+      runner.alg.neighbor_retention_anchor_kl_budget
+    ),
+    "retention_anchor_adaptation_rate": (
+      runner.alg.retention_anchor_adaptation_rate
+    ),
+    "maximum_retention_anchor_weight": (
+      runner.alg.maximum_retention_anchor_weight
+    ),
+    "retention_anchor_batch_size": runner.alg.retention_anchor_batch_size,
+    "retention_anchor_banks": retention_bank_metadata,
+    "retention_actor_input_only": bool(retention_bank_metadata),
+    "ppo_policy_gradient_domains": [args.train_domain],
     "hard_case_policy_weight": args.hard_case_policy_weight,
     "correction_distillation_weight": args.correction_distillation_weight,
     "correction_success_horizon": args.correction_success_horizon,
@@ -1261,6 +1460,7 @@ def main() -> None:
     "critic_burn_in": burn_in,
     "critic_min_explained_variance": args.critic_min_explained_variance,
     "baseline_eval": baseline_eval,
+    "baseline_eval_source": baseline_eval_source,
     "rounds": rounds,
     "accepted_total_kl_from_base": accepted_total_kl,
     "final_eval": final_eval,
