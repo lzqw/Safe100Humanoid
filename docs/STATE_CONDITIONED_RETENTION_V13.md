@@ -118,3 +118,97 @@ reference state.
 
 Formal A/B and final-audit results are published only after their JSON ledgers
 finish; a smoke acceptance is not treated as performance evidence.
+
+## Formal matched-arm result
+
+Both arms reused the byte-identical baseline matrix (SHA-256
+`fa4e36fd4bdddf4470e0f239dee549005caae677d4df8371584d81f54853ff1d`).
+All six 48-episode/domain candidates were rejected and transactionally rolled
+back. Deltas below are candidate minus the paired old actor; success and fall
+deltas are percentage points.
+
+| Arm | Round | Fraction | DQH success | DQH fall | Return | CBF/riser | D0 success | DQNH success | Accepted |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| A global | 1 | 0.25 | +2.08 | -2.08 | -0.228 | +0.115 | -4.17 | 0.00 | no |
+| A global | 2 | 0.25 | +2.08 | -2.08 | +0.265 | +0.050 | -10.42 | +8.33 | no |
+| A global | 3 | 0.50 | +6.25 | -6.25 | +0.324 | +0.111 | -4.17 | -4.17 | no |
+| B fixed bank | 1 | 1.50 | -4.17 | +4.17 | -0.239 | +0.037 | 0.00 | +6.25 | no |
+| B fixed bank | 2 | 1.50 | +2.08 | -2.08 | +0.487 | -0.021 | -4.17 | -2.08 | no |
+| B fixed bank | 3 | 0.25 | +4.17 | -4.17 | +0.769 | -0.092 | -12.50 | -4.17 | no |
+
+The B fixed-bank KL values for rounds 1-3 were respectively
+`3.178e-4/3.337e-4`, `3.185e-4/3.355e-4`, and
+`9.296e-6/9.262e-6` for D0/DQNH. All stayed below the independent `0.002`
+budgets, so the predeclared monotone adaptation rule correctly left the anchor
+weights at `0.02/0.01`. Task-level retention still failed. This means the
+tested bank coverage, weights, and budgets are not a sufficient retention
+contract; it does not show that a smaller fixed-bank KL generally guarantees
+task success.
+
+## Disjoint 512-episode/domain audits
+
+Round 3 was fixed as the audit candidate for each arm because it had that
+arm's largest formal DQH safe-score increase. The audit used 64 environments,
+8 repeats, seeds 23000-23007, runtime CBF on, and no seeds used by screening or
+the in-run gate. Both candidates shared the same cached old-policy replicates.
+
+| Policy | Domain | Success | Fall | Return | CBF/riser |
+|---|---|---:|---:|---:|---:|
+| Old | D0 | 91.21% | 2.54% | 8.278 | 0.628 |
+| Arm A candidate | D0 | 89.65% | 1.56% | 8.592 | 0.674 |
+| Arm B candidate | D0 | 92.19% | 1.56% | 8.625 | 0.625 |
+| Old | DQH | 87.70% | 12.11% | 8.413 | 0.797 |
+| Arm A candidate | DQH | 89.65% | 10.35% | 8.752 | 0.711 |
+| Arm B candidate | DQH | 88.09% | 11.91% | 8.557 | 0.741 |
+| Old | DQNH | 86.33% | 13.67% | 8.106 | 0.836 |
+| Arm A candidate | DQNH | 86.13% | 13.87% | 8.027 | 0.833 |
+| Arm B candidate | DQNH | 89.06% | 10.94% | 8.555 | 0.778 |
+
+The paired DQH deltas and percentile 95% intervals were:
+
+| Arm | Metric | Mean | 95% lower | 95% upper |
+|---|---|---:|---:|---:|
+| A | Success | +1.95 pp | -0.78 pp | +4.30 pp |
+| A | Fall | -1.76 pp | -4.10 pp | +0.78 pp |
+| A | Return | +0.340 | -0.056 | +0.748 |
+| A | CBF/riser | -0.086 | -0.191 | +0.001 |
+| A | Safe score | +0.066 | -0.020 | +0.142 |
+| B | Success | +0.39 pp | -2.73 pp | +3.71 pp |
+| B | Fall | -0.20 pp | -3.71 pp | +3.32 pp |
+| B | Return | +0.144 | -0.328 | +0.612 |
+| B | CBF/riser | -0.056 | -0.207 | +0.066 |
+| B | Safe score | +0.013 | -0.103 | +0.130 |
+
+Neither arm has a positive task-improvement lower bound. Arm B also reaches
+only 92.19% D0 success, below the predeclared 93.83% absolute retention floor;
+its paired D0 non-inferiority lower bound is negative as well. Both final
+decisions are therefore `rollback`, for the same exact reasons:
+
+```text
+target metrics show no strict improvement
+target task metrics show no strict improvement
+D0 retention bound violated
+```
+
+The final accepted actor tensors for both arms are byte-identical to the
+deployed start actor (13 tensors, maximum absolute error 0). Runtime CBF stays
+enabled. Because Arm B did not pass the Level A retention gate, the planned
+3 base seeds x 5 hidden deployment contexts expansion was not run.
+
+## Evidence boundary and next decision
+
+The result is a clean negative finding for the tested calibration: fixed,
+stage-balanced actor-only observation banks and finite KL anchors are
+implemented correctly, but `beta_0=0.02`, `beta_N=0.01`, and KL budget `0.002`
+did not produce a promotable DQH update. It would be selection-biased to tune
+the budget after viewing these audit seeds and call that the same experiment.
+A future protocol should predeclare a tighter task-calibrated bank-KL budget or
+broader failure-boundary bank coverage, then use fresh selection and audit
+seeds. No claim about 15 hidden contexts or real-robot improvement is made from
+this result.
+
+The compact machine-readable ledger is
+`results/online/retention_v13/key_results.json` (SHA-256
+`4ebe894ecb051457268aa1d5e1f4b299c43f90c318861a0e8cfc720e9a6d9d6e`).
+It includes every formal round, both final audits, checkpoint identities,
+paired intervals, bank manifests, and source-artifact checksums.

@@ -3,12 +3,21 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
 
 
 DOMAINS = ("D0", "DQH", "DQNH")
+
+
+def _sha256(path: Path) -> str:
+  digest = hashlib.sha256()
+  with path.open("rb") as stream:
+    for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+      digest.update(chunk)
+  return digest.hexdigest()
 
 
 def _domain_metrics(result: dict[str, Any]) -> dict[str, Any]:
@@ -79,6 +88,7 @@ def _arm(path: Path) -> dict[str, Any]:
   )
   return {
     "summary_file": str(path.resolve()),
+    "summary_sha256": _sha256(path),
     "seed": int(result["seed"]),
     "base_anchor_weight": float(result["base_anchor_weight"]),
     "d0_retention_anchor_weight_initial": float(
@@ -118,6 +128,7 @@ def _audit(path: Path | None) -> dict[str, Any] | None:
   result = json.loads(path.read_text())
   return {
     "file": str(path.resolve()),
+    "file_sha256": _sha256(path),
     "accepted": bool(result["accepted"]),
     "decision": result["decision"],
     "round": int(result["round"]),
@@ -152,8 +163,31 @@ def main() -> None:
   ):
     if not path.is_file():
       raise FileNotFoundError(path)
+  arm_a = _arm(args.arm_a_summary)
+  arm_b = _arm(args.arm_b_summary)
+  audit_a = _audit(args.arm_a_audit)
+  audit_b = _audit(args.arm_b_audit)
+  if audit_b is None:
+    overall_decision = "pending_final_audit"
+    scale_status = "pending_final_audit"
+  elif audit_b["accepted"]:
+    overall_decision = "promotion_eligible"
+    scale_status = "eligible_after_state_retention_gate"
+  else:
+    overall_decision = "rollback"
+    scale_status = "not_run_state_retention_gate_failed"
   ledger = {
     "schema_version": 1,
+    "overall_decision": overall_decision,
+    "accepted_actor_changed": bool(
+      arm_a["accepted_rounds"] or arm_b["accepted_rounds"]
+    ),
+    "hidden_context_scale_3x5": {
+      "state_retention_gate_passed": bool(
+        audit_b is not None and audit_b["accepted"]
+      ),
+      "status": scale_status,
+    },
     "scope": (
       "simulation evidence for safe adaptation to an unknown fixed combined "
       "deployment shift; not exhaustive sim-to-real validation"
@@ -165,12 +199,12 @@ def main() -> None:
       "DQNH": json.loads(args.neighbor_bank_manifest.read_text()),
     },
     "arms": {
-      "A_v12_global_anchor": _arm(args.arm_a_summary),
-      "B_state_conditioned_retention": _arm(args.arm_b_summary),
+      "A_v12_global_anchor": arm_a,
+      "B_state_conditioned_retention": arm_b,
     },
     "final_audits": {
-      "A_v12_global_anchor": _audit(args.arm_a_audit),
-      "B_state_conditioned_retention": _audit(args.arm_b_audit),
+      "A_v12_global_anchor": audit_a,
+      "B_state_conditioned_retention": audit_b,
     },
   }
   args.output.parent.mkdir(parents=True, exist_ok=True)
