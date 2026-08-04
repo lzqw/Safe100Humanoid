@@ -43,6 +43,9 @@ class StairCbfJointPositionActionCfg(JointPositionActionCfg):
   intervention_norm_scale: float = 0.05
   safety_history_length: int = 5
   safety_prediction_steps: int = 5
+  deployment_action_gain: float = 1.0
+  deployment_action_bias: tuple[float, ...] | None = None
+  deployment_action_delay_steps: int = 0
 
   def build(self, env: "ManagerBasedRlEnv") -> "StairCbfJointPositionAction":
     return StairCbfJointPositionAction(self, env)
@@ -124,6 +127,30 @@ class StairCbfJointPositionAction(JointPositionAction):
     self.nominal_raw_action = torch.zeros_like(self.nominal_target)
     self.safe_raw_action = torch.zeros_like(self.nominal_target)
     self.executed_raw_action = torch.zeros_like(self.nominal_target)
+    if cfg.deployment_action_delay_steps < 0:
+      raise ValueError("deployment action delay must be non-negative")
+    if not 0.0 < cfg.deployment_action_gain <= 2.0:
+      raise ValueError("deployment action gain must be in (0, 2]")
+    bias = (
+      (0.0,) * self.action_dim
+      if cfg.deployment_action_bias is None
+      else cfg.deployment_action_bias
+    )
+    if len(bias) != self.action_dim:
+      raise ValueError(
+        "deployment action bias must match action dimension: "
+        f"{len(bias)} != {self.action_dim}"
+      )
+    self._deployment_action_bias = torch.tensor(
+      bias, device=self.device, dtype=self.nominal_target.dtype
+    )
+    self._deployment_action_queue = torch.zeros(
+      self.num_envs,
+      cfg.deployment_action_delay_steps + 1,
+      self.action_dim,
+      device=self.device,
+      dtype=self.nominal_target.dtype,
+    )
     if cfg.safety_history_length < 1 or cfg.safety_prediction_steps < 1:
       raise ValueError("CBF safety history and prediction horizon must be positive")
     self.barrier_derivative = torch.zeros(shape, device=self.device)
@@ -151,10 +178,25 @@ class StairCbfJointPositionAction(JointPositionAction):
 
   def process_actions(self, actions: torch.Tensor) -> None:
     previous_h = self.h.clone()
-    super().process_actions(actions)
+    if self.cfg.deployment_action_delay_steps > 0:
+      self._deployment_action_queue[:, 1:] = (
+        self._deployment_action_queue[:, :-1].clone()
+      )
+    self._deployment_action_queue[:, 0] = actions
+    delayed_actions = self._deployment_action_queue[
+      :, self.cfg.deployment_action_delay_steps
+    ]
+    deployment_actions = (
+      self.cfg.deployment_action_gain * delayed_actions
+      + self._deployment_action_bias
+    )
+    # The actor and PPO buffer retain ``actions``. Gain, bias, and delay are a
+    # hidden plant-side transform; the runtime CBF filters the transformed
+    # command that would otherwise reach the actuators.
+    super().process_actions(deployment_actions)
     nominal_target = self._processed_actions.clone()
     self.nominal_target[:] = nominal_target
-    self.nominal_raw_action[:] = actions
+    self.nominal_raw_action[:] = deployment_actions
     q = self._entity.data.joint_pos[:, self._target_ids]
     qdot_nominal = (nominal_target - q) / self._env.step_dt
     foot_pos = self._entity.data.site_pos_w[:, self._site_local_ids]
@@ -227,7 +269,7 @@ class StairCbfJointPositionAction(JointPositionAction):
     self.safe_target[:] = projected_target
     self.safe_raw_action[:] = projected_raw_action
     self.executed_raw_action[:] = (
-      projected_raw_action if self.cfg.enabled else actions
+      projected_raw_action if self.cfg.enabled else deployment_actions
     )
     self.h[:] = torch.where(active, h, torch.full_like(h, torch.inf))
     self.selected_edge_top_z[:] = selected_top_z
@@ -291,6 +333,7 @@ class StairCbfJointPositionAction(JointPositionAction):
     self.nominal_raw_action[env_ids] = 0.0
     self.safe_raw_action[env_ids] = 0.0
     self.executed_raw_action[env_ids] = 0.0
+    self._deployment_action_queue[env_ids] = 0.0
     self.barrier_derivative[env_ids] = 0.0
     self.predicted_h[env_ids] = 1.0
     self.h_history[env_ids] = 1.0

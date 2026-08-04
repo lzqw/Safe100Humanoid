@@ -43,6 +43,7 @@ def _evaluate_state(
   runtime_filter: bool = True,
   artifact_dir: Path | None = None,
   resume: bool = False,
+  deployment_context: Path | None = None,
 ) -> dict[str, dict[str, Any]]:
   """Evaluate one actor in isolated CUDA processes.
 
@@ -58,6 +59,16 @@ def _evaluate_state(
     )
   output: dict[str, dict[str, Any]] = {}
   repo = Path(__file__).resolve().parents[2]
+  context_hash = None
+  if deployment_context is not None:
+    from src.tasks.stairs_cbf.deployment_context import (
+      load_frozen_deployment_context,
+    )
+
+    deployment_context = deployment_context.resolve()
+    context_hash = load_frozen_deployment_context(deployment_context)[
+      "parameters_sha256"
+    ]
   checkpoint_payload = runner.alg.save()
   checkpoint_payload["actor_state_dict"] = {
     key: value.detach().cpu() for key, value in actor_state.items()
@@ -77,6 +88,13 @@ def _evaluate_state(
     checkpoint = temp_root / "actor.pt"
     torch.save(checkpoint_payload, checkpoint)
     for domain in domains:
+      from src.tasks.stairs_cbf.deployment_context import (
+        deployment_context_role_for_task,
+      )
+
+      context_role = deployment_context_role_for_task(domain)
+      if context_role is not None and deployment_context is None:
+        raise ValueError(f"medium domain {domain} requires a deployment context")
       replicate_summaries = []
       for repeat in range(repeats):
         stem = f"{domain}-seed{seed + repeat}"
@@ -93,6 +111,13 @@ def _evaluate_state(
             and int(summary.get("seed", -1)) == seed + repeat
             and int(summary.get("num_episodes", -1)) == num_episodes
             and summary.get("runtime_filter") is runtime_filter
+            and (
+              context_role is None
+              or summary.get("deployment_context", {}).get(
+                "parameters_sha256"
+              )
+              == context_hash
+            )
           ):
             replicate_summaries.append(summary)
             continue
@@ -121,6 +146,11 @@ def _evaluate_state(
           "--output-csv",
           str(output_csv),
         ]
+        if context_role is not None:
+          assert deployment_context is not None
+          command.extend(
+            ("--deployment-context", str(deployment_context))
+          )
         completed = subprocess.run(
           command,
           cwd=repo,
@@ -275,6 +305,10 @@ def _collect_and_update(
   hard_case_pre_steps: int,
   hard_case_generator: torch.Generator,
   persistent_hard_case_slots: bool = False,
+  late_failure_hard_cases: bool = False,
+  late_failure_minimum_steps: int = 50,
+  late_failure_maximum_steps: int = 150,
+  late_failure_minimum_riser: int = 5,
 ):
   from rsl_rl.utils import check_nan
   from src.tasks.stairs_cbf.hard_cases import (
@@ -282,6 +316,7 @@ def _collect_and_update(
     hard_case_state_shape_mismatches,
     reset_rollout_with_hard_cases,
     restore_hard_case_state,
+    select_late_failure_candidate,
   )
 
   del obs
@@ -320,7 +355,16 @@ def _collect_and_update(
   normal_completed = 0
   normal_falls = 0
   normal_successes = 0
-  state_history = deque(maxlen=hard_case_pre_steps + 1)
+  history_steps = (
+    late_failure_maximum_steps
+    if late_failure_hard_cases
+    else hard_case_pre_steps
+  )
+  state_history = deque(maxlen=history_steps + 1)
+  riser_history = deque(maxlen=history_steps + 1)
+  centerline_history = deque(maxlen=history_steps + 1)
+  heading_history = deque(maxlen=history_steps + 1)
+  correction_history = deque(maxlen=history_steps + 1)
   valid_steps = torch.zeros(
     runner.env.num_envs, dtype=torch.long, device=runner.env.device
   )
@@ -328,12 +372,41 @@ def _collect_and_update(
     runner.env.num_envs, dtype=torch.bool, device=runner.env.device
   )
   bank_added = 0
+  target_falls_seen = 0
+  late_failure_candidates_found = 0
   hard_case_restart_count = 0
   # Use no_grad rather than inference_mode because critic normalization is
   # intentionally updated and must remain rollback-compatible.
   with torch.no_grad():
     for _ in range(runner.cfg["num_steps_per_env"]):
-      state_history.append(capture_hard_case_state(runner.env.unwrapped))
+      unwrapped = runner.env.unwrapped
+      state_history.append(capture_hard_case_state(unwrapped))
+      action_term = unwrapped.action_manager.get_term("joint_pos")
+      command_term = unwrapped.command_manager.get_term("twist")
+      terrain = unwrapped.scene.terrain
+      assert terrain is not None
+      edge_x = action_term._edge_x[
+        terrain.terrain_levels, terrain.terrain_types
+      ]
+      root_x = unwrapped.scene["robot"].data.root_link_pos_w[:, 0:1]
+      riser_history.append(torch.sum(root_x >= edge_x, dim=1).detach().clone())
+      centerline_history.append(
+        getattr(
+          command_term,
+          "centerline_error",
+          torch.zeros(runner.env.num_envs, device=runner.env.device),
+        ).detach().clone()
+      )
+      heading_history.append(
+        getattr(
+          command_term,
+          "heading_error",
+          torch.zeros(runner.env.num_envs, device=runner.env.device),
+        ).detach().clone()
+      )
+      correction_history.append(
+        action_term.target_intervention_norm.detach().clone()
+      )
       actions = runner.alg.act(obs)
       obs, rewards, dones, extras = runner.env.step(actions.to(runner.env.device))
       check_nan(obs, rewards, dones)
@@ -343,6 +416,8 @@ def _collect_and_update(
       magnitude = extras.get("cbf_intervention_magnitude")
       riser_index = extras.get("online_stair_index")
       if (
+        not late_failure_hard_cases
+        and
         actual_intervention is not None
         and magnitude is not None
         and riser_index is not None
@@ -365,6 +440,35 @@ def _collect_and_update(
       fell = extras.get(
         "online_fell", torch.zeros_like(done_mask, dtype=torch.bool)
       ).bool()
+      if late_failure_hard_cases:
+        fall_ids = fell.nonzero(as_tuple=False).flatten()
+        target_falls_seen += len(fall_ids)
+        if len(fall_ids) > 0:
+          states = list(state_history)
+          risers = list(riser_history)
+          centerline = list(centerline_history)
+          heading = list(heading_history)
+          corrections = list(correction_history)
+          for env_id in fall_ids.tolist():
+            episode_steps = min(int(valid_steps[env_id]) + 1, len(states))
+            if episode_steps <= late_failure_minimum_steps:
+              continue
+            start = len(states) - episode_steps
+            candidate = select_late_failure_candidate(
+              torch.stack(risers[start:])[:, env_id],
+              torch.stack(centerline[start:])[:, env_id],
+              torch.stack(heading[start:])[:, env_id],
+              torch.stack(corrections[start:])[:, env_id],
+              minimum_steps_before_fall=late_failure_minimum_steps,
+              maximum_steps_before_fall=late_failure_maximum_steps,
+              minimum_riser=late_failure_minimum_riser,
+            )
+            if candidate is None:
+              continue
+            late_failure_candidates_found += 1
+            bank_added += hard_case_bank.add_late_failure(
+              states[start + candidate.history_index], env_id, candidate
+            )
       completed_normal = done_mask & normal_active & ~timeouts
       normal_completed += int(completed_normal.sum())
       normal_falls += int((completed_normal & fell).sum())
@@ -429,6 +533,11 @@ def _collect_and_update(
           done_mask, torch.ones_like(normal_active), normal_active
         )
     credit_metrics = runner.alg.relabel_pre_intervention_costs()
+    fall_credit_metrics = (
+      runner.alg.redistribute_failure_focused_fall_penalty()
+      if runner.alg.failure_focused_refinement
+      else {}
+    )
     completion_metrics = {
       "normal_start_completed_episode_count": normal_completed,
       "normal_start_success_count": normal_successes,
@@ -446,6 +555,7 @@ def _collect_and_update(
     advantage_metrics = runner.alg.prepare_constrained_advantages()
   losses = runner.alg.update()
   losses.update(credit_metrics)
+  losses.update(fall_credit_metrics)
   losses.update(advantage_metrics)
   losses.update(multiplier_metrics)
   losses.update(completion_metrics)
@@ -458,6 +568,13 @@ def _collect_and_update(
       "hard_case_pre_steps": hard_case_pre_steps,
       "persistent_hard_case_slots": persistent_hard_case_slots,
       "hard_case_restart_count": hard_case_restart_count,
+      "late_failure_hard_cases": late_failure_hard_cases,
+      "late_failure_target_falls_seen": target_falls_seen,
+      "late_failure_candidates_found": late_failure_candidates_found,
+      "late_failure_minimum_steps": late_failure_minimum_steps,
+      "late_failure_maximum_steps": late_failure_maximum_steps,
+      "late_failure_minimum_riser": late_failure_minimum_riser,
+      "hard_case_bank_audit": hard_case_bank.audit_metadata(),
     }
   )
   return obs, losses

@@ -262,6 +262,8 @@ def g1_online_stairs_env_cfg(
     "DQH": "DQ",
     "DQNH": "DQN",
     "DQMH": "DQM",
+    "DQHMED": "DQ",
+    "DQNHMED": "DQN",
   }
   closed_loop_centering = domain in human_domain
   base_domain = human_domain.get(domain, domain)

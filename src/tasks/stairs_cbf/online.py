@@ -118,6 +118,16 @@ class BriefPpoGateThresholds:
   d0_success_tolerance: float = 0.05
 
 
+@dataclass(frozen=True)
+class FailureFocusedGateThresholds:
+  """Wide point gates for v15; final confidence gates are evaluated separately."""
+
+  maximum_kl: float = 0.01
+  maximum_target_fall_increase: float = 0.03
+  maximum_cbf_demand_ratio: float = 1.25
+  d0_success_tolerance: float = 0.05
+
+
 def brief_dual_reward_weight(round_index: int) -> float:
   """Task-first scalar-reward schedule from the v14 protocol."""
   if round_index < 1:
@@ -223,6 +233,125 @@ def brief_d0_retention_gate(
   elif baseline_signature != candidate_signature:
     reasons.append("paired D0 initial-state signature differs")
   return len(reasons) == 0, reasons
+
+
+def failure_focused_target_score(result: dict[str, Any]) -> dict[str, float]:
+  """Return the v15 training score ``success - fall`` and its components."""
+  components = {
+    "success": float(result.get("success_rate", float("nan"))),
+    "fall": -float(result.get("fall_rate", float("nan"))),
+  }
+  if not all(math.isfinite(value) for value in components.values()):
+    raise ValueError("failure-focused target score is missing or non-finite")
+  return {**components, "total": sum(components.values())}
+
+
+def failure_focused_candidate_precheck(
+  *,
+  update_metrics: dict[str, Any],
+  parameters_finite: bool,
+  thresholds: FailureFocusedGateThresholds = FailureFocusedGateThresholds(),
+) -> list[str]:
+  reasons: list[str] = []
+  if not parameters_finite:
+    reasons.append("non-finite model parameters")
+  kl = float(update_metrics.get("mean_kl", float("nan")))
+  if not math.isfinite(kl):
+    reasons.append("update KL is missing or non-finite")
+  elif kl >= thresholds.maximum_kl:
+    reasons.append("update KL is not below 0.01")
+  return reasons
+
+
+def failure_focused_candidate_gate(
+  *,
+  update_metrics: dict[str, Any],
+  old_eval: dict[str, Any],
+  candidate_eval: dict[str, Any],
+  parameters_finite: bool,
+  thresholds: FailureFocusedGateThresholds = FailureFocusedGateThresholds(),
+) -> tuple[bool, list[str], dict[str, dict[str, float]]]:
+  """Apply only v15 target score, fall, KL/finite, and catastrophic-CBF gates."""
+  reasons = failure_focused_candidate_precheck(
+    update_metrics=update_metrics,
+    parameters_finite=parameters_finite,
+    thresholds=thresholds,
+  )
+  old_signature = old_eval.get("initial_state_signatures")
+  candidate_signature = candidate_eval.get("initial_state_signatures")
+  if old_signature is None or candidate_signature is None:
+    reasons.append("paired target initial-state signature missing")
+  elif old_signature != candidate_signature:
+    reasons.append("paired target initial-state signature differs")
+  try:
+    old_score = failure_focused_target_score(old_eval)
+    candidate_score = failure_focused_target_score(candidate_eval)
+    old_fall = float(old_eval["fall_rate"])
+    candidate_fall = float(candidate_eval["fall_rate"])
+    old_demand = safety_demand_per_riser(old_eval)
+    candidate_demand = safety_demand_per_riser(candidate_eval)
+  except (KeyError, TypeError, ValueError):
+    reasons.append("target evaluation is missing or non-finite")
+    old_score = {"total": float("nan")}
+    candidate_score = {"total": float("nan")}
+  else:
+    if candidate_score["total"] <= old_score["total"]:
+      reasons.append("target point-estimate score did not improve")
+    if candidate_fall > old_fall + thresholds.maximum_target_fall_increase:
+      reasons.append("target fall rate increased by more than 3 percentage points")
+    if candidate_demand > thresholds.maximum_cbf_demand_ratio * old_demand:
+      reasons.append("target CBF demand increased by more than 25 percent")
+  return len(reasons) == 0, reasons, {
+    "old": old_score,
+    "candidate": candidate_score,
+  }
+
+
+def redistributed_fall_credit(
+  fall_events: torch.Tensor,
+  dones: torch.Tensor,
+  *,
+  horizon: int = 100,
+  decay: float = 0.97,
+  amount_per_fall: float = 2.0,
+) -> torch.Tensor:
+  """Redistribute a fixed fall amount backward without crossing episodes.
+
+  The returned tensor is a positive penalty magnitude. For every fall event,
+  exactly ``amount_per_fall`` is assigned to at most ``horizon`` transitions,
+  ending at the terminal transition. The caller subtracts it from the single
+  scalar reward stream.
+  """
+  if fall_events.shape != dones.shape or fall_events.ndim != 2:
+    raise ValueError("fall events and dones must share [T, N] shape")
+  if horizon < 1:
+    raise ValueError("fall redistribution horizon must be positive")
+  if not 0.0 < decay <= 1.0:
+    raise ValueError("fall redistribution decay must be in (0, 1]")
+  if not math.isfinite(amount_per_fall) or amount_per_fall < 0.0:
+    raise ValueError("fall redistribution amount must be finite and non-negative")
+  credit = torch.zeros_like(fall_events, dtype=torch.float32)
+  episode_start = torch.zeros(
+    fall_events.shape[1], dtype=torch.long, device=fall_events.device
+  )
+  for step in range(fall_events.shape[0]):
+    fall_ids = fall_events[step].bool().nonzero(as_tuple=False).flatten()
+    for env_id in fall_ids.tolist():
+      start = max(int(episode_start[env_id]), step - horizon + 1)
+      indices = torch.arange(step, start - 1, -1, device=fall_events.device)
+      powers = torch.arange(len(indices), device=fall_events.device)
+      weights = decay ** powers.float()
+      weights = amount_per_fall * weights / weights.sum()
+      credit[indices, env_id] += weights
+    done_ids = dones[step].bool().nonzero(as_tuple=False).flatten()
+    if len(done_ids) > 0:
+      episode_start[done_ids] = step + 1
+  expected = amount_per_fall * float(fall_events.float().sum())
+  if not math.isclose(
+    float(credit.sum()), expected, rel_tol=1.0e-5, abs_tol=1.0e-5
+  ):
+    raise RuntimeError("redistributed fall penalty does not preserve episode total")
+  return credit
 
 
 def safe_improvement_score(
@@ -1121,7 +1250,11 @@ class OnlineSafePpoAlgorithmCfg(RslRlPpoAlgorithmCfg):
   use_counterfactual_cbf_credit: bool = False
   task_first_constrained: bool = False
   brief_ppo_refinement: bool = False
+  failure_focused_refinement: bool = False
   kl_early_stopping: bool = False
+  fall_redistribution_horizon: int = 100
+  fall_redistribution_decay: float = 0.97
+  fall_redistribution_amount: float = 2.0
   initial_fall_multiplier: float = 0.0
   initial_intervention_multiplier: float = 0.0
   fall_multiplier_learning_rate: float = 1.0
@@ -1167,7 +1300,11 @@ class OnlineSafePPO(PPO):
     use_counterfactual_cbf_credit: bool = False,
     task_first_constrained: bool = False,
     brief_ppo_refinement: bool = False,
+    failure_focused_refinement: bool = False,
     kl_early_stopping: bool = False,
+    fall_redistribution_horizon: int = 100,
+    fall_redistribution_decay: float = 0.97,
+    fall_redistribution_amount: float = 2.0,
     initial_fall_multiplier: float = 0.0,
     initial_intervention_multiplier: float = 0.0,
     fall_multiplier_learning_rate: float = 1.0,
@@ -1210,7 +1347,11 @@ class OnlineSafePPO(PPO):
     self.use_counterfactual_cbf_credit = use_counterfactual_cbf_credit
     self.task_first_constrained = task_first_constrained
     self.brief_ppo_refinement = brief_ppo_refinement
+    self.failure_focused_refinement = failure_focused_refinement
     self.kl_early_stopping = kl_early_stopping
+    self.fall_redistribution_horizon = fall_redistribution_horizon
+    self.fall_redistribution_decay = fall_redistribution_decay
+    self.fall_redistribution_amount = fall_redistribution_amount
     self.fall_multiplier = float(initial_fall_multiplier)
     self.intervention_multiplier = float(initial_intervention_multiplier)
     self.fall_multiplier_learning_rate = fall_multiplier_learning_rate
@@ -1288,6 +1429,28 @@ class OnlineSafePPO(PPO):
       raise ValueError("retention anchor batch size must be positive")
     if self.task_first_constrained and self.brief_ppo_refinement:
       raise ValueError("brief PPO cannot enable task-first constrained heads")
+    if self.failure_focused_refinement and not self.brief_ppo_refinement:
+      raise ValueError("failure-focused refinement must use brief PPO")
+    if self.fall_redistribution_horizon < 1:
+      raise ValueError("fall redistribution horizon must be positive")
+    if not 0.0 < self.fall_redistribution_decay <= 1.0:
+      raise ValueError("fall redistribution decay must be in (0, 1]")
+    if self.fall_redistribution_amount < 0.0 or not math.isfinite(
+      self.fall_redistribution_amount
+    ):
+      raise ValueError("fall redistribution amount must be finite and non-negative")
+    if self.failure_focused_refinement and (
+      self.fall_redistribution_horizon != 100
+      or not math.isclose(
+        self.fall_redistribution_decay, 0.97, rel_tol=0.0, abs_tol=1.0e-12
+      )
+      or not math.isclose(
+        self.fall_redistribution_amount, 2.0, rel_tol=0.0, abs_tol=1.0e-12
+      )
+    ):
+      raise ValueError(
+        "failure-focused brief PPO requires fall redistribution (100, 0.97, 2.0)"
+      )
     if self.kl_early_stopping and (
       self.desired_kl is None or self.desired_kl <= 0.0
     ):
@@ -1313,16 +1476,28 @@ class OnlineSafePPO(PPO):
         raise ValueError("brief PPO requires exactly one learning epoch")
       if not math.isclose(self.clip_param, 0.05, rel_tol=0.0, abs_tol=1.0e-12):
         raise ValueError("brief PPO requires PPO clip 0.05")
+      required_target_kl = 0.003 if self.failure_focused_refinement else 0.005
       if not math.isclose(
-        float(self.desired_kl or 0.0), 0.005, rel_tol=0.0, abs_tol=1.0e-12
+        float(self.desired_kl or 0.0),
+        required_target_kl,
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
       ):
-        raise ValueError("brief PPO requires target KL 0.005")
+        raise ValueError(
+          f"brief PPO mode requires target KL {required_target_kl}"
+        )
       if not self.kl_early_stopping:
         raise ValueError("brief PPO requires target-KL early stopping")
+      required_actor_lr = 5.0e-6 if self.failure_focused_refinement else 2.0e-6
       if not math.isclose(
-        self.actor_learning_rate, 2.0e-6, rel_tol=0.0, abs_tol=1.0e-15
+        self.actor_learning_rate,
+        required_actor_lr,
+        rel_tol=0.0,
+        abs_tol=1.0e-15,
       ):
-        raise ValueError("brief PPO requires actor learning rate 2e-6")
+        raise ValueError(
+          f"brief PPO mode requires actor learning rate {required_actor_lr}"
+        )
       if any(
         not math.isclose(value, 1.0, rel_tol=0.0, abs_tol=1.0e-12)
         for value in self.actor_layer_multipliers
@@ -1330,10 +1505,24 @@ class OnlineSafePPO(PPO):
         raise ValueError("brief PPO requires the full actor at the configured LR")
       if not 0.25 <= self.std_scale_from_base <= 0.50:
         raise ValueError("brief PPO exploration std scale must be in [0.25, 0.50]")
-      if not math.isclose(
-        self.hard_case_policy_weight, 0.5, rel_tol=0.0, abs_tol=1.0e-12
+      if self.failure_focused_refinement and not math.isclose(
+        self.std_scale_from_base, 0.35, rel_tol=0.0, abs_tol=1.0e-12
       ):
-        raise ValueError("brief PPO requires hard-case actor weight 0.5")
+        raise ValueError("failure-focused brief PPO requires base std scale 0.35")
+      if self.failure_focused_refinement and not math.isclose(
+        self.critic_learning_rate, 1.0e-4, rel_tol=0.0, abs_tol=1.0e-15
+      ):
+        raise ValueError("failure-focused brief PPO requires critic LR 1e-4")
+      required_hard_weight = 0.75 if self.failure_focused_refinement else 0.5
+      if not math.isclose(
+        self.hard_case_policy_weight,
+        required_hard_weight,
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
+      ):
+        raise ValueError(
+          f"brief PPO mode requires hard-case actor weight {required_hard_weight}"
+        )
 
     # The task critic retains the pretrained value representation.  Cost and
     # short-horizon risk heads are distinct modules so safety cannot silently
@@ -1815,6 +2004,12 @@ class OnlineSafePPO(PPO):
       return {
         "task_first_constrained": False,
         "brief_ppo_refinement": True,
+        "failure_focused_refinement": self.failure_focused_refinement,
+        "fall_redistribution": {
+          "horizon": self.fall_redistribution_horizon,
+          "decay": self.fall_redistribution_decay,
+          "amount": self.fall_redistribution_amount,
+        },
       }
     output: dict[str, Any] = {
       "task_first_constrained": self.task_first_constrained,
@@ -2050,6 +2245,35 @@ class OnlineSafePPO(PPO):
       "hard_case_transition_fraction": float(
         self.hard_case_transitions.float().mean()
       ),
+    }
+    self.last_update_metrics.update(metrics)
+    return metrics
+
+  def redistribute_failure_focused_fall_penalty(self) -> dict[str, float]:
+    """Move half of each v15 fall penalty into its preceding scalar rewards."""
+    if not self.failure_focused_refinement:
+      return {
+        "fall_redistribution_enabled": 0.0,
+        "fall_redistribution_event_count": 0.0,
+        "fall_redistribution_total": 0.0,
+      }
+    credit = redistributed_fall_credit(
+      self.fall_events,
+      self.storage.dones.squeeze(-1),
+      horizon=self.fall_redistribution_horizon,
+      decay=self.fall_redistribution_decay,
+      amount_per_fall=self.fall_redistribution_amount,
+    )
+    self.storage.rewards.sub_(credit.unsqueeze(-1))
+    metrics = {
+      "fall_redistribution_enabled": 1.0,
+      "fall_redistribution_event_count": float(self.fall_events.sum()),
+      "fall_redistribution_total": float(credit.sum()),
+      "fall_redistribution_per_event": (
+        float(credit.sum() / self.fall_events.sum().clamp_min(1))
+      ),
+      "fall_redistribution_horizon": float(self.fall_redistribution_horizon),
+      "fall_redistribution_decay": self.fall_redistribution_decay,
     }
     self.last_update_metrics.update(metrics)
     return metrics

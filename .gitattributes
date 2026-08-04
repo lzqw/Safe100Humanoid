@@ -7,3 +7,4 @@
 *.gif binary
 *.tfevents.* binary
 results/online/brief_ppo_v14/final_audit/paired_episode_metrics.csv binary
+results/online/failure_focused_v15/**/*.csv binary

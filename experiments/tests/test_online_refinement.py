@@ -17,6 +17,7 @@ from src.tasks.stairs_cbf.online import (
   BriefPpoGateThresholds,
   CandidateGateThresholds,
   CbfIndependenceThresholds,
+  FailureFocusedGateThresholds,
   OnlineSafePPO,
   OnlineSafeRefinementRunner,
   SafeImprovementScoreWeights,
@@ -36,8 +37,12 @@ from src.tasks.stairs_cbf.online import (
   critic_readiness_reasons,
   critic_calibration_by_riser,
   future_event_labels,
+  failure_focused_candidate_gate,
+  failure_focused_candidate_precheck,
+  failure_focused_target_score,
   generalized_cost_advantage,
   projected_lagrange_update,
+  redistributed_fall_credit,
   pre_event_value_delta,
   rollout_action_dataflow_metrics,
   paired_metric_delta_interval,
@@ -50,10 +55,19 @@ from src.tasks.stairs_cbf.online import (
 )
 from src.tasks.stairs_cbf.hard_cases import (
   HardCaseStateBank,
+  LateFailureCandidate,
   curriculum_destination_ids,
   hard_case_destination_ids,
   hard_case_state_shape_mismatches,
   perturb_joystick_command_state,
+  select_late_failure_candidate,
+)
+from src.tasks.stairs_cbf.deployment_context import (
+  FAILURE_FOCUSED_CALIBRATION_KIND,
+  apply_frozen_deployment_context,
+  generate_failure_focused_context,
+  validate_calibrated_deployment_context,
+  validate_frozen_deployment_context,
 )
 from src.tasks.stairs_cbf.retention import (
   RETENTION_BANK_KIND,
@@ -121,6 +135,191 @@ def test_brief_dual_reward_schedule_is_task_first() -> None:
   ]
   with pytest.raises(ValueError, match="positive"):
     brief_dual_reward_weight(0)
+
+
+def test_failure_focused_gate_uses_success_minus_fall_and_catastrophic_cbf_cap() -> None:
+  old = {
+    "success_rate": 0.80,
+    "fall_rate": 0.15,
+    "intervention_per_riser": 0.40,
+    "initial_state_signatures": ["paired-v15"],
+  }
+  candidate = {
+    "success_rate": 0.82,
+    "fall_rate": 0.14,
+    "intervention_per_riser": 0.49,
+    "initial_state_signatures": ["paired-v15"],
+  }
+  assert failure_focused_target_score(candidate) == pytest.approx(
+    {"success": 0.82, "fall": -0.14, "total": 0.68}
+  )
+  accepted, reasons, scores = failure_focused_candidate_gate(
+    update_metrics={"mean_kl": 0.003},
+    old_eval=old,
+    candidate_eval=candidate,
+    parameters_finite=True,
+  )
+  assert accepted
+  assert reasons == []
+  assert scores["candidate"]["total"] > scores["old"]["total"]
+
+  accepted, reasons, _ = failure_focused_candidate_gate(
+    update_metrics={"mean_kl": 0.003},
+    old_eval=old,
+    candidate_eval={**candidate, "intervention_per_riser": 0.501},
+    parameters_finite=True,
+  )
+  assert not accepted
+  assert any("25 percent" in reason for reason in reasons)
+  thresholds = FailureFocusedGateThresholds()
+  assert failure_focused_candidate_precheck(
+    update_metrics={"mean_kl": 0.01},
+    parameters_finite=True,
+    thresholds=thresholds,
+  ) == ["update KL is not below 0.01"]
+
+
+def test_failure_focused_fall_credit_preserves_two_units_without_crossing_reset() -> None:
+  falls = torch.zeros(205, 2, dtype=torch.bool)
+  dones = torch.zeros_like(falls)
+  dones[30, 0] = True
+  falls[160, 0] = True
+  dones[160, 0] = True
+  falls[10, 1] = True
+  dones[10, 1] = True
+  credit = redistributed_fall_credit(falls, dones, horizon=100, decay=0.97)
+  assert float(credit[:, 0].sum()) == pytest.approx(2.0, abs=1e-6)
+  assert float(credit[:, 1].sum()) == pytest.approx(2.0, abs=1e-6)
+  assert torch.count_nonzero(credit[:, 0]) == 100
+  assert torch.count_nonzero(credit[:, 1]) == 11
+  assert torch.count_nonzero(credit[:61, 0]) == 0
+  assert float(credit[159, 0] / credit[160, 0]) == pytest.approx(0.97)
+
+
+def test_late_failure_selector_and_bank_are_target_failure_only() -> None:
+  length = 170
+  risers = torch.arange(length).div(16, rounding_mode="floor").clamp_max(6)
+  lateral = torch.zeros(length)
+  heading = torch.zeros(length)
+  correction = torch.zeros(length)
+  lateral[90:] = 0.25
+  heading[100:] = 0.30
+  correction[110:] = 0.02
+  candidate = select_late_failure_candidate(
+    risers,
+    lateral,
+    heading,
+    correction,
+    minimum_steps_before_fall=50,
+    maximum_steps_before_fall=150,
+    minimum_riser=5,
+  )
+  assert candidate is not None
+  assert 50 <= candidate.steps_before_fall <= 150
+  assert candidate.riser_index >= 5
+  assert max(
+    candidate.lateral_drift_fraction,
+    candidate.heading_drift_fraction,
+    candidate.large_correction_fraction,
+  ) > 0.0
+
+  crossed_after_window = torch.full((160,), 5, dtype=torch.long)
+  crossed_after_window[-20:] = 6
+  assert select_late_failure_candidate(
+    crossed_after_window,
+    torch.zeros(160),
+    torch.zeros(160),
+    torch.zeros(160),
+    minimum_steps_before_fall=50,
+    maximum_steps_before_fall=150,
+    minimum_riser=5,
+  ) is None
+
+  bank = HardCaseStateBank(
+    capacity=2,
+    bank_kind="target_late_failure",
+    source_domain="DQHMED",
+    context_sha256="context-hash",
+  )
+  state = {
+    "terrain/type": torch.tensor([0]),
+    "dummy": torch.tensor([[1.0, 2.0]]),
+  }
+  assert bank.add_late_failure(state, 0, candidate) == 1
+  audit = bank.audit_metadata()
+  assert audit["bank_kind"] == "target_late_failure"
+  assert audit["late_failure_entry_count"] == 1
+  assert 50 <= audit["steps_before_fall_min"] <= 150
+  assert audit["successful_crossing_exclusion_passed"] is True
+
+  general_bank = HardCaseStateBank(capacity=2)
+  with pytest.raises(ValueError, match="target_late_failure"):
+    general_bank.add_late_failure(
+      state,
+      0,
+      LateFailureCandidate(0, 50, 5, 0.0, 0.0, 0.0, 5.0),
+    )
+
+
+def test_failure_focused_context_is_deterministic_hidden_and_calibration_auditable() -> None:
+  first = generate_failure_focused_context(1001)
+  assert first == generate_failure_focused_context(1001)
+  assert first != generate_failure_focused_context(1002)
+  assert validate_frozen_deployment_context(first)["parameters_sha256"] == first[
+    "parameters_sha256"
+  ]
+  tampered = copy.deepcopy(first)
+  tampered["target"]["action_gain"] += 0.001
+  with pytest.raises(ValueError, match="hash mismatch"):
+    validate_frozen_deployment_context(tampered)
+
+  cfg = g1_online_stairs_env_cfg("DQHMED")
+  actor_terms_before = tuple(cfg.observations["actor"].terms)
+  metadata = apply_frozen_deployment_context(cfg, first, role="target")
+  assert tuple(cfg.observations["actor"].terms) == actor_terms_before
+  assert metadata["actor_context_fields_added"] == 0
+  assert cfg.actions["joint_pos"].deployment_action_gain == first["target"][
+    "action_gain"
+  ]
+  assert cfg.commands["twist"].command_delay_range_s == (
+    first["target"]["command_delay_s"],
+    first["target"]["command_delay_s"],
+  )
+
+  previous = generate_failure_focused_context(1000)
+  calibrated = copy.deepcopy(first)
+  calibrated["calibration"] = {
+    "kind": FAILURE_FOCUSED_CALIBRATION_KIND,
+    "selection_metric_fields": ["success_rate"],
+    "adapted_policy_evaluations_used": False,
+    "success_rate_bounds": [0.75, 0.85],
+    "candidate_seeds": [1000, 1001],
+    "attempts": [
+      {
+        "candidate_seed": 1000,
+        "parameters_sha256": previous["parameters_sha256"],
+        "base_policy_only": True,
+        "num_episodes": 128,
+        "success_rate": 0.70,
+      },
+      {
+        "candidate_seed": 1001,
+        "parameters_sha256": first["parameters_sha256"],
+        "base_policy_only": True,
+        "num_episodes": 128,
+        "success_rate": 0.80,
+      },
+    ],
+    "selected_candidate_seed": 1001,
+    "selected_parameters_sha256": first["parameters_sha256"],
+  }
+  assert validate_calibrated_deployment_context(calibrated)["calibration"][
+    "selected_candidate_seed"
+  ] == 1001
+  invalid = copy.deepcopy(calibrated)
+  invalid["calibration"]["attempts"][0]["success_rate"] = 0.80
+  with pytest.raises(ValueError, match="skipped an earlier qualifying"):
+    validate_calibrated_deployment_context(invalid)
 
 
 def test_brief_target_gate_uses_only_point_score_fall_and_small_kl() -> None:

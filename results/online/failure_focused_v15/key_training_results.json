@@ -1,0 +1,120 @@
+{
+  "method": "Failure-Focused Brief PPO v15",
+  "result_status": "target improvement not statistically established",
+  "all_promotion_gates_passed": false,
+  "post_v15_decision": {
+    "branch": "B",
+    "next_step": "classify target falls and build the bank around only the dominant failure type"
+  },
+  "claim_scope": "one fixed training-unseen and algorithm-hidden composite deployment context",
+  "runtime_cbf": true,
+  "calibration": {
+    "candidate_seed_range": [1000, 1019],
+    "selected_candidate_seed": 1000,
+    "episodes": 128,
+    "base_success_rate": 0.8046875,
+    "base_fall_rate": 0.1953125,
+    "base_intervention_per_riser": 1.1950912931934,
+    "base_mean_reached_riser": 10.765625,
+    "selection_used_only_base_success_rate": true,
+    "adapted_policy_evaluations_used": false,
+    "parameters_sha256": "4eafa5b94792f8b709e2da98ed3638a285790497a1e876e937373d55ce8d75bf",
+    "frozen_context_file_sha256": "51cf8ad7b1cd353c285af8b62636000cfc36b0b9e8d379ac386b1a97e6ce06f4"
+  },
+  "training_protocol": {
+    "adaptation_seeds": [42, 142, 242],
+    "rounds_per_seed": 5,
+    "normal_slots": 54,
+    "hard_slots": 10,
+    "hard_transition_fraction": 0.15625,
+    "hard_case_actor_weight": 0.75,
+    "online_dual_cbf_reward": 0,
+    "candidate_fractions": [0.5, 1.0, 1.5],
+    "candidate_paired_episodes": 128,
+    "hard_kl_gate": 0.01,
+    "fall_terminal_penalty": -2,
+    "fall_redistributed_penalty": -2,
+    "fall_redistribution_horizon": 100,
+    "fall_redistribution_decay": 0.97
+  },
+  "training_integrity": {
+    "42": {
+      "selected_fractions": [1.0, 1.5, 1.0, 1.5, 0.5],
+      "policy_changes": [true, true, true, true, true],
+      "maximum_attempted_minibatch_kl": 0.00229255435988307,
+      "final_bank_size": 256,
+      "final_bank_steps_before_fall": [50, 140],
+      "final_bank_risers": [10, 11],
+      "checkpoint_sha256": "a586c9fc645fcaee7883122f0bef7c589c5a188a3a364da62e11f624763bfd45"
+    },
+    "142": {
+      "selected_fractions": [0.5, 1.0, 1.0, null, 1.0],
+      "policy_changes": [true, true, true, false, true],
+      "maximum_attempted_minibatch_kl": 0.003209217917174101,
+      "final_bank_size": 256,
+      "final_bank_steps_before_fall": [55, 69],
+      "final_bank_risers": [11, 11],
+      "checkpoint_sha256": "321eeac82f97a43aaed9b94b907dc7022c6ef5f4ee9b1aa1a45967d8d1102bf0"
+    },
+    "242": {
+      "selected_fractions": [1.0, 1.0, 1.5, 0.5, 1.0],
+      "policy_changes": [true, true, true, true, true],
+      "maximum_attempted_minibatch_kl": 0.0025077643804252148,
+      "final_bank_size": 256,
+      "final_bank_steps_before_fall": [50, 63],
+      "final_bank_risers": [11, 11],
+      "checkpoint_sha256": "3d3985671fb85763b71cb3eac171482f3ec78fc2ce417a62f83f6e8a1fd41b9b"
+    },
+    "all_dual_rewards_zero": true,
+    "all_hard_transition_fractions_exact": true,
+    "all_banks_target_only": true,
+    "all_banks_exclude_later_successful_crossings": true,
+    "all_fall_redistribution_totals_exact": true,
+    "all_periodic_d0_checks_passed": true,
+    "maximum_raw_policy_storage_error": 0,
+    "maximum_executed_safe_action_routing_error": 0
+  },
+  "final_audit": {
+    "adaptation_seeds": [42, 142, 242],
+    "paired_rows": 3072,
+    "bootstrap_samples": 10000,
+    "interval_tuple_order": ["mean", "lcb95", "ucb95"],
+    "target_success": {
+      "baseline": 0.8274739583333334,
+      "final": 0.8352864583333334,
+      "paired_delta": [0.0078125, -0.016276041666666668, 0.031901041666666664]
+    },
+    "target_fall": {
+      "baseline": 0.17252604166666666,
+      "final": 0.16471354166666666,
+      "paired_delta": [-0.0078125, -0.032552083333333336, 0.015625]
+    },
+    "d0_success": {
+      "baseline": 0.91796875,
+      "final": 0.9205729166666666,
+      "paired_delta": [0.0026041666666666665, -0.018229166666666668, 0.024739583333333332]
+    },
+    "neighbor_success_report_only": {
+      "baseline": 0.8177083333333334,
+      "final": 0.8151041666666666,
+      "paired_delta": [-0.0026041666666666665, -0.06380208333333333, 0.05859375]
+    },
+    "target_intervention_per_riser_report_only": {
+      "baseline": 1.2984200341743417,
+      "final": 1.2795123480803643,
+      "paired_delta": [-0.018907686093977343, -0.0815033326682169, 0.03967974026018053]
+    },
+    "promotion_gates": {
+      "target_success_improvement": {"passed": false},
+      "d0_success_noninferiority": {"passed": true},
+      "target_fall_increase_cap": {"passed": true}
+    },
+    "summary_sha256": "c203f6939a6a9f4370325f5bac1740c518064aff80678561e88ea5b58bea461b",
+    "paired_csv_sha256": "46c7db9a8c0b3f7f92530f915839c83c0610b37c6b3c6f00877fa533dc73604d"
+  },
+  "validation": {
+    "authoritative_tests": "59 passed in 9.81s",
+    "end_to_end_gpu_smoke": "passed",
+    "cached_audit_rerun_bit_identical": true
+  }
+}

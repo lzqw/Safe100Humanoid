@@ -26,6 +26,8 @@ def evaluate_policy(
   device: str,
   runtime_filter: bool = True,
   one_episode_per_env: bool = False,
+  deployment_context: dict[str, Any] | None = None,
+  deployment_context_role: str | None = None,
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
   from mjlab.envs import ManagerBasedRlEnv
   from mjlab.rl import RslRlVecEnvWrapper
@@ -44,6 +46,19 @@ def evaluate_policy(
       "initial environment contributes exactly one episode"
     )
   cfg = load_env_cfg(task, play=True)
+  context_metadata = None
+  if deployment_context is not None:
+    from src.tasks.stairs_cbf.deployment_context import (
+      apply_frozen_deployment_context,
+      deployment_context_role_for_task,
+    )
+
+    role = deployment_context_role or deployment_context_role_for_task(task)
+    if role is None:
+      raise ValueError("deployment context was supplied for a non-medium task")
+    context_metadata = apply_frozen_deployment_context(
+      cfg, deployment_context, role=role
+    )
   cfg.scene.num_envs = num_envs
   cfg.seed = seed
   cfg.actions["joint_pos"].enabled = runtime_filter
@@ -78,6 +93,11 @@ def evaluate_policy(
       command_term,
       "_delay_queue",
       torch.zeros(num_envs, 1, 3, device=device),
+    ),
+    getattr(
+      action_term,
+      "_deployment_action_queue",
+      torch.zeros(num_envs, 1, action_term.action_dim, device=device),
     ),
   ]
   for tensor in initial_tensors:
@@ -514,6 +534,7 @@ def evaluate_policy(
     "survival_curve": survival,
     "conditional_failure_hazard": hazard,
     "per_riser_cbf": per_riser,
+    "deployment_context": context_metadata,
   }
   return summary, completed
 
@@ -535,6 +556,10 @@ def main() -> None:
   )
   parser.add_argument("--output-json", type=Path, required=True)
   parser.add_argument("--output-csv", type=Path, required=True)
+  parser.add_argument("--deployment-context", type=Path)
+  parser.add_argument(
+    "--deployment-context-role", choices=("target", "neighbor")
+  )
   args = parser.parse_args()
   sys.path.insert(0, str(args.repo.resolve()))
 
@@ -543,8 +568,29 @@ def main() -> None:
   from mjlab.envs import ManagerBasedRlEnv
   from mjlab.rl import MjlabOnPolicyRunner, RslRlVecEnvWrapper
   from mjlab.tasks.registry import load_env_cfg, load_rl_cfg, load_runner_cls
+  from src.tasks.stairs_cbf.deployment_context import (
+    apply_frozen_deployment_context,
+    deployment_context_role_for_task,
+    load_frozen_deployment_context,
+  )
+
+  deployment_context = (
+    load_frozen_deployment_context(args.deployment_context)
+    if args.deployment_context is not None
+    else None
+  )
+  inferred_role = deployment_context_role_for_task(args.task)
+  context_role = args.deployment_context_role or inferred_role
+  if inferred_role is not None and deployment_context is None:
+    raise ValueError("medium deployment tasks require --deployment-context")
+  if deployment_context is not None and context_role is None:
+    raise ValueError("deployment context role cannot be inferred for this task")
 
   env_cfg = load_env_cfg(args.task, play=True)
+  if deployment_context is not None:
+    apply_frozen_deployment_context(
+      env_cfg, deployment_context, role=context_role
+    )
   env_cfg.scene.num_envs = 1
   env_cfg.seed = args.seed
   base_env = ManagerBasedRlEnv(env_cfg, device=args.device)
@@ -570,6 +616,8 @@ def main() -> None:
     device=args.device,
     runtime_filter=args.runtime_filter == "on",
     one_episode_per_env=args.one_episode_per_env,
+    deployment_context=deployment_context,
+    deployment_context_role=context_role,
   )
   summary["checkpoint"] = str(args.checkpoint)
   args.output_json.parent.mkdir(parents=True, exist_ok=True)

@@ -42,6 +42,7 @@ _ACTION_TERM_ATTRS = (
   "predicted_h",
   "h_history",
   "correction_history",
+  "_deployment_action_queue",
 )
 _COMMAND_ATTRS = (
   "time_left",
@@ -321,15 +322,118 @@ class HardCaseEntry:
   priority: float
   riser_index: int
   terrain_type: int
+  steps_before_fall: int | None = None
+  lateral_drift_fraction: float = 0.0
+  heading_drift_fraction: float = 0.0
+  large_correction_fraction: float = 0.0
+  no_subsequent_riser_crossing: bool = False
+
+
+@dataclass(frozen=True)
+class LateFailureCandidate:
+  history_index: int
+  steps_before_fall: int
+  riser_index: int
+  lateral_drift_fraction: float
+  heading_drift_fraction: float
+  large_correction_fraction: float
+  priority: float
+  no_subsequent_riser_crossing: bool = True
+
+
+def select_late_failure_candidate(
+  riser_history: torch.Tensor,
+  centerline_error_history: torch.Tensor,
+  heading_error_history: torch.Tensor,
+  correction_history: torch.Tensor,
+  *,
+  minimum_steps_before_fall: int = 50,
+  maximum_steps_before_fall: int = 150,
+  minimum_riser: int = 5,
+  lateral_threshold: float = 0.18,
+  heading_threshold: float = 0.25,
+  correction_threshold: float = 0.01,
+) -> LateFailureCandidate | None:
+  """Choose one late-riser state from the window preceding a target fall."""
+  tensors = (
+    riser_history,
+    centerline_error_history,
+    heading_error_history,
+    correction_history,
+  )
+  if any(tensor.ndim != 1 for tensor in tensors):
+    raise ValueError("late-failure histories must be one-dimensional")
+  if len({len(tensor) for tensor in tensors}) != 1:
+    raise ValueError("late-failure histories must have equal length")
+  if minimum_steps_before_fall < 1:
+    raise ValueError("minimum pre-fall offset must be positive")
+  if maximum_steps_before_fall < minimum_steps_before_fall:
+    raise ValueError("maximum pre-fall offset is below minimum")
+  candidates: list[LateFailureCandidate] = []
+  maximum_offset = min(maximum_steps_before_fall, len(riser_history) - 1)
+  for offset in range(minimum_steps_before_fall, maximum_offset + 1):
+    index = len(riser_history) - 1 - offset
+    riser = int(riser_history[index])
+    if riser < minimum_riser:
+      continue
+    suffix = slice(index, len(riser_history))
+    # A state followed by another normal riser crossing was not the boundary
+    # that decided this fall. Excluding it also prevents ordinary CBF
+    # interventions on otherwise successful stair transitions entering v15.
+    if bool(torch.any(riser_history[index + 1 :] > riser)):
+      continue
+    lateral_fraction = float(
+      (centerline_error_history[suffix].abs() >= lateral_threshold).float().mean()
+    )
+    heading_fraction = float(
+      (heading_error_history[suffix].abs() >= heading_threshold).float().mean()
+    )
+    correction_fraction = float(
+      (correction_history[suffix] >= correction_threshold).float().mean()
+    )
+    # Later risers dominate. Persistent drift/correction identifies which
+    # late boundary is most causally informative; a small recency term breaks
+    # otherwise equal candidates without moving outside the 50--150 window.
+    priority = (
+      float(riser)
+      + 2.0 * lateral_fraction
+      + 2.0 * heading_fraction
+      + 2.0 * correction_fraction
+      + 0.1 * (maximum_steps_before_fall - offset)
+      / max(1, maximum_steps_before_fall - minimum_steps_before_fall)
+    )
+    candidates.append(
+      LateFailureCandidate(
+        history_index=index,
+        steps_before_fall=offset,
+        riser_index=riser,
+        lateral_drift_fraction=lateral_fraction,
+        heading_drift_fraction=heading_fraction,
+        large_correction_fraction=correction_fraction,
+        priority=priority,
+        no_subsequent_riser_crossing=True,
+      )
+    )
+  return max(candidates, key=lambda candidate: candidate.priority, default=None)
 
 
 class HardCaseStateBank:
   """Bounded priority bank of pre-intervention simulator states."""
 
-  def __init__(self, capacity: int = 256) -> None:
+  def __init__(
+    self,
+    capacity: int = 256,
+    *,
+    bank_kind: str = "general_intervention",
+    source_domain: str | None = None,
+    context_sha256: str | None = None,
+  ) -> None:
     if capacity < 1:
       raise ValueError("hard-case capacity must be positive")
     self.capacity = capacity
+    self.bank_kind = bank_kind
+    self.source_domain = source_domain
+    self.context_sha256 = context_sha256
     self.entries: list[HardCaseEntry] = []
     self.total_added = 0
 
@@ -379,6 +483,44 @@ class HardCaseStateBank:
       self.total_added += 1
     return added
 
+  def add_late_failure(
+    self,
+    state: dict[str, torch.Tensor],
+    env_id: int,
+    candidate: LateFailureCandidate,
+  ) -> int:
+    """Insert one state selected only after its target episode ended in a fall."""
+    if self.bank_kind != "target_late_failure":
+      raise ValueError("late failures require a target_late_failure bank")
+    selected = torch.tensor([env_id], device=next(iter(state.values())).device)
+    individual = {
+      key: value.index_select(0, selected).detach().cpu()
+      for key, value in state.items()
+    }
+    terrain_type = int(individual.get("terrain/type", torch.tensor([-1]))[0])
+    entry = HardCaseEntry(
+      state=individual,
+      priority=candidate.priority,
+      riser_index=candidate.riser_index,
+      terrain_type=terrain_type,
+      steps_before_fall=candidate.steps_before_fall,
+      lateral_drift_fraction=candidate.lateral_drift_fraction,
+      heading_drift_fraction=candidate.heading_drift_fraction,
+      large_correction_fraction=candidate.large_correction_fraction,
+      no_subsequent_riser_crossing=candidate.no_subsequent_riser_crossing,
+    )
+    added = 0
+    if len(self.entries) < self.capacity:
+      self.entries.append(entry)
+      added = 1
+    else:
+      minimum = min(range(len(self.entries)), key=lambda i: self.entries[i].priority)
+      if entry.priority > self.entries[minimum].priority:
+        self.entries[minimum] = entry
+        added = 1
+    self.total_added += 1
+    return added
+
   def sample(
     self,
     count: int,
@@ -412,12 +554,20 @@ class HardCaseStateBank:
     return {
       "capacity": self.capacity,
       "total_added": self.total_added,
+      "bank_kind": self.bank_kind,
+      "source_domain": self.source_domain,
+      "context_sha256": self.context_sha256,
       "entries": [
         {
           "state": entry.state,
           "priority": entry.priority,
           "riser_index": entry.riser_index,
           "terrain_type": entry.terrain_type,
+          "steps_before_fall": entry.steps_before_fall,
+          "lateral_drift_fraction": entry.lateral_drift_fraction,
+          "heading_drift_fraction": entry.heading_drift_fraction,
+          "large_correction_fraction": entry.large_correction_fraction,
+          "no_subsequent_riser_crossing": entry.no_subsequent_riser_crossing,
         }
         for entry in self.entries
       ],
@@ -426,17 +576,84 @@ class HardCaseStateBank:
   def load_state_dict(self, payload: dict[str, Any]) -> None:
     self.capacity = int(payload["capacity"])
     self.total_added = int(payload.get("total_added", 0))
+    self.bank_kind = str(payload.get("bank_kind", "general_intervention"))
+    self.source_domain = payload.get("source_domain")
+    self.context_sha256 = payload.get("context_sha256")
     self.entries = [
       HardCaseEntry(
         state=item["state"],
         priority=float(item["priority"]),
         riser_index=int(item["riser_index"]),
         terrain_type=int(item.get("terrain_type", -1)),
+        steps_before_fall=(
+          None
+          if item.get("steps_before_fall") is None
+          else int(item["steps_before_fall"])
+        ),
+        lateral_drift_fraction=float(item.get("lateral_drift_fraction", 0.0)),
+        heading_drift_fraction=float(item.get("heading_drift_fraction", 0.0)),
+        large_correction_fraction=float(
+          item.get("large_correction_fraction", 0.0)
+        ),
+        no_subsequent_riser_crossing=bool(
+          item.get("no_subsequent_riser_crossing", False)
+        ),
       )
       for item in payload.get("entries", [])
     ]
     if len(self.entries) > self.capacity:
       raise ValueError("serialized hard-case bank exceeds capacity")
+
+  def audit_metadata(self) -> dict[str, Any]:
+    late_entries = [
+      entry for entry in self.entries if entry.steps_before_fall is not None
+    ]
+    return {
+      "bank_kind": self.bank_kind,
+      "source_domain": self.source_domain,
+      "context_sha256": self.context_sha256,
+      "size": len(self.entries),
+      "capacity": self.capacity,
+      "total_added": self.total_added,
+      "late_failure_entry_count": len(late_entries),
+      "steps_before_fall_min": (
+        min(entry.steps_before_fall for entry in late_entries)
+        if late_entries
+        else None
+      ),
+      "steps_before_fall_max": (
+        max(entry.steps_before_fall for entry in late_entries)
+        if late_entries
+        else None
+      ),
+      "riser_index_min": (
+        min(entry.riser_index for entry in late_entries) if late_entries else None
+      ),
+      "riser_index_max": (
+        max(entry.riser_index for entry in late_entries) if late_entries else None
+      ),
+      "mean_lateral_drift_fraction": (
+        sum(entry.lateral_drift_fraction for entry in late_entries)
+        / len(late_entries)
+        if late_entries
+        else 0.0
+      ),
+      "mean_heading_drift_fraction": (
+        sum(entry.heading_drift_fraction for entry in late_entries)
+        / len(late_entries)
+        if late_entries
+        else 0.0
+      ),
+      "mean_large_correction_fraction": (
+        sum(entry.large_correction_fraction for entry in late_entries)
+        / len(late_entries)
+        if late_entries
+        else 0.0
+      ),
+      "successful_crossing_exclusion_passed": all(
+        entry.no_subsequent_riser_crossing for entry in late_entries
+      ),
+    }
 
 
 def hard_case_destination_ids(

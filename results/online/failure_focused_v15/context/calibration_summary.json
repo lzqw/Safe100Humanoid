@@ -1,0 +1,64 @@
+{
+  "adapted_policy_evaluations_used": false,
+  "calibration": {
+    "adapted_policy_evaluations_used": false,
+    "attempts": [
+      {
+        "base_policy_only": true,
+        "candidate_seed": 1000,
+        "evaluation_seed": 1000,
+        "fall_rate": 0.1953125,
+        "intervention_per_riser": 1.1950912931934,
+        "mean_reached_riser": 10.765625,
+        "num_episodes": 128,
+        "parameters_sha256": "4eafa5b94792f8b709e2da98ed3638a285790497a1e876e937373d55ce8d75bf",
+        "qualifies_by_success_rate_only": true,
+        "success_rate": 0.8046875
+      }
+    ],
+    "base_policy_checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/retention_v13/arm_b_state_retention/accepted_final.pt",
+    "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+    "calibration_and_training_seeds_disjoint": true,
+    "candidate_seeds": [
+      1000,
+      1001,
+      1002,
+      1003,
+      1004,
+      1005,
+      1006,
+      1007,
+      1008,
+      1009,
+      1010,
+      1011,
+      1012,
+      1013,
+      1014,
+      1015,
+      1016,
+      1017,
+      1018,
+      1019
+    ],
+    "kind": "base_success_first_qualifying_v1",
+    "selected_candidate_seed": 1000,
+    "selected_parameters_sha256": "4eafa5b94792f8b709e2da98ed3638a285790497a1e876e937373d55ce8d75bf",
+    "selection_metric_fields": [
+      "success_rate"
+    ],
+    "selection_rule": "select the first context with 0.75 <= base success rate <= 0.85",
+    "success_rate_bounds": [
+      0.75,
+      0.85
+    ]
+  },
+  "frozen_context": "/home/carla/LZQW/SAFE100/humanoid/artifacts/failure_focused_v15/frozen_dqh_medium_context.json",
+  "frozen_context_file_sha256": "51cf8ad7b1cd353c285af8b62636000cfc36b0b9e8d379ac386b1a97e6ce06f4",
+  "parameters_sha256": "4eafa5b94792f8b709e2da98ed3638a285790497a1e876e937373d55ce8d75bf",
+  "protocol": "Failure-Focused Brief PPO v15 context calibration",
+  "selected": true,
+  "selected_base_success_rate": 0.8046875,
+  "selected_candidate_seed": 1000,
+  "selection_used_only_base_success_rate": true
+}
