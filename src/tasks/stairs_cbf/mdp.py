@@ -66,29 +66,81 @@ def cbf_dual_reward(
   term = _cbf_term(env, action_name)
   active = torch.isfinite(term.h)
   value = dual_cbf_reward(
-    term.psi_nominal, term.target_intervention_norm, active, sigma=sigma
+    term.psi_nominal,
+    term.counterfactual_target_intervention_norm,
+    active,
+    sigma=sigma,
   )
+  _record_online_cbf_telemetry(env, term, dual_reward=value)
+  return value
+
+
+def _record_online_cbf_telemetry(
+  env: ManagerBasedRlEnv,
+  term,
+  *,
+  dual_reward: torch.Tensor | None = None,
+) -> None:
+  """Emit per-transition CBF data independently of reward scalarization."""
   env.extras["log"]["CBF/violation_mean"] = torch.relu(-term.psi_nominal).mean()
   env.extras["log"]["CBF/geometric_active_fraction"] = (
     term.geometric_active.float().mean()
   )
   env.extras["log"]["CBF/intervention_fraction"] = term.intervened.float().mean()
+  env.extras["log"]["CBF/would_intervene_fraction"] = (
+    term.would_intervene.float().mean()
+  )
   env.extras["log"]["CBF/filtered_margin_min"] = term.psi_filtered.min()
   env.extras["log"]["CBF/intervention_norm_mean"] = term.intervention_norm.mean()
   env.extras["log"]["CBF/target_intervention_norm_mean"] = (
     term.target_intervention_norm.mean()
   )
-  env.extras["log"]["CBF/dual_reward_mean"] = value.mean()
+  env.extras["log"]["CBF/counterfactual_correction_mean"] = (
+    term.counterfactual_target_intervention_norm.mean()
+  )
+  if dual_reward is not None:
+    env.extras["log"]["CBF/dual_reward_mean"] = dual_reward.mean()
   # Per-environment transition data is consumed by OnlineSafePPO.  It lives
   # outside ``log`` so the scalar logger never reduces or serializes it.
   env.extras["cbf_intervened"] = term.intervened.detach().clone()
   env.extras["cbf_intervention_magnitude"] = (
     term.target_intervention_norm.detach().clone()
   )
+  env.extras["cbf_would_intervene"] = term.would_intervene.detach().clone()
+  env.extras["cbf_counterfactual_magnitude"] = (
+    term.counterfactual_target_intervention_norm.detach().clone()
+  )
   env.extras["cbf_nominal_target"] = term.nominal_target.detach().clone()
   env.extras["cbf_safe_target"] = term.safe_target.detach().clone()
   env.extras["cbf_safe_raw_action"] = term.safe_raw_action.detach().clone()
-  return value
+  env.extras["cbf_nominal_raw_action"] = term.nominal_raw_action.detach().clone()
+  env.extras["cbf_executed_raw_action"] = (
+    term.executed_raw_action.detach().clone()
+  )
+  env.extras["cbf_filter_enabled"] = torch.full(
+    (env.num_envs,), term.cfg.enabled, dtype=torch.bool, device=env.device
+  )
+  env.extras["online_stair_index"] = stair_index(env).detach().clone()
+
+
+def online_safety_telemetry(
+  env: ManagerBasedRlEnv,
+  action_name: str = "joint_pos",
+  termination_name: str = "fell_over",
+) -> torch.Tensor:
+  """Record CBF/fall costs while contributing exactly zero task reward.
+
+  MJLab skips zero-weight reward terms, so this term has unit configuration
+  weight but returns an identically zero tensor.  It remains active when the
+  fixed ``cbf_dual`` and ``fall_termination`` rewards are disabled by the
+  task-first constrained algorithm.
+  """
+  term = _cbf_term(env, action_name)
+  _record_online_cbf_telemetry(env, term)
+  fell = env.termination_manager.get_term(termination_name).float()
+  env.extras["log"]["Online/fall_termination_fraction"] = fell.mean()
+  env.extras["online_fell"] = fell.detach().bool().clone()
+  return torch.zeros(env.num_envs, dtype=torch.float32, device=env.device)
 
 
 class IncrementalStairProgress:
@@ -208,11 +260,38 @@ def fall_termination(
   return fell
 
 
+def fixed_delay_queue_state(
+  command_term,
+  *,
+  num_envs: int,
+  command_dim: int,
+  queue_length: int,
+  device: str | torch.device,
+) -> torch.Tensor:
+  """Return a fixed-size newest-first command-delay queue for the critic."""
+  if queue_length < 1:
+    raise ValueError("queue_length must be positive")
+  output = torch.zeros(
+    num_envs, queue_length, command_dim, device=device
+  )
+  queue = getattr(command_term, "_delay_queue", None)
+  if queue is None:
+    return output
+  if queue.ndim != 3 or queue.shape[0] != num_envs or queue.shape[2] != command_dim:
+    raise ValueError(
+      "command delay queue must have [num_envs, queue_steps, command_dim] shape"
+    )
+  copied = min(queue_length, queue.shape[1])
+  output[:, :copied].copy_(queue[:, :copied])
+  return output
+
+
 def online_privileged_state(
   env: ManagerBasedRlEnv,
   action_name: str = "joint_pos",
   command_name: str = "twist",
   asset_name: str = "robot",
+  delay_queue_length: int = 9,
 ) -> torch.Tensor:
   """Action-independent full state used only by the online value function.
 
@@ -231,6 +310,13 @@ def online_privileged_state(
     "delay_steps",
     torch.zeros(env.num_envs, dtype=torch.long, device=env.device),
   ).float().unsqueeze(1)
+  delay_queue = fixed_delay_queue_state(
+    command_term,
+    num_envs=env.num_envs,
+    command_dim=delivered.shape[-1],
+    queue_length=delay_queue_length,
+    device=env.device,
+  )
 
   risers = _terrain_risers(env)
   index = stair_index(env)
@@ -295,8 +381,32 @@ def online_privileged_state(
     ],
     dim=1,
   )
+  safety_history = torch.cat(
+    [
+      term.barrier_derivative.clamp(-20.0, 20.0).unsqueeze(1),
+      term.predicted_h.clamp(-1.0, 1.0).unsqueeze(1),
+      term.h_history.clamp(-1.0, 1.0),
+      term.correction_history.clamp(0.0, 2.0),
+    ],
+    dim=1,
+  )
+  # Append the queue after the historical 111-D block.  This preserves the
+  # exact prefix layout of existing 799-D online critics, allowing their first
+  # layer and normalization statistics to be expanded with zero/identity
+  # initialization rather than discarded.
   return torch.cat(
-    [true_robot, geometry, raw, delivered, derivative, delay_steps, cbf, episode],
+    [
+      true_robot,
+      geometry,
+      raw,
+      delivered,
+      derivative,
+      delay_steps,
+      cbf,
+      episode,
+      delay_queue.flatten(1),
+      safety_history,
+    ],
     dim=1,
   )
 

@@ -22,7 +22,10 @@ register_mjlab_task(
 )
 
 
-for _domain in ("D0", "D1", "D2", "D3", "D4", "D5", "DQ", "DQN"):
+for _domain in (
+  "D0", "D1", "D2", "D3", "D4", "D5", "DQ", "DQN", "DQM",
+  "D2H", "D3H", "D4H", "D5H", "DQH", "DQNH", "DQMH",
+):
   register_mjlab_task(
     task_id=f"Unitree-G1-Stairs-Online-{_domain}",
     env_cfg=g1_online_stairs_env_cfg(_domain),
