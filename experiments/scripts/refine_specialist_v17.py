@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import asdict
-import hashlib
 import json
 import math
 from pathlib import Path
@@ -15,6 +14,7 @@ import torch
 
 from online_refine_stairs import (
   _actor_state,
+  _actor_state_sha256,
   _collect_and_update_specialist,
   _evaluate_state,
   _file_sha256,
@@ -38,17 +38,6 @@ TRAINING_SOURCE_FILES = (
 
 def _finite_actor_state(state: dict[str, torch.Tensor]) -> bool:
   return all(bool(torch.isfinite(value).all()) for value in state.values())
-
-
-def _actor_sha256(state: dict[str, torch.Tensor]) -> str:
-  digest = hashlib.sha256()
-  for name in sorted(state):
-    value = state[name].detach().cpu().contiguous()
-    digest.update(name.encode("utf-8"))
-    digest.update(str(value.dtype).encode("ascii"))
-    digest.update(str(tuple(value.shape)).encode("ascii"))
-    digest.update(value.numpy().tobytes())
-  return digest.hexdigest()
 
 
 def _parse_args() -> argparse.Namespace:
@@ -359,7 +348,7 @@ def main() -> None:
   runner = runner_cls(env, asdict(agent_cfg), log_dir=None, device=args.device)
   warm_start = runner.load_online_checkpoint(str(checkpoint), map_location=args.device)
   initial_actor_state = _actor_state(runner.alg.actor)
-  initial_actor_sha256 = _actor_sha256(initial_actor_state)
+  initial_actor_sha256 = _actor_state_sha256(initial_actor_state)
   structural_checks = _validate_algorithm(runner)
 
   failure_bank = HardCaseStateBank(
@@ -567,37 +556,36 @@ def main() -> None:
       selected_fraction = float(selected["fraction"])
       selected_score = float(selected["scores"]["candidate"]["total"])
 
-    d0_check: dict[str, Any] | None = None
+    d0_check: dict[str, Any]
     d0_rollback = False
-    if round_index % 2 == 0:
-      d0_eval = _evaluate_state(
-        runner,
-        _actor_state(runner.alg.actor),
-        domains=("D0",),
-        num_envs=args.d0_check_num_episodes,
-        num_episodes=args.d0_check_num_episodes,
-        seed=d0_seed,
-        device=args.gate_device,
-        runtime_filter=True,
-      )["D0"]
-      d0_passed, d0_reasons = specialist_d0_retention_gate(
-        baseline_eval=baseline_eval["D0"],
-        candidate_eval=d0_eval,
-        thresholds=thresholds,
-      )
-      d0_check = {
-        "passed": d0_passed,
-        "reasons": d0_reasons,
-        "baseline": baseline_eval["D0"],
-        "candidate": d0_eval,
-      }
-      if d0_passed:
-        last_d0_safe_state = runner.snapshot_candidate_state()
-        last_d0_safe_round = round_index
-      else:
-        runner.restore_candidate_state(last_d0_safe_state)
-        runner.reduce_after_rejection()
-        d0_rollback = True
+    d0_eval = _evaluate_state(
+      runner,
+      _actor_state(runner.alg.actor),
+      domains=("D0",),
+      num_envs=args.d0_check_num_episodes,
+      num_episodes=args.d0_check_num_episodes,
+      seed=d0_seed,
+      device=args.gate_device,
+      runtime_filter=True,
+    )["D0"]
+    d0_passed, d0_reasons = specialist_d0_retention_gate(
+      baseline_eval=baseline_eval["D0"],
+      candidate_eval=d0_eval,
+      thresholds=thresholds,
+    )
+    d0_check = {
+      "passed": d0_passed,
+      "reasons": d0_reasons,
+      "baseline": baseline_eval["D0"],
+      "candidate": d0_eval,
+    }
+    if d0_passed:
+      last_d0_safe_state = runner.snapshot_candidate_state()
+      last_d0_safe_round = round_index
+    else:
+      runner.restore_candidate_state(last_d0_safe_state)
+      runner.reduce_after_rejection()
+      d0_rollback = True
 
     serializable_variants = [
       {key: value for key, value in variant.items() if key != "state"}
@@ -663,7 +651,7 @@ def main() -> None:
     "base_policy_checkpoint": str(checkpoint),
     "base_policy_checkpoint_sha256": _file_sha256(checkpoint),
     "initial_actor_sha256": initial_actor_sha256,
-    "final_actor_sha256": _actor_sha256(final_actor_state),
+    "final_actor_sha256": _actor_state_sha256(final_actor_state),
     "deployment_context_path": str(context_path),
     "deployment_context_file_sha256": _file_sha256(context_path),
     "deployment_context": context_metadata,
@@ -694,7 +682,7 @@ def main() -> None:
     "target_training_score": "success_rate - fall_rate",
     "target_fall_tolerance": thresholds.maximum_target_fall_increase,
     "training_maximum_kl": thresholds.maximum_kl,
-    "d0_check_period_rounds": 2,
+    "d0_check_period_rounds": 1,
     "d0_success_tolerance": thresholds.d0_success_tolerance,
     "other_specialist_training_gates": False,
     "neighbor_training_gate": False,

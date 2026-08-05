@@ -16,6 +16,17 @@ import numpy as np
 import torch
 
 
+def _actor_state_sha256(state: dict[str, torch.Tensor]) -> str:
+  digest = hashlib.sha256()
+  for name in sorted(state):
+    value = state[name].detach().cpu().contiguous()
+    digest.update(name.encode("utf-8"))
+    digest.update(str(value.dtype).encode("ascii"))
+    digest.update(str(tuple(value.shape)).encode("ascii"))
+    digest.update(value.numpy().tobytes())
+  return digest.hexdigest()
+
+
 def evaluate_policy(
   policy,
   *,
@@ -697,6 +708,7 @@ def main() -> None:
     strict=True,
     map_location=args.device,
   )
+  actor_state_sha256 = _actor_state_sha256(runner.alg.actor.state_dict())
   policy = runner.get_inference_policy(args.device)
   env.close()
 
@@ -713,6 +725,7 @@ def main() -> None:
     deployment_context_role=context_role,
   )
   summary["checkpoint"] = str(args.checkpoint)
+  summary["actor_state_sha256"] = actor_state_sha256
   args.output_json.parent.mkdir(parents=True, exist_ok=True)
   args.output_csv.parent.mkdir(parents=True, exist_ok=True)
   args.output_json.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n")

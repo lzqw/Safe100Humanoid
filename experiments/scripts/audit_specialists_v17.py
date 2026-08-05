@@ -151,6 +151,8 @@ def _validate_training_artifacts(
         reasons.append("a neighbor domain was used as a training gate")
       if summary.get("cbf_demand_training_gate") is not False:
         reasons.append("CBF demand was used as a v17 training gate")
+      if summary.get("d0_check_period_rounds") != 1:
+        reasons.append("D0 catastrophic retention was not checked every round")
       mixture = summary.get("integer_start_mixture_for_64_envs")
       if mixture != {"normal": 44, "failure": 10, "success": 10}:
         reasons.append("integer 70/15/15 replay allocation differs")
@@ -164,6 +166,11 @@ def _validate_training_artifacts(
       for round_index in expected_rounds:
         if not (run_dir / f"post_round_{round_index:03d}.pt").is_file():
           reasons.append(f"round {round_index} checkpoint is missing")
+      if any(
+        not isinstance(record.get("d0_check"), dict)
+        for record in summary.get("rounds", [])
+      ):
+        reasons.append("a training round is missing its D0 catastrophic check")
       if reasons:
         raise RuntimeError(f"v17 artifact invariant failed for {mode}/{seed}: {reasons}")
       base_file_hashes.add(summary["base_policy_checkpoint_sha256"])
@@ -270,10 +277,13 @@ def main() -> None:
   base_actor = _actor_state(runner.alg.actor)
 
   raw: dict[str, Any] = {}
+  baseline_cache: dict[
+    tuple[int, str], tuple[dict[str, Any], list[dict[str, str]]]
+  ] = {}
   rows: dict[str, dict[int, dict[str, dict[str, list[dict[str, str]]]]]] = {
     mode: {} for mode in MODES
   }
-  for specialist_index, specialist_mode in enumerate(MODES):
+  for specialist_mode in MODES:
     raw[specialist_mode] = {}
     for seed_index, adaptation_seed in enumerate(seeds):
       runner.load_online_checkpoint(
@@ -295,7 +305,6 @@ def main() -> None:
         repeats = episode_count // args.eval_batch_size
         evaluation_seed = (
           args.audit_seed
-          + 10000 * specialist_index
           + 1000 * seed_index
           + 100 * eval_index
         )
@@ -313,26 +322,41 @@ def main() -> None:
           / f"seed{adaptation_seed}"
           / eval_mode
         )
-        base_root = eval_root / "baseline"
+        base_root = (
+          output_dir
+          / "raw"
+          / "common_baseline"
+          / f"seed{adaptation_seed}"
+          / eval_mode
+        )
         final_root = eval_root / "final"
         domains = ("D0",) if eval_mode == "D0" else ("DQHMED",)
         deployment_context = (
           None if eval_mode == "D0" else context_paths[eval_mode]
         )
-        baseline_eval = _evaluate_state(
-          runner,
-          base_actor,
-          domains=domains,
-          num_envs=args.eval_batch_size,
-          num_episodes=args.eval_batch_size,
-          seed=evaluation_seed,
-          repeats=repeats,
-          device=args.device,
-          runtime_filter=True,
-          artifact_dir=base_root,
-          resume=True,
-          deployment_context=deployment_context,
-        )[domains[0]]
+        baseline_key = (adaptation_seed, eval_mode)
+        if baseline_key not in baseline_cache:
+          baseline_eval = _evaluate_state(
+            runner,
+            base_actor,
+            domains=domains,
+            num_envs=args.eval_batch_size,
+            num_episodes=args.eval_batch_size,
+            seed=evaluation_seed,
+            repeats=repeats,
+            device=args.device,
+            runtime_filter=True,
+            artifact_dir=base_root,
+            resume=True,
+            deployment_context=deployment_context,
+          )[domains[0]]
+          loader = _load_d0_rows if eval_mode == "D0" else _load_rows
+          baseline_rows = loader(
+            base_root, first_seed=evaluation_seed, repeats=repeats
+          )
+          baseline_cache[baseline_key] = (baseline_eval, baseline_rows)
+        else:
+          baseline_eval, baseline_rows = baseline_cache[baseline_key]
         final_eval = _evaluate_state(
           runner,
           final_actor,
@@ -352,9 +376,6 @@ def main() -> None:
         ]:
           raise RuntimeError("v17 audit baseline/final pairing signature differs")
         loader = _load_d0_rows if eval_mode == "D0" else _load_rows
-        baseline_rows = loader(
-          base_root, first_seed=evaluation_seed, repeats=repeats
-        )
         final_rows = loader(
           final_root, first_seed=evaluation_seed, repeats=repeats
         )
@@ -529,6 +550,7 @@ def main() -> None:
       "d0_paired_episodes_per_adaptation_seed": args.d0_episodes,
       "off_diagonal_results_are_report_only": True,
       "individual_scene_lcb_gate_used": False,
+      "common_paired_baseline_reused_across_specialists": True,
     },
     "matrix": matrix,
     "scene_gates": scene_gates,

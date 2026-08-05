@@ -22,6 +22,18 @@ def _actor_state(actor) -> dict[str, torch.Tensor]:
   return {key: value.detach().clone() for key, value in actor.state_dict().items()}
 
 
+def _actor_state_sha256(state: dict[str, torch.Tensor]) -> str:
+  """Hash exactly the inference state, excluding critic/optimizer payloads."""
+  digest = hashlib.sha256()
+  for name in sorted(state):
+    value = state[name].detach().cpu().contiguous()
+    digest.update(name.encode("utf-8"))
+    digest.update(str(value.dtype).encode("ascii"))
+    digest.update(str(tuple(value.shape)).encode("ascii"))
+    digest.update(value.numpy().tobytes())
+  return digest.hexdigest()
+
+
 def _file_sha256(path: Path) -> str:
   digest = hashlib.sha256()
   with path.open("rb") as handle:
@@ -60,6 +72,7 @@ def _evaluate_state(
   output: dict[str, dict[str, Any]] = {}
   repo = Path(__file__).resolve().parents[2]
   context_hash = None
+  actor_state_sha256 = _actor_state_sha256(actor_state)
   if deployment_context is not None:
     from src.tasks.stairs_cbf.deployment_context import (
       load_frozen_deployment_context,
@@ -111,6 +124,7 @@ def _evaluate_state(
             and int(summary.get("seed", -1)) == seed + repeat
             and int(summary.get("num_episodes", -1)) == num_episodes
             and summary.get("runtime_filter") is runtime_filter
+            and summary.get("actor_state_sha256") == actor_state_sha256
             and (
               context_role is None
               or summary.get("deployment_context", {}).get(
@@ -166,6 +180,10 @@ def _evaluate_state(
             f"isolated paired evaluation failed for {stem}:\n{diagnostic}"
           )
         summary = json.loads(output_json.read_text())
+        if summary.get("actor_state_sha256") != actor_state_sha256:
+          raise RuntimeError(
+            f"isolated evaluation loaded a different actor for {stem}"
+          )
         replicate_summaries.append(summary)
       aggregate: dict[str, Any] = {
         "task": f"Unitree-G1-Stairs-Online-{domain}",
@@ -178,6 +196,7 @@ def _evaluate_state(
         "initial_state_signatures": [
           summary["initial_state_signature"] for summary in replicate_summaries
         ],
+        "actor_state_sha256": actor_state_sha256,
       }
       for key in (
         "success_rate",
