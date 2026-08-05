@@ -66,6 +66,7 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--failure-start-fraction", type=float, default=0.15)
   parser.add_argument("--success-start-fraction", type=float, default=0.15)
   parser.add_argument("--failure-policy-weight", type=float, default=0.75)
+  parser.add_argument("--success-policy-weight", type=float, default=1.5)
   parser.add_argument("--bank-capacity", type=int, default=256)
   parser.add_argument("--success-pool-capacity", type=int, default=512)
   parser.add_argument("--failure-discovery-max-rollouts", type=int, default=8)
@@ -94,6 +95,8 @@ def _validate_protocol(args: argparse.Namespace) -> None:
     raise ValueError("v17 success counterexample start fraction must be 0.15")
   if not math.isclose(args.failure_policy_weight, 0.75):
     raise ValueError("v17 failure-precursor actor weight must be 0.75")
+  if not math.isclose(args.success_policy_weight, 1.5):
+    raise ValueError("v17 success-counterexample actor weight must be 1.5")
   if args.failure_discovery_max_rollouts < 1:
     raise ValueError("v17 requires a positive bank-discovery limit")
   positive = (
@@ -166,6 +169,9 @@ def _validate_algorithm(runner) -> dict[str, Any]:
     "target_kl": alg.desired_kl,
     "target_kl_early_stopping": alg.kl_early_stopping,
     "hard_case_policy_weight": alg.hard_case_policy_weight,
+    "success_counterexample_policy_weight": (
+      alg.success_counterexample_policy_weight
+    ),
     "std_scale_from_base": alg.std_scale_from_base,
     "base_anchor_weight": alg.base_anchor_weight,
     "d0_retention_anchor_weight": alg.d0_retention_anchor_weight,
@@ -208,6 +214,7 @@ def _validate_algorithm(runner) -> dict[str, Any]:
     and math.isclose(checks["target_kl"], 0.003)
     and checks["target_kl_early_stopping"] is True
     and math.isclose(checks["hard_case_policy_weight"], 0.75)
+    and math.isclose(checks["success_counterexample_policy_weight"], 1.5)
     and math.isclose(checks["std_scale_from_base"], 0.35)
   )
   if not valid:
@@ -339,6 +346,7 @@ def main() -> None:
   alg_cfg.fall_redistribution_decay = args.fall_redistribution_decay
   alg_cfg.fall_redistribution_amount = args.fall_redistribution_amount
   alg_cfg.hard_case_policy_weight = args.failure_policy_weight
+  alg_cfg.success_counterexample_policy_weight = args.success_policy_weight
   alg_cfg.clip_param = 0.05
   alg_cfg.desired_kl = 0.003
   alg_cfg.num_learning_epochs = 1
@@ -687,7 +695,7 @@ def main() -> None:
       "success": 10 / 64,
     },
     "failure_precursor_policy_weight": args.failure_policy_weight,
-    "success_counterexample_policy_weight": 1.0,
+    "success_counterexample_policy_weight": args.success_policy_weight,
     "actor_layer_learning_rate_multipliers": list(
       V17_ACTOR_LAYER_MULTIPLIERS
     ),

@@ -162,6 +162,8 @@ def _validate_training_artifacts(
         1.0,
       ]:
         reasons.append("conservative actor layer LR profile differs")
+      if summary.get("success_counterexample_policy_weight") != 1.5:
+        reasons.append("matched-success policy emphasis differs")
       mixture = summary.get("integer_start_mixture_for_64_envs")
       if mixture != {"normal": 44, "failure": 10, "success": 10}:
         reasons.append("integer 70/15/15 replay allocation differs")

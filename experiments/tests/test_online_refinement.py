@@ -777,7 +777,7 @@ def test_brief_d0_gate_checks_baseline_minus_five_points_periodically() -> None:
   assert any("5 percentage points" in reason for reason in reasons)
 
 
-def test_brief_hard_cases_weight_the_same_single_reward_advantage() -> None:
+def test_brief_failure_and_success_samples_weight_one_reward_advantage() -> None:
   class _Storage:
     advantages = torch.tensor([[[1.0], [2.0]], [[-3.0], [4.0]]])
 
@@ -786,15 +786,20 @@ def test_brief_hard_cases_weight_the_same_single_reward_advantage() -> None:
   algorithm.hard_case_transitions = torch.tensor(
     [[False, True], [True, False]]
   )
+  algorithm.success_counterexample_transitions = torch.tensor(
+    [[True, False], [False, True]]
+  )
   algorithm.hard_case_policy_weight = 0.5
+  algorithm.success_counterexample_policy_weight = 1.5
   algorithm.last_update_metrics = {}
   metrics = algorithm.prepare_brief_advantages()
   assert torch.equal(
     algorithm.storage.advantages.squeeze(-1),
-    torch.tensor([[1.0, 1.0], [-1.5, 4.0]]),
+    torch.tensor([[1.5, 1.0], [-1.5, 6.0]]),
   )
   assert metrics["brief_single_reward_advantage"] == 1.0
   assert metrics["hard_case_transition_fraction"] == 0.5
+  assert metrics["success_counterexample_transition_fraction"] == 0.5
 
 
 def test_cost_gae_is_separate_and_stops_at_episode_boundaries() -> None:

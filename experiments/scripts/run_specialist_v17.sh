@@ -43,6 +43,7 @@ export PYTHONUNBUFFERED=1
   --failure-start-fraction 0.15 \
   --success-start-fraction 0.15 \
   --failure-policy-weight 0.75 \
+  --success-policy-weight 1.5 \
   --bank-capacity 256 \
   --success-pool-capacity 512 \
   --failure-discovery-max-rollouts 8 \

@@ -905,8 +905,12 @@ def _collect_and_update_specialist(
       check_nan(obs, rewards, dones)
       extras = dict(extras)
       # Only failure-precursor transitions receive the 0.75 actor weight.
-      # Successful counterexamples use the ordinary scalar-reward PPO weight.
+      # Matched-success slots remain in the same scalar-reward PPO surrogate
+      # but can receive their declared preservation emphasis in v17.
       extras["online_hard_case_transition"] = failure_slots.detach().clone()
+      extras["online_success_counterexample_transition"] = (
+        success_slots.detach().clone()
+      )
       done_mask = dones.bool()
       timeouts = extras.get(
         "time_outs", torch.zeros_like(done_mask, dtype=torch.bool)

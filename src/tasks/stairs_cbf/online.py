@@ -1442,6 +1442,7 @@ class OnlineSafePpoAlgorithmCfg(RslRlPpoAlgorithmCfg):
   fall_cost_budget: float = 0.0
   intervention_cost_budget: float = 0.0
   hard_case_policy_weight: float = 0.0
+  success_counterexample_policy_weight: float = 1.0
   correction_distillation_weight: float = 0.0
   correction_success_horizon: int = 100
   risk_horizon: int = 50
@@ -1492,6 +1493,7 @@ class OnlineSafePPO(PPO):
     fall_cost_budget: float = 0.0,
     intervention_cost_budget: float = 0.0,
     hard_case_policy_weight: float = 0.0,
+    success_counterexample_policy_weight: float = 1.0,
     correction_distillation_weight: float = 0.0,
     correction_success_horizon: int = 100,
     risk_horizon: int = 50,
@@ -1541,6 +1543,9 @@ class OnlineSafePPO(PPO):
     self.fall_cost_budget = fall_cost_budget
     self.intervention_cost_budget = intervention_cost_budget
     self.hard_case_policy_weight = hard_case_policy_weight
+    self.success_counterexample_policy_weight = (
+      success_counterexample_policy_weight
+    )
     self.correction_distillation_weight = correction_distillation_weight
     self.correction_success_horizon = correction_success_horizon
     self.risk_horizon = risk_horizon
@@ -1556,6 +1561,7 @@ class OnlineSafePPO(PPO):
         self.fall_cost_budget,
         self.intervention_cost_budget,
         self.hard_case_policy_weight,
+        self.success_counterexample_policy_weight,
         self.correction_distillation_weight,
         float(self.correction_success_horizon),
         float(self.risk_horizon),
@@ -1579,6 +1585,8 @@ class OnlineSafePPO(PPO):
       raise ValueError("maximum cost multiplier must be positive")
     if not 0.0 <= self.hard_case_policy_weight <= 1.0:
       raise ValueError("hard-case policy weight must be in [0, 1]")
+    if not 1.0 <= self.success_counterexample_policy_weight <= 2.0:
+      raise ValueError("success-counterexample policy weight must be in [1, 2]")
     if self.correction_success_horizon < 1 or self.risk_horizon < 1:
       raise ValueError("correction/risk horizons must be positive")
     if not 0.0 < self.strong_intervention_fraction <= 1.0:
@@ -1757,6 +1765,9 @@ class OnlineSafePPO(PPO):
       t, n, dtype=torch.bool, device=self.device
     )
     self.hard_case_transitions = torch.zeros(
+      t, n, dtype=torch.bool, device=self.device
+    )
+    self.success_counterexample_transitions = torch.zeros(
       t, n, dtype=torch.bool, device=self.device
     )
     self.timeout_events = torch.zeros(t, n, dtype=torch.bool, device=self.device)
@@ -2460,12 +2471,20 @@ class OnlineSafePPO(PPO):
     return metrics
 
   def prepare_brief_advantages(self) -> dict[str, float]:
-    """Weight hard-case samples in the same single-reward PPO surrogate."""
+    """Weight failure and matched-success samples in one reward surrogate."""
     before = self.storage.advantages.squeeze(-1).clone()
+    if bool(
+      (self.hard_case_transitions & self.success_counterexample_transitions).any()
+    ):
+      raise RuntimeError("failure and success-counterexample samples overlap")
     sample_weights = torch.where(
       self.hard_case_transitions,
       torch.full_like(before, self.hard_case_policy_weight),
-      torch.ones_like(before),
+      torch.where(
+        self.success_counterexample_transitions,
+        torch.full_like(before, self.success_counterexample_policy_weight),
+        torch.ones_like(before),
+      ),
     )
     weighted = before * sample_weights
     self.storage.advantages.copy_(weighted.unsqueeze(-1))
@@ -2474,8 +2493,14 @@ class OnlineSafePPO(PPO):
       "brief_advantage_mean_before_weighting": float(before.mean()),
       "brief_advantage_mean_after_weighting": float(weighted.mean()),
       "hard_case_policy_weight": self.hard_case_policy_weight,
+      "success_counterexample_policy_weight": (
+        self.success_counterexample_policy_weight
+      ),
       "hard_case_transition_fraction": float(
         self.hard_case_transitions.float().mean()
+      ),
+      "success_counterexample_transition_fraction": float(
+        self.success_counterexample_transitions.float().mean()
       ),
     }
     self.last_update_metrics.update(metrics)
@@ -2533,6 +2558,9 @@ class OnlineSafePPO(PPO):
       fell = extras.get("online_fell")
       stair_index = extras.get("online_stair_index")
       hard_case_transition = extras.get("online_hard_case_transition")
+      success_counterexample_transition = extras.get(
+        "online_success_counterexample_transition"
+      )
       timeouts = extras.get("time_outs")
       if self.transition.actions is not None:
         self.policy_actions[step].copy_(self.transition.actions)
@@ -2562,6 +2590,10 @@ class OnlineSafePPO(PPO):
         self.stair_indices[step].copy_(stair_index)
       if hard_case_transition is not None:
         self.hard_case_transitions[step].copy_(hard_case_transition)
+      if success_counterexample_transition is not None:
+        self.success_counterexample_transitions[step].copy_(
+          success_counterexample_transition
+        )
       if timeouts is not None:
         self.timeout_events[step].copy_(timeouts.bool())
       if self.task_first_constrained:
@@ -3262,6 +3294,7 @@ class OnlineSafePPO(PPO):
     self.risk_labels.zero_()
     self.successful_correction.zero_()
     self.hard_case_transitions.zero_()
+    self.success_counterexample_transitions.zero_()
     self.timeout_events.zero_()
     self._pending_fall_values = None
     self._pending_intervention_values = None
