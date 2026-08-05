@@ -25,6 +25,20 @@ TARGET_FAILURE_TYPES = (
   NON_LATERAL_HIGH_CBF_FAILURE_TYPE,
   NON_LATERAL_BALANCE_FAILURE_TYPE,
 )
+SPECIALIST_MODES = ("lateral", "cbf", "balance")
+SPECIALIST_FAILURE_TYPES = {
+  "lateral": LATERAL_HEADING_DRIFT_FAILURE_TYPE,
+  "cbf": NON_LATERAL_HIGH_CBF_FAILURE_TYPE,
+  "balance": NON_LATERAL_BALANCE_FAILURE_TYPE,
+}
+SPECIALIST_FAILURE_BANK_KIND = "specialist_failure_precursor"
+SPECIALIST_SUCCESS_POOL_KIND = "specialist_success_pool"
+SPECIALIST_SUCCESS_BANK_KIND = "specialist_success_counterexample"
+SPECIALIST_BANK_KINDS = (
+  SPECIALIST_FAILURE_BANK_KIND,
+  SPECIALIST_SUCCESS_POOL_KIND,
+  SPECIALIST_SUCCESS_BANK_KIND,
+)
 LATERAL_CENTERLINE_WIDTH_FRACTION = 2.0 / 3.0
 LATERAL_HEADING_THRESHOLD_RAD = math.pi / 2.0
 HIGH_CBF_CORRECTION_THRESHOLD = 0.5
@@ -386,6 +400,19 @@ class HardCaseEntry:
   large_correction_fraction: float = 0.0
   no_subsequent_riser_crossing: bool = False
   failure_type: str = MIXED_FAILURE_TYPE
+  outcome: str = "unspecified"
+  specialist_mode: str | None = None
+  gait_phase: float | None = None
+  support_foot: int | None = None
+  delivered_command: tuple[float, ...] = ()
+  root_velocity: tuple[float, ...] = ()
+  cbf_active: bool | None = None
+  actor_observation: torch.Tensor | None = None
+  balance_bucket: str | None = None
+  selection_signal: float = 0.0
+  matched_failure_index: int | None = None
+  match_distance: float | None = None
+  success_pool_index: int | None = None
 
 
 @dataclass(frozen=True)
@@ -399,6 +426,331 @@ class LateFailureCandidate:
   priority: float
   no_subsequent_riser_crossing: bool = True
   failure_type: str = MIXED_FAILURE_TYPE
+
+
+@dataclass(frozen=True)
+class SpecialistBankCandidate:
+  """One mode-conditioned terminal-history state selected for a bank."""
+
+  history_index: int
+  steps_before_terminal: int
+  riser_index: int
+  gait_phase: float
+  support_foot: int
+  delivered_command: tuple[float, ...]
+  root_velocity: tuple[float, ...]
+  cbf_active: bool
+  priority: float
+  balance_bucket: str
+  selection_signal: float
+  outcome: str
+  failure_type: str
+
+
+def specialist_history_window(mode: str) -> tuple[int, int]:
+  """Return the frozen precursor offset window for one specialist."""
+  windows = {
+    "lateral": (50, 150),
+    "cbf": (10, 50),
+    "balance": (20, 100),
+  }
+  if mode not in windows:
+    raise ValueError(f"unsupported specialist mode: {mode!r}")
+  return windows[mode]
+
+
+def _validate_specialist_histories(
+  *,
+  mode: str,
+  riser_history: torch.Tensor,
+  component_histories: dict[str, torch.Tensor],
+  gait_phase_history: torch.Tensor,
+  support_foot_history: torch.Tensor,
+  delivered_command_history: torch.Tensor,
+  root_velocity_history: torch.Tensor,
+  cbf_active_history: torch.Tensor,
+) -> int:
+  specialist_history_window(mode)
+  one_dimensional = (
+    riser_history,
+    gait_phase_history,
+    support_foot_history,
+    cbf_active_history,
+  )
+  if any(value.ndim != 1 for value in one_dimensional):
+    raise ValueError("scalar specialist histories must be one-dimensional")
+  if delivered_command_history.ndim != 2 or root_velocity_history.ndim != 2:
+    raise ValueError("vector specialist histories must be two-dimensional")
+  required_components = {
+    "lateral": {"centerline", "heading", "edge"},
+    "cbf": {"intervention", "nominal_margin"},
+    "balance": {
+      "roll",
+      "pitch",
+      "angular_velocity",
+      "slip",
+      "contact_mismatch",
+    },
+  }[mode]
+  missing = required_components - set(component_histories)
+  if missing:
+    raise ValueError(f"specialist component histories are missing {sorted(missing)}")
+  length = len(riser_history)
+  values = (
+    *one_dimensional[1:],
+    delivered_command_history,
+    root_velocity_history,
+    *(component_histories[name] for name in required_components),
+  )
+  if any(len(value) != length for value in values):
+    raise ValueError("specialist histories must have equal length")
+  if any(value.ndim != 1 for value in component_histories.values()):
+    raise ValueError("specialist component histories must be one-dimensional")
+  return length
+
+
+def _specialist_signal(
+  mode: str, component_histories: dict[str, torch.Tensor]
+) -> torch.Tensor:
+  weights = {
+    "lateral": {"centerline": 0.45, "heading": 0.35, "edge": 0.20},
+    "cbf": {"intervention": 0.60, "nominal_margin": 0.40},
+    "balance": {
+      "roll": 0.20,
+      "pitch": 0.20,
+      "angular_velocity": 0.20,
+      "slip": 0.20,
+      "contact_mismatch": 0.20,
+    },
+  }[mode]
+  return sum(
+    weight * component_histories[name] for name, weight in weights.items()
+  )
+
+
+def _specialist_bucket(
+  mode: str, riser: int, gait_phase: float, support_foot: int
+) -> str:
+  phase_bin = min(3, max(0, int(math.floor((gait_phase % 1.0) * 4.0))))
+  if mode == "lateral":
+    # One bucket per late riser prevents the bank collapsing onto riser 11.
+    return f"riser:{riser}"
+  if mode == "balance":
+    return f"support:{support_foot}/phase:{phase_bin}"
+  return f"riser:{riser}/phase:{phase_bin}"
+
+
+def _candidate_from_history(
+  *,
+  mode: str,
+  index: int,
+  length: int,
+  riser_history: torch.Tensor,
+  signal: torch.Tensor,
+  gait_phase_history: torch.Tensor,
+  support_foot_history: torch.Tensor,
+  delivered_command_history: torch.Tensor,
+  root_velocity_history: torch.Tensor,
+  cbf_active_history: torch.Tensor,
+  outcome: str,
+  failure_type: str,
+  priority: float,
+) -> SpecialistBankCandidate:
+  riser = int(riser_history[index])
+  phase = float(gait_phase_history[index]) % 1.0
+  support = int(support_foot_history[index])
+  return SpecialistBankCandidate(
+    history_index=index,
+    steps_before_terminal=length - 1 - index,
+    riser_index=riser,
+    gait_phase=phase,
+    support_foot=support,
+    delivered_command=tuple(
+      float(value) for value in delivered_command_history[index]
+    ),
+    root_velocity=tuple(float(value) for value in root_velocity_history[index]),
+    cbf_active=bool(cbf_active_history[index]),
+    priority=float(priority),
+    balance_bucket=_specialist_bucket(mode, riser, phase, support),
+    selection_signal=float(signal[index]),
+    outcome=outcome,
+    failure_type=failure_type,
+  )
+
+
+def select_specialist_failure_candidates(
+  mode: str,
+  riser_history: torch.Tensor,
+  component_histories: dict[str, torch.Tensor],
+  gait_phase_history: torch.Tensor,
+  support_foot_history: torch.Tensor,
+  delivered_command_history: torch.Tensor,
+  root_velocity_history: torch.Tensor,
+  cbf_active_history: torch.Tensor,
+  *,
+  minimum_riser: int,
+  maximum_candidates: int = 4,
+  failure_type: str | None = None,
+) -> tuple[SpecialistBankCandidate, ...]:
+  """Select diverse mode-specific precursors from one completed fall.
+
+  Lateral candidates are grouped by riser, CBF candidates by riser/phase, and
+  balance candidates by support-foot/phase.  Grouping happens before ranking,
+  so a high-priority terminal state cannot fill the whole bank by itself.
+  """
+  length = _validate_specialist_histories(
+    mode=mode,
+    riser_history=riser_history,
+    component_histories=component_histories,
+    gait_phase_history=gait_phase_history,
+    support_foot_history=support_foot_history,
+    delivered_command_history=delivered_command_history,
+    root_velocity_history=root_velocity_history,
+    cbf_active_history=cbf_active_history,
+  )
+  if maximum_candidates < 1:
+    raise ValueError("maximum specialist candidates must be positive")
+  expected_failure = SPECIALIST_FAILURE_TYPES[mode]
+  if failure_type is None:
+    failure_type = expected_failure
+  if failure_type != expected_failure:
+    raise ValueError("specialist candidate failure type does not match its mode")
+  minimum_offset, maximum_offset = specialist_history_window(mode)
+  maximum_offset = min(maximum_offset, length - 1)
+  if maximum_offset < minimum_offset:
+    return ()
+  signal = _specialist_signal(mode, component_histories)
+  best_by_bucket: dict[str, SpecialistBankCandidate] = {}
+  for offset in range(minimum_offset, maximum_offset + 1):
+    index = length - 1 - offset
+    riser = int(riser_history[index])
+    if riser < minimum_riser:
+      continue
+    suffix = signal[index:]
+    future_peak = float(suffix.max())
+    future_mean = float(suffix.mean())
+    growth = max(0.0, future_peak - float(signal[index]))
+    # The mode must be visible after the precursor; this filters ordinary late
+    # states that happened to precede an unrelated terminal fall.
+    minimum_peak = {"lateral": 0.20, "cbf": 0.15, "balance": 0.12}[mode]
+    if future_peak < minimum_peak:
+      continue
+    recency = (maximum_offset - offset) / max(
+      1, maximum_offset - minimum_offset
+    )
+    priority = (
+      float(riser)
+      + 3.0 * future_peak
+      + 2.0 * future_mean
+      + 2.0 * growth
+      + 0.10 * recency
+    )
+    candidate = _candidate_from_history(
+      mode=mode,
+      index=index,
+      length=length,
+      riser_history=riser_history,
+      signal=signal,
+      gait_phase_history=gait_phase_history,
+      support_foot_history=support_foot_history,
+      delivered_command_history=delivered_command_history,
+      root_velocity_history=root_velocity_history,
+      cbf_active_history=cbf_active_history,
+      outcome="failure",
+      failure_type=failure_type,
+      priority=priority,
+    )
+    previous = best_by_bucket.get(candidate.balance_bucket)
+    if previous is None or candidate.priority > previous.priority:
+      best_by_bucket[candidate.balance_bucket] = candidate
+  ordered = sorted(
+    best_by_bucket.values(),
+    key=lambda candidate: (-candidate.priority, candidate.balance_bucket),
+  )
+  # Round-robin ordering across risers is deterministic and makes the first
+  # few entries diverse even before the bounded bank reaches capacity.
+  if mode == "lateral":
+    ordered = sorted(
+      ordered,
+      key=lambda candidate: (
+        -candidate.riser_index,
+        -candidate.priority,
+        candidate.balance_bucket,
+      ),
+    )
+  return tuple(ordered[:maximum_candidates])
+
+
+def select_specialist_success_candidates(
+  mode: str,
+  riser_history: torch.Tensor,
+  component_histories: dict[str, torch.Tensor],
+  gait_phase_history: torch.Tensor,
+  support_foot_history: torch.Tensor,
+  delivered_command_history: torch.Tensor,
+  root_velocity_history: torch.Tensor,
+  cbf_active_history: torch.Tensor,
+  *,
+  minimum_riser: int,
+  maximum_candidates: int = 4,
+) -> tuple[SpecialistBankCandidate, ...]:
+  """Select diverse late states from a genuinely successful target episode."""
+  length = _validate_specialist_histories(
+    mode=mode,
+    riser_history=riser_history,
+    component_histories=component_histories,
+    gait_phase_history=gait_phase_history,
+    support_foot_history=support_foot_history,
+    delivered_command_history=delivered_command_history,
+    root_velocity_history=root_velocity_history,
+    cbf_active_history=cbf_active_history,
+  )
+  if maximum_candidates < 1:
+    raise ValueError("maximum specialist candidates must be positive")
+  minimum_offset, maximum_offset = specialist_history_window(mode)
+  # Successful episodes terminate at the top; use the same temporal support
+  # as failures so matching cannot exploit terminal-time information.
+  maximum_offset = min(maximum_offset, length - 1)
+  if maximum_offset < minimum_offset:
+    return ()
+  signal = _specialist_signal(mode, component_histories)
+  best_by_bucket: dict[str, SpecialistBankCandidate] = {}
+  for offset in range(minimum_offset, maximum_offset + 1):
+    index = length - 1 - offset
+    riser = int(riser_history[index])
+    if riser < minimum_riser:
+      continue
+    phase = float(gait_phase_history[index]) % 1.0
+    support = int(support_foot_history[index])
+    bucket = _specialist_bucket(mode, riser, phase, support)
+    # Prefer informative successful states, but keep priority bounded away
+    # from zero so low-cost counterexamples remain sampleable.
+    priority = float(riser) + float(signal[index]) + 0.05 * (
+      (maximum_offset - offset) / max(1, maximum_offset - minimum_offset)
+    )
+    candidate = _candidate_from_history(
+      mode=mode,
+      index=index,
+      length=length,
+      riser_history=riser_history,
+      signal=signal,
+      gait_phase_history=gait_phase_history,
+      support_foot_history=support_foot_history,
+      delivered_command_history=delivered_command_history,
+      root_velocity_history=root_velocity_history,
+      cbf_active_history=cbf_active_history,
+      outcome="success",
+      failure_type=MIXED_FAILURE_TYPE,
+      priority=priority,
+    )
+    previous = best_by_bucket.get(bucket)
+    if previous is None or candidate.priority > previous.priority:
+      best_by_bucket[bucket] = candidate
+  ordered = sorted(
+    best_by_bucket.values(),
+    key=lambda candidate: (-candidate.priority, candidate.balance_bucket),
+  )
+  return tuple(ordered[:maximum_candidates])
 
 
 def select_late_failure_candidate(
@@ -496,6 +848,7 @@ class HardCaseStateBank:
     source_domain: str | None = None,
     context_sha256: str | None = None,
     dominant_failure_type: str | None = None,
+    specialist_mode: str | None = None,
   ) -> None:
     if capacity < 1:
       raise ValueError("hard-case capacity must be positive")
@@ -511,6 +864,13 @@ class HardCaseStateBank:
         f"unsupported dominant target failure type: {dominant_failure_type}"
       )
     self.dominant_failure_type = dominant_failure_type
+    if specialist_mode is not None and specialist_mode not in SPECIALIST_MODES:
+      raise ValueError(f"unsupported specialist mode: {specialist_mode!r}")
+    if bank_kind in SPECIALIST_BANK_KINDS and specialist_mode is None:
+      raise ValueError("a specialist bank requires specialist_mode")
+    if bank_kind not in SPECIALIST_BANK_KINDS and specialist_mode is not None:
+      raise ValueError("specialist_mode is valid only for a specialist bank")
+    self.specialist_mode = specialist_mode
     self.entries: list[HardCaseEntry] = []
     self.total_added = 0
 
@@ -611,6 +971,147 @@ class HardCaseStateBank:
     self.total_added += 1
     return added
 
+  def _insert_entry(self, entry: HardCaseEntry) -> int:
+    """Insert by priority while preserving specialist bucket coverage."""
+    if len(self.entries) < self.capacity:
+      self.entries.append(entry)
+      self.total_added += 1
+      return 1
+    replacement_candidates = list(range(len(self.entries)))
+    if entry.balance_bucket is not None:
+      same_bucket = [
+        index
+        for index, existing in enumerate(self.entries)
+        if existing.balance_bucket == entry.balance_bucket
+      ]
+      if same_bucket:
+        replacement_candidates = same_bucket
+      else:
+        counts: dict[str | None, int] = {}
+        for existing in self.entries:
+          counts[existing.balance_bucket] = (
+            counts.get(existing.balance_bucket, 0) + 1
+          )
+        largest = max(counts.values())
+        overrepresented = {
+          bucket for bucket, count in counts.items() if count == largest
+        }
+        replacement_candidates = [
+          index
+          for index, existing in enumerate(self.entries)
+          if existing.balance_bucket in overrepresented
+        ]
+    minimum = min(
+      replacement_candidates, key=lambda index: self.entries[index].priority
+    )
+    added = 0
+    if (
+      entry.balance_bucket != self.entries[minimum].balance_bucket
+      or entry.priority > self.entries[minimum].priority
+    ):
+      self.entries[minimum] = entry
+      added = 1
+    self.total_added += 1
+    return added
+
+  def add_specialist_candidate(
+    self,
+    state: dict[str, torch.Tensor],
+    env_id: int,
+    candidate: SpecialistBankCandidate,
+    actor_observation: torch.Tensor,
+  ) -> int:
+    """Insert one failure precursor or successful source-pool state."""
+    if self.bank_kind not in (
+      SPECIALIST_FAILURE_BANK_KIND,
+      SPECIALIST_SUCCESS_POOL_KIND,
+    ):
+      raise ValueError("candidate insertion requires a specialist source bank")
+    if candidate.outcome == "failure":
+      expected_kind = SPECIALIST_FAILURE_BANK_KIND
+      expected_failure = SPECIALIST_FAILURE_TYPES[self.specialist_mode]
+      if candidate.failure_type != expected_failure:
+        raise ValueError("failure candidate does not match specialist mode")
+    elif candidate.outcome == "success":
+      expected_kind = SPECIALIST_SUCCESS_POOL_KIND
+    else:
+      raise ValueError("specialist candidate outcome must be failure or success")
+    if self.bank_kind != expected_kind:
+      raise ValueError("specialist candidate outcome does not match bank kind")
+    if actor_observation.ndim != 1:
+      raise ValueError("one specialist actor observation must be one-dimensional")
+    selected = torch.tensor([env_id], device=next(iter(state.values())).device)
+    individual = {
+      key: value.index_select(0, selected).detach().cpu()
+      for key, value in state.items()
+    }
+    terrain_type = int(individual.get("terrain/type", torch.tensor([-1]))[0])
+    entry = HardCaseEntry(
+      state=individual,
+      priority=candidate.priority,
+      riser_index=candidate.riser_index,
+      terrain_type=terrain_type,
+      steps_before_fall=(
+        candidate.steps_before_terminal
+        if candidate.outcome == "failure"
+        else None
+      ),
+      no_subsequent_riser_crossing=candidate.outcome == "failure",
+      failure_type=candidate.failure_type,
+      outcome=candidate.outcome,
+      specialist_mode=self.specialist_mode,
+      gait_phase=candidate.gait_phase,
+      support_foot=candidate.support_foot,
+      delivered_command=candidate.delivered_command,
+      root_velocity=candidate.root_velocity,
+      cbf_active=candidate.cbf_active,
+      actor_observation=actor_observation.detach().cpu().clone(),
+      balance_bucket=candidate.balance_bucket,
+      selection_signal=candidate.selection_signal,
+    )
+    return self._insert_entry(entry)
+
+  def add_matched_success(
+    self,
+    source: HardCaseEntry,
+    *,
+    failure_index: int,
+    success_pool_index: int,
+    distance: float,
+  ) -> int:
+    """Copy one successful source state into the replay counterexample bank."""
+    if self.bank_kind != SPECIALIST_SUCCESS_BANK_KIND:
+      raise ValueError("matched success requires a counterexample bank")
+    if source.outcome != "success" or source.specialist_mode != self.specialist_mode:
+      raise ValueError("matched source is not a success from the same specialist")
+    if not math.isfinite(distance) or distance < 0.0:
+      raise ValueError("success match distance must be finite and non-negative")
+    entry = HardCaseEntry(
+      state={key: value.detach().clone() for key, value in source.state.items()},
+      priority=max(1.0e-6, 1.0 / (1.0 + distance)),
+      riser_index=source.riser_index,
+      terrain_type=source.terrain_type,
+      failure_type=MIXED_FAILURE_TYPE,
+      outcome="success",
+      specialist_mode=source.specialist_mode,
+      gait_phase=source.gait_phase,
+      support_foot=source.support_foot,
+      delivered_command=source.delivered_command,
+      root_velocity=source.root_velocity,
+      cbf_active=source.cbf_active,
+      actor_observation=(
+        None
+        if source.actor_observation is None
+        else source.actor_observation.detach().clone()
+      ),
+      balance_bucket=source.balance_bucket,
+      selection_signal=source.selection_signal,
+      matched_failure_index=failure_index,
+      match_distance=distance,
+      success_pool_index=success_pool_index,
+    )
+    return self._insert_entry(entry)
+
   def sample(
     self,
     count: int,
@@ -648,6 +1149,7 @@ class HardCaseStateBank:
       "source_domain": self.source_domain,
       "context_sha256": self.context_sha256,
       "dominant_failure_type": self.dominant_failure_type,
+      "specialist_mode": self.specialist_mode,
       "entries": [
         {
           "state": entry.state,
@@ -660,6 +1162,19 @@ class HardCaseStateBank:
           "large_correction_fraction": entry.large_correction_fraction,
           "no_subsequent_riser_crossing": entry.no_subsequent_riser_crossing,
           "failure_type": entry.failure_type,
+          "outcome": entry.outcome,
+          "specialist_mode": entry.specialist_mode,
+          "gait_phase": entry.gait_phase,
+          "support_foot": entry.support_foot,
+          "delivered_command": list(entry.delivered_command),
+          "root_velocity": list(entry.root_velocity),
+          "cbf_active": entry.cbf_active,
+          "actor_observation": entry.actor_observation,
+          "balance_bucket": entry.balance_bucket,
+          "selection_signal": entry.selection_signal,
+          "matched_failure_index": entry.matched_failure_index,
+          "match_distance": entry.match_distance,
+          "success_pool_index": entry.success_pool_index,
         }
         for entry in self.entries
       ],
@@ -672,11 +1187,16 @@ class HardCaseStateBank:
     self.source_domain = payload.get("source_domain")
     self.context_sha256 = payload.get("context_sha256")
     self.dominant_failure_type = payload.get("dominant_failure_type")
+    self.specialist_mode = payload.get("specialist_mode")
     if (
       self.dominant_failure_type is not None
       and self.dominant_failure_type not in TARGET_FAILURE_TYPES
     ):
       raise ValueError("serialized bank has an unsupported dominant failure type")
+    if self.specialist_mode is not None and self.specialist_mode not in SPECIALIST_MODES:
+      raise ValueError("serialized bank has an unsupported specialist mode")
+    if self.bank_kind in SPECIALIST_BANK_KINDS and self.specialist_mode is None:
+      raise ValueError("serialized specialist bank has no specialist mode")
     self.entries = [
       HardCaseEntry(
         state=item["state"],
@@ -697,6 +1217,45 @@ class HardCaseStateBank:
           item.get("no_subsequent_riser_crossing", False)
         ),
         failure_type=str(item.get("failure_type", MIXED_FAILURE_TYPE)),
+        outcome=str(item.get("outcome", "unspecified")),
+        specialist_mode=item.get("specialist_mode"),
+        gait_phase=(
+          None if item.get("gait_phase") is None else float(item["gait_phase"])
+        ),
+        support_foot=(
+          None if item.get("support_foot") is None else int(item["support_foot"])
+        ),
+        delivered_command=tuple(
+          float(value) for value in item.get("delivered_command", ())
+        ),
+        root_velocity=tuple(
+          float(value) for value in item.get("root_velocity", ())
+        ),
+        cbf_active=(
+          None if item.get("cbf_active") is None else bool(item["cbf_active"])
+        ),
+        actor_observation=(
+          None
+          if item.get("actor_observation") is None
+          else item["actor_observation"].detach().cpu().clone()
+        ),
+        balance_bucket=item.get("balance_bucket"),
+        selection_signal=float(item.get("selection_signal", 0.0)),
+        matched_failure_index=(
+          None
+          if item.get("matched_failure_index") is None
+          else int(item["matched_failure_index"])
+        ),
+        match_distance=(
+          None
+          if item.get("match_distance") is None
+          else float(item["match_distance"])
+        ),
+        success_pool_index=(
+          None
+          if item.get("success_pool_index") is None
+          else int(item["success_pool_index"])
+        ),
       )
       for item in payload.get("entries", [])
     ]
@@ -709,6 +1268,10 @@ class HardCaseStateBank:
       raise ValueError(
         "serialized bank contains entries outside its dominant failure type"
       )
+    if self.specialist_mode is not None and any(
+      entry.specialist_mode != self.specialist_mode for entry in self.entries
+    ):
+      raise ValueError("serialized specialist bank contains a foreign-mode entry")
 
   def audit_metadata(self) -> dict[str, Any]:
     late_entries = [
@@ -725,6 +1288,7 @@ class HardCaseStateBank:
       "source_domain": self.source_domain,
       "context_sha256": self.context_sha256,
       "dominant_failure_type": self.dominant_failure_type,
+      "specialist_mode": self.specialist_mode,
       "failure_type_counts": failure_type_counts,
       "dominant_failure_type_purity_passed": (
         self.dominant_failure_type is None
@@ -774,7 +1338,289 @@ class HardCaseStateBank:
       "successful_crossing_exclusion_passed": all(
         entry.no_subsequent_riser_crossing for entry in late_entries
       ),
+      "outcome_counts": {
+        outcome: sum(entry.outcome == outcome for entry in self.entries)
+        for outcome in sorted({entry.outcome for entry in self.entries})
+      },
+      "balance_bucket_counts": {
+        bucket: sum(entry.balance_bucket == bucket for entry in self.entries)
+        for bucket in sorted(
+          {
+            entry.balance_bucket
+            for entry in self.entries
+            if entry.balance_bucket is not None
+          }
+        )
+      },
+      "riser_index_counts": {
+        str(riser): sum(entry.riser_index == riser for entry in self.entries)
+        for riser in sorted({entry.riser_index for entry in self.entries})
+      },
+      "support_foot_counts": {
+        str(support): sum(entry.support_foot == support for entry in self.entries)
+        for support in sorted(
+          {
+            entry.support_foot
+            for entry in self.entries
+            if entry.support_foot is not None
+          }
+        )
+      },
+      "matched_entry_count": sum(
+        entry.matched_failure_index is not None for entry in self.entries
+      ),
+      "unique_success_pool_source_count": len(
+        {
+          entry.success_pool_index
+          for entry in self.entries
+          if entry.success_pool_index is not None
+        }
+      ),
+      "mean_match_distance": (
+        sum(
+          entry.match_distance
+          for entry in self.entries
+          if entry.match_distance is not None
+        )
+        / max(1, sum(entry.match_distance is not None for entry in self.entries))
+      ),
     }
+
+
+def _specialist_entry_distance(
+  failure: HardCaseEntry, success: HardCaseEntry
+) -> float:
+  if failure.specialist_mode != success.specialist_mode:
+    raise ValueError("cannot match entries from different specialist modes")
+  if failure.actor_observation is None or success.actor_observation is None:
+    raise ValueError("specialist matching requires actor observations")
+  if failure.actor_observation.shape != success.actor_observation.shape:
+    raise ValueError("specialist actor-observation shapes do not match")
+  observation_distance = float(
+    torch.sqrt(
+      torch.mean(
+        (
+          failure.actor_observation.float()
+          - success.actor_observation.float()
+        ).square()
+      )
+    )
+  )
+  phase_delta = abs(float(failure.gait_phase) - float(success.gait_phase))
+  phase_delta = min(phase_delta, 1.0 - phase_delta)
+  command_a = torch.tensor(failure.delivered_command, dtype=torch.float64)
+  command_b = torch.tensor(success.delivered_command, dtype=torch.float64)
+  velocity_a = torch.tensor(failure.root_velocity, dtype=torch.float64)
+  velocity_b = torch.tensor(success.root_velocity, dtype=torch.float64)
+  if command_a.shape != command_b.shape or velocity_a.shape != velocity_b.shape:
+    raise ValueError("specialist match-feature shapes do not agree")
+  command_distance = float(torch.linalg.vector_norm(command_a - command_b))
+  velocity_distance = float(torch.linalg.vector_norm(velocity_a - velocity_b))
+  return (
+    observation_distance
+    + 1.50 * abs(failure.riser_index - success.riser_index)
+    + 1.00 * phase_delta
+    + 0.75 * (failure.support_foot != success.support_foot)
+    + 0.50 * command_distance
+    + 0.35 * velocity_distance
+    + 0.50 * (failure.cbf_active != success.cbf_active)
+  )
+
+
+def match_specialist_success_counterexamples(
+  failure_bank: HardCaseStateBank,
+  success_pool: HardCaseStateBank,
+  success_bank: HardCaseStateBank,
+) -> dict[str, Any]:
+  """Build a matched success bank using frozen bucketed actor-state features."""
+  mode = failure_bank.specialist_mode
+  if (
+    failure_bank.bank_kind != SPECIALIST_FAILURE_BANK_KIND
+    or success_pool.bank_kind != SPECIALIST_SUCCESS_POOL_KIND
+    or success_bank.bank_kind != SPECIALIST_SUCCESS_BANK_KIND
+    or mode is None
+    or success_pool.specialist_mode != mode
+    or success_bank.specialist_mode != mode
+  ):
+    raise ValueError("specialist match banks have incompatible roles or modes")
+  if not failure_bank.entries:
+    raise RuntimeError("cannot match an empty failure-precursor bank")
+  if not success_pool.entries:
+    raise RuntimeError("cannot match without successful source states")
+  success_bank.clear()
+  used_sources: set[int] = set()
+  matches: list[dict[str, Any]] = []
+  ordered_failures = sorted(
+    enumerate(failure_bank.entries),
+    key=lambda item: (-item[1].priority, item[0]),
+  )
+  for failure_index, failure in ordered_failures[: success_bank.capacity]:
+    distances = [
+      (_specialist_entry_distance(failure, success), success_index)
+      for success_index, success in enumerate(success_pool.entries)
+    ]
+    unused = [item for item in distances if item[1] not in used_sources]
+    distance, success_index = min(unused or distances)
+    source = success_pool.entries[success_index]
+    added = success_bank.add_matched_success(
+      source,
+      failure_index=failure_index,
+      success_pool_index=success_index,
+      distance=distance,
+    )
+    if added != 1:
+      raise RuntimeError("matched success bank rejected a required counterexample")
+    used_sources.add(success_index)
+    matches.append(
+      {
+        "failure_index": failure_index,
+        "success_pool_index": success_index,
+        "distance": distance,
+        "failure_riser": failure.riser_index,
+        "success_riser": source.riser_index,
+        "failure_bucket": failure.balance_bucket,
+        "success_bucket": source.balance_bucket,
+      }
+    )
+  return {
+    "specialist_mode": mode,
+    "failure_entry_count": len(failure_bank),
+    "success_pool_entry_count": len(success_pool),
+    "matched_entry_count": len(success_bank),
+    "unique_success_source_count": len(used_sources),
+    "one_match_per_replayed_failure": len(success_bank)
+    == min(len(failure_bank), success_bank.capacity),
+    "matches": matches,
+  }
+
+
+def specialist_destination_ids(
+  num_envs: int,
+  *,
+  failure_fraction: float,
+  success_fraction: float,
+  device: str | torch.device,
+  generator: torch.Generator | None = None,
+) -> tuple[torch.Tensor, torch.Tensor]:
+  """Select disjoint failure and matched-success replay slots."""
+  fractions = torch.tensor(
+    (failure_fraction, success_fraction), dtype=torch.float64
+  )
+  if not bool(torch.isfinite(fractions).all()):
+    raise ValueError("specialist replay fractions must be finite")
+  if min(failure_fraction, success_fraction) < 0.0:
+    raise ValueError("specialist replay fractions must be non-negative")
+  if failure_fraction + success_fraction > 1.0 + 1.0e-12:
+    raise ValueError("specialist replay fractions exceed one")
+  if num_envs < 0:
+    raise ValueError("num_envs must be non-negative")
+  failure_count = min(num_envs, int(round(num_envs * failure_fraction)))
+  success_count = min(
+    num_envs - failure_count, int(round(num_envs * success_fraction))
+  )
+  permutation = torch.randperm(num_envs, generator=generator)
+  return (
+    permutation[:failure_count].to(device=device),
+    permutation[failure_count : failure_count + success_count].to(device=device),
+  )
+
+
+def reset_rollout_with_specialist_banks(
+  vec_env,
+  failure_bank: HardCaseStateBank,
+  success_bank: HardCaseStateBank,
+  *,
+  failure_fraction: float = 0.15,
+  success_fraction: float = 0.15,
+  generator: torch.Generator | None = None,
+):
+  """Create one on-policy 70/15/15 target rollout start mixture."""
+  if (
+    failure_bank.bank_kind != SPECIALIST_FAILURE_BANK_KIND
+    or success_bank.bank_kind != SPECIALIST_SUCCESS_BANK_KIND
+    or failure_bank.specialist_mode != success_bank.specialist_mode
+  ):
+    raise ValueError("specialist replay banks have incompatible roles or modes")
+  env = vec_env.unwrapped
+  all_ids = torch.arange(env.num_envs, device=env.device, dtype=torch.long)
+  env._reset_idx(all_ids)
+  env.scene.write_data_to_sim()
+  env.sim.forward()
+  env.sim.sense()
+  env.observation_manager.compute(update_history=True)
+  requested_failure, requested_success = specialist_destination_ids(
+    env.num_envs,
+    failure_fraction=failure_fraction,
+    success_fraction=success_fraction,
+    device=env.device,
+    generator=generator,
+  )
+  failure_count = min(len(requested_failure), len(failure_bank))
+  success_count = min(len(requested_success), len(success_bank))
+  failure_ids = requested_failure[:failure_count]
+  success_ids = requested_success[:success_count]
+  shape_mismatches: dict[str, list[str]] = {"failure": [], "success": []}
+  incompatible_counts = {"failure": 0, "success": 0}
+  current = capture_hard_case_state(env)
+  sampled_failure = (
+    failure_bank.sample(failure_count, device=env.device, generator=generator)
+    if failure_count
+    else {}
+  )
+  sampled_success = (
+    success_bank.sample(success_count, device=env.device, generator=generator)
+    if success_count
+    else {}
+  )
+  for label, bank, sampled, ids in (
+    ("failure", failure_bank, sampled_failure, failure_ids),
+    ("success", success_bank, sampled_success, success_ids),
+  ):
+    if not sampled:
+      continue
+    shape_mismatches[label] = hard_case_state_shape_mismatches(current, sampled)
+    if shape_mismatches[label]:
+      incompatible_counts[label] = bank.clear()
+      if label == "failure":
+        failure_count = 0
+        failure_ids = requested_failure[:0]
+      else:
+        success_count = 0
+        success_ids = requested_success[:0]
+      continue
+    restore_hard_case_state(env, sampled, ids)
+  if failure_count or success_count:
+    env.scene.write_data_to_sim()
+    env.sim.forward()
+    for sensor in env.scene.sensors.values():
+      sensor._invalidate_cache()
+    env.sim.sense()
+  env.observation_manager._obs_buffer = None
+  obs = env.observation_manager.compute(update_history=False)
+  env.obs_buf = obs
+  realized_normal = env.num_envs - failure_count - success_count
+  return vec_env.get_observations(), {
+    "specialist_mode": failure_bank.specialist_mode,
+    "requested_mixture": {
+      "normal": 1.0 - failure_fraction - success_fraction,
+      "failure": failure_fraction,
+      "success": success_fraction,
+    },
+    "failure_bank_size": len(failure_bank),
+    "success_bank_size": len(success_bank),
+    "failure_start_requested_count": len(requested_failure),
+    "success_start_requested_count": len(requested_success),
+    "failure_start_count": failure_count,
+    "success_start_count": success_count,
+    "normal_start_count": realized_normal,
+    "failure_start_fraction": failure_count / max(1, env.num_envs),
+    "success_start_fraction": success_count / max(1, env.num_envs),
+    "normal_start_fraction": realized_normal / max(1, env.num_envs),
+    "failure_start_ids": failure_ids.detach().cpu().tolist(),
+    "success_start_ids": success_ids.detach().cpu().tolist(),
+    "incompatible_bank_dropped_counts": incompatible_counts,
+    "bank_shape_mismatches": shape_mismatches,
+  }
 
 
 def hard_case_destination_ids(

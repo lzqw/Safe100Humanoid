@@ -476,6 +476,27 @@ def g1_online_stairs_env_cfg(
     weight=-200.0,
     params={"termination_name": "fell_over"},
   )
+  # Specialist contexts replace this zero-weight placeholder before the
+  # environment is built. Ordinary D0--DQ tasks therefore remain unchanged.
+  cfg.rewards["specialist_failure_signal"] = RewardTermCfg(
+    func=mdp.specialist_failure_signal,
+    weight=0.0,
+    params={
+      "mode": "lateral",
+      "weights": {
+        "centerline": 1.0,
+        "heading": 0.0,
+        "edge": 0.0,
+        "intervention": 0.0,
+        "nominal_margin": 0.0,
+        "roll": 0.0,
+        "pitch": 0.0,
+        "angular_velocity": 0.0,
+        "slip": 0.0,
+        "contact_mismatch": 0.0,
+      },
+    },
+  )
   cfg.terminations["reached_top"] = TerminationTermCfg(
     func=mdp.reached_stair_top,
     params={

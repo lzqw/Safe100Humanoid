@@ -331,15 +331,37 @@ class JoystickVelocityCommand(CommandTerm):
   def _update_command(self) -> None:
     if self.cfg.closed_loop_centering:
       correction = self._centerline_feedback()
-      self.raw_command[:, 1:] = correction[:, 1:]
+      disturbance = torch.zeros_like(correction)
+      if self.cfg.disturbance_pulses_with_centering:
+        self._update_pulses()
+        disturbance[:, 1:] = self._pulse_value[:, 1:]
+      self.raw_command[:, 1] = (
+        correction[:, 1]
+        + disturbance[:, 1]
+        + self.cfg.fixed_lateral_bias
+      )
+      self.raw_command[:, 2] = (
+        correction[:, 2] + disturbance[:, 2] + self.cfg.fixed_yaw_bias
+      )
+      self.operator_correction[:, 1:] = self.raw_command[:, 1:]
+      self.correction_active[:] = (
+        torch.abs(self.raw_command[:, 1]) > self.cfg.correction_epsilon
+      ) | (torch.abs(self.raw_command[:, 2]) > self.cfg.correction_epsilon)
     else:
       # Preserve the original open-loop teleoperation benchmark.  It injects
       # random stick pulses but deliberately has no knowledge of drift.
       self._update_pulses()
-      self.raw_command[:, 1:] = self._pulse_value[:, 1:]
+      self.raw_command[:, 1] = (
+        self._pulse_value[:, 1] + self.cfg.fixed_lateral_bias
+      )
+      self.raw_command[:, 2] = self._pulse_value[:, 2] + self.cfg.fixed_yaw_bias
       self._centerline_feedback()
-      self.operator_correction[:, 1:] = self._pulse_value[:, 1:]
-      self.correction_active[:] = self._pulse_steps_left > 0
+      self.operator_correction[:, 1:] = self.raw_command[:, 1:]
+      self.correction_active[:] = (
+        (self._pulse_steps_left > 0)
+        | (abs(self.cfg.fixed_lateral_bias) > self.cfg.correction_epsilon)
+        | (abs(self.cfg.fixed_yaw_bias) > self.cfg.correction_epsilon)
+      )
     self._update_release()
 
     previous = self.delivered_command.clone()
@@ -374,6 +396,9 @@ class JoystickVelocityCommandCfg(CommandTermCfg):
   release_delay_range_s: tuple[float, float] = (0.10, 0.40)
   release_position_tolerance: float = 0.15
   closed_loop_centering: bool = False
+  disturbance_pulses_with_centering: bool = False
+  fixed_lateral_bias: float = 0.0
+  fixed_yaw_bias: float = 0.0
   stair_half_width: float = 1.20
   centerline_lookahead_distance: float = 1.00
   centerline_lateral_gain: float = 0.80

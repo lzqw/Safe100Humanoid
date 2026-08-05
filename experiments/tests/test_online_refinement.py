@@ -18,6 +18,7 @@ from src.tasks.stairs_cbf.online import (
   CandidateGateThresholds,
   CbfIndependenceThresholds,
   FailureFocusedGateThresholds,
+  SpecialistGateThresholds,
   OnlineSafePPO,
   OnlineSafeRefinementRunner,
   SafeImprovementScoreWeights,
@@ -40,6 +41,7 @@ from src.tasks.stairs_cbf.online import (
   failure_focused_candidate_gate,
   failure_focused_candidate_precheck,
   failure_focused_target_score,
+  hierarchical_specialist_macro_interval,
   generalized_cost_advantage,
   projected_lagrange_update,
   redistributed_fall_credit,
@@ -52,6 +54,10 @@ from src.tasks.stairs_cbf.online import (
   adaptive_cbf_std_factor,
   validate_behavior_log_prob,
   validate_behavior_distribution_params,
+  specialist_candidate_gate,
+  specialist_candidate_precheck,
+  specialist_d0_retention_gate,
+  specialist_target_score,
 )
 from src.tasks.stairs_cbf.hard_cases import (
   HardCaseStateBank,
@@ -59,18 +65,31 @@ from src.tasks.stairs_cbf.hard_cases import (
   LateFailureCandidate,
   NON_LATERAL_BALANCE_FAILURE_TYPE,
   NON_LATERAL_HIGH_CBF_FAILURE_TYPE,
+  SPECIALIST_FAILURE_BANK_KIND,
+  SPECIALIST_SUCCESS_BANK_KIND,
+  SPECIALIST_SUCCESS_POOL_KIND,
+  SpecialistBankCandidate,
   classify_target_failure_mode,
   curriculum_destination_ids,
   hard_case_destination_ids,
   hard_case_state_shape_mismatches,
   perturb_joystick_command_state,
+  match_specialist_success_counterexamples,
   select_late_failure_candidate,
+  select_specialist_failure_candidates,
+  select_specialist_success_candidates,
+  specialist_destination_ids,
+  specialist_history_window,
 )
 from src.tasks.stairs_cbf.deployment_context import (
   FAILURE_FOCUSED_CALIBRATION_KIND,
+  SPECIALIST_CALIBRATION_KIND,
+  SPECIALIST_FAILURE_TYPES,
   apply_frozen_deployment_context,
   generate_failure_focused_context,
+  generate_specialist_context,
   validate_calibrated_deployment_context,
+  validate_calibrated_specialist_context,
   validate_frozen_deployment_context,
 )
 from src.tasks.stairs_cbf.retention import (
@@ -181,6 +200,260 @@ def test_failure_focused_gate_uses_success_minus_fall_and_catastrophic_cbf_cap()
     parameters_finite=True,
     thresholds=thresholds,
   ) == ["update KL is not below 0.01"]
+
+
+def test_specialist_gate_is_diagonal_score_fall_and_kl_only() -> None:
+  old = {
+    "success_rate": 0.76,
+    "fall_rate": 0.22,
+    "intervention_per_riser": 0.1,
+    "initial_state_signatures": ["paired-v17"],
+  }
+  candidate = {
+    "success_rate": 0.79,
+    "fall_rate": 0.20,
+    # Deliberately catastrophic by the removed v15 CBF-demand gate.
+    "intervention_per_riser": 100.0,
+    "initial_state_signatures": ["paired-v17"],
+  }
+  assert specialist_target_score(candidate) == pytest.approx(
+    {"success": 0.79, "fall": -0.20, "total": 0.59}
+  )
+  accepted, reasons, scores = specialist_candidate_gate(
+    update_metrics={"mean_kl": 0.009},
+    old_eval=old,
+    candidate_eval=candidate,
+    parameters_finite=True,
+  )
+  assert accepted
+  assert reasons == []
+  assert scores["candidate"]["total"] > scores["old"]["total"]
+  assert specialist_candidate_precheck(
+    update_metrics={"mean_kl": 0.01},
+    parameters_finite=True,
+    thresholds=SpecialistGateThresholds(),
+  ) == ["update KL is not below 0.01"]
+
+  d0_passed, d0_reasons = specialist_d0_retention_gate(
+    baseline_eval={
+      "success_rate": 0.90,
+      "initial_state_signatures": ["d0-pair"],
+    },
+    candidate_eval={
+      "success_rate": 0.85,
+      "initial_state_signatures": ["d0-pair"],
+    },
+  )
+  assert d0_passed
+  assert d0_reasons == []
+
+
+def test_specialist_contexts_are_hashed_mode_specific_and_base_only_calibrated() -> None:
+  legacy = generate_failure_focused_context(1701)
+  assert validate_frozen_deployment_context(legacy)["parameters_sha256"] == legacy[
+    "parameters_sha256"
+  ]
+  contexts = {
+    mode: generate_specialist_context(mode, seed)
+    for mode, seed in (("lateral", 2100), ("cbf", 2200), ("balance", 2300))
+  }
+  assert len({context["parameters_sha256"] for context in contexts.values()}) == 3
+  for mode, context in contexts.items():
+    weights = {
+      key.removesuffix("_signal_weight"): value
+      for key, value in context["scenario"].items()
+      if key.endswith("_signal_weight")
+    }
+    assert sum(weights.values()) == pytest.approx(1.0)
+    attempt = {
+      "candidate_seed": context["calibration_candidate_seed"],
+      "parameters_sha256": context["parameters_sha256"],
+      "base_policy_only": True,
+      "num_episodes": 512,
+      "success_rate": 0.80,
+      "fall_count": 103,
+      "target_failure_type": SPECIALIST_FAILURE_TYPES[mode],
+      "target_failure_fraction": 0.65,
+      "second_failure_fraction": 0.25,
+      "qualifies": True,
+    }
+    context["calibration"] = {
+      "kind": SPECIALIST_CALIBRATION_KIND,
+      "success_rate_bounds": [0.70, 0.85],
+      "minimum_target_failure_fraction": 0.60,
+      "maximum_second_failure_fraction": 0.30,
+      "minimum_fall_count": 100,
+      "episodes_per_candidate": 512,
+      "candidate_seeds": [context["calibration_candidate_seed"]],
+      "attempts": [attempt],
+      "selected_candidate_seed": context["calibration_candidate_seed"],
+      "selected_parameters_sha256": context["parameters_sha256"],
+      "adapted_policy_evaluations_used": False,
+    }
+    validated = validate_calibrated_specialist_context(context)
+    assert validated["specialist_mode"] == mode
+
+
+def _specialist_test_histories(length: int = 161):
+  time = torch.linspace(0.0, 1.0, length)
+  riser = torch.floor(5.0 + 6.0 * time).long()
+  phase = (torch.arange(length, dtype=torch.float32) * 0.07) % 1.0
+  support = (torch.arange(length) % 2).long()
+  command = torch.stack((0.4 + 0.1 * time, 0.05 * time, 0.1 * time), dim=1)
+  velocity = torch.stack((0.3 + 0.1 * time, 0.02 * time, 0.0 * time), dim=1)
+  cbf_active = time > 0.55
+  components = {
+    "centerline": time,
+    "heading": time.square(),
+    "edge": (time > 0.75).float(),
+    "intervention": time,
+    "nominal_margin": time.square(),
+    "roll": time,
+    "pitch": 0.8 * time,
+    "angular_velocity": time.square(),
+    "slip": (time > 0.65).float(),
+    "contact_mismatch": 0.6 * time,
+  }
+  return riser, components, phase, support, command, velocity, cbf_active
+
+
+@pytest.mark.parametrize(
+  ("mode", "window"),
+  (("lateral", (50, 150)), ("cbf", (10, 50)), ("balance", (20, 100))),
+)
+def test_specialist_selectors_use_frozen_windows_and_balanced_buckets(
+  mode: str, window: tuple[int, int]
+) -> None:
+  histories = _specialist_test_histories()
+  assert specialist_history_window(mode) == window
+  candidates = select_specialist_failure_candidates(
+    mode,
+    *histories,
+    minimum_riser=5,
+    maximum_candidates=4,
+  )
+  assert candidates
+  assert all(
+    window[0] <= candidate.steps_before_terminal <= window[1]
+    for candidate in candidates
+  )
+  assert len({candidate.balance_bucket for candidate in candidates}) == len(
+    candidates
+  )
+  if mode == "lateral":
+    assert len({candidate.riser_index for candidate in candidates}) >= 2
+  if mode == "balance":
+    assert {candidate.support_foot for candidate in candidates} == {0, 1}
+  successes = select_specialist_success_candidates(
+    mode,
+    *histories,
+    minimum_riser=5,
+    maximum_candidates=4,
+  )
+  assert successes
+  assert all(candidate.outcome == "success" for candidate in successes)
+
+
+def test_specialist_banks_match_successes_and_serialize_without_cross_mode_state() -> None:
+  mode = "lateral"
+  failure_bank = HardCaseStateBank(
+    capacity=4,
+    bank_kind=SPECIALIST_FAILURE_BANK_KIND,
+    source_domain="DQHMED",
+    context_sha256="context",
+    specialist_mode=mode,
+  )
+  success_pool = HardCaseStateBank(
+    capacity=4,
+    bank_kind=SPECIALIST_SUCCESS_POOL_KIND,
+    source_domain="DQHMED",
+    context_sha256="context",
+    specialist_mode=mode,
+  )
+  success_bank = HardCaseStateBank(
+    capacity=4,
+    bank_kind=SPECIALIST_SUCCESS_BANK_KIND,
+    source_domain="DQHMED",
+    context_sha256="context",
+    specialist_mode=mode,
+  )
+  state = {
+    "robot/root_pose_relative": torch.arange(14, dtype=torch.float32).reshape(2, 7),
+    "terrain/type": torch.tensor([0, 1]),
+  }
+  for env_id in range(2):
+    failure = SpecialistBankCandidate(
+      history_index=0,
+      steps_before_terminal=60 + env_id,
+      riser_index=7 + env_id,
+      gait_phase=0.2 + 0.4 * env_id,
+      support_foot=env_id,
+      delivered_command=(0.4, 0.0, 0.0),
+      root_velocity=(0.3, 0.0, 0.0),
+      cbf_active=bool(env_id),
+      priority=10.0 + env_id,
+      balance_bucket=f"riser:{7 + env_id}",
+      selection_signal=0.5,
+      outcome="failure",
+      failure_type=LATERAL_HEADING_DRIFT_FAILURE_TYPE,
+    )
+    success = SpecialistBankCandidate(
+      **{
+        **failure.__dict__,
+        "outcome": "success",
+        "failure_type": "mixed",
+        "priority": 8.0 + env_id,
+      }
+    )
+    observation = torch.tensor([float(env_id), 0.5, -0.5])
+    assert failure_bank.add_specialist_candidate(
+      state, env_id, failure, observation
+    ) == 1
+    assert success_pool.add_specialist_candidate(
+      state, env_id, success, observation + 0.01
+    ) == 1
+  matching = match_specialist_success_counterexamples(
+    failure_bank, success_pool, success_bank
+  )
+  assert matching["one_match_per_replayed_failure"]
+  assert len(success_bank) == len(failure_bank) == 2
+  audit = success_bank.audit_metadata()
+  assert audit["outcome_counts"] == {"success": 2}
+  assert audit["matched_entry_count"] == 2
+  restored = HardCaseStateBank(capacity=1)
+  restored.load_state_dict(success_bank.state_dict())
+  assert restored.specialist_mode == mode
+  assert restored.audit_metadata()["matched_entry_count"] == 2
+
+
+def test_specialist_start_ids_realize_integer_70_15_15_allocation() -> None:
+  generator = torch.Generator().manual_seed(170)
+  failure, success = specialist_destination_ids(
+    64,
+    failure_fraction=0.15,
+    success_fraction=0.15,
+    device="cpu",
+    generator=generator,
+  )
+  assert len(failure) == len(success) == 10
+  assert len(torch.unique(torch.cat((failure, success)))) == 20
+  assert 64 - len(failure) - len(success) == 44
+
+
+def test_hierarchical_specialist_macro_bootstrap_is_deterministic() -> None:
+  groups = [
+    [torch.full((32,), 0.03 + 0.002 * seed) for seed in range(3)]
+    for _scene in range(3)
+  ]
+  first = hierarchical_specialist_macro_interval(
+    groups, bootstrap_samples=1000, bootstrap_seed=17
+  )
+  second = hierarchical_specialist_macro_interval(
+    groups, bootstrap_samples=1000, bootstrap_seed=17
+  )
+  assert first == second
+  assert first[0] > 0.03
+  assert first[1] > 0.0
 
 
 def test_failure_focused_fall_credit_preserves_two_units_without_crossing_reset() -> None:

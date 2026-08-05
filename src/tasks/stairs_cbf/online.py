@@ -128,6 +128,15 @@ class FailureFocusedGateThresholds:
   d0_success_tolerance: float = 0.05
 
 
+@dataclass(frozen=True)
+class SpecialistGateThresholds:
+  """Frozen v17 target-only point gates; final evidence is audited later."""
+
+  maximum_kl: float = 0.01
+  maximum_target_fall_increase: float = 0.03
+  d0_success_tolerance: float = 0.05
+
+
 def brief_dual_reward_weight(round_index: int) -> float:
   """Task-first scalar-reward schedule from the v14 protocol."""
   if round_index < 1:
@@ -305,6 +314,92 @@ def failure_focused_candidate_gate(
     "old": old_score,
     "candidate": candidate_score,
   }
+
+
+def specialist_target_score(result: dict[str, Any]) -> dict[str, float]:
+  """Return the v17 target score ``success rate - fall rate``."""
+  return failure_focused_target_score(result)
+
+
+def specialist_candidate_precheck(
+  *,
+  update_metrics: dict[str, Any],
+  parameters_finite: bool,
+  thresholds: SpecialistGateThresholds = SpecialistGateThresholds(),
+) -> list[str]:
+  """Check only finite parameters and the declared hard KL bound."""
+  reasons: list[str] = []
+  if not parameters_finite:
+    reasons.append("non-finite model parameters")
+  kl = float(update_metrics.get("mean_kl", float("nan")))
+  if not math.isfinite(kl):
+    reasons.append("update KL is missing or non-finite")
+  elif kl >= thresholds.maximum_kl:
+    reasons.append("update KL is not below 0.01")
+  return reasons
+
+
+def specialist_candidate_gate(
+  *,
+  update_metrics: dict[str, Any],
+  old_eval: dict[str, Any],
+  candidate_eval: dict[str, Any],
+  parameters_finite: bool,
+  thresholds: SpecialistGateThresholds = SpecialistGateThresholds(),
+) -> tuple[bool, list[str], dict[str, dict[str, float]]]:
+  """Apply exactly the v17 diagonal score, fall, KL, and pairing gates."""
+  reasons = specialist_candidate_precheck(
+    update_metrics=update_metrics,
+    parameters_finite=parameters_finite,
+    thresholds=thresholds,
+  )
+  old_signature = old_eval.get("initial_state_signatures")
+  candidate_signature = candidate_eval.get("initial_state_signatures")
+  if old_signature is None or candidate_signature is None:
+    reasons.append("paired target initial-state signature missing")
+  elif old_signature != candidate_signature:
+    reasons.append("paired target initial-state signature differs")
+  try:
+    old_score = specialist_target_score(old_eval)
+    candidate_score = specialist_target_score(candidate_eval)
+    old_fall = float(old_eval["fall_rate"])
+    candidate_fall = float(candidate_eval["fall_rate"])
+  except (KeyError, TypeError, ValueError):
+    reasons.append("target evaluation is missing or non-finite")
+    old_score = {"total": float("nan")}
+    candidate_score = {"total": float("nan")}
+  else:
+    if candidate_score["total"] <= old_score["total"]:
+      reasons.append("target point-estimate score did not improve")
+    if candidate_fall > old_fall + thresholds.maximum_target_fall_increase:
+      reasons.append("target fall rate increased by more than 3 percentage points")
+  return len(reasons) == 0, reasons, {
+    "old": old_score,
+    "candidate": candidate_score,
+  }
+
+
+def specialist_d0_retention_gate(
+  *,
+  baseline_eval: dict[str, Any],
+  candidate_eval: dict[str, Any],
+  thresholds: SpecialistGateThresholds = SpecialistGateThresholds(),
+) -> tuple[bool, list[str]]:
+  """Check only D0 success against the common base policy every two rounds."""
+  reasons: list[str] = []
+  baseline_success = float(baseline_eval.get("success_rate", float("nan")))
+  candidate_success = float(candidate_eval.get("success_rate", float("nan")))
+  if not math.isfinite(baseline_success) or not math.isfinite(candidate_success):
+    reasons.append("D0 success rate is missing or non-finite")
+  elif candidate_success < baseline_success - thresholds.d0_success_tolerance:
+    reasons.append("D0 success is more than 5 percentage points below baseline")
+  baseline_signature = baseline_eval.get("initial_state_signatures")
+  candidate_signature = candidate_eval.get("initial_state_signatures")
+  if baseline_signature is None or candidate_signature is None:
+    reasons.append("paired D0 initial-state signature missing")
+  elif baseline_signature != candidate_signature:
+    reasons.append("paired D0 initial-state signature differs")
+  return len(reasons) == 0, reasons
 
 
 def redistributed_fall_credit(
@@ -1096,6 +1191,69 @@ def paired_metric_delta_interval(
     bootstrap_seed=bootstrap_seed,
     z_value=z_value,
   )
+
+
+def hierarchical_specialist_macro_interval(
+  scene_seed_deltas: list[list[torch.Tensor]],
+  *,
+  bootstrap_samples: int = 10000,
+  bootstrap_seed: int = 0,
+) -> tuple[float, float, float]:
+  """Resample three scenes, adaptation seeds, then paired episode deltas."""
+  if len(scene_seed_deltas) != 3 or any(
+    len(seed_groups) != 3 for seed_groups in scene_seed_deltas
+  ):
+    raise ValueError("macro bootstrap requires three scenes and three seeds each")
+  lengths = {
+    int(group.numel())
+    for seed_groups in scene_seed_deltas
+    for group in seed_groups
+  }
+  if len(lengths) != 1 or 0 in lengths:
+    raise ValueError("macro bootstrap episode groups must have one non-zero size")
+  if bootstrap_samples < 1000:
+    raise ValueError("formal macro bootstrap requires at least 1000 samples")
+  values = torch.stack(
+    [torch.stack(seed_groups) for seed_groups in scene_seed_deltas]
+  ).to(dtype=torch.float64, device="cpu")
+  if not bool(torch.isfinite(values).all()):
+    raise ValueError("macro bootstrap deltas contain non-finite values")
+  scene_count, seed_count, episode_count = values.shape
+  generator = torch.Generator(device="cpu")
+  generator.manual_seed(bootstrap_seed)
+  means: list[torch.Tensor] = []
+  chunk_size = 100
+  for start in range(0, bootstrap_samples, chunk_size):
+    count = min(chunk_size, bootstrap_samples - start)
+    sampled_scene = torch.randint(
+      scene_count, (count, scene_count), generator=generator
+    )
+    sampled_seed = torch.randint(
+      seed_count, (count, scene_count, seed_count), generator=generator
+    )
+    samples = torch.empty(
+      (count, scene_count, seed_count, episode_count), dtype=torch.float64
+    )
+    for draw in range(count):
+      for scene_slot in range(scene_count):
+        source_scene = int(sampled_scene[draw, scene_slot])
+        for seed_slot in range(seed_count):
+          source_seed = int(sampled_seed[draw, scene_slot, seed_slot])
+          episode_ids = torch.randint(
+            episode_count, (episode_count,), generator=generator
+          )
+          samples[draw, scene_slot, seed_slot] = values[
+            source_scene, source_seed, episode_ids
+          ]
+    means.append(samples.mean(dim=(1, 2, 3)))
+  bootstrap_means = torch.cat(means)
+  lower, upper = torch.quantile(
+    bootstrap_means, torch.tensor((0.025, 0.975), dtype=torch.float64)
+  )
+  point = torch.stack(
+    [torch.cat(seed_groups).to(torch.float64).mean() for seed_groups in scene_seed_deltas]
+  ).mean()
+  return float(point), float(lower), float(upper)
 
 
 def adaptive_cbf_std_factor(

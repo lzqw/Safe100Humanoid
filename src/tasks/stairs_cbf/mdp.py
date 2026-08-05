@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+
 import torch
 
 from mjlab.envs import ManagerBasedRlEnv
@@ -141,6 +143,138 @@ def online_safety_telemetry(
   env.extras["log"]["Online/fall_termination_fraction"] = fell.mean()
   env.extras["online_fell"] = fell.detach().bool().clone()
   return torch.zeros(env.num_envs, dtype=torch.float32, device=env.device)
+
+
+def specialist_failure_signal_components(
+  env: ManagerBasedRlEnv,
+  *,
+  command_name: str = "twist",
+  action_name: str = "joint_pos",
+  asset_name: str = "robot",
+  sensor_name: str = "feet_ground_contact",
+) -> dict[str, torch.Tensor]:
+  """Return normalized sensor-derived components for all three specialists."""
+  command = env.command_manager.get_term(command_name)
+  action = _cbf_term(env, action_name)
+  robot = env.scene[asset_name]
+  centerline_error = getattr(
+    command, "centerline_error", torch.zeros(env.num_envs, device=env.device)
+  )
+  heading_error = getattr(
+    command, "heading_error", torch.zeros(env.num_envs, device=env.device)
+  )
+  stair_half_width = float(getattr(command.cfg, "stair_half_width", 1.20))
+  centerline_threshold = (2.0 / 3.0) * stair_half_width
+  centerline = (centerline_error.abs() / centerline_threshold).clamp(0.0, 1.0)
+  heading = (heading_error.abs() / (math.pi / 2.0)).clamp(0.0, 1.0)
+  terrain = env.scene.terrain
+  if terrain is None:
+    raise RuntimeError("specialist failure signal requires stair terrain")
+  patches = terrain.flat_patches["stair_targets"][
+    terrain.terrain_levels, terrain.terrain_types
+  ]
+  center_y = patches[:, 0, 1]
+  foot_y = robot.data.site_pos_w[:, action._site_local_ids, 1]
+  maximum_foot_error = torch.max(
+    torch.abs(foot_y - center_y.unsqueeze(1)), dim=1
+  ).values
+  edge = (
+    (centerline_error.abs() >= centerline_threshold)
+    | (maximum_foot_error >= centerline_threshold)
+  ).float()
+
+  intervention = (action.target_intervention_norm / 0.5).clamp(0.0, 1.0)
+  nominal_margin = (torch.relu(-action.psi_nominal) / 1.0).clamp(0.0, 1.0)
+  gravity = robot.data.projected_gravity_b
+  roll_angle = torch.atan2(gravity[:, 1], -gravity[:, 2]).abs()
+  pitch_angle = torch.atan2(
+    -gravity[:, 0],
+    torch.sqrt(gravity[:, 1].square() + gravity[:, 2].square()),
+  ).abs()
+  roll = (roll_angle / 0.60).clamp(0.0, 1.0)
+  pitch = (pitch_angle / 0.60).clamp(0.0, 1.0)
+  angular_velocity = (
+    torch.linalg.vector_norm(robot.data.root_link_ang_vel_b, dim=1) / 4.0
+  ).square().clamp(0.0, 1.0)
+
+  sensor = env.scene[sensor_name]
+  found = sensor.data.found
+  if found is None:
+    raise RuntimeError("specialist balance signal requires foot-contact state")
+  if found.ndim == 3 and found.shape[-1] == 1:
+    found = found.squeeze(-1)
+  in_contact = found > 0
+  foot_velocity = robot.data.site_lin_vel_w[:, action._site_local_ids, :2]
+  slip = (
+    torch.sum(
+      torch.linalg.vector_norm(foot_velocity, dim=-1).square()
+      * in_contact.float(),
+      dim=1,
+    )
+    / 1.0
+  ).clamp(0.0, 1.0)
+  phase = ((env.episode_length_buf * env.step_dt) / 0.6).unsqueeze(1)
+  offsets = torch.tensor((0.0, 0.5), device=env.device).view(1, 2)
+  expected_stance = ((phase + offsets) % 1.0) < 0.56
+  contact_mismatch = (expected_stance != in_contact).float().mean(dim=1)
+  return {
+    "centerline": centerline,
+    "heading": heading,
+    "edge": edge,
+    "intervention": intervention,
+    "nominal_margin": nominal_margin,
+    "roll": roll,
+    "pitch": pitch,
+    "angular_velocity": angular_velocity,
+    "slip": slip,
+    "contact_mismatch": contact_mismatch,
+  }
+
+
+def specialist_failure_signal(
+  env: ManagerBasedRlEnv,
+  mode: str,
+  weights: dict[str, float],
+  command_name: str = "twist",
+  action_name: str = "joint_pos",
+  asset_name: str = "robot",
+  sensor_name: str = "feet_ground_contact",
+) -> torch.Tensor:
+  """One mode-conditioned cost inserted into the single scalar reward."""
+  active = {
+    "lateral": {"centerline", "heading", "edge"},
+    "cbf": {"intervention", "nominal_margin"},
+    "balance": {
+      "roll",
+      "pitch",
+      "angular_velocity",
+      "slip",
+      "contact_mismatch",
+    },
+  }
+  if mode not in active:
+    raise ValueError(f"unsupported specialist failure-signal mode: {mode!r}")
+  if set(weights) != set().union(*active.values()):
+    raise ValueError("specialist failure-signal component set is incomplete")
+  if any(float(weight) < 0.0 for weight in weights.values()):
+    raise ValueError("specialist failure-signal weights must be non-negative")
+  if not math.isclose(sum(float(weights[name]) for name in active[mode]), 1.0):
+    raise ValueError("active specialist failure-signal weights must sum to one")
+  if any(float(weights[name]) != 0.0 for name in set(weights) - active[mode]):
+    raise ValueError("specialist failure signal contains cross-mode weight")
+  components = specialist_failure_signal_components(
+    env,
+    command_name=command_name,
+    action_name=action_name,
+    asset_name=asset_name,
+    sensor_name=sensor_name,
+  )
+  value = sum(float(weights[name]) * components[name] for name in active[mode])
+  env.extras["log"][f"Specialist/{mode}_failure_signal_mean"] = value.mean()
+  env.extras["specialist_failure_signal"] = value.detach().clone()
+  for name in active[mode]:
+    env.extras[f"specialist_{name}_component"] = components[name].detach().clone()
+  return value
 
 
 class IncrementalStairProgress:

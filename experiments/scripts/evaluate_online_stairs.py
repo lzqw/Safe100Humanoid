@@ -129,6 +129,11 @@ def evaluate_policy(
   filtered_violation_steps = torch.zeros(num_envs, device=device)
   min_nominal_margin = torch.full((num_envs,), torch.inf, device=device)
   min_filtered_margin = torch.full((num_envs,), torch.inf, device=device)
+  max_roll_signal = torch.zeros(num_envs, device=device)
+  max_pitch_signal = torch.zeros(num_envs, device=device)
+  max_angular_velocity_signal = torch.zeros(num_envs, device=device)
+  slip_signal_integral = torch.zeros(num_envs, device=device)
+  contact_mismatch_integral = torch.zeros(num_envs, device=device)
   correction_history = torch.zeros(
     num_envs, max_episode_steps, device=device
   )
@@ -206,6 +211,21 @@ def evaluate_policy(
         )
         min_nominal_margin = torch.minimum(min_nominal_margin, nominal_margin)
         min_filtered_margin = torch.minimum(min_filtered_margin, filtered_margin)
+        from src.tasks.stairs_cbf.mdp import specialist_failure_signal_components
+
+        specialist_components = specialist_failure_signal_components(base_env)
+        max_roll_signal = torch.maximum(
+          max_roll_signal, specialist_components["roll"]
+        )
+        max_pitch_signal = torch.maximum(
+          max_pitch_signal, specialist_components["pitch"]
+        )
+        max_angular_velocity_signal = torch.maximum(
+          max_angular_velocity_signal,
+          specialist_components["angular_velocity"],
+        )
+        slip_signal_integral += specialist_components["slip"]
+        contact_mismatch_integral += specialist_components["contact_mismatch"]
         centerline_error = getattr(
           command_term,
           "centerline_error",
@@ -258,6 +278,8 @@ def evaluate_policy(
         fell_all = base_env.termination_manager.get_term("fell_over")
         timeout_all = base_env.termination_manager.get_term("time_out")
         success_all = base_env.termination_manager.get_term("reached_top")
+        from src.tasks.stairs_cbf.hard_cases import classify_target_failure_mode
+
         for env_id in record_ids.tolist():
           reached = int(max_riser[env_id])
           episode_steps = max(1, int(steps[env_id]))
@@ -267,12 +289,33 @@ def evaluate_policy(
           counterfactual_correction_p95 = torch.quantile(
             counterfactual_correction_history[env_id, :episode_steps], 0.95
           )
+          fell = bool(fell_all[env_id])
+          success = bool(success_all[env_id])
+          failure_type = (
+            classify_target_failure_mode(
+              side_edge_breach=bool(
+                (min_root_edge_clearance[env_id] < 0.0)
+                | (min_foot_edge_clearance[env_id] < 0.0)
+              ),
+              max_abs_centerline_error=float(
+                max_abs_centerline_error[env_id]
+              ),
+              max_abs_heading_error=float(max_abs_heading_error[env_id]),
+              correction_max=float(correction_max[env_id]),
+              stair_half_width=stair_half_width,
+            )
+            if fell
+            else "success"
+            if success
+            else "timeout_or_other_nonfall"
+          )
           completed.append(
             {
               "episode": len(completed),
-              "success": bool(success_all[env_id]),
-              "fell": bool(fell_all[env_id]),
+              "success": success,
+              "fell": fell,
               "timed_out": bool(timeout_all[env_id]),
+              "failure_type": failure_type,
               "return": float(returns[env_id]),
               "steps": int(steps[env_id]),
               "episode_time_s": float(steps[env_id]) * step_dt,
@@ -359,6 +402,19 @@ def evaluate_policy(
                 operator_correction_steps[env_id]
                 / max(1.0, float(steps[env_id]))
               ),
+              "maximum_roll_signal": float(max_roll_signal[env_id]),
+              "maximum_pitch_signal": float(max_pitch_signal[env_id]),
+              "maximum_angular_velocity_signal": float(
+                max_angular_velocity_signal[env_id]
+              ),
+              "mean_slip_signal": float(
+                slip_signal_integral[env_id]
+                / max(1.0, float(steps[env_id]))
+              ),
+              "contact_mismatch_fraction": float(
+                contact_mismatch_integral[env_id]
+                / max(1.0, float(steps[env_id]))
+              ),
               "side_edge_breach": bool(
                 (min_root_edge_clearance[env_id] < 0.0)
                 | (min_foot_edge_clearance[env_id] < 0.0)
@@ -389,6 +445,11 @@ def evaluate_policy(
         filtered_violation_steps[done_ids] = 0.0
         min_nominal_margin[done_ids] = torch.inf
         min_filtered_margin[done_ids] = torch.inf
+        max_roll_signal[done_ids] = 0.0
+        max_pitch_signal[done_ids] = 0.0
+        max_angular_velocity_signal[done_ids] = 0.0
+        slip_signal_integral[done_ids] = 0.0
+        contact_mismatch_integral[done_ids] = 0.0
         correction_history[done_ids] = 0.0
         counterfactual_correction_history[done_ids] = 0.0
         steps_by_riser[done_ids] = 0.0
@@ -428,6 +489,18 @@ def evaluate_policy(
     for row in completed
     if row["minimum_filtered_margin"] is not None
   ]
+  failure_type_counts = {
+    failure_type: sum(
+      bool(row["fell"]) and row["failure_type"] == failure_type
+      for row in completed
+    )
+    for failure_type in (
+      "lateral_heading_drift",
+      "non_lateral_high_cbf_demand",
+      "non_lateral_balance_or_phase",
+    )
+  }
+  fall_count = sum(failure_type_counts.values())
   per_riser = {}
   for riser in range(n_risers):
     step_count = sum(int(row["steps_by_riser"][riser]) for row in completed)
@@ -460,6 +533,11 @@ def evaluate_policy(
     "initial_state_signature": initial_state_signature,
     "success_rate": sum(bool(row["success"]) for row in completed) / len(completed),
     "fall_rate": sum(bool(row["fell"]) for row in completed) / len(completed),
+    "failure_type_counts": failure_type_counts,
+    "failure_type_fractions": {
+      key: value / max(1, fall_count)
+      for key, value in failure_type_counts.items()
+    },
     "timeout_rate": sum(bool(row["timed_out"]) for row in completed) / len(completed),
     "mean_reached_riser": sum(int(row["max_riser"]) for row in completed) / len(completed),
     "mean_return": sum(float(row["return"]) for row in completed) / len(completed),
@@ -522,6 +600,21 @@ def evaluate_policy(
     ),
     "operator_correction_fraction": sum(
       float(row["operator_correction_fraction"]) for row in completed
+    ) / len(completed),
+    "mean_maximum_roll_signal": sum(
+      float(row["maximum_roll_signal"]) for row in completed
+    ) / len(completed),
+    "mean_maximum_pitch_signal": sum(
+      float(row["maximum_pitch_signal"]) for row in completed
+    ) / len(completed),
+    "mean_maximum_angular_velocity_signal": sum(
+      float(row["maximum_angular_velocity_signal"]) for row in completed
+    ) / len(completed),
+    "mean_slip_signal": sum(
+      float(row["mean_slip_signal"]) for row in completed
+    ) / len(completed),
+    "mean_contact_mismatch_fraction": sum(
+      float(row["contact_mismatch_fraction"]) for row in completed
     ) / len(completed),
     "side_edge_breach_rate": sum(
       bool(row["side_edge_breach"]) for row in completed

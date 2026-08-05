@@ -197,6 +197,11 @@ def _evaluate_state(
         "would_intervene_fraction",
         "nominal_violation_fraction",
         "filtered_violation_fraction",
+        "mean_maximum_roll_signal",
+        "mean_maximum_pitch_signal",
+        "mean_maximum_angular_velocity_signal",
+        "mean_slip_signal",
+        "mean_contact_mismatch_fraction",
       ):
         values = [float(summary[key]) for summary in replicate_summaries]
         aggregate[key] = sum(values) / len(values)
@@ -226,6 +231,23 @@ def _evaluate_state(
           if summary[key] is not None
         ]
         aggregate[key] = min(finite_values) if finite_values else None
+      failure_type_counts = {
+        failure_type: sum(
+          int(summary.get("failure_type_counts", {}).get(failure_type, 0))
+          for summary in replicate_summaries
+        )
+        for failure_type in (
+          "lateral_heading_drift",
+          "non_lateral_high_cbf_demand",
+          "non_lateral_balance_or_phase",
+        )
+      }
+      fall_count = sum(failure_type_counts.values())
+      aggregate["failure_type_counts"] = failure_type_counts
+      aggregate["failure_type_fractions"] = {
+        key: value / max(1, fall_count)
+        for key, value in failure_type_counts.items()
+      }
       output[domain] = aggregate
   return output
 
@@ -656,6 +678,434 @@ def _collect_and_update(
   return obs, losses
 
 
+def _actor_observation_batch(obs) -> torch.Tensor:
+  """Extract the actor-visible observation without admitting critic state."""
+  if isinstance(obs, torch.Tensor):
+    return obs
+  if isinstance(obs, dict) or callable(getattr(obs, "get", None)):
+    for key in ("policy", "actor", "observations"):
+      value = obs.get(key)
+      if isinstance(value, torch.Tensor):
+        return value
+  raise TypeError("specialist matching requires a tensor actor observation")
+
+
+def _collect_and_update_specialist(
+  runner,
+  obs,
+  *,
+  critic_only: bool,
+  specialist_mode: str,
+  failure_bank,
+  success_pool,
+  success_bank,
+  failure_fraction: float,
+  success_fraction: float,
+  specialist_generator: torch.Generator,
+  minimum_riser: int,
+):
+  """Collect one v17 on-policy rollout and update its single PPO actor/critic."""
+  from rsl_rl.utils import check_nan
+  from src.tasks.stairs_cbf.hard_cases import (
+    SPECIALIST_FAILURE_TYPES,
+    capture_hard_case_state,
+    classify_target_failure_mode,
+    hard_case_state_shape_mismatches,
+    match_specialist_success_counterexamples,
+    reset_rollout_with_specialist_banks,
+    restore_hard_case_state,
+    select_specialist_failure_candidates,
+    select_specialist_success_candidates,
+    specialist_history_window,
+  )
+  from src.tasks.stairs_cbf.mdp import specialist_failure_signal_components
+
+  if specialist_mode not in SPECIALIST_FAILURE_TYPES:
+    raise ValueError(f"unsupported specialist mode: {specialist_mode!r}")
+  if minimum_riser < 1:
+    raise ValueError("specialist minimum riser must be positive")
+  runner.alg.set_critic_only(critic_only)
+  runner.alg.clear_cbf_rollout()
+  runner.alg.train_mode()
+  del obs
+  obs, start_metrics = reset_rollout_with_specialist_banks(
+    runner.env,
+    failure_bank,
+    success_bank,
+    failure_fraction=failure_fraction,
+    success_fraction=success_fraction,
+    generator=specialist_generator,
+  )
+  device = runner.env.device
+  failure_slots = torch.zeros(runner.env.num_envs, dtype=torch.bool, device=device)
+  success_slots = torch.zeros_like(failure_slots)
+  failure_ids = torch.tensor(
+    start_metrics["failure_start_ids"], dtype=torch.long, device=device
+  )
+  success_ids = torch.tensor(
+    start_metrics["success_start_ids"], dtype=torch.long, device=device
+  )
+  if len(failure_ids):
+    failure_slots[failure_ids] = True
+  if len(success_ids):
+    success_slots[success_ids] = True
+  normal_slots = ~(failure_slots | success_slots)
+  persistent_slots = bool(failure_fraction or success_fraction)
+  _, maximum_history_steps = specialist_history_window(specialist_mode)
+  state_history = deque(maxlen=maximum_history_steps + 1)
+  actor_observation_history = deque(maxlen=maximum_history_steps + 1)
+  riser_history = deque(maxlen=maximum_history_steps + 1)
+  gait_phase_history = deque(maxlen=maximum_history_steps + 1)
+  support_foot_history = deque(maxlen=maximum_history_steps + 1)
+  delivered_command_history = deque(maxlen=maximum_history_steps + 1)
+  root_velocity_history = deque(maxlen=maximum_history_steps + 1)
+  cbf_active_history = deque(maxlen=maximum_history_steps + 1)
+  component_history = {
+    name: deque(maxlen=maximum_history_steps + 1)
+    for name in (
+      "centerline",
+      "heading",
+      "edge",
+      "intervention",
+      "nominal_margin",
+      "roll",
+      "pitch",
+      "angular_velocity",
+      "slip",
+      "contact_mismatch",
+    )
+  }
+  valid_steps = torch.zeros(
+    runner.env.num_envs, dtype=torch.long, device=device
+  )
+  episode_side_edge_breach = torch.zeros_like(failure_slots)
+  episode_max_abs_centerline_error = torch.zeros(
+    runner.env.num_envs, device=device
+  )
+  episode_max_abs_heading_error = torch.zeros_like(
+    episode_max_abs_centerline_error
+  )
+  episode_correction_max = torch.zeros_like(episode_max_abs_centerline_error)
+  failure_added = 0
+  success_pool_added = 0
+  target_falls_seen = 0
+  target_failures_admitted = 0
+  successful_episodes_seen = 0
+  rejected_failure_type_counts: dict[str, int] = {}
+  failure_restart_count = 0
+  success_restart_count = 0
+  normal_completed = 0
+  normal_successes = 0
+  normal_falls = 0
+
+  with torch.no_grad():
+    for _ in range(runner.cfg["num_steps_per_env"]):
+      unwrapped = runner.env.unwrapped
+      state_history.append(capture_hard_case_state(unwrapped))
+      actor_observation_history.append(
+        _actor_observation_batch(obs).detach().clone()
+      )
+      action_term = unwrapped.action_manager.get_term("joint_pos")
+      command_term = unwrapped.command_manager.get_term("twist")
+      terrain = unwrapped.scene.terrain
+      if terrain is None:
+        raise RuntimeError("specialist refinement requires stair terrain")
+      edge_x = action_term._edge_x[
+        terrain.terrain_levels, terrain.terrain_types
+      ]
+      root = unwrapped.scene["robot"]
+      root_x = root.data.root_link_pos_w[:, 0:1]
+      riser = torch.sum(root_x >= edge_x, dim=1).detach().clone()
+      riser_history.append(riser)
+      components = specialist_failure_signal_components(unwrapped)
+      for name, values in components.items():
+        component_history[name].append(values.detach().clone())
+      phase = ((unwrapped.episode_length_buf * unwrapped.step_dt) / 0.6) % 1.0
+      gait_phase_history.append(phase.detach().clone())
+      contact = unwrapped.scene["feet_ground_contact"].data.found
+      if contact is None:
+        raise RuntimeError("specialist matching requires foot contact state")
+      if contact.ndim == 3 and contact.shape[-1] == 1:
+        contact = contact.squeeze(-1)
+      contact = contact.bool()
+      scheduled_support = (phase >= 0.5).long()
+      support = torch.where(
+        contact[:, 0] & ~contact[:, 1],
+        torch.zeros_like(scheduled_support),
+        torch.where(
+          contact[:, 1] & ~contact[:, 0],
+          torch.ones_like(scheduled_support),
+          scheduled_support,
+        ),
+      )
+      support_foot_history.append(support.detach().clone())
+      delivered_command_history.append(
+        command_term.delivered_command.detach().clone()
+      )
+      root_velocity_history.append(root.data.root_link_lin_vel_b.detach().clone())
+      cbf_active_history.append(
+        (action_term.target_intervention_norm > 0.01).detach().clone()
+      )
+      centerline_error = getattr(
+        command_term,
+        "centerline_error",
+        torch.zeros(runner.env.num_envs, device=device),
+      )
+      heading_error = getattr(
+        command_term,
+        "heading_error",
+        torch.zeros(runner.env.num_envs, device=device),
+      )
+      stair_half_width = float(
+        getattr(command_term.cfg, "stair_half_width", 1.20)
+      )
+      episode_max_abs_centerline_error = torch.maximum(
+        episode_max_abs_centerline_error, centerline_error.abs()
+      )
+      episode_max_abs_heading_error = torch.maximum(
+        episode_max_abs_heading_error, heading_error.abs()
+      )
+      episode_correction_max = torch.maximum(
+        episode_correction_max, action_term.target_intervention_norm
+      )
+      patches = terrain.flat_patches["stair_targets"][
+        terrain.terrain_levels, terrain.terrain_types
+      ]
+      center_y = patches[:, 0, 1]
+      foot_y = root.data.site_pos_w[:, action_term._site_local_ids, 1]
+      foot_edge_breach = torch.max(
+        torch.abs(foot_y - center_y.unsqueeze(1)), dim=1
+      ).values >= stair_half_width
+      episode_side_edge_breach |= (
+        centerline_error.abs() >= stair_half_width
+      ) | foot_edge_breach
+
+      actions = runner.alg.act(obs)
+      obs, rewards, dones, extras = runner.env.step(actions.to(device))
+      check_nan(obs, rewards, dones)
+      extras = dict(extras)
+      # Only failure-precursor transitions receive the 0.75 actor weight.
+      # Successful counterexamples use the ordinary scalar-reward PPO weight.
+      extras["online_hard_case_transition"] = failure_slots.detach().clone()
+      done_mask = dones.bool()
+      timeouts = extras.get(
+        "time_outs", torch.zeros_like(done_mask, dtype=torch.bool)
+      ).bool()
+      fell = extras.get(
+        "online_fell", torch.zeros_like(done_mask, dtype=torch.bool)
+      ).bool()
+      magnitude = extras.get("cbf_intervention_magnitude")
+      if magnitude is not None:
+        episode_correction_max = torch.maximum(
+          episode_correction_max, magnitude
+        )
+      completed_normal = done_mask & normal_slots & ~timeouts
+      normal_completed += int(completed_normal.sum())
+      normal_falls += int((completed_normal & fell).sum())
+      normal_successes += int((completed_normal & ~fell).sum())
+
+      histories = None
+      terminal_ids = completed_normal.nonzero(as_tuple=False).flatten()
+      if len(terminal_ids):
+        histories = {
+          "states": list(state_history),
+          "observations": list(actor_observation_history),
+          "riser": list(riser_history),
+          "phase": list(gait_phase_history),
+          "support": list(support_foot_history),
+          "command": list(delivered_command_history),
+          "velocity": list(root_velocity_history),
+          "cbf_active": list(cbf_active_history),
+          "components": {
+            name: list(values) for name, values in component_history.items()
+          },
+        }
+      for env_id in terminal_ids.tolist():
+        assert histories is not None
+        episode_steps = min(int(valid_steps[env_id]) + 1, len(histories["states"]))
+        start = len(histories["states"]) - episode_steps
+        if bool(fell[env_id]):
+          target_falls_seen += 1
+          failure_type = classify_target_failure_mode(
+            side_edge_breach=bool(episode_side_edge_breach[env_id]),
+            max_abs_centerline_error=float(
+              episode_max_abs_centerline_error[env_id]
+            ),
+            max_abs_heading_error=float(episode_max_abs_heading_error[env_id]),
+            correction_max=float(episode_correction_max[env_id]),
+            stair_half_width=stair_half_width,
+          )
+          if failure_type != SPECIALIST_FAILURE_TYPES[specialist_mode]:
+            rejected_failure_type_counts[failure_type] = (
+              rejected_failure_type_counts.get(failure_type, 0) + 1
+            )
+            continue
+          target_failures_admitted += 1
+          candidates = select_specialist_failure_candidates(
+            specialist_mode,
+            torch.stack(histories["riser"][start:])[:, env_id],
+            {
+              name: torch.stack(values[start:])[:, env_id]
+              for name, values in histories["components"].items()
+            },
+            torch.stack(histories["phase"][start:])[:, env_id],
+            torch.stack(histories["support"][start:])[:, env_id],
+            torch.stack(histories["command"][start:])[:, env_id],
+            torch.stack(histories["velocity"][start:])[:, env_id],
+            torch.stack(histories["cbf_active"][start:])[:, env_id],
+            minimum_riser=minimum_riser,
+            failure_type=failure_type,
+          )
+          for candidate in candidates:
+            history_index = start + candidate.history_index
+            failure_added += failure_bank.add_specialist_candidate(
+              histories["states"][history_index],
+              env_id,
+              candidate,
+              histories["observations"][history_index][env_id],
+            )
+        else:
+          successful_episodes_seen += 1
+          candidates = select_specialist_success_candidates(
+            specialist_mode,
+            torch.stack(histories["riser"][start:])[:, env_id],
+            {
+              name: torch.stack(values[start:])[:, env_id]
+              for name, values in histories["components"].items()
+            },
+            torch.stack(histories["phase"][start:])[:, env_id],
+            torch.stack(histories["support"][start:])[:, env_id],
+            torch.stack(histories["command"][start:])[:, env_id],
+            torch.stack(histories["velocity"][start:])[:, env_id],
+            torch.stack(histories["cbf_active"][start:])[:, env_id],
+            minimum_riser=minimum_riser,
+          )
+          for candidate in candidates:
+            history_index = start + candidate.history_index
+            success_pool_added += success_pool.add_specialist_candidate(
+              histories["states"][history_index],
+              env_id,
+              candidate,
+              histories["observations"][history_index][env_id],
+            )
+
+      if persistent_slots:
+        restart_groups = (
+          (
+            "failure",
+            (done_mask & failure_slots).nonzero(as_tuple=False).flatten(),
+            failure_bank,
+          ),
+          (
+            "success",
+            (done_mask & success_slots).nonzero(as_tuple=False).flatten(),
+            success_bank,
+          ),
+        )
+        restored_any = False
+        for label, restart_ids, bank in restart_groups:
+          if not len(restart_ids):
+            continue
+          if len(bank) < len(restart_ids):
+            raise RuntimeError(
+              f"specialist {label} bank cannot refill persistent slots"
+            )
+          replay = bank.sample(
+            len(restart_ids), device=device, generator=specialist_generator
+          )
+          mismatches = hard_case_state_shape_mismatches(
+            capture_hard_case_state(unwrapped), replay
+          )
+          if mismatches:
+            raise RuntimeError(
+              f"persistent specialist {label} replay became incompatible: "
+              + "; ".join(mismatches[:5])
+            )
+          restore_hard_case_state(unwrapped, replay, restart_ids)
+          restored_any = True
+          if label == "failure":
+            failure_restart_count += len(restart_ids)
+          else:
+            success_restart_count += len(restart_ids)
+        if restored_any:
+          unwrapped.scene.write_data_to_sim()
+          unwrapped.sim.forward()
+          for sensor in unwrapped.scene.sensors.values():
+            sensor._invalidate_cache()
+          unwrapped.sim.sense()
+          unwrapped.observation_manager._obs_buffer = None
+          unwrapped.obs_buf = unwrapped.observation_manager.compute(
+            update_history=False
+          )
+          obs = runner.env.get_observations()
+
+      valid_steps = torch.where(
+        done_mask, torch.zeros_like(valid_steps), valid_steps + 1
+      )
+      episode_side_edge_breach[done_mask] = False
+      episode_max_abs_centerline_error[done_mask] = 0.0
+      episode_max_abs_heading_error[done_mask] = 0.0
+      episode_correction_max[done_mask] = 0.0
+      obs = obs.to(runner.device)
+      rewards = rewards.to(runner.device)
+      dones = dones.to(runner.device)
+      runner.alg.process_env_step(obs, rewards, dones, extras)
+
+    matching = (
+      match_specialist_success_counterexamples(
+        failure_bank, success_pool, success_bank
+      )
+      if len(failure_bank) and len(success_pool)
+      else {
+        "specialist_mode": specialist_mode,
+        "failure_entry_count": len(failure_bank),
+        "success_pool_entry_count": len(success_pool),
+        "matched_entry_count": len(success_bank),
+        "one_match_per_replayed_failure": False,
+        "matches": [],
+      }
+    )
+    credit_metrics = runner.alg.relabel_pre_intervention_costs()
+    fall_credit_metrics = runner.alg.redistribute_failure_focused_fall_penalty()
+    completion_metrics = {
+      "normal_start_completed_episode_count": normal_completed,
+      "normal_start_success_count": normal_successes,
+      "normal_start_fall_count": normal_falls,
+      "normal_start_success_rate": normal_successes / max(1, normal_completed),
+      "normal_start_fall_rate": normal_falls / max(1, normal_completed),
+    }
+    runner.alg.last_update_metrics.update(completion_metrics)
+    runner.alg.compute_returns(obs)
+    advantage_metrics = runner.alg.prepare_constrained_advantages()
+  losses = runner.alg.update()
+  losses.update(credit_metrics)
+  losses.update(fall_credit_metrics)
+  losses.update(advantage_metrics)
+  losses.update(completion_metrics)
+  losses.update(start_metrics)
+  losses.update(
+    {
+      "specialist_mode": specialist_mode,
+      "failure_bank_added": failure_added,
+      "success_pool_added": success_pool_added,
+      "failure_bank_size_after_rollout": len(failure_bank),
+      "success_pool_size_after_rollout": len(success_pool),
+      "success_bank_size_after_matching": len(success_bank),
+      "target_falls_seen": target_falls_seen,
+      "target_failures_admitted": target_failures_admitted,
+      "successful_episodes_seen": successful_episodes_seen,
+      "rejected_failure_type_counts": rejected_failure_type_counts,
+      "failure_restart_count": failure_restart_count,
+      "success_restart_count": success_restart_count,
+      "failure_bank_audit": failure_bank.audit_metadata(),
+      "success_pool_audit": success_pool.audit_metadata(),
+      "success_bank_audit": success_bank.audit_metadata(),
+      "success_matching": matching,
+    }
+  )
+  return obs, losses
+
+
 def _save_checkpoint(
   runner,
   path: Path,
@@ -664,6 +1114,8 @@ def _save_checkpoint(
   metadata: dict[str, Any],
   hard_case_bank=None,
   hard_case_generator: torch.Generator | None = None,
+  specialist_success_pool=None,
+  specialist_success_bank=None,
 ) -> None:
   payload = runner.alg.save()
   payload["iter"] = iteration
@@ -672,6 +1124,10 @@ def _save_checkpoint(
     payload["hard_case_bank"] = hard_case_bank.state_dict()
   if hard_case_generator is not None:
     payload["hard_case_generator_state"] = hard_case_generator.get_state()
+  if specialist_success_pool is not None:
+    payload["specialist_success_pool"] = specialist_success_pool.state_dict()
+  if specialist_success_bank is not None:
+    payload["specialist_success_bank"] = specialist_success_bank.state_dict()
   path.parent.mkdir(parents=True, exist_ok=True)
   torch.save(payload, path)
 
