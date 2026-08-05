@@ -32,6 +32,25 @@ from src.tasks.velocity.rl import VelocityOnPolicyRunner
 # same 64 x 1024 rollout is recomputed as one flattened GPU batch.
 BEHAVIOR_LOG_PROB_ATOL = 5.0e-4
 BEHAVIOR_DISTRIBUTION_PARAM_ATOL = 2.0e-5
+FULL_ACTOR_LAYER_MULTIPLIERS = (1.0, 1.0, 1.0, 1.0)
+CONSERVATIVE_ACTOR_LAYER_MULTIPLIERS = (0.10, 0.25, 0.50, 1.0)
+
+
+def brief_actor_layer_profile_is_valid(
+  multipliers: tuple[float, ...], *, failure_focused: bool
+) -> bool:
+  """Accept the legacy full-rate profile and v17's retention profile."""
+  allowed = [FULL_ACTOR_LAYER_MULTIPLIERS]
+  if failure_focused:
+    allowed.append(CONSERVATIVE_ACTOR_LAYER_MULTIPLIERS)
+  return any(
+    len(multipliers) == len(profile)
+    and all(
+      math.isclose(actual, expected, rel_tol=0.0, abs_tol=1.0e-12)
+      for actual, expected in zip(multipliers, profile, strict=True)
+    )
+    for profile in allowed
+  )
 
 
 def validate_behavior_log_prob(
@@ -1658,11 +1677,13 @@ class OnlineSafePPO(PPO):
         raise ValueError(
           f"brief PPO mode requires actor learning rate {required_actor_lr}"
         )
-      if any(
-        not math.isclose(value, 1.0, rel_tol=0.0, abs_tol=1.0e-12)
-        for value in self.actor_layer_multipliers
+      if not brief_actor_layer_profile_is_valid(
+        self.actor_layer_multipliers,
+        failure_focused=self.failure_focused_refinement,
       ):
-        raise ValueError("brief PPO requires the full actor at the configured LR")
+        raise ValueError(
+          "brief PPO actor layer LR profile is not an approved protocol"
+        )
       if not 0.25 <= self.std_scale_from_base <= 0.50:
         raise ValueError("brief PPO exploration std scale must be in [0.25, 0.50]")
       if self.failure_focused_refinement and not math.isclose(

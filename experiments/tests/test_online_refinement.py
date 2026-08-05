@@ -24,6 +24,7 @@ from src.tasks.stairs_cbf.online import (
   SafeImprovementScoreWeights,
   backtrack_actor_state,
   backward_intervention_credit,
+  brief_actor_layer_profile_is_valid,
   brief_candidate_gate,
   brief_candidate_precheck,
   brief_d0_retention_gate,
@@ -1815,6 +1816,24 @@ def test_behavior_distribution_parameter_audit_is_strict() -> None:
     assert "distribution is inconsistent" in str(exc)
   else:
     raise AssertionError("a true Gaussian parameter mismatch was not rejected")
+
+
+def test_failure_focused_brief_ppo_accepts_only_declared_layer_profiles() -> None:
+  assert brief_actor_layer_profile_is_valid(
+    (1.0, 1.0, 1.0, 1.0), failure_focused=False
+  )
+  assert brief_actor_layer_profile_is_valid(
+    (1.0, 1.0, 1.0, 1.0), failure_focused=True
+  )
+  assert brief_actor_layer_profile_is_valid(
+    (0.10, 0.25, 0.50, 1.0), failure_focused=True
+  )
+  assert not brief_actor_layer_profile_is_valid(
+    (0.10, 0.25, 0.50, 1.0), failure_focused=False
+  )
+  assert not brief_actor_layer_profile_is_valid(
+    (0.10, 0.25, 0.50), failure_focused=True
+  )
 
 
 def test_intervention_advantage_shaping_is_policy_only_and_immediate() -> None:
