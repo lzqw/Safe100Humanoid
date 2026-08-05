@@ -1,0 +1,53 @@
+{
+  "attempts": [
+    {
+      "balance_telemetry": {
+        "mean_contact_mismatch_fraction": 0.2567797557276208,
+        "mean_maximum_angular_velocity_signal": 1.0,
+        "mean_maximum_pitch_signal": 0.7678929979447275,
+        "mean_maximum_roll_signal": 0.5355599018512294,
+        "mean_slip_signal": 0.09191225823451532
+      },
+      "base_policy_only": true,
+      "candidate_seed": 2212,
+      "evaluation_seed_start": 1832100,
+      "evaluation_seeds": [
+        1832100,
+        1832101,
+        1832102,
+        1832103
+      ],
+      "failure_type_counts": {
+        "lateral_heading_drift": 21,
+        "non_lateral_balance_or_phase": 10,
+        "non_lateral_high_cbf_demand": 77
+      },
+      "failure_type_fractions": {
+        "lateral_heading_drift": 0.19444444444444445,
+        "non_lateral_balance_or_phase": 0.09259259259259259,
+        "non_lateral_high_cbf_demand": 0.7129629629629629
+      },
+      "fall_count": 108,
+      "fall_rate": 0.2109375,
+      "intervention_per_riser": 2.8160111121833324,
+      "mean_reached_riser": 10.265625,
+      "num_episodes": 512,
+      "parameters_sha256": "da07fd6cc606c3cb1e8b7064a5712cbc31b26f978a36f1b250f41ae2b0aae3d1",
+      "qualifies": true,
+      "second_failure_fraction": 0.19444444444444445,
+      "success_rate": 0.7890625,
+      "target_failure_fraction": 0.7129629629629629,
+      "target_failure_type": "non_lateral_high_cbf_demand"
+    }
+  ],
+  "base_policy_checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/retention_v13/arm_b_state_retention/accepted_final.pt",
+  "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "candidate_seeds": [
+    2212
+  ],
+  "exploratory": false,
+  "mode": "cbf",
+  "protocol": "Failure-Mode-Conditioned Brief PPO v17 context calibration",
+  "selection_rule": "first base-only context with 70--85% success, at least 100 falls, target failure fraction >= 60%, and second fraction <= 30%",
+  "target_failure_type": "non_lateral_high_cbf_demand"
+}
