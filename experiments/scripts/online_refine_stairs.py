@@ -771,16 +771,17 @@ def _collect_and_update_specialist(
   normal_slots = ~(failure_slots | success_slots)
   persistent_slots = bool(failure_fraction or success_fraction)
   _, maximum_history_steps = specialist_history_window(specialist_mode)
-  state_history = deque(maxlen=maximum_history_steps + 1)
-  actor_observation_history = deque(maxlen=maximum_history_steps + 1)
-  riser_history = deque(maxlen=maximum_history_steps + 1)
-  gait_phase_history = deque(maxlen=maximum_history_steps + 1)
-  support_foot_history = deque(maxlen=maximum_history_steps + 1)
-  delivered_command_history = deque(maxlen=maximum_history_steps + 1)
-  root_velocity_history = deque(maxlen=maximum_history_steps + 1)
-  cbf_active_history = deque(maxlen=maximum_history_steps + 1)
+  history_capacity = max(maximum_history_steps + 1, 384)
+  state_history = deque(maxlen=history_capacity)
+  actor_observation_history = deque(maxlen=history_capacity)
+  riser_history = deque(maxlen=history_capacity)
+  gait_phase_history = deque(maxlen=history_capacity)
+  support_foot_history = deque(maxlen=history_capacity)
+  delivered_command_history = deque(maxlen=history_capacity)
+  root_velocity_history = deque(maxlen=history_capacity)
+  cbf_active_history = deque(maxlen=history_capacity)
   component_history = {
-    name: deque(maxlen=maximum_history_steps + 1)
+    name: deque(maxlen=history_capacity)
     for name in (
       "centerline",
       "heading",
@@ -1105,6 +1106,7 @@ def _collect_and_update_specialist(
   losses.update(
     {
       "specialist_mode": specialist_mode,
+      "history_capacity_steps": history_capacity,
       "failure_bank_added": failure_added,
       "success_pool_added": success_pool_added,
       "failure_bank_size_after_rollout": len(failure_bank),

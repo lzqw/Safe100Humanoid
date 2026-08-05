@@ -153,6 +153,8 @@ def _validate_training_artifacts(
         reasons.append("CBF demand was used as a v17 training gate")
       if summary.get("d0_check_period_rounds") != 1:
         reasons.append("D0 catastrophic retention was not checked every round")
+      if summary.get("candidate_paired_episodes") != 256:
+        reasons.append("candidate gate did not use two paired 128-episode blocks")
       mixture = summary.get("integer_start_mixture_for_64_envs")
       if mixture != {"normal": 44, "failure": 10, "success": 10}:
         reasons.append("integer 70/15/15 replay allocation differs")

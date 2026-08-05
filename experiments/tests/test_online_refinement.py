@@ -352,6 +352,12 @@ def test_specialist_selectors_use_frozen_windows_and_balanced_buckets(
   )
   assert successes
   assert all(candidate.outcome == "success" for candidate in successes)
+  if mode in {"lateral", "cbf"}:
+    assert len({candidate.riser_index for candidate in successes}) == len(
+      successes
+    )
+  if mode == "balance":
+    assert {candidate.support_foot for candidate in successes} == {0, 1}
 
 
 def test_specialist_banks_match_successes_and_serialize_without_cross_mode_state() -> None:
@@ -1793,8 +1799,16 @@ def test_behavior_distribution_parameter_audit_is_strict() -> None:
   recomputed = tuple(value.clone() for value in stored)
   assert validate_behavior_distribution_params(stored, recomputed) == 0.0
 
+  gpu_roundoff = (stored[0].clone(), stored[1].clone())
+  gpu_roundoff[0][0, 0] = 1.1e-5
+  assert (
+    1.0e-5
+    < validate_behavior_distribution_params(stored, gpu_roundoff)
+    < 2.0e-5
+  )
+
   mismatched = (stored[0].clone(), stored[1].clone())
-  mismatched[0][0, 0] = 2.0e-5
+  mismatched[0][0, 0] = 3.0e-5
   try:
     validate_behavior_distribution_params(stored, mismatched)
   except RuntimeError as exc:

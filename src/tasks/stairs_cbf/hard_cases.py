@@ -692,9 +692,9 @@ def select_specialist_success_candidates(
   cbf_active_history: torch.Tensor,
   *,
   minimum_riser: int,
-  maximum_candidates: int = 4,
+  maximum_candidates: int = 8,
 ) -> tuple[SpecialistBankCandidate, ...]:
-  """Select diverse late states from a genuinely successful target episode."""
+  """Select bucket-diverse states across a genuinely successful crossing."""
   length = _validate_specialist_histories(
     mode=mode,
     riser_history=riser_history,
@@ -707,16 +707,16 @@ def select_specialist_success_candidates(
   )
   if maximum_candidates < 1:
     raise ValueError("maximum specialist candidates must be positive")
-  minimum_offset, maximum_offset = specialist_history_window(mode)
-  # Successful episodes terminate at the top; use the same temporal support
-  # as failures so matching cannot exploit terminal-time information.
-  maximum_offset = min(maximum_offset, length - 1)
-  if maximum_offset < minimum_offset:
+  # Failure windows are mode-specific, but successful counterexamples must
+  # cover every corresponding late riser.  Exclude only the final few states
+  # so replay does not start inside the terminal-success transition.
+  final_exclusion_steps = min(10, length)
+  stop_index = length - final_exclusion_steps
+  if stop_index <= 0:
     return ()
   signal = _specialist_signal(mode, component_histories)
   best_by_bucket: dict[str, SpecialistBankCandidate] = {}
-  for offset in range(minimum_offset, maximum_offset + 1):
-    index = length - 1 - offset
+  for index in range(stop_index):
     riser = int(riser_history[index])
     if riser < minimum_riser:
       continue
@@ -725,8 +725,8 @@ def select_specialist_success_candidates(
     bucket = _specialist_bucket(mode, riser, phase, support)
     # Prefer informative successful states, but keep priority bounded away
     # from zero so low-cost counterexamples remain sampleable.
-    priority = float(riser) + float(signal[index]) + 0.05 * (
-      (maximum_offset - offset) / max(1, maximum_offset - minimum_offset)
+    priority = 1.0 + float(signal[index]) + 0.05 * (
+      index / max(1, stop_index - 1)
     )
     candidate = _candidate_from_history(
       mode=mode,
@@ -746,10 +746,39 @@ def select_specialist_success_candidates(
     previous = best_by_bucket.get(bucket)
     if previous is None or candidate.priority > previous.priority:
       best_by_bucket[bucket] = candidate
-  ordered = sorted(
-    best_by_bucket.values(),
-    key=lambda candidate: (-candidate.priority, candidate.balance_bucket),
-  )
+  if not best_by_bucket:
+    return ()
+  if mode == "lateral":
+    ordered = sorted(
+      best_by_bucket.values(),
+      key=lambda candidate: (
+        candidate.riser_index,
+        -candidate.priority,
+        candidate.balance_bucket,
+      ),
+    )
+  elif mode == "balance":
+    ordered = sorted(
+      best_by_bucket.values(),
+      key=lambda candidate: (
+        min(3, max(0, int(math.floor(candidate.gait_phase * 4.0)))),
+        candidate.support_foot,
+        -candidate.priority,
+      ),
+    )
+  else:
+    by_riser: dict[int, list[SpecialistBankCandidate]] = {}
+    for candidate in best_by_bucket.values():
+      by_riser.setdefault(candidate.riser_index, []).append(candidate)
+    for candidates in by_riser.values():
+      candidates.sort(
+        key=lambda candidate: (-candidate.priority, candidate.balance_bucket)
+      )
+    ordered = []
+    for rank in range(max(len(candidates) for candidates in by_riser.values())):
+      for riser in sorted(by_riser):
+        if rank < len(by_riser[riser]):
+          ordered.append(by_riser[riser][rank])
   return tuple(ordered[:maximum_candidates])
 
 

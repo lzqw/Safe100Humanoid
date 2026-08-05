@@ -52,6 +52,7 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--rollout-steps", type=int, default=1024)
   parser.add_argument("--online-rounds", type=int, default=5)
   parser.add_argument("--candidate-num-episodes", type=int, default=128)
+  parser.add_argument("--candidate-eval-repeats", type=int, default=2)
   parser.add_argument("--d0-check-num-episodes", type=int, default=128)
   parser.add_argument("--final-eval-num-episodes", type=int, default=128)
   parser.add_argument(
@@ -95,6 +96,7 @@ def _validate_protocol(args: argparse.Namespace) -> None:
     args.rollout_steps,
     args.online_rounds,
     args.candidate_num_episodes,
+    args.candidate_eval_repeats,
     args.d0_check_num_episodes,
     args.final_eval_num_episodes,
     args.bank_capacity,
@@ -108,6 +110,7 @@ def _validate_protocol(args: argparse.Namespace) -> None:
       "rollout_steps": (args.rollout_steps, 1024),
       "online_rounds": (args.online_rounds, 5),
       "candidate_num_episodes": (args.candidate_num_episodes, 128),
+      "candidate_eval_repeats": (args.candidate_eval_repeats, 2),
       "d0_check_num_episodes": (args.d0_check_num_episodes, 128),
     }
     mismatches = {
@@ -482,6 +485,7 @@ def main() -> None:
       num_envs=args.candidate_num_episodes,
       num_episodes=args.candidate_num_episodes,
       seed=target_seed,
+      repeats=args.candidate_eval_repeats,
       device=args.gate_device,
       runtime_filter=True,
       deployment_context=context_path,
@@ -510,6 +514,7 @@ def main() -> None:
           num_envs=args.candidate_num_episodes,
           num_episodes=args.candidate_num_episodes,
           seed=target_seed,
+          repeats=args.candidate_eval_repeats,
           device=args.gate_device,
           runtime_filter=True,
           deployment_context=context_path,
@@ -678,7 +683,11 @@ def main() -> None:
     "failure_precursor_policy_weight": args.failure_policy_weight,
     "success_counterexample_policy_weight": 1.0,
     "candidate_fractions": list(args.candidate_fractions),
-    "candidate_paired_episodes": args.candidate_num_episodes,
+    "candidate_eval_batch_size": args.candidate_num_episodes,
+    "candidate_eval_repeats": args.candidate_eval_repeats,
+    "candidate_paired_episodes": (
+      args.candidate_num_episodes * args.candidate_eval_repeats
+    ),
     "target_training_score": "success_rate - fall_rate",
     "target_fall_tolerance": thresholds.maximum_target_fall_increase,
     "training_maximum_kl": thresholds.maximum_kl,

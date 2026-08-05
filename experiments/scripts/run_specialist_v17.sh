@@ -36,6 +36,7 @@ export PYTHONUNBUFFERED=1
   --rollout-steps 1024 \
   --online-rounds 5 \
   --candidate-num-episodes 128 \
+  --candidate-eval-repeats 2 \
   --d0-check-num-episodes 128 \
   --final-eval-num-episodes 128 \
   --candidate-fractions 0.5 1.0 1.5 \

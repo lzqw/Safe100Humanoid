@@ -26,10 +26,12 @@ from src.tasks.velocity.rl import VelocityOnPolicyRunner
 # few ULPs even though every distribution parameter and sampled action is
 # unchanged.  Keep this far below PPO-scale changes while avoiding false
 # failures observed at 2.57e-4 on a 64 x 1024 rollout.  Distribution
-# parameters remain guarded independently at 1e-5, and the rollout audit
-# still requires bitwise-identical stored policy actions.
+# parameters remain guarded independently at 2e-5, and the rollout audit
+# still requires bitwise-identical stored policy actions.  The parameter
+# tolerance covers the observed 1.049e-5 GEMM batch-shape roundoff when the
+# same 64 x 1024 rollout is recomputed as one flattened GPU batch.
 BEHAVIOR_LOG_PROB_ATOL = 5.0e-4
-BEHAVIOR_DISTRIBUTION_PARAM_ATOL = 1.0e-5
+BEHAVIOR_DISTRIBUTION_PARAM_ATOL = 2.0e-5
 
 
 def validate_behavior_log_prob(
