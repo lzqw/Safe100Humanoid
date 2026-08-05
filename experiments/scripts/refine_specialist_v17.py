@@ -35,6 +35,11 @@ TRAINING_SOURCE_FILES = (
   "src/tasks/stairs_cbf/online.py",
 )
 
+# Keep the pretrained representation close to pi0 while allowing the output
+# layer to express a mode-local correction.  The maximum actor LR remains the
+# frozen v17 value (5e-6); only the earlier, more global layers are damped.
+V17_ACTOR_LAYER_MULTIPLIERS = (0.10, 0.25, 0.50, 1.0)
+
 
 def _finite_actor_state(state: dict[str, torch.Tensor]) -> bool:
   return all(bool(torch.isfinite(value).all()) for value in state.values())
@@ -52,7 +57,7 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--rollout-steps", type=int, default=1024)
   parser.add_argument("--online-rounds", type=int, default=5)
   parser.add_argument("--candidate-num-episodes", type=int, default=128)
-  parser.add_argument("--candidate-eval-repeats", type=int, default=2)
+  parser.add_argument("--candidate-eval-repeats", type=int, default=4)
   parser.add_argument("--d0-check-num-episodes", type=int, default=128)
   parser.add_argument("--final-eval-num-episodes", type=int, default=128)
   parser.add_argument(
@@ -110,7 +115,7 @@ def _validate_protocol(args: argparse.Namespace) -> None:
       "rollout_steps": (args.rollout_steps, 1024),
       "online_rounds": (args.online_rounds, 5),
       "candidate_num_episodes": (args.candidate_num_episodes, 128),
-      "candidate_eval_repeats": (args.candidate_eval_repeats, 2),
+      "candidate_eval_repeats": (args.candidate_eval_repeats, 4),
       "d0_check_num_episodes": (args.d0_check_num_episodes, 128),
     }
     mismatches = {
@@ -196,7 +201,8 @@ def _validate_algorithm(runner) -> dict[str, Any]:
     and all(checks[name] == 0.0 for name in zero_fields)
     and math.isclose(checks["actor_learning_rate"], 5.0e-6)
     and math.isclose(checks["critic_learning_rate"], 1.0e-4)
-    and checks["actor_layer_multipliers"] == [1.0, 1.0, 1.0, 1.0]
+    and checks["actor_layer_multipliers"]
+    == list(V17_ACTOR_LAYER_MULTIPLIERS)
     and checks["ppo_epochs"] == 1
     and math.isclose(checks["ppo_clip"], 0.05)
     and math.isclose(checks["target_kl"], 0.003)
@@ -314,7 +320,7 @@ def main() -> None:
   alg_cfg = agent_cfg.algorithm
   alg_cfg.actor_learning_rate = args.actor_learning_rate
   alg_cfg.critic_learning_rate = args.critic_learning_rate
-  alg_cfg.actor_layer_multipliers = (1.0, 1.0, 1.0, 1.0)
+  alg_cfg.actor_layer_multipliers = V17_ACTOR_LAYER_MULTIPLIERS
   alg_cfg.log_std_learning_rate = 0.0
   alg_cfg.std_scale_from_base = 0.35
   alg_cfg.pre_intervention_weight = 0.0
@@ -682,6 +688,9 @@ def main() -> None:
     },
     "failure_precursor_policy_weight": args.failure_policy_weight,
     "success_counterexample_policy_weight": 1.0,
+    "actor_layer_learning_rate_multipliers": list(
+      V17_ACTOR_LAYER_MULTIPLIERS
+    ),
     "candidate_fractions": list(args.candidate_fractions),
     "candidate_eval_batch_size": args.candidate_num_episodes,
     "candidate_eval_repeats": args.candidate_eval_repeats,
