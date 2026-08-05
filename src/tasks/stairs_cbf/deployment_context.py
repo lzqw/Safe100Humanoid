@@ -345,7 +345,7 @@ def generate_specialist_context(mode: str, candidate_seed: int) -> dict[str, Any
     # directly steering either foot toward a stair edge. Candidate parity
     # covers forward- and backward-biased plant response.
     direction = -1.0 if candidate_seed % 2 else 1.0
-    amplitude = direction * (0.010 + 0.030 * difficulty)
+    amplitude = direction * (0.011 + 0.031 * difficulty)
     action_bias = tuple(
       round(value, 6)
       for value in (
@@ -482,7 +482,7 @@ def generate_specialist_context(mode: str, candidate_seed: int) -> dict[str, Any
       centerline_max_lateral_velocity=0.50,
       centerline_max_yaw_velocity=1.00,
       toe_margin=0.040,
-      foot_friction=round(0.515 - 0.26 * difficulty, 6),
+      foot_friction=round(0.52 - 0.26 * difficulty, 6),
       failure_signal_scale=0.35,
       **zero_weights,
     )

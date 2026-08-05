@@ -109,6 +109,7 @@ def _validate_training_artifacts(
   summaries: dict[str, Any] = {mode: {} for mode in MODES}
   base_file_hashes: set[str] = set()
   initial_actor_hashes: set[str] = set()
+  source_manifests: set[str] = set()
   for mode in MODES:
     for seed in seeds:
       run_dir = training_root / mode / f"seed{seed}"
@@ -131,6 +132,13 @@ def _validate_training_artifacts(
         reasons.append("raw policy action was not retained for PPO")
       if summary.get("independent_training_branch") is not True:
         reasons.append("training branch isolation is not attested")
+      source_manifest = summary.get("source_file_sha256")
+      if not isinstance(source_manifest, dict) or not source_manifest:
+        reasons.append("training source-file manifest is missing")
+      else:
+        source_manifests.add(
+          json.dumps(source_manifest, sort_keys=True, separators=(",", ":"))
+        )
       if summary.get("deployment_context", {}).get("parameters_sha256") != contexts[
         mode
       ]["parameters_sha256"]:
@@ -174,11 +182,15 @@ def _validate_training_artifacts(
       }
   if len(base_file_hashes) != 1 or len(initial_actor_hashes) != 1:
     raise RuntimeError("the nine specialists did not start from one common pi0")
+  if len(source_manifests) != 1:
+    raise RuntimeError("the nine specialists did not use one source manifest")
   return checkpoints, {
     "base_policy_checkpoint_sha256_values": sorted(base_file_hashes),
     "initial_actor_sha256_values": sorted(initial_actor_hashes),
     "same_base_policy_file_for_all_nine_jobs": True,
     "same_initial_actor_for_all_nine_jobs": True,
+    "same_source_files_for_all_nine_jobs": True,
+    "source_file_sha256": json.loads(next(iter(source_manifests))),
     "runs": summaries,
   }
 

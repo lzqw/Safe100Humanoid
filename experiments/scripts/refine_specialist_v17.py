@@ -23,6 +23,19 @@ from online_refine_stairs import (
 )
 
 
+TRAINING_SOURCE_FILES = (
+  "experiments/scripts/evaluate_online_stairs.py",
+  "experiments/scripts/online_refine_stairs.py",
+  "experiments/scripts/refine_specialist_v17.py",
+  "src/tasks/stairs_cbf/command.py",
+  "src/tasks/stairs_cbf/config.py",
+  "src/tasks/stairs_cbf/deployment_context.py",
+  "src/tasks/stairs_cbf/hard_cases.py",
+  "src/tasks/stairs_cbf/mdp.py",
+  "src/tasks/stairs_cbf/online.py",
+)
+
+
 def _finite_actor_state(state: dict[str, torch.Tensor]) -> bool:
   return all(bool(torch.isfinite(value).all()) for value in state.values())
 
@@ -286,6 +299,9 @@ def main() -> None:
   if context["specialist_mode"] != args.mode:
     raise ValueError("frozen context mode does not match requested specialist")
   context_hash = context["parameters_sha256"]
+  source_file_sha256 = {
+    relative: _file_sha256(repo / relative) for relative in TRAINING_SOURCE_FILES
+  }
   task = "Unitree-G1-Stairs-Online-DQHMED"
   env_cfg = load_env_cfg(task)
   context_metadata = apply_frozen_deployment_context(
@@ -643,6 +659,7 @@ def main() -> None:
     "raw_policy_action_for_ppo": True,
     "executed_action": "runtime_cbf_safe_action",
     "independent_training_branch": True,
+    "source_file_sha256": source_file_sha256,
     "base_policy_checkpoint": str(checkpoint),
     "base_policy_checkpoint_sha256": _file_sha256(checkpoint),
     "initial_actor_sha256": initial_actor_sha256,
