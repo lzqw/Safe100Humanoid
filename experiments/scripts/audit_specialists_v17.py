@@ -287,7 +287,7 @@ def main() -> None:
 
   raw: dict[str, Any] = {}
   baseline_cache: dict[
-    tuple[int, str], tuple[dict[str, Any], list[dict[str, str]]]
+    tuple[int, str, int], tuple[dict[str, Any], list[dict[str, str]]]
   ] = {}
   rows: dict[str, dict[int, dict[str, dict[str, list[dict[str, str]]]]]] = {
     mode: {} for mode in MODES
@@ -343,7 +343,11 @@ def main() -> None:
         deployment_context = (
           None if eval_mode == "D0" else context_paths[eval_mode]
         )
-        baseline_key = (adaptation_seed, eval_mode)
+        # The same scene is diagonal (512) for its own specialist and
+        # off-diagonal (256) for the other two.  Cache aggregates at their
+        # declared row count; _evaluate_state resume still reuses the common
+        # first two raw 128-episode blocks when extending the cache to four.
+        baseline_key = (adaptation_seed, eval_mode, episode_count)
         if baseline_key not in baseline_cache:
           baseline_eval = _evaluate_state(
             runner,
