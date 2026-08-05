@@ -1,0 +1,222 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-08-05T16:32:07+08:00",
+  "status": "development_holdout_passed_formal_pending",
+  "evidence_class": "development_only",
+  "code": {
+    "branch": "feature/online-safe-refinement",
+    "commit": "f2ef800",
+    "remote_tests_passed": 64,
+    "remote_tests_failed": 0
+  },
+  "context": {
+    "mode": "lateral",
+    "target_failure_type": "lateral_heading_drift",
+    "parameters_sha256": "e79dad659a30c99837c0c9ff11da2186a01b9dcbfd3bc1ee118e8f77b173bf85",
+    "file_sha256": "db4bb299278c02734aa54bfb4d94b8684a21d5bc731deff522964fba86650eb9"
+  },
+  "protocol": {
+    "adaptation_seed": 17,
+    "num_envs": 64,
+    "rollout_steps": 1024,
+    "online_rounds": 5,
+    "actor_learning_rate_max": 5e-06,
+    "critic_learning_rate": 0.0001,
+    "ppo_epochs": 1,
+    "ppo_clip": 0.05,
+    "target_kl": 0.003,
+    "hard_kl_limit": 0.01,
+    "candidate_fractions": [0.5, 1.0, 1.5],
+    "candidate_eval_repeats": 4,
+    "candidate_paired_episodes": 512,
+    "start_mixture": {
+      "normal": 0.7,
+      "failure": 0.15,
+      "matched_success": 0.15
+    },
+    "failure_precursor_policy_weight": 0.75,
+    "success_counterexample_policy_weight": 1.5,
+    "actor_layer_learning_rate_multipliers": [0.1, 0.25, 0.5, 1.0],
+    "runtime_cbf": true,
+    "single_scalar_reward": true,
+    "retention_bank_count": 0,
+    "auxiliary_actor_loss_count": 0
+  },
+  "bank_discovery": {
+    "discovery_rollouts": 1,
+    "target_failures": 114,
+    "successful_trajectory_pool": 444,
+    "matched_successes": 114,
+    "unmatched_failures": 0
+  },
+  "actors": {
+    "pi0_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+    "pi0_actor_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+    "v6_checkpoint_sha256": "cb5cc638307ff735d29db3db40281c99cf2b62621a644104cebb3c0071556525",
+    "v6_actor_sha256": "75f51f3fb422ff9fcdf4ed108e9b4d727d316831aed93777b7c0a1ffc3750937"
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "accepted_fraction": null,
+      "old_success_rate": 0.779296875,
+      "old_fall_rate": 0.220703125,
+      "candidates": [
+        {"fraction": 0.5, "success_rate": 0.76171875, "fall_rate": 0.23828125, "passed": false},
+        {"fraction": 1.0, "success_rate": 0.76953125, "fall_rate": 0.23046875, "passed": false},
+        {"fraction": 1.5, "success_rate": 0.7734375, "fall_rate": 0.2265625, "passed": false}
+      ]
+    },
+    {
+      "round": 2,
+      "accepted_fraction": null,
+      "old_success_rate": 0.794921875,
+      "old_fall_rate": 0.205078125,
+      "candidates": [
+        {"fraction": 0.5, "success_rate": 0.755859375, "fall_rate": 0.244140625, "passed": false},
+        {"fraction": 1.0, "success_rate": 0.771484375, "fall_rate": 0.228515625, "passed": false},
+        {"fraction": 1.5, "success_rate": 0.79296875, "fall_rate": 0.20703125, "passed": false}
+      ]
+    },
+    {
+      "round": 3,
+      "accepted_fraction": 0.5,
+      "old_success_rate": 0.76953125,
+      "old_fall_rate": 0.228515625,
+      "accepted_success_rate": 0.7734375,
+      "accepted_fall_rate": 0.2265625,
+      "target_score_delta": 0.005859375,
+      "d0_baseline_success_rate": 0.9140625,
+      "d0_candidate_success_rate": 0.9296875,
+      "d0_passed": true
+    },
+    {
+      "round": 4,
+      "accepted_fraction": 1.5,
+      "old_success_rate": 0.76953125,
+      "old_fall_rate": 0.23046875,
+      "accepted_success_rate": 0.7890625,
+      "accepted_fall_rate": 0.2109375,
+      "target_score_delta": 0.0390625,
+      "d0_baseline_success_rate": 0.9140625,
+      "d0_candidate_success_rate": 0.8828125,
+      "d0_passed": true
+    },
+    {
+      "round": 5,
+      "accepted_fraction": 1.5,
+      "old_success_rate": 0.76171875,
+      "old_fall_rate": 0.23828125,
+      "accepted_success_rate": 0.7890625,
+      "accepted_fall_rate": 0.2109375,
+      "target_score_delta": 0.0546875,
+      "d0_baseline_success_rate": 0.9140625,
+      "d0_candidate_success_rate": 0.9375,
+      "d0_passed": true
+    }
+  ],
+  "fresh_paired_holdout": {
+    "domain": "DQHMED",
+    "runtime_cbf": true,
+    "seeds": [1854000, 1854001, 1854002, 1854003],
+    "episodes_per_seed": 128,
+    "paired_episode_count": 512,
+    "gate_seed_reuse": false,
+    "initial_state_signatures_match": true,
+    "blocks": [
+      {
+        "seed": 1854000,
+        "initial_state_signature": "52729d7d8df3f92800e1c022c695e5513cd4049079836de2d69b292c8bb2ccae",
+        "pi0_success_rate": 0.7265625,
+        "v6_success_rate": 0.78125,
+        "pi0_fall_rate": 0.2734375,
+        "v6_fall_rate": 0.21875,
+        "repairs": 17,
+        "regressions": 10
+      },
+      {
+        "seed": 1854001,
+        "initial_state_signature": "0de790779604f19b95be4ee40f23ef323971aaa5b7fc55d5b832b9a7d99791b0",
+        "pi0_success_rate": 0.71875,
+        "v6_success_rate": 0.8203125,
+        "pi0_fall_rate": 0.28125,
+        "v6_fall_rate": 0.1796875,
+        "repairs": 22,
+        "regressions": 9
+      },
+      {
+        "seed": 1854002,
+        "initial_state_signature": "4a76c36c0de98263696cca1d45b470d0b399573fdd3eacedaf99c0f30411d425",
+        "pi0_success_rate": 0.7265625,
+        "v6_success_rate": 0.765625,
+        "pi0_fall_rate": 0.2734375,
+        "v6_fall_rate": 0.234375,
+        "repairs": 20,
+        "regressions": 15
+      },
+      {
+        "seed": 1854003,
+        "initial_state_signature": "5beee9a2a663ddae8658395684d91122e390a667d65efee0245430175354d260",
+        "pi0_success_rate": 0.78125,
+        "v6_success_rate": 0.78125,
+        "pi0_fall_rate": 0.21875,
+        "v6_fall_rate": 0.21875,
+        "repairs": 14,
+        "regressions": 14
+      }
+    ],
+    "aggregate": {
+      "pi0_success_count": 378,
+      "v6_success_count": 403,
+      "pi0_fall_count": 134,
+      "v6_fall_count": 109,
+      "pi0_success_rate": 0.73828125,
+      "v6_success_rate": 0.787109375,
+      "success_rate_delta": 0.048828125,
+      "pi0_fall_rate": 0.26171875,
+      "v6_fall_rate": 0.212890625,
+      "fall_rate_delta": -0.048828125,
+      "pi0_score": 0.4765625,
+      "v6_score": 0.57421875,
+      "score_delta": 0.09765625,
+      "repairs": 73,
+      "regressions": 48,
+      "net_repairs": 25,
+      "failure_types_pi0": {
+        "lateral_heading_drift": 114,
+        "non_lateral_balance_or_phase": 7,
+        "non_lateral_high_cbf_demand": 13
+      },
+      "failure_types_v6": {
+        "lateral_heading_drift": 95,
+        "non_lateral_balance_or_phase": 6,
+        "non_lateral_high_cbf_demand": 8
+      }
+    },
+    "paired_inference": {
+      "bootstrap_seed": 1706,
+      "bootstrap_resamples": 200000,
+      "success_delta_bootstrap_95": [0.0078125, 0.091796875],
+      "mcnemar_exact_two_sided_p": 0.02870319917373686
+    }
+  },
+  "artifact_sha256": {
+    "specialist_summary.json": "8a02ef17021a268a0628a6cfd84d4a5a22ba5ec085b2ac374aeec8b94cad9970",
+    "online_rounds.json": "20df846e97259e617b75ab5186c472d22120cf8b0a7cf37068fef18f5bc8e4e3",
+    "bank_discovery.json": "1aeee3668ce634895d60ac2d29ed30392ee5e044ad35bfd872b21d886e310e16",
+    "paired_holdout_512/baseline/seed1854000.csv": "db6a211d01e487cf09b228724d1e757a6d645f470a8f63bc82a111dc8db2561a",
+    "paired_holdout_512/baseline/seed1854001.csv": "3f57ef083ffbe5d9f5e769f18d3ef1a2338ffdd369aa24ad190910eafb6fedbe",
+    "paired_holdout_512/baseline/seed1854002.csv": "46d9c24cd935fa69db239ca2e3cdc0061e96189dc8cedb1fca2b8504d8a34cbc",
+    "paired_holdout_512/baseline/seed1854003.csv": "c4d122dd01799ab2ba303762069a703ee934e8e10d9d47ca77bf20bb1d48fabf",
+    "paired_holdout_512/final/seed1854000.csv": "40eb6ba7c8f57923f2c62734b18761b8e99b221d825808331b1309486bbbdd82",
+    "paired_holdout_512/final/seed1854001.csv": "9cc8a4bf06effa450d83cd080529c2bcd19cc190e74e8856aed7afe22eb22ea6",
+    "paired_holdout_512/final/seed1854002.csv": "aaf37af3d83025f39efe1a14d58861e1f5bcaf2db99bcb4e90a16c929aeff44c",
+    "paired_holdout_512/final/seed1854003.csv": "0395fb5b29bc951f3ae76ebc1079de65bb07f41c5458e9a9655a39a974bd2083"
+  },
+  "formal_status": {
+    "training_runs_required": 9,
+    "adaptation_seeds": [42, 142, 242],
+    "modes": ["lateral", "cbf", "balance"],
+    "promotion_decision": "pending"
+  }
+}
