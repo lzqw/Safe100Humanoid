@@ -21,14 +21,16 @@
     "eval_batch_size": 128,
     "first_qualifying_candidate_is_frozen": true,
     "lateral_candidate_seeds": [
-      7106,
-      7107,
-      7108,
-      7109,
-      7110,
-      7111
+      7312,
+      7313,
+      7314,
+      7315,
+      7316,
+      7317,
+      7318,
+      7319
     ],
-    "lateral_evaluation_seed_base": 4700000,
+    "lateral_evaluation_seed_base": 4720000,
     "lateral_maximum_second_failure_fraction": 0.3,
     "lateral_minimum_target_failure_fraction": 0.8,
     "minimum_fall_count": 100,
@@ -58,8 +60,15 @@
     "formal_adaptation_must_follow_calibration": true,
     "formal_audit_must_follow_all_ten_sealed_adaptations": true,
     "historical_v17_and_v18_results_may_not_be_relabelled_as_v19": true,
-    "no_formal_v19_outcomes_seen_before_freeze": true,
+    "no_adapted_policy_or_formal_audit_outcomes_seen_before_revision_2_freeze": true,
+    "revision_1_base_only_calibration_failure_seen_before_revision_2_freeze": true,
     "smoke_and_exploratory_results_are_not_formal_evidence": true
+  },
+  "failure_classification": {
+    "attitude_outcomes_are_not_primary_causes": true,
+    "contact_stability_context": "first sustained severe support-foot-slip or lateral event wins; contact therefore precedes later terminal lateral drift",
+    "lateral_context": "an observed geometric lateral or heading event is primary in the lateral-instrumented family even when stair slip is an earlier mediator; without a lateral event, contact instability remains contact",
+    "support_foot_slip_only": true
   },
   "independent_specialist_acceptance": {
     "confidence_interval_is_a_gate": false,
@@ -85,7 +94,19 @@
   },
   "policy_method": "Observable Failure-Conditioned Brief PPO v19",
   "protocol_id": "safe100-observable-failure-conditioned-v19",
-  "protocol_revision": 1,
+  "protocol_revision": 2,
+  "revision_history": [
+    {
+      "commit": "45aca13add2f03a09e5783f4624bf3a681c740e3",
+      "outcome": "all six declared lateral contexts failed the 80% mechanism-purity gate; no context was selected and no adaptation began",
+      "revision": 1,
+      "scope": "base-policy-only calibration preflight"
+    },
+    {
+      "changes": "make failure-event precedence explicit by perturbation family and replace lateral candidates/evaluation randomness with unseen values",
+      "revision": 2
+    }
+  ],
   "removed_conditions": {
     "cbf_specialist": true,
     "cross_specialist_all_pass_requirement": true,
@@ -107,9 +128,12 @@
       "experiments/scripts/evaluate_online_stairs.py",
       "experiments/scripts/online_refine_stairs.py",
       "experiments/scripts/calibrate_specialist_contexts_v19.py",
+      "experiments/scripts/run_specialist_calibration_v19.sh",
       "experiments/scripts/refine_specialist_v19.py",
+      "experiments/scripts/run_specialist_v19.sh",
       "experiments/scripts/diagonal_audit_stats.py",
       "experiments/scripts/audit_specialists_diagonal_v19.py",
+      "experiments/scripts/run_specialist_diagonal_audit_v19.sh",
       "experiments/scripts/verify_diagonal_audit_v19.py"
     ]
   },
@@ -117,7 +141,7 @@
     "lateral",
     "contact_stability"
   ],
-  "status": "frozen_before_base_only_calibration_and_adaptation",
+  "status": "refrozen_after_revision1_base_only_calibration_failure_before_adaptation",
   "training": {
     "actor_layer_learning_rate_multipliers": [
       0.1,

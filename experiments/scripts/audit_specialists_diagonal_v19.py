@@ -110,8 +110,8 @@ def _parse_args() -> argparse.Namespace:
 def _validate_protocol(protocol: dict[str, Any], args: argparse.Namespace) -> None:
   expected = {
     "protocol_id": PROTOCOL_ID,
-    "protocol_revision": 1,
-    "status": "frozen_before_base_only_calibration_and_adaptation",
+    "protocol_revision": 2,
+    "status": "refrozen_after_revision1_base_only_calibration_failure_before_adaptation",
     "policy_method": "Observable Failure-Conditioned Brief PPO v19",
     "specialist_modes": list(MODES),
     "adaptation_seeds": FORMAL_ADAPTATION_SEEDS,
@@ -157,27 +157,38 @@ def _validate_protocol(protocol: dict[str, Any], args: argparse.Namespace) -> No
         "required": value,
       }
   calibration = protocol.get("calibration", {})
-  if calibration.get("lateral_candidate_seeds") != [
-    7106,
-    7107,
-    7108,
-    7109,
-    7110,
-    7111,
-  ]:
-    mismatches["calibration.lateral_candidate_seeds"] = {
-      "actual": calibration.get("lateral_candidate_seeds"),
-      "required": [7106, 7107, 7108, 7109, 7110, 7111],
-    }
-  if calibration.get("contact_stability_candidate_seeds") != [
-    7217,
-    7218,
-    7219,
-  ]:
-    mismatches["calibration.contact_stability_candidate_seeds"] = {
-      "actual": calibration.get("contact_stability_candidate_seeds"),
-      "required": [7217, 7218, 7219],
-    }
+  expected_calibration = {
+    "adapted_policy_evaluations_used": False,
+    "base_policy_only": True,
+    "lateral_candidate_seeds": [
+      7312,
+      7313,
+      7314,
+      7315,
+      7316,
+      7317,
+      7318,
+      7319,
+    ],
+    "lateral_evaluation_seed_base": 4_720_000,
+    "contact_stability_candidate_seeds": [7217, 7218, 7219],
+    "contact_stability_evaluation_seed_base": 4_710_000,
+    "episodes_per_candidate": 512,
+    "eval_batch_size": 128,
+    "minimum_fall_count": 100,
+    "success_rate_bounds_inclusive": [0.70, 0.85],
+    "first_qualifying_candidate_is_frozen": True,
+    "lateral_minimum_target_failure_fraction": 0.80,
+    "lateral_maximum_second_failure_fraction": 0.30,
+    "contact_stability_minimum_target_failure_fraction": 0.75,
+    "contact_stability_maximum_second_failure_fraction": 0.20,
+  }
+  for key, value in expected_calibration.items():
+    if calibration.get(key) != value:
+      mismatches[f"calibration.{key}"] = {
+        "actual": calibration.get(key),
+        "required": value,
+      }
   if mismatches:
     raise ValueError(f"diagonal v19 protocol file mismatch: {mismatches}")
   if args.smoke:

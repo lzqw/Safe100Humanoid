@@ -2054,12 +2054,14 @@ def test_v19_failure_classifier_uses_contact_mechanism_not_attitude_outcome() ->
   }
   assert classify_v19_failure_mode(
     **common,
+    specialist_mode="contact_stability",
     maximum_left_slip_speed=0.35,
     maximum_right_slip_speed=0.1,
     mean_contact_mismatch=0.1,
   ) == "contact_stability"
   assert classify_v19_failure_mode(
     **common,
+    specialist_mode="contact_stability",
     maximum_left_slip_speed=0.8,
     maximum_right_slip_speed=0.7,
     mean_contact_mismatch=0.4,
@@ -2068,16 +2070,31 @@ def test_v19_failure_classifier_uses_contact_mechanism_not_attitude_outcome() ->
   ) == "contact_stability"
   assert classify_v19_failure_mode(
     **common,
+    specialist_mode="contact_stability",
     maximum_left_slip_speed=0.1,
     maximum_right_slip_speed=0.1,
     mean_contact_mismatch=0.35,
   ) == "contact_stability"
   assert classify_v19_failure_mode(
     **{**common, "correction_max": 0.6},
+    specialist_mode="contact_stability",
     maximum_left_slip_speed=0.1,
     maximum_right_slip_speed=0.1,
     mean_contact_mismatch=0.1,
   ) == "non_lateral_high_cbf_demand"
+
+  # Stair slip can mediate an injected lateral disturbance. In the lateral
+  # family an observed geometric lateral event remains primary even if the
+  # severe slip threshold happened a few steps earlier.
+  assert classify_v19_failure_mode(
+    **common,
+    specialist_mode="lateral",
+    maximum_left_slip_speed=0.8,
+    maximum_right_slip_speed=0.7,
+    mean_contact_mismatch=0.4,
+    first_contact_event_step=20,
+    first_lateral_event_step=80,
+  ) == "lateral_heading_drift"
 
 
 def test_v19_banks_select_lateral_strata_and_touchdown_centered_contact_states() -> None:

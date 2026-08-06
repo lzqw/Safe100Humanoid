@@ -1011,9 +1011,8 @@ def _collect_and_update_specialist(
       obs, rewards, dones, extras = runner.env.step(actions.to(device))
       check_nan(obs, rewards, dones)
       extras = dict(extras)
-      # Only failure-precursor transitions receive the 0.75 actor weight.
-      # Matched-success slots remain in the same scalar-reward PPO surrogate
-      # but can receive their declared preservation emphasis in v17.
+      # v19 failure precursors use unit actor weight. Matched-success slots
+      # remain in the scalar-reward PPO surrogate with weight 1.25.
       extras["online_hard_case_transition"] = failure_slots.detach().clone()
       extras["online_success_counterexample_transition"] = (
         success_slots.detach().clone()
@@ -1060,6 +1059,7 @@ def _collect_and_update_specialist(
           target_falls_seen += 1
           failure_type = (
             classify_v19_failure_mode(
+              specialist_mode=specialist_mode,
               side_edge_breach=bool(episode_side_edge_breach[env_id]),
               max_abs_centerline_error=float(
                 episode_max_abs_centerline_error[env_id]

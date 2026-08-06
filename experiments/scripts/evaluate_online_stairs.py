@@ -371,6 +371,7 @@ def evaluate_policy(
           success = bool(success_all[env_id])
           if fell and v19_context is not None:
             failure_type = classify_v19_failure_mode(
+              specialist_mode=v19_context["specialist_mode"],
               side_edge_breach=bool(
                 (min_root_edge_clearance[env_id] < 0.0)
                 | (min_foot_edge_clearance[env_id] < 0.0)

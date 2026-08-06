@@ -50,16 +50,33 @@ Contact stability uses only moderate foot-friction reduction, a two-step
 contact-sensor lag, a small gait-clock offset, and small name-resolved
 left/right sagittal response asymmetry. Swing-foot velocity is explicitly not
 counted as slip. Its recovery reward is active around touchdown, and its bank
-balances both touchdown feet, both slip feet, and early/delayed contact. A
-sustained severe contact-slip event is timestamped so later terminal lateral
-drift does not overwrite the observable primary cause.
+balances both touchdown feet, both slip feet, and early/delayed contact.
+
+Failure precedence is tied to the instrumented perturbation family. In a
+lateral context, an observed geometric lateral/heading event remains primary
+even if ordinary stair slip is an earlier mediator; a fall without that event
+remains contact instability. In a contact-only context, a sustained severe
+support-foot-slip event is timestamped so later terminal lateral drift does
+not overwrite the observable primary cause. Roll, pitch, and angular velocity
+remain outcomes rather than primary labels.
 
 ## Prospective evidence boundary
 
-The immutable protocol is
+The frozen protocol is
 [`results/online/specialist_v19/protocol.json`](../results/online/specialist_v19/protocol.json).
 It freezes base-only calibration candidates, five adaptation seeds, fresh
 audit/bootstrap seeds, and every engineering gate before formal calibration.
+
+Revision 1 stopped at its prospective preflight because all six lateral
+candidates failed the 80% mechanism-purity gate; no context was selected and
+no adaptation ran. Raw timing showed that a global first-event rule treated
+stair slip as primary even in the explicitly lateral-instrumented family.
+Revision 2 records that failure, makes precedence explicit, and uses unseen
+lateral candidates and evaluation randomness. It was re-frozen before any
+adapted-policy or formal-audit outcome.
+
+The full revision-1 attempt table and overlap diagnostic are retained in
+[`results/online/specialist_v19/preflight/revision1_lateral_calibration_failure.json`](../results/online/specialist_v19/preflight/revision1_lateral_calibration_failure.json).
 
 Formal evaluation contains only two diagonal claims. For each specialist and
 adaptation seed it uses 512 paired target episodes and 256 paired D0 episodes.

@@ -98,6 +98,7 @@ def classify_target_failure_mode(
 
 def classify_v19_failure_mode(
   *,
+  specialist_mode: str,
   side_edge_breach: bool,
   max_abs_centerline_error: float,
   max_abs_heading_error: float,
@@ -113,10 +114,15 @@ def classify_v19_failure_mode(
 ) -> str:
   """Classify v19 falls by observable mechanism, never attitude outcome.
 
-  When causal event times are available, the first severe observable event
-  wins.  This prevents a support-foot slip from being relabeled as lateral
-  merely because the eventual fall later crosses a stair edge.
+  The perturbation family supplies causal context without making the label
+  automatic. A lateral-instrumented episode is lateral only if it actually
+  reaches a geometric lateral/heading event; ordinary stair slip is otherwise
+  retained as contact instability. In the contact-only family, the first
+  severe observable event wins so a support-foot slip is not relabeled by a
+  later terminal drift across the stair edge.
   """
+  if specialist_mode not in ("lateral", "contact_stability"):
+    raise ValueError(f"unsupported v19 classifier mode: {specialist_mode!r}")
   values = torch.tensor(
     (
       max_abs_centerline_error,
@@ -137,13 +143,21 @@ def classify_v19_failure_mode(
   ):
     if event_step is not None and event_step < 0:
       raise ValueError(f"first {name} event step must be non-negative")
-  if first_contact_event_step is not None and (
-    first_lateral_event_step is None
-    or first_contact_event_step < first_lateral_event_step
-  ):
-    return CONTACT_STABILITY_FAILURE_TYPE
-  if first_lateral_event_step is not None:
-    return LATERAL_HEADING_DRIFT_FAILURE_TYPE
+  if specialist_mode == "lateral":
+    if first_lateral_event_step is not None:
+      return LATERAL_HEADING_DRIFT_FAILURE_TYPE
+    if first_contact_event_step is not None:
+      return CONTACT_STABILITY_FAILURE_TYPE
+  else:
+    if first_contact_event_step is not None and (
+      first_lateral_event_step is None
+      or first_contact_event_step < first_lateral_event_step
+    ):
+      return CONTACT_STABILITY_FAILURE_TYPE
+    if first_lateral_event_step is not None:
+      return LATERAL_HEADING_DRIFT_FAILURE_TYPE
+    if first_contact_event_step is not None:
+      return CONTACT_STABILITY_FAILURE_TYPE
   if (
     side_edge_breach
     or max_abs_centerline_error
