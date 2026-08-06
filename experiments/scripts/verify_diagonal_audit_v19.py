@@ -21,13 +21,13 @@ from diagonal_audit_stats import (
 
 
 MODES = ("lateral", "contact_stability")
-SEEDS = (43, 143, 243, 343, 443)
-AUDIT_SEED = 5_100_000
-BOOTSTRAP_SEED = 6_000_000
+SEEDS = (53, 153, 253, 353, 453)
+AUDIT_SEED = 5_300_000
+BOOTSTRAP_SEED = 6_300_000
 TARGET_ROWS = 512
 D0_ROWS = 256
 TOTAL_ROWS = 7_680
-PROTOCOL_RELATIVE = Path("results/online/specialist_v19/protocol.json")
+PROTOCOL_RELATIVE = Path("results/online/specialist_v19/protocol_revision3.json")
 
 
 def _sha256(path: Path) -> str:

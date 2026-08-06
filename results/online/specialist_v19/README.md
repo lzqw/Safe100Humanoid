@@ -63,13 +63,18 @@ test suite passes 89/89. Exact diagnostics, hashes, development outcomes, and
 the explicit no-formal-claim boundary are recorded in
 [`development/revision3_preflight.json`](development/revision3_preflight.json).
 
-No revision-3 formal protocol has been frozen and no revision-3 formal run has
-started. A clean full-sized rerun of the already exposed weak seed 143 completed
-eight rounds with six accepted updates; all 16 replay audits had zero marginal
+A clean full-sized rerun of the already exposed weak seed 143 completed eight
+rounds with six accepted updates; all 16 replay audits had zero marginal
 imbalance, all D0 checks passed, and the legacy input-column change was exactly
-zero. Its final 128-episode target/D0 numbers remain training diagnostics only.
-Seed 143 cannot enter a later formal claim; the next step is a prospective
-revision-3 freeze using entirely unseen adaptation and audit randomness.
+zero. Its final 128-episode target/D0 numbers remain training diagnostics only,
+and seed 143 cannot enter a later formal claim.
+
+Revision 3 is now prospectively frozen in
+[`protocol_revision3.json`](protocol_revision3.json), using unseen adaptation
+seeds 53/153/253/353/453, audit seed 5,300,000, and bootstrap seed 6,300,000.
+It reuses only the revision-2 base-policy-calibrated contexts and excludes all
+revision-2/development adaptation seeds. No revision-3 formal adaptation or
+audit outcome was observed before this freeze.
 
 Development smoke runs and exploratory context probes are intentionally not
 copied here and are not formal evidence. A future prospectively refrozen run

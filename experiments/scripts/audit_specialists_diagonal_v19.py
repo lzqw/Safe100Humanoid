@@ -24,9 +24,9 @@ from online_refine_stairs import _actor_state, _actor_state_sha256, _evaluate_st
 
 PROTOCOL_ID = "safe100-observable-failure-conditioned-v19"
 MODES = ("lateral", "contact_stability")
-FORMAL_ADAPTATION_SEEDS = [43, 143, 243, 343, 443]
-FORMAL_AUDIT_SEED = 5_100_000
-FORMAL_BOOTSTRAP_SEED = 6_000_000
+FORMAL_ADAPTATION_SEEDS = [53, 153, 253, 353, 453]
+FORMAL_AUDIT_SEED = 5_300_000
+FORMAL_BOOTSTRAP_SEED = 6_300_000
 
 
 def _sha256(path: Path) -> str:
@@ -144,8 +144,8 @@ def _parse_args() -> argparse.Namespace:
 def _validate_protocol(protocol: dict[str, Any], args: argparse.Namespace) -> None:
   expected = {
     "protocol_id": PROTOCOL_ID,
-    "protocol_revision": 2,
-    "status": "refrozen_after_revision1_base_only_calibration_failure_before_adaptation",
+    "protocol_revision": 3,
+    "status": "frozen_after_nonformal_seed143_development_before_revision3_formal_adaptation",
     "policy_method": "Observable Failure-Conditioned Brief PPO v19",
     "specialist_modes": list(MODES),
     "adaptation_seeds": FORMAL_ADAPTATION_SEEDS,
@@ -188,6 +188,18 @@ def _validate_protocol(protocol: dict[str, Any], args: argparse.Namespace) -> No
     if acceptance.get(key) != value:
       mismatches[f"independent_specialist_acceptance.{key}"] = {
         "actual": acceptance.get(key),
+        "required": value,
+      }
+  development_exclusions = protocol.get("development_exclusions", {})
+  expected_exclusions = {
+    "revision_2_declared_adaptation_seeds": [43, 143, 243, 343, 443],
+    "development_only_adaptation_seeds": [143],
+    "revision_3_formal_seed_overlap": False,
+  }
+  for key, value in expected_exclusions.items():
+    if development_exclusions.get(key) != value:
+      mismatches[f"development_exclusions.{key}"] = {
+        "actual": development_exclusions.get(key),
         "required": value,
       }
   calibration = protocol.get("calibration", {})
@@ -550,6 +562,15 @@ def main() -> None:
     context = load_calibrated_v19_context(path)
     if context["specialist_mode"] != mode:
       raise RuntimeError(f"{mode} context has another specialist mode")
+    sealed_context = protocol["sealed_inputs"]["contexts"][mode]
+    if (
+      _sha256(path) != sealed_context["file_sha256"]
+      or context["parameters_sha256"]
+      != sealed_context["parameters_sha256"]
+      or context["calibration"]["selected_candidate_seed"]
+      != sealed_context["selected_calibration_seed"]
+    ):
+      raise RuntimeError(f"{mode} context differs from the revision-3 seal")
     contexts[mode] = context
     context_paths[mode] = path
     calibration_checks[mode] = _validate_context(mode, context, protocol)

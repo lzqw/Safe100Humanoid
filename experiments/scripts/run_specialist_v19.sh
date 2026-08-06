@@ -2,23 +2,23 @@
 set -euo pipefail
 
 ROOT="${SAFE100_HUMANOID_ROOT:-/home/carla/LZQW/SAFE100/humanoid}"
-REPO="${SAFE100_MJLAB_REPO:-$ROOT/worktrees/v19_formal}"
+REPO="${SAFE100_MJLAB_REPO:-$ROOT/worktrees/v19_r3_formal}"
 PYTHON="${SAFE100_PYTHON:-$ROOT/workspace/conda_env/bin/python}"
 BASELINE="${SAFE100_BASELINE_CHECKPOINT:-$ROOT/artifacts/retention_v13/arm_b_state_retention/accepted_final.pt}"
 MODE="${SAFE100_SPECIALIST_MODE:?set SAFE100_SPECIALIST_MODE to lateral or contact_stability}"
-SEED="${SAFE100_SEED:?set SAFE100_SEED to 43, 143, 243, 343, or 443}"
-PROTOCOL_COMMIT="${SAFE100_V19_PROTOCOL_COMMIT:?set SAFE100_V19_PROTOCOL_COMMIT to the frozen v19 commit}"
+SEED="${SAFE100_SEED:?set SAFE100_SEED to 53, 153, 253, 353, or 453}"
+PROTOCOL_COMMIT="${SAFE100_V19_REVISION3_PROTOCOL_COMMIT:?set SAFE100_V19_REVISION3_PROTOCOL_COMMIT to the frozen revision-3 commit}"
 CONTEXT="${SAFE100_SPECIALIST_CONTEXT:-$ROOT/artifacts/specialist_v19/contexts/${MODE}.json}"
-OUTPUT="${SAFE100_OUTPUT_DIR:-$ROOT/artifacts/specialist_v19/training/${MODE}/seed${SEED}}"
-LOG="${SAFE100_LOG_PATH:-$ROOT/logs/specialist_v19/train_${MODE}_seed${SEED}.log}"
+OUTPUT="${SAFE100_OUTPUT_DIR:-$ROOT/artifacts/specialist_v19_revision3/training/${MODE}/seed${SEED}}"
+LOG="${SAFE100_LOG_PATH:-$ROOT/logs/specialist_v19_revision3/train_${MODE}_seed${SEED}.log}"
 
 case "$MODE" in
   lateral|contact_stability) ;;
   *) echo "unknown v19 specialist mode: $MODE" >&2; exit 2 ;;
 esac
 case "$SEED" in
-  43|143|243|343|443) ;;
-  *) echo "formal v19 seed must be 43, 143, 243, 343, or 443" >&2; exit 2 ;;
+  53|153|253|353|453) ;;
+  *) echo "formal v19 revision-3 seed must be 53, 153, 253, 353, or 453" >&2; exit 2 ;;
 esac
 
 cd "$REPO"
