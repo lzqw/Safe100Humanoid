@@ -102,6 +102,27 @@ seeds 63/163/263/363/463, audit seed 5,400,000, and bootstrap seed 6,400,000.
 No revision-4 formal adaptation or audit outcome was observed before this
 freeze; the seed-153 development result remains nonformal evidence only.
 
+Revision-4 formal training subsequently stopped fail-fast before the audit.
+All five lateral jobs completed the frozen protocol with accepted-update
+counts 4/4/3/3/7. Contact-stability seeds 63/163/263 also completed with
+4/3/3 accepted updates, but seed 363 completed all eight rounds with only two
+of the required three accepted updates. Contact-stability seed 463 was
+therefore not started, and neither the 512-target/256-D0 paired audit nor its
+independent verification began.
+
+The revision-4 feasibility changes worked as designed: lateral seed 163 used
+two discovery rollouts whose joint preflights were both feasible, while
+contact-stability seed 363 rejected an infeasible first discovery bank and
+continued with a feasible second rollout. One of 138 adaptation-time bank
+updates was transactionally restored; all 138 left a usable feasible replay
+bank; and every exact 12-pair replay audit had zero marginal imbalance. These
+are implementation/protocol results, not specialist-performance claims. The
+complete compact run records, training-only diagnostics, external artifact and
+log hashes, and exact stop boundary are retained in
+[`training/revision4_training_stop.json`](training/revision4_training_stop.json).
+Revision 4 supports no formal specialist claim because the independent audit
+was never run.
+
 Development smoke runs and exploratory context probes are intentionally not
 copied here and are not formal evidence. A future prospectively refrozen run
 may add a compact training manifest, paired CSV, audit summary, verifier
