@@ -76,7 +76,13 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--fall-redistribution-amount", type=float, default=2.0)
   parser.add_argument("--device", default="cuda:0")
   parser.add_argument("--gate-device", default="cuda:0")
-  parser.add_argument("--smoke", action="store_true")
+  run_kind = parser.add_mutually_exclusive_group()
+  run_kind.add_argument("--smoke", action="store_true")
+  run_kind.add_argument(
+    "--development",
+    action="store_true",
+    help="enforce formal-sized invariants but prohibit a formal evidence label",
+  )
   return parser.parse_args()
 
 
@@ -154,6 +160,16 @@ def _finite_actor_state(state: dict[str, torch.Tensor]) -> bool:
 
 def _validate_algorithm(runner) -> dict[str, Any]:
   alg = runner.alg
+  new_feature_groups = [
+    group
+    for group in alg.optimizer.param_groups
+    if group.get("role") == "actor_new_features"
+  ]
+  first_layer_weight = next(
+    module.weight
+    for module in alg.actor.mlp
+    if isinstance(module, torch.nn.Linear)
+  )
   checks = {
     "observable_failure_conditioned_refinement": alg.observable_failure_conditioned_refinement,
     "brief_ppo_refinement": alg.brief_ppo_refinement,
@@ -167,6 +183,24 @@ def _validate_algorithm(runner) -> dict[str, Any]:
     "actor_learning_rate": alg.actor_learning_rate,
     "critic_learning_rate": alg.critic_learning_rate,
     "actor_layer_multipliers": list(alg.actor_layer_multipliers),
+    "actor_new_feature_count": alg.actor_new_feature_count,
+    "actor_new_feature_learning_rate_multiplier": (
+      alg.actor_new_feature_learning_rate_multiplier
+    ),
+    "freeze_legacy_actor_input_columns": (
+      alg.freeze_legacy_actor_input_columns
+    ),
+    "actor_new_feature_optimizer_group_count": len(new_feature_groups),
+    "actor_new_feature_optimizer_learning_rate": (
+      None if not new_feature_groups else new_feature_groups[0]["lr"]
+    ),
+    "actor_new_feature_optimizer_owns_first_layer_weight": (
+      len(new_feature_groups) == 1
+      and any(
+        parameter is first_layer_weight
+        for parameter in new_feature_groups[0]["params"]
+      )
+    ),
     "ppo_epochs": alg.num_learning_epochs,
     "ppo_minibatches": alg.num_mini_batches,
     "ppo_clip": alg.clip_param,
@@ -189,6 +223,16 @@ def _validate_algorithm(runner) -> dict[str, Any]:
     and math.isclose(checks["actor_learning_rate"], 5.0e-6)
     and math.isclose(checks["critic_learning_rate"], 1.0e-4)
     and checks["actor_layer_multipliers"] == list(V19_ACTOR_LAYER_MULTIPLIERS)
+    and checks["actor_new_feature_count"] == 5
+    and math.isclose(
+      checks["actor_new_feature_learning_rate_multiplier"], 1.0
+    )
+    and checks["freeze_legacy_actor_input_columns"] is True
+    and checks["actor_new_feature_optimizer_group_count"] == 1
+    and math.isclose(
+      checks["actor_new_feature_optimizer_learning_rate"], 5.0e-6
+    )
+    and checks["actor_new_feature_optimizer_owns_first_layer_weight"] is True
     and checks["ppo_epochs"] == 1
     and checks["ppo_minibatches"] == 4
     and math.isclose(checks["ppo_clip"], 0.05)
@@ -230,6 +274,17 @@ def _bank_invariant_reasons(
     reasons.append("matched success bank outcome purity failed")
   if success["matched_entry_count"] != len(success_bank):
     reasons.append("a replayed success is not matched to a failure")
+  matched_failure_indices = {
+    entry.matched_failure_index
+    for entry in success_bank.entries
+    if entry.matched_failure_index is not None
+    and 0 <= entry.matched_failure_index < len(failure_bank.entries)
+  }
+  matched_failures = [
+    failure_bank.entries[index] for index in sorted(matched_failure_indices)
+  ]
+  if len(matched_failures) < minimum_required:
+    reasons.append("exactly matched failure subset is too small")
   if require_full_diversity and mode == "lateral":
     if set(failure["centerline_sign_counts"]) != {"-1", "1"}:
       reasons.append("lateral bank lacks both centerline-error signs")
@@ -241,6 +296,21 @@ def _bank_invariant_reasons(
       reasons.append("lateral bank lacks both support feet")
     if not {"low", "high"}.issubset(failure["error_growth_bin_counts"]):
       reasons.append("lateral bank lacks low/high error-growth coverage")
+    if {entry.centerline_sign for entry in matched_failures} != {-1, 1}:
+      reasons.append("matched lateral pairs lack both centerline-error signs")
+    if {entry.heading_sign for entry in matched_failures} != {-1, 1}:
+      reasons.append("matched lateral pairs lack both heading-error signs")
+    if not {"early", "mid", "late"}.issubset(
+      {entry.riser_stage for entry in matched_failures}
+    ):
+      reasons.append("matched lateral pairs lack early/mid/late riser coverage")
+    if {entry.support_foot for entry in matched_failures} != {0, 1}:
+      reasons.append("matched lateral pairs lack both support feet")
+    if {
+      "high" if entry.error_growth_rate >= 0.25 else "low"
+      for entry in matched_failures
+    } != {"low", "high"}:
+      reasons.append("matched lateral pairs lack low/high error-growth coverage")
   elif require_full_diversity:
     if set(failure["touchdown_foot_counts"]) != {"0", "1"}:
       reasons.append("contact bank lacks left/right touchdown")
@@ -248,6 +318,19 @@ def _bank_invariant_reasons(
       reasons.append("contact bank lacks left/right slip")
     if set(failure["contact_timing_counts"]) != {"early", "delayed"}:
       reasons.append("contact bank lacks early/delayed contact")
+    if set(failure["support_foot_counts"]) != {"0", "1"}:
+      reasons.append("contact bank lacks both support feet")
+    if {entry.touchdown_foot for entry in matched_failures} != {0, 1}:
+      reasons.append("matched contact pairs lack left/right touchdown")
+    if {entry.slip_foot for entry in matched_failures} != {0, 1}:
+      reasons.append("matched contact pairs lack left/right slip")
+    if {entry.contact_timing for entry in matched_failures} != {
+      "early",
+      "delayed",
+    }:
+      reasons.append("matched contact pairs lack early/delayed contact")
+    if {entry.support_foot for entry in matched_failures} != {0, 1}:
+      reasons.append("matched contact pairs lack both support feet")
   return reasons
 
 
@@ -355,6 +438,9 @@ def main() -> None:
   alg_cfg.brief_ppo_refinement = True
   alg_cfg.failure_focused_refinement = True
   alg_cfg.observable_failure_conditioned_refinement = True
+  alg_cfg.actor_new_feature_count = 5
+  alg_cfg.actor_new_feature_learning_rate_multiplier = 1.0
+  alg_cfg.freeze_legacy_actor_input_columns = True
   alg_cfg.kl_early_stopping = True
   alg_cfg.fall_redistribution_horizon = args.fall_redistribution_horizon
   alg_cfg.fall_redistribution_decay = args.fall_redistribution_decay
@@ -383,8 +469,10 @@ def main() -> None:
   warm_start = runner.load_online_checkpoint(str(checkpoint), map_location=args.device)
   initial_actor_state = _actor_state(runner.alg.actor)
   initial_actor_sha256 = _actor_state_sha256(initial_actor_state)
+  first_layer_key = "mlp.0.weight"
+  legacy_width = warm_start["source_actor_width"]
   zero_column_max_abs = float(
-    runner.alg.actor.state_dict()["mlp.0.weight"][:, -5:].abs().max()
+    runner.alg.actor.state_dict()[first_layer_key][:, -5:].abs().max()
   )
   if (
     warm_start["zero_initialized_actor_columns"] != 5
@@ -547,6 +635,29 @@ def main() -> None:
       raise RuntimeError("v19 failure-transition fraction drifted from 12/64")
 
     full_candidate_state = _actor_state(runner.alg.actor)
+    old_first_layer = old_actor_state[first_layer_key]
+    full_first_layer = full_candidate_state[first_layer_key]
+    input_adapter_update = {
+      "legacy_input_column_change_max_abs": float(
+        (
+          full_first_layer[:, :legacy_width]
+          - old_first_layer[:, :legacy_width]
+        )
+        .abs()
+        .max()
+      ),
+      "new_input_column_change_max_abs": float(
+        (
+          full_first_layer[:, legacy_width:]
+          - old_first_layer[:, legacy_width:]
+        )
+        .abs()
+        .max()
+      ),
+      "new_input_column_max_abs": float(
+        full_first_layer[:, legacy_width:].abs().max()
+      ),
+    }
     screening_seed = args.seed + 20_000 * round_index
     old_screen = _evaluate_state(
       runner,
@@ -709,6 +820,7 @@ def main() -> None:
       "dual_rollout_seeds": rollout_seeds,
       "dual_rollout_same_behavior_policy": True,
       "full_update_metrics": update_metrics,
+      "input_adapter_update": input_adapter_update,
       "candidate_screening": {
         "seed": screening_seed,
         "episodes_per_candidate": args.candidate_screen_episodes,
@@ -756,6 +868,17 @@ def main() -> None:
   if accepted_update_count < args.minimum_accepted_updates:
     stop_reason = "insufficient_accepted_updates_after_maximum_rounds"
   final_actor_state = _actor_state(runner.alg.actor)
+  initial_first_layer = initial_actor_state[first_layer_key]
+  final_first_layer = final_actor_state[first_layer_key]
+  legacy_input_column_change_max_abs = float(
+    (final_first_layer[:, :legacy_width] - initial_first_layer[:, :legacy_width])
+    .abs()
+    .max()
+  )
+  new_input_column_max_abs = float(final_first_layer[:, legacy_width:].abs().max())
+  new_input_column_rms = float(
+    final_first_layer[:, legacy_width:].square().mean().sqrt()
+  )
   final_eval = _evaluate_state(
     runner,
     final_actor_state,
@@ -771,7 +894,9 @@ def main() -> None:
   final_path = output_dir / "accepted_final.pt"
   result = {
     "method": "Observable Failure-Conditioned Brief PPO v19",
-    "formal_protocol": not args.smoke,
+    "formal_protocol": not args.smoke and not args.development,
+    "development_run": args.development,
+    "smoke_run": args.smoke,
     "protocol_completed": accepted_update_count >= args.minimum_accepted_updates,
     "specialist_mode": args.mode,
     "target_failure_type": V19_SPECIALIST_FAILURE_TYPES[args.mode],
@@ -794,6 +919,17 @@ def main() -> None:
       "v19_width": warm_start["expanded_actor_width"],
       "new_feature_count": 5,
       "new_first_layer_column_max_abs_before_adaptation": zero_column_max_abs,
+      "legacy_first_layer_input_column_change_max_abs": (
+        legacy_input_column_change_max_abs
+      ),
+      "new_first_layer_column_max_abs_after_adaptation": (
+        new_input_column_max_abs
+      ),
+      "new_first_layer_column_rms_after_adaptation": new_input_column_rms,
+      "legacy_input_columns_frozen_during_adaptation": (
+        legacy_input_column_change_max_abs == 0.0
+      ),
+      "new_input_columns_use_full_actor_learning_rate": True,
       "pre_adaptation_policy_exactly_preserved": (
         warm_start["pi0_exact_preservation_proof"] is True
         and zero_column_max_abs == 0.0

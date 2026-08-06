@@ -10,6 +10,7 @@ keeping the actor interface unchanged.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import lru_cache
 import math
 from typing import Any
 
@@ -1641,6 +1642,26 @@ class HardCaseStateBank:
       for key in keys
     }
 
+  def sample_indices(
+    self,
+    indices: tuple[int, ...],
+    *,
+    device: str | torch.device,
+  ) -> dict[str, torch.Tensor]:
+    """Stack explicitly selected entries without changing their pair order."""
+    if not indices:
+      return {}
+    if min(indices) < 0 or max(indices) >= len(self.entries):
+      raise IndexError("hard-case sample index is outside the bank")
+    selected = [self.entries[index] for index in indices]
+    keys = selected[0].state.keys()
+    if any(entry.state.keys() != keys for entry in selected[1:]):
+      raise ValueError("hard-case entries do not share one state schema")
+    return {
+      key: torch.cat([entry.state[key] for entry in selected], dim=0).to(device)
+      for key in keys
+    }
+
   def state_dict(self) -> dict[str, Any]:
     return {
       "capacity": self.capacity,
@@ -2173,6 +2194,288 @@ def match_v19_success_counterexamples(
   }
 
 
+def _v19_restart_balance_stratum(entry: HardCaseEntry) -> tuple[Any, ...]:
+  if entry.specialist_mode == "lateral":
+    return (
+      entry.centerline_sign,
+      entry.heading_sign,
+      entry.riser_stage,
+      entry.support_foot,
+      "high" if entry.error_growth_rate >= 0.25 else "low",
+    )
+  if entry.specialist_mode == "contact_stability":
+    return (
+      entry.touchdown_foot,
+      entry.slip_foot,
+      entry.contact_timing,
+      entry.support_foot,
+    )
+  raise ValueError("balanced v19 restart sampling requires a v19 specialist")
+
+
+def _v19_restart_marginal_names(mode: str) -> tuple[str, ...]:
+  if mode == "lateral":
+    return (
+      "centerline_sign",
+      "heading_sign",
+      "riser_stage",
+      "support_foot",
+      "error_growth_bin",
+    )
+  if mode == "contact_stability":
+    return (
+      "touchdown_foot",
+      "slip_foot",
+      "contact_timing",
+      "support_foot",
+    )
+  raise ValueError("balanced v19 restart sampling requires a v19 specialist")
+
+
+def _balanced_restart_quota_score(
+  keys: tuple[tuple[Any, ...], ...], quotas: tuple[int, ...]
+) -> tuple[int, ...]:
+  """Rank full-stratum quotas by every observable marginal at once."""
+  width = len(keys[0])
+  ranges: list[int] = []
+  marginal_concentration = 0
+  for field in range(width):
+    values = tuple(sorted({key[field] for key in keys}, key=repr))
+    counts = [
+      sum(
+        quota
+        for key, quota in zip(keys, quotas, strict=True)
+        if key[field] == value
+      )
+      for value in values
+    ]
+    ranges.append(max(counts) - min(counts))
+    marginal_concentration += sum(count * count for count in counts)
+  return (
+    max(ranges),
+    sum(ranges),
+    marginal_concentration,
+    -sum(quota > 0 for quota in quotas),
+    max(quotas),
+  )
+
+
+@lru_cache(maxsize=128)
+def _balanced_restart_quotas(
+  keys: tuple[tuple[Any, ...], ...], total: int
+) -> tuple[int, ...]:
+  """Use deterministic multi-start search to balance all full-stratum margins."""
+  if not keys or total < 0:
+    raise ValueError("restart quotas require strata and non-negative work")
+  width = len(keys[0])
+  if width < 1 or any(len(key) != width for key in keys):
+    raise ValueError("restart strata must have one common non-zero width")
+  if total == 0:
+    return (0,) * len(keys)
+
+  natural = tuple(range(len(keys)))
+  reversed_order = tuple(reversed(natural))
+  orders = tuple(
+    order[offset:] + order[:offset]
+    for order in (natural, reversed_order)
+    for offset in range(len(order))
+  )
+  solutions: list[tuple[int, ...]] = []
+  for order in orders:
+    quotas = [0] * len(keys)
+    for _ in range(total):
+      best_index: int | None = None
+      best_score: tuple[int, ...] | None = None
+      for index in order:
+        candidate = quotas.copy()
+        candidate[index] += 1
+        score = _balanced_restart_quota_score(keys, tuple(candidate))
+        if best_score is None or score < best_score:
+          best_index = index
+          best_score = score
+      if best_index is None:
+        raise RuntimeError("balanced restart greedy search returned no slot")
+      quotas[best_index] += 1
+
+    while True:
+      current_score = _balanced_restart_quota_score(keys, tuple(quotas))
+      best_move: tuple[int, int] | None = None
+      best_score = current_score
+      for source in order:
+        if quotas[source] == 0:
+          continue
+        for destination in order:
+          if source == destination:
+            continue
+          candidate = quotas.copy()
+          candidate[source] -= 1
+          candidate[destination] += 1
+          score = _balanced_restart_quota_score(keys, tuple(candidate))
+          if score < best_score:
+            best_move = (source, destination)
+            best_score = score
+      if best_move is None:
+        break
+      source, destination = best_move
+      quotas[source] -= 1
+      quotas[destination] += 1
+    solutions.append(tuple(quotas))
+
+  return min(
+    solutions,
+    key=lambda quotas: (_balanced_restart_quota_score(keys, quotas), quotas),
+  )
+
+
+def _permuted_values(
+  values: tuple[Any, ...], generator: torch.Generator | None
+) -> tuple[Any, ...]:
+  if len(values) < 2:
+    return values
+  order = torch.randperm(len(values), generator=generator).tolist()
+  return tuple(values[index] for index in order)
+
+
+def select_v19_balanced_restart_pairs(
+  failure_bank: HardCaseStateBank,
+  success_bank: HardCaseStateBank,
+  count: int,
+  *,
+  generator: torch.Generator | None = None,
+) -> tuple[tuple[int, ...], tuple[int, ...], dict[str, Any]]:
+  """Select exact failure/success pairs with balanced observable strata.
+
+  The source banks may be intrinsically imbalanced when a frozen context has
+  a signed disturbance bias.  One global quota allocation jointly balances
+  every required observable marginal, rather than balancing a primary field
+  and hoping a nested allocation also balances the others.  A scarce full
+  stratum is sampled with replacement rather than silently losing its quota.
+  """
+  if count < 0:
+    raise ValueError("v19 restart-pair count must be non-negative")
+  mode = failure_bank.specialist_mode
+  if (
+    mode not in ("lateral", "contact_stability")
+    or failure_bank.bank_kind != SPECIALIST_FAILURE_BANK_KIND
+    or success_bank.bank_kind != SPECIALIST_SUCCESS_BANK_KIND
+    or success_bank.specialist_mode != mode
+  ):
+    raise ValueError("v19 restart-pair banks have incompatible roles or modes")
+  if count == 0:
+    return (), (), {
+      "specialist_mode": mode,
+      "pair_count": 0,
+      "exact_match_passed": True,
+      "primary_stratum_counts": {},
+      "primary_marginal_counts": {},
+      "secondary_stratum_counts": {},
+      "unique_failure_entry_count": 0,
+      "unique_success_entry_count": 0,
+    }
+
+  best_success_by_failure: dict[int, int] = {}
+  for success_index, success in enumerate(success_bank.entries):
+    failure_index = success.matched_failure_index
+    if failure_index is None or not 0 <= failure_index < len(failure_bank):
+      continue
+    failure = failure_bank.entries[failure_index]
+    if not _v19_required_match(failure, success):
+      continue
+    previous = best_success_by_failure.get(failure_index)
+    success_distance = (
+      math.inf if success.match_distance is None else float(success.match_distance)
+    )
+    previous_distance = (
+      math.inf
+      if previous is None
+      or success_bank.entries[previous].match_distance is None
+      else float(success_bank.entries[previous].match_distance)
+    )
+    if previous is None or success_distance < previous_distance:
+      best_success_by_failure[failure_index] = success_index
+  if not best_success_by_failure:
+    raise RuntimeError("v19 restart sampling found no exact matched pairs")
+
+  balance_groups: dict[tuple[Any, ...], list[tuple[int, int]]] = {}
+  for failure_index, success_index in best_success_by_failure.items():
+    failure = failure_bank.entries[failure_index]
+    balance_groups.setdefault(_v19_restart_balance_stratum(failure), []).append(
+      (failure_index, success_index)
+    )
+  balance_keys = tuple(sorted(balance_groups, key=repr))
+  balance_quotas = _balanced_restart_quotas(balance_keys, count)
+  selected: list[tuple[int, int]] = []
+  for balance_key, balance_quota in zip(
+    balance_keys, balance_quotas, strict=True
+  ):
+    if balance_quota == 0:
+      continue
+    pairs = balance_groups[balance_key]
+    priorities = torch.tensor(
+      [max(failure_bank.entries[pair[0]].priority, 1.0e-6) for pair in pairs],
+      dtype=torch.float64,
+    )
+    chosen = torch.multinomial(
+      priorities,
+      balance_quota,
+      replacement=balance_quota > len(pairs),
+      generator=generator,
+    )
+    selected.extend(pairs[index] for index in chosen.tolist())
+  if len(selected) != count:
+    raise RuntimeError("balanced v19 restart sampler returned the wrong pair count")
+  selected = list(_permuted_values(tuple(selected), generator))
+  failure_indices = tuple(pair[0] for pair in selected)
+  success_indices = tuple(pair[1] for pair in selected)
+
+  primary_counts: dict[str, int] = {}
+  secondary_counts: dict[str, int] = {}
+  for failure_index in failure_indices:
+    failure = failure_bank.entries[failure_index]
+    primary = repr(_v19_restart_balance_stratum(failure))
+    primary_counts[primary] = primary_counts.get(primary, 0) + 1
+    if mode == "contact_stability":
+      diagnostic = str(failure.contact_window_side)
+      secondary_counts[diagnostic] = secondary_counts.get(diagnostic, 0) + 1
+  marginal_names = _v19_restart_marginal_names(mode)
+  primary_marginal_counts: dict[str, dict[str, int]] = {}
+  for field_index, field_name in enumerate(marginal_names):
+    values = sorted(
+      {
+        _v19_restart_balance_stratum(failure_bank.entries[index])[field_index]
+        for index in failure_indices
+      },
+      key=repr,
+    )
+    primary_marginal_counts[field_name] = {
+      str(value): sum(
+        _v19_restart_balance_stratum(failure_bank.entries[index])[field_index]
+        == value
+        for index in failure_indices
+      )
+      for value in values
+    }
+  exact_match = all(
+    success_bank.entries[success_index].matched_failure_index == failure_index
+    and _v19_required_match(
+      failure_bank.entries[failure_index], success_bank.entries[success_index]
+    )
+    for failure_index, success_index in selected
+  )
+  if not exact_match:
+    raise RuntimeError("balanced v19 restart sampler broke an exact match")
+  return failure_indices, success_indices, {
+    "specialist_mode": mode,
+    "pair_count": count,
+    "exact_match_passed": exact_match,
+    "primary_stratum_counts": dict(sorted(primary_counts.items())),
+    "primary_marginal_counts": primary_marginal_counts,
+    "secondary_stratum_counts": dict(sorted(secondary_counts.items())),
+    "unique_failure_entry_count": len(set(failure_indices)),
+    "unique_success_entry_count": len(set(success_indices)),
+  }
+
+
 def specialist_destination_ids(
   num_envs: int,
   *,
@@ -2211,6 +2514,7 @@ def reset_rollout_with_specialist_banks(
   *,
   failure_fraction: float = 0.15,
   success_fraction: float = 0.15,
+  matched_pair_sampling: bool = False,
   generator: torch.Generator | None = None,
 ):
   """Create one on-policy 70/15/15 target rollout start mixture."""
@@ -2241,16 +2545,35 @@ def reset_rollout_with_specialist_banks(
   shape_mismatches: dict[str, list[str]] = {"failure": [], "success": []}
   incompatible_counts = {"failure": 0, "success": 0}
   current = capture_hard_case_state(env)
-  sampled_failure = (
-    failure_bank.sample(failure_count, device=env.device, generator=generator)
-    if failure_count
-    else {}
-  )
-  sampled_success = (
-    success_bank.sample(success_count, device=env.device, generator=generator)
-    if success_count
-    else {}
-  )
+  pair_audit: dict[str, Any] | None = None
+  if matched_pair_sampling:
+    if failure_count != success_count:
+      raise ValueError("matched v19 restart sampling requires equal replay counts")
+    failure_indices, success_indices, pair_audit = (
+      select_v19_balanced_restart_pairs(
+        failure_bank,
+        success_bank,
+        failure_count,
+        generator=generator,
+      )
+    )
+    sampled_failure = failure_bank.sample_indices(
+      failure_indices, device=env.device
+    )
+    sampled_success = success_bank.sample_indices(
+      success_indices, device=env.device
+    )
+  else:
+    sampled_failure = (
+      failure_bank.sample(failure_count, device=env.device, generator=generator)
+      if failure_count
+      else {}
+    )
+    sampled_success = (
+      success_bank.sample(success_count, device=env.device, generator=generator)
+      if success_count
+      else {}
+    )
   for label, bank, sampled, ids in (
     ("failure", failure_bank, sampled_failure, failure_ids),
     ("success", success_bank, sampled_success, success_ids),
@@ -2299,6 +2622,8 @@ def reset_rollout_with_specialist_banks(
     "success_start_ids": success_ids.detach().cpu().tolist(),
     "incompatible_bank_dropped_counts": incompatible_counts,
     "bank_shape_mismatches": shape_mismatches,
+    "matched_pair_sampling": matched_pair_sampling,
+    "matched_pair_audit": pair_audit,
   }
 
 

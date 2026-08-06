@@ -785,6 +785,7 @@ def _collect_and_update_specialist(
     success_bank,
     failure_fraction=failure_fraction,
     success_fraction=success_fraction,
+    matched_pair_sampling=v19,
     generator=specialist_generator,
   )
   device = runner.env.device

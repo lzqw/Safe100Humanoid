@@ -42,6 +42,28 @@ records, artifact hashes, stop reason, and not-started seed list are retained
 in
 [`training/revision2_lateral_training_stop.json`](training/revision2_lateral_training_stop.json).
 
+## Revision-3 development preflight (not formal)
+
+The stopped run exposed two implementation-level weaknesses: replay reset did
+not preserve the exact failure/success matches constructed in the banks, and
+the five new zero-initialized observation columns inherited only the 0.1 first
+layer learning-rate multiplier. The development successor preserves exact
+pairs, jointly balances every required replay marginal, freezes the 405 legacy
+input columns, and trains only the five new columns at the full actor learning
+rate.
+
+The current allocator was replayed against both saved lateral banks and a saved
+contact bank. Every 12-state sample was exactly paired; lateral achieved 6/6
+for both signs, support, and growth plus 4/4/4 riser stages, while contact
+achieved 6/6 for touchdown, slip, timing, and support. The complete GPU test
+suite passes 88/88. Exact diagnostics, hashes, development-smoke outcomes, and
+the explicit no-formal-claim boundary are recorded in
+[`development/revision3_preflight.json`](development/revision3_preflight.json).
+
+No revision-3 formal protocol has been frozen and no revision-3 formal run has
+started. The next check uses the already exposed weak seed 143 strictly as a
+development ablation; it cannot enter a later formal claim.
+
 Development smoke runs and exploratory context probes are intentionally not
 copied here and are not formal evidence. A future prospectively refrozen run
 may add a compact training manifest, paired CSV, audit summary, verifier

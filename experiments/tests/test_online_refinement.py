@@ -46,6 +46,7 @@ from src.tasks.stairs_cbf.online import (
   failure_focused_target_score,
   hierarchical_specialist_macro_interval,
   generalized_cost_advantage,
+  mask_legacy_actor_input_gradient,
   projected_lagrange_update,
   redistributed_fall_credit,
   pre_event_value_delta,
@@ -64,6 +65,7 @@ from src.tasks.stairs_cbf.online import (
   specialist_target_score,
 )
 from src.tasks.stairs_cbf.hard_cases import (
+  HardCaseEntry,
   HardCaseStateBank,
   LATERAL_HEADING_DRIFT_FAILURE_TYPE,
   LateFailureCandidate,
@@ -79,6 +81,7 @@ from src.tasks.stairs_cbf.hard_cases import (
   hard_case_state_shape_mismatches,
   perturb_joystick_command_state,
   match_specialist_success_counterexamples,
+  match_v19_success_counterexamples,
   select_late_failure_candidate,
   select_specialist_failure_candidates,
   select_specialist_success_candidates,
@@ -88,6 +91,7 @@ from src.tasks.stairs_cbf.hard_cases import (
   select_v19_contact_candidates,
   select_v19_lateral_failure_candidates,
   select_v19_lateral_success_candidates,
+  select_v19_balanced_restart_pairs,
 )
 from src.tasks.stairs_cbf.deployment_context import (
   FAILURE_FOCUSED_CALIBRATION_KIND,
@@ -2171,3 +2175,184 @@ def test_v19_banks_select_lateral_strata_and_touchdown_centered_contact_states()
   assert {candidate.slip_foot for candidate in contact} == {0, 1}
   assert {candidate.contact_timing for candidate in contact} == {"early", "delayed"}
   assert {candidate.contact_window_side for candidate in contact} == {"pre", "post"}
+
+
+def test_v19_restart_pairs_are_exact_and_balance_sparse_lateral_signs() -> None:
+  count = 14
+  state = {
+    "robot/root_pose_relative": torch.arange(
+      count * 7, dtype=torch.float32
+    ).reshape(count, 7),
+    "terrain/type": torch.zeros(count, dtype=torch.long),
+  }
+  failure_bank = HardCaseStateBank(
+    capacity=32,
+    bank_kind=SPECIALIST_FAILURE_BANK_KIND,
+    source_domain="DQHMED",
+    context_sha256="context",
+    specialist_mode="lateral",
+  )
+  success_pool = HardCaseStateBank(
+    capacity=32,
+    bank_kind=SPECIALIST_SUCCESS_POOL_KIND,
+    source_domain="DQHMED",
+    context_sha256="context",
+    specialist_mode="lateral",
+  )
+  success_bank = HardCaseStateBank(
+    capacity=32,
+    bank_kind=SPECIALIST_SUCCESS_BANK_KIND,
+    source_domain="DQHMED",
+    context_sha256="context",
+    specialist_mode="lateral",
+  )
+  for env_id in range(count):
+    rare = env_id >= 12
+    centerline_sign, heading_sign = ((-1, 1) if rare else (1, -1))
+    common = {
+      "history_index": 0,
+      "steps_before_terminal": 50 + env_id,
+      "riser_index": 4 + env_id % 3,
+      "gait_phase": 0.1 + 0.25 * (env_id % 3),
+      "support_foot": env_id % 2,
+      "delivered_command": (0.4, 0.02, 0.1),
+      "root_velocity": (0.3, 0.01, 0.0),
+      "cbf_active": False,
+      "balance_bucket": f"pair:{env_id}",
+      "selection_signal": 0.5,
+      "centerline_sign": centerline_sign,
+      "heading_sign": heading_sign,
+      "error_growth_rate": 0.1 if env_id % 2 else 0.4,
+      "riser_stage": ("early", "mid", "late")[env_id % 3],
+    }
+    failure = SpecialistBankCandidate(
+      **common,
+      priority=10.0 + env_id,
+      outcome="failure",
+      failure_type=LATERAL_HEADING_DRIFT_FAILURE_TYPE,
+    )
+    success = SpecialistBankCandidate(
+      **common,
+      priority=8.0 + env_id,
+      outcome="success",
+      failure_type="mixed",
+    )
+    observation = torch.tensor([float(env_id), 0.5, -0.5])
+    assert failure_bank.add_specialist_candidate(
+      state, env_id, failure, observation
+    ) == 1
+    assert success_pool.add_specialist_candidate(
+      state, env_id, success, observation + 0.001
+    ) == 1
+  matching = match_v19_success_counterexamples(
+    failure_bank, success_pool, success_bank
+  )
+  assert matching["one_match_per_replayed_failure"]
+
+  first = select_v19_balanced_restart_pairs(
+    failure_bank,
+    success_bank,
+    8,
+    generator=torch.Generator().manual_seed(19),
+  )
+  second = select_v19_balanced_restart_pairs(
+    failure_bank,
+    success_bank,
+    8,
+    generator=torch.Generator().manual_seed(19),
+  )
+  assert first == second
+  failure_indices, success_indices, audit = first
+  assert audit["pair_count"] == 8
+  assert audit["exact_match_passed"] is True
+  assert sum(audit["primary_stratum_counts"].values()) == 8
+  assert audit["primary_marginal_counts"] == {
+    "centerline_sign": {"-1": 4, "1": 4},
+    "heading_sign": {"-1": 4, "1": 4},
+    "riser_stage": {"early": 3, "late": 2, "mid": 3},
+    "support_foot": {"0": 4, "1": 4},
+    "error_growth_bin": {"high": 4, "low": 4},
+  }
+  for failure_index, success_index in zip(
+    failure_indices, success_indices, strict=True
+  ):
+    assert (
+      success_bank.entries[success_index].matched_failure_index
+      == failure_index
+    )
+
+
+def test_v19_input_adapter_freezes_legacy_gradient_columns() -> None:
+  gradient = torch.arange(28, dtype=torch.float32).reshape(4, 7)
+  masked = mask_legacy_actor_input_gradient(gradient, 3)
+  assert torch.count_nonzero(masked[:, :4]) == 0
+  assert torch.equal(masked[:, 4:], gradient[:, 4:])
+  assert torch.equal(gradient, torch.arange(28, dtype=torch.float32).reshape(4, 7))
+  with pytest.raises(ValueError, match="two-dimensional"):
+    mask_legacy_actor_input_gradient(torch.ones(7), 3)
+  with pytest.raises(ValueError, match="inside the input width"):
+    mask_legacy_actor_input_gradient(gradient, 7)
+
+
+def test_v19_contact_restart_quotas_balance_each_observable_margin() -> None:
+  failure_bank = HardCaseStateBank(
+    capacity=16,
+    bank_kind=SPECIALIST_FAILURE_BANK_KIND,
+    source_domain="DQHMED",
+    context_sha256="context",
+    specialist_mode="contact_stability",
+  )
+  success_bank = HardCaseStateBank(
+    capacity=16,
+    bank_kind=SPECIALIST_SUCCESS_BANK_KIND,
+    source_domain="DQHMED",
+    context_sha256="context",
+    specialist_mode="contact_stability",
+  )
+  strata = (
+    (0, 0, "early", 0),
+    (0, 0, "delayed", 1),
+    (0, 1, "early", 1),
+    (1, 0, "delayed", 0),
+    (1, 1, "early", 0),
+    (1, 1, "delayed", 1),
+  )
+  for index, (touchdown, slip, timing, support) in enumerate(strata):
+    common = {
+      "state": {"state": torch.tensor([[float(index)]])},
+      "priority": 1.0 + index,
+      "riser_index": 5,
+      "terrain_type": 0,
+      "specialist_mode": "contact_stability",
+      "gait_phase": 0.25,
+      "support_foot": support,
+      "delivered_command": (0.4, 0.0, 0.0),
+      "root_velocity": (0.3, 0.0, 0.0),
+      "cbf_active": False,
+      "actor_observation": torch.tensor([float(index)]),
+      "touchdown_foot": touchdown,
+      "slip_foot": slip,
+      "contact_timing": timing,
+      "contact_window_side": "pre" if index % 2 else "post",
+    }
+    failure_bank.entries.append(HardCaseEntry(**common, outcome="failure"))
+    success_bank.entries.append(
+      HardCaseEntry(
+        **common,
+        outcome="success",
+        matched_failure_index=index,
+        match_distance=0.01,
+        success_pool_index=index,
+      )
+    )
+  _, _, audit = select_v19_balanced_restart_pairs(
+    failure_bank,
+    success_bank,
+    6,
+    generator=torch.Generator().manual_seed(29),
+  )
+  assert audit["exact_match_passed"] is True
+  assert all(
+    sorted(counts.values()) == [3, 3]
+    for counts in audit["primary_marginal_counts"].values()
+  )

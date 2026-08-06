@@ -1,0 +1,197 @@
+{
+  "schema_version": 1,
+  "status": "development_preflight_passed_formal_rerun_not_started",
+  "formal_claim": false,
+  "parent_commit": "900b379294043897f233b3419afac8a767e26ce3",
+  "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "revision_2_stop_reference": "../training/revision2_lateral_training_stop.json",
+  "diagnosis": {
+    "independent_replay_sampling": "Revision 2 independently priority-sampled the failure and success banks at reset, so matched bank construction did not preserve within-batch failure/success pairs.",
+    "lateral_failure_bank_imbalance": {
+      "seed43": {
+        "centerline_sign_counts": {
+          "-1": 29,
+          "1": 227
+        },
+        "heading_sign_counts": {
+          "-1": 229,
+          "1": 27
+        }
+      },
+      "seed143": {
+        "centerline_sign_counts": {
+          "-1": 26,
+          "1": 230
+        },
+        "heading_sign_counts": {
+          "-1": 236,
+          "1": 20
+        }
+      }
+    },
+    "weak_new_feature_learning": {
+      "revision_2_actor_first_layer_multiplier": 0.1,
+      "seed43_new_column_rms": 2.0564484657370485e-06,
+      "seed143_new_column_rms": 9.674650982560706e-07
+    }
+  },
+  "development_changes": {
+    "exact_matched_restart_pairs": true,
+    "jointly_balanced_required_marginals": {
+      "lateral": [
+        "centerline_sign",
+        "heading_sign",
+        "riser_stage",
+        "support_foot",
+        "error_growth_bin"
+      ],
+      "contact_stability": [
+        "touchdown_foot",
+        "slip_foot",
+        "contact_timing",
+        "support_foot"
+      ]
+    },
+    "legacy_first_layer_input_columns_frozen": true,
+    "new_feature_columns_use_full_actor_learning_rate": true,
+    "formal_auditor_requires_all_restart_marginals": true,
+    "explicit_nonformal_development_run_label": true
+  },
+  "development_smoke_only": {
+    "scope": "These one-round, 16-episode diagnostics validate mechanics only and are not performance evidence. They preceded the final global marginal allocator.",
+    "lateral": {
+      "artifact_name": "lateral_smoke_bjCbOp",
+      "seed": 9143,
+      "summary_sha256": "c70e3d9a438129ae2529cd027fef8375c867e67606827abd686bac86f8c1739c",
+      "checkpoint_sha256": "74f02d395f31b73fa98dbe1800d770b9fc55cbf8b1f3363a5fbc996993fb5d0b",
+      "exact_pair_audit_passed": true,
+      "legacy_input_column_change_max_abs": 0.0,
+      "new_input_column_change_max_abs": 1.9997805793536827e-05,
+      "candidate_confirmation": {
+        "accepted": true,
+        "success_delta": 0.125,
+        "fall_delta": -0.125,
+        "mean_kl": 0.0004093676689080894
+      }
+    },
+    "contact_stability": {
+      "artifact_name": "contact_smoke_73PoxO",
+      "seed": 9243,
+      "summary_sha256": "9a605050b16396a9516491873df2adce7909db8084d72677696af90fbb65e675",
+      "checkpoint_sha256": "ca3aefe61d66cbbd660b5d7b9d2059169e1c647c10065fea3cc590f60f7bbb27",
+      "exact_pair_audit_passed": true,
+      "legacy_input_column_change_max_abs": 0.0,
+      "new_input_column_change_max_abs": 1.9803159375442192e-05,
+      "candidate_confirmation": {
+        "accepted": false,
+        "success_delta": -0.125,
+        "fall_delta": 0.125,
+        "mean_kl": 8.180738950613886e-05
+      }
+    }
+  },
+  "saved_bank_replay_validation": {
+    "sample_count": 12,
+    "sampling_seed": 1901,
+    "lateral_seed43": {
+      "source_checkpoint_sha256": "1290ee952063787ab262946f7dd55efbb28b58fdcf68b2c87ac3fba12ca5eedf",
+      "exact_match_passed": true,
+      "unique_failure_entry_count": 12,
+      "elapsed_seconds": 0.6486182878725231,
+      "marginal_counts": {
+        "centerline_sign": {
+          "-1": 6,
+          "1": 6
+        },
+        "heading_sign": {
+          "-1": 6,
+          "1": 6
+        },
+        "riser_stage": {
+          "early": 4,
+          "mid": 4,
+          "late": 4
+        },
+        "support_foot": {
+          "0": 6,
+          "1": 6
+        },
+        "error_growth_bin": {
+          "low": 6,
+          "high": 6
+        }
+      }
+    },
+    "lateral_seed143": {
+      "source_checkpoint_sha256": "699faa682bdacf1e4cc8a3367cda83616265ddb014f936b4ba4b2584baa38984",
+      "exact_match_passed": true,
+      "unique_failure_entry_count": 12,
+      "elapsed_seconds": 0.8778221160173416,
+      "marginal_counts": {
+        "centerline_sign": {
+          "-1": 6,
+          "1": 6
+        },
+        "heading_sign": {
+          "-1": 6,
+          "1": 6
+        },
+        "riser_stage": {
+          "early": 4,
+          "mid": 4,
+          "late": 4
+        },
+        "support_foot": {
+          "0": 6,
+          "1": 6
+        },
+        "error_growth_bin": {
+          "low": 6,
+          "high": 6
+        }
+      }
+    },
+    "contact_stability": {
+      "source_checkpoint_sha256": "ca3aefe61d66cbbd660b5d7b9d2059169e1c647c10065fea3cc590f60f7bbb27",
+      "exact_match_passed": true,
+      "unique_failure_entry_count": 9,
+      "elapsed_seconds": 0.05021370714530349,
+      "marginal_counts": {
+        "touchdown_foot": {
+          "0": 6,
+          "1": 6
+        },
+        "slip_foot": {
+          "0": 6,
+          "1": 6
+        },
+        "contact_timing": {
+          "early": 6,
+          "delayed": 6
+        },
+        "support_foot": {
+          "0": 6,
+          "1": 6
+        }
+      }
+    }
+  },
+  "validation": {
+    "gpu_test_command": "python -m pytest -q experiments/tests",
+    "gpu_tests_passed": 88,
+    "gpu_tests_failed": 0,
+    "fatal_ruff_subset_passed": true,
+    "python_compile_passed": true,
+    "git_diff_check_passed": true,
+    "local_pytest_unavailable_reason": "mjlab is not installed in the local Python environment"
+  },
+  "source_file_sha256": {
+    "src/tasks/stairs_cbf/hard_cases.py": "a58c17a01afe442ffcd30b38200e5827903a62c646d968b98112cb3154efa2ab",
+    "src/tasks/stairs_cbf/online.py": "d530455a222be9f5a61c912fd38f9c3a27ca896d7821f691a317fc90b28a0e34",
+    "experiments/scripts/online_refine_stairs.py": "a9508c1316d4a8794dadd3f981c15de072f941773a3991ce639f7a6bc30096e8",
+    "experiments/scripts/refine_specialist_v19.py": "53ac2af189a441e861e5475f106549fabe12612afac914e61fc43ddcf45bc4b4",
+    "experiments/scripts/audit_specialists_diagonal_v19.py": "f6ba83655956759c15a123b4d5d084837a6637af40b252e6ddb3963aa42e273a",
+    "experiments/tests/test_online_refinement.py": "097c8589f361f27f4f4a11178f1c1ddadaa905c750979b08b268330a3f3d4da0"
+  },
+  "next_step": "Run the known revision-2 weak seed 143 once as a nonformal, full-sized development ablation. Freeze unseen revision-3 formal seeds only if that development run completes the minimum-update protocol."
+}

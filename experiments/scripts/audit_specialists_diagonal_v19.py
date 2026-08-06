@@ -7,6 +7,7 @@ import csv
 from dataclasses import asdict
 import hashlib
 import json
+import math
 from pathlib import Path
 import subprocess
 import sys
@@ -82,6 +83,32 @@ def _paired_delta(
     if old["episode"] != new["episode"]:
       raise ValueError(f"paired episode index differs at row {index}")
   return _binary_column(final, field) - _binary_column(baseline, field)
+
+
+def _balanced_restart_strata(audit: dict[str, Any]) -> bool:
+  marginals = audit.get("primary_marginal_counts") or {}
+  expected = {
+    "lateral": {
+      "centerline_sign": {"-1", "1"},
+      "heading_sign": {"-1", "1"},
+      "riser_stage": {"early", "mid", "late"},
+      "support_foot": {"0", "1"},
+      "error_growth_bin": {"low", "high"},
+    },
+    "contact_stability": {
+      "touchdown_foot": {"0", "1"},
+      "slip_foot": {"0", "1"},
+      "contact_timing": {"early", "delayed"},
+      "support_foot": {"0", "1"},
+    },
+  }.get(audit.get("specialist_mode"))
+  pair_count = audit.get("pair_count")
+  return bool(expected) and set(marginals) == set(expected) and all(
+    set(marginals[field]) == values
+    and sum(marginals[field].values()) == pair_count
+    and max(marginals[field].values()) - min(marginals[field].values()) <= 1
+    for field, values in expected.items()
+  )
 
 
 def _parse_args() -> argparse.Namespace:
@@ -299,8 +326,35 @@ def _validate_training_artifacts(
         and expansion.get("v19_width") == 410
         and expansion.get("new_feature_count") == 5
         and expansion.get("pre_adaptation_policy_exactly_preserved") is True
+        and expansion.get("legacy_input_columns_frozen_during_adaptation")
+        is True
+        and expansion.get("legacy_first_layer_input_column_change_max_abs")
+        == 0.0
+        and expansion.get("new_input_columns_use_full_actor_learning_rate")
+        is True
+        and expansion.get("new_first_layer_column_max_abs_after_adaptation", 0.0)
+        > 0.0
       ):
-        reasons.append("zero-column actor expansion proof differs")
+        reasons.append("observable input-adapter proof differs")
+      structural = summary.get("structural_checks", {})
+      if not (
+        structural.get("actor_new_feature_count") == 5
+        and math.isclose(
+          structural.get("actor_new_feature_learning_rate_multiplier", math.nan),
+          1.0,
+        )
+        and structural.get("freeze_legacy_actor_input_columns") is True
+        and structural.get("actor_new_feature_optimizer_group_count") == 1
+        and math.isclose(
+          structural.get("actor_new_feature_optimizer_learning_rate", math.nan),
+          5.0e-6,
+        )
+        and structural.get(
+          "actor_new_feature_optimizer_owns_first_layer_weight"
+        )
+        is True
+      ):
+        reasons.append("full-rate observable input adapter differs")
       rollout = summary.get("rollout_per_round", {})
       if rollout != {
         "batch_count": 2,
@@ -341,6 +395,7 @@ def _validate_training_artifacts(
         reasons.append("round/accepted-update protocol differs")
       for record in rounds:
         metrics = record.get("full_update_metrics", {})
+        input_adapter = record.get("input_adapter_update", {})
         if not (
           metrics.get("dual_rollout_batch_count") == 2
           and metrics.get("dual_rollout_gradient_cosine_is_gate") is False
@@ -351,6 +406,31 @@ def _validate_training_artifacts(
           and len(set(record.get("dual_rollout_seeds", []))) == 2
         ):
           reasons.append(f"round {record.get('round')} dual PPO invariant differs")
+        if not (
+          input_adapter.get("legacy_input_column_change_max_abs") == 0.0
+          and input_adapter.get("new_input_column_change_max_abs", 0.0) > 0.0
+          and input_adapter.get("new_input_column_max_abs", 0.0) > 0.0
+        ):
+          reasons.append(
+            f"round {record.get('round')} observable input update differs"
+          )
+        collector_metrics = metrics.get("collector_metrics", [])
+        if not (
+          len(collector_metrics) == 2
+          and all(
+            item.get("matched_pair_sampling") is True
+            and (item.get("matched_pair_audit") or {}).get(
+              "exact_match_passed"
+            )
+            is True
+            and (item.get("matched_pair_audit") or {}).get("pair_count") == 12
+            and _balanced_restart_strata(item.get("matched_pair_audit") or {})
+            for item in collector_metrics
+          )
+        ):
+          reasons.append(
+            f"round {record.get('round')} balanced matched restart pairs differ"
+          )
       failure = summary.get("failure_bank", {})
       success_pool = summary.get("success_pool", {})
       success = summary.get("success_counterexample_bank", {})
@@ -377,6 +457,7 @@ def _validate_training_artifacts(
         set(failure.get("touchdown_foot_counts", {})) == {"0", "1"}
         and set(failure.get("slip_foot_counts", {})) == {"0", "1"}
         and set(failure.get("contact_timing_counts", {})) == {"early", "delayed"}
+        and set(failure.get("support_foot_counts", {})) == {"0", "1"}
       ):
         reasons.append("contact bank diversity is incomplete")
       source_manifest = summary.get("source_file_sha256")

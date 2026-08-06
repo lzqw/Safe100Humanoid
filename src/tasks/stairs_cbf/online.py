@@ -37,6 +37,19 @@ CONSERVATIVE_ACTOR_LAYER_MULTIPLIERS = (0.10, 0.25, 0.50, 1.0)
 V19_DEPLOYABLE_FAILURE_OBSERVATION_DIM = 5
 
 
+def mask_legacy_actor_input_gradient(
+  gradient: torch.Tensor, new_feature_count: int
+) -> torch.Tensor:
+  """Freeze legacy input columns while retaining new observable gradients."""
+  if gradient.ndim != 2:
+    raise ValueError("actor first-layer weight gradient must be two-dimensional")
+  if not 0 < new_feature_count < gradient.shape[1]:
+    raise ValueError("new actor feature count must be inside the input width")
+  masked = gradient.clone()
+  masked[:, :-new_feature_count] = 0.0
+  return masked
+
+
 def brief_actor_layer_profile_is_valid(
   multipliers: tuple[float, ...], *, failure_focused: bool
 ) -> bool:
@@ -1461,6 +1474,9 @@ class OnlineSafePpoAlgorithmCfg(RslRlPpoAlgorithmCfg):
   actor_learning_rate: float = 5.0e-6
   critic_learning_rate: float = 1.0e-4
   actor_layer_multipliers: tuple[float, ...] = (0.10, 0.25, 0.50, 1.0)
+  actor_new_feature_count: int = 0
+  actor_new_feature_learning_rate_multiplier: float = 1.0
+  freeze_legacy_actor_input_columns: bool = False
   log_std_learning_rate: float = 0.0
   std_scale_from_base: float = 0.35
   minimum_std: float = 0.05
@@ -1540,6 +1556,9 @@ class OnlineSafePPO(PPO):
     actor_learning_rate: float = 5.0e-6,
     critic_learning_rate: float = 1.0e-4,
     actor_layer_multipliers: tuple[float, ...] = (0.10, 0.25, 0.50, 1.0),
+    actor_new_feature_count: int = 0,
+    actor_new_feature_learning_rate_multiplier: float = 1.0,
+    freeze_legacy_actor_input_columns: bool = False,
     log_std_learning_rate: float = 0.0,
     std_scale_from_base: float = 0.35,
     minimum_std: float = 0.05,
@@ -1588,6 +1607,13 @@ class OnlineSafePPO(PPO):
     self.critic_learning_rate = critic_learning_rate
     self.log_std_learning_rate = log_std_learning_rate
     self.actor_layer_multipliers = tuple(actor_layer_multipliers)
+    self.actor_new_feature_count = int(actor_new_feature_count)
+    self.actor_new_feature_learning_rate_multiplier = float(
+      actor_new_feature_learning_rate_multiplier
+    )
+    self.freeze_legacy_actor_input_columns = bool(
+      freeze_legacy_actor_input_columns
+    )
     self.std_scale_from_base = std_scale_from_base
     self.minimum_std = minimum_std
     self.maximum_std = maximum_std
@@ -1659,6 +1685,7 @@ class OnlineSafePPO(PPO):
         self.neighbor_retention_anchor_kl_budget,
         self.retention_anchor_adaptation_rate,
         self.maximum_retention_anchor_weight,
+        self.actor_new_feature_learning_rate_multiplier,
       ],
       dtype=torch.float64,
     )
@@ -1709,6 +1736,26 @@ class OnlineSafePPO(PPO):
       raise ValueError(
         "observable failure-conditioned refinement requires failure-focused brief PPO"
       )
+    if self.actor_new_feature_count < 0:
+      raise ValueError("new actor feature count must be non-negative")
+    if self.actor_new_feature_learning_rate_multiplier <= 0.0:
+      raise ValueError("new actor feature LR multiplier must be positive")
+    if self.observable_failure_conditioned_refinement:
+      if (
+        self.actor_new_feature_count != V19_DEPLOYABLE_FAILURE_OBSERVATION_DIM
+        or not self.freeze_legacy_actor_input_columns
+        or not math.isclose(
+          self.actor_new_feature_learning_rate_multiplier,
+          1.0,
+          rel_tol=0.0,
+          abs_tol=1.0e-12,
+        )
+      ):
+        raise ValueError(
+          "observable refinement requires a five-column full-rate input adapter"
+        )
+    elif self.actor_new_feature_count or self.freeze_legacy_actor_input_columns:
+      raise ValueError("the actor input adapter is reserved for observable refinement")
     if self.fall_redistribution_horizon < 1:
       raise ValueError("fall redistribution horizon must be positive")
     if not 0.0 < self.fall_redistribution_decay <= 1.0:
@@ -1849,6 +1896,19 @@ class OnlineSafePPO(PPO):
     self.retention_anchor_banks: dict[str, torch.Tensor] = {}
     self.retention_anchor_bank_metadata: dict[str, dict[str, Any]] = {}
     self.retention_anchor_cursors = {"d0": 0, "neighbor": 0}
+    self._actor_input_gradient_hook = None
+    if self.freeze_legacy_actor_input_columns:
+      first_layer = next(
+        module for module in self.actor.mlp if isinstance(module, torch.nn.Linear)
+      )
+      if self.actor_new_feature_count >= first_layer.in_features:
+        raise ValueError("new actor feature count consumes the legacy input prefix")
+      new_feature_count = self.actor_new_feature_count
+      self._actor_input_gradient_hook = first_layer.weight.register_hook(
+        lambda gradient: mask_legacy_actor_input_gradient(
+          gradient, new_feature_count
+        )
+      )
     self._build_separate_optimizer()
 
     t = self.storage.num_transitions_per_env
@@ -1901,15 +1961,40 @@ class OnlineSafePPO(PPO):
         f"{len(self.actor_layer_multipliers)} != {len(layers)}"
       )
     groups: list[dict[str, Any]] = []
-    for layer, multiplier in zip(layers, self.actor_layer_multipliers, strict=True):
-      groups.append(
-        {
-          "params": list(layer.parameters()),
-          "lr": self.actor_learning_rate * multiplier,
-          "base_lr": self.actor_learning_rate * multiplier,
-          "role": "actor",
-        }
-      )
+    for layer_index, (layer, multiplier) in enumerate(
+      zip(layers, self.actor_layer_multipliers, strict=True)
+    ):
+      if layer_index == 0 and self.freeze_legacy_actor_input_columns:
+        new_feature_lr = (
+          self.actor_learning_rate
+          * self.actor_new_feature_learning_rate_multiplier
+        )
+        groups.append(
+          {
+            "params": [layer.weight],
+            "lr": new_feature_lr,
+            "base_lr": new_feature_lr,
+            "role": "actor_new_features",
+          }
+        )
+        if layer.bias is not None:
+          groups.append(
+            {
+              "params": [layer.bias],
+              "lr": self.actor_learning_rate * multiplier,
+              "base_lr": self.actor_learning_rate * multiplier,
+              "role": "actor",
+            }
+          )
+      else:
+        groups.append(
+          {
+            "params": list(layer.parameters()),
+            "lr": self.actor_learning_rate * multiplier,
+            "base_lr": self.actor_learning_rate * multiplier,
+            "role": "actor",
+          }
+        )
     distribution_params = list(self.actor.distribution.parameters())
     if distribution_params:
       groups.append(
