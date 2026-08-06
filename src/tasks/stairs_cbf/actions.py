@@ -11,6 +11,7 @@ import warp as wp
 
 from mjlab.envs.mdp.actions import JointPositionAction, JointPositionActionCfg
 from mjlab.sensor import ContactSensor
+from mjlab.utils.lab_api.string import resolve_matching_names_values
 
 from .cbf_math import project_halfspace
 from .edge_detection import (
@@ -44,8 +45,11 @@ class StairCbfJointPositionActionCfg(JointPositionActionCfg):
   safety_history_length: int = 5
   safety_prediction_steps: int = 5
   deployment_action_gain: float = 1.0
+  deployment_action_scale: tuple[float, ...] | dict[str, float] | None = None
   deployment_action_bias: tuple[float, ...] | None = None
   deployment_action_delay_steps: int = 0
+  deployment_contact_delay_steps: int = 0
+  deployment_contact_phase_offset: float = 0.0
 
   def build(self, env: "ManagerBasedRlEnv") -> "StairCbfJointPositionAction":
     return StairCbfJointPositionAction(self, env)
@@ -131,6 +135,33 @@ class StairCbfJointPositionAction(JointPositionAction):
       raise ValueError("deployment action delay must be non-negative")
     if not 0.0 < cfg.deployment_action_gain <= 2.0:
       raise ValueError("deployment action gain must be in (0, 2]")
+    if cfg.deployment_action_scale is None:
+      scale = torch.ones(
+        self.action_dim, device=self.device, dtype=self.nominal_target.dtype
+      )
+    elif isinstance(cfg.deployment_action_scale, dict):
+      scale = torch.ones(
+        self.action_dim, device=self.device, dtype=self.nominal_target.dtype
+      )
+      indices, _, values = resolve_matching_names_values(
+        cfg.deployment_action_scale, self._target_names
+      )
+      scale[indices] = torch.tensor(
+        values, device=self.device, dtype=self.nominal_target.dtype
+      )
+    else:
+      if len(cfg.deployment_action_scale) != self.action_dim:
+        raise ValueError(
+          "deployment action scale must match the action dimension"
+        )
+      scale = torch.tensor(
+        cfg.deployment_action_scale,
+        device=self.device,
+        dtype=self.nominal_target.dtype,
+      )
+    if not bool(((scale >= 0.5) & (scale <= 1.5)).all()):
+      raise ValueError("deployment action scale must lie in [0.5, 1.5]")
+    self._deployment_action_scale = scale
     bias = (
       (0.0,) * self.action_dim
       if cfg.deployment_action_bias is None
@@ -150,6 +181,18 @@ class StairCbfJointPositionAction(JointPositionAction):
       self.action_dim,
       device=self.device,
       dtype=self.nominal_target.dtype,
+    )
+    if cfg.deployment_contact_delay_steps < 0:
+      raise ValueError("deployment contact delay must be non-negative")
+    self._deployment_contact_queue = torch.zeros(
+      self.num_envs,
+      cfg.deployment_contact_delay_steps + 1,
+      2,
+      dtype=torch.bool,
+      device=self.device,
+    )
+    self._deployment_contact_queue_initialized = torch.zeros(
+      self.num_envs, dtype=torch.bool, device=self.device
     )
     if cfg.safety_history_length < 1 or cfg.safety_prediction_steps < 1:
       raise ValueError("CBF safety history and prediction horizon must be positive")
@@ -187,7 +230,9 @@ class StairCbfJointPositionAction(JointPositionAction):
       :, self.cfg.deployment_action_delay_steps
     ]
     deployment_actions = (
-      self.cfg.deployment_action_gain * delayed_actions
+      self.cfg.deployment_action_gain
+      * self._deployment_action_scale
+      * delayed_actions
       + self._deployment_action_bias
     )
     # The actor and PPO buffer retain ``actions``. Gain, bias, and delay are a
@@ -205,9 +250,24 @@ class StairCbfJointPositionAction(JointPositionAction):
     found = self._contact_sensor.data.found
     if found is None:
       raise RuntimeError("CBF contact sensor must provide the 'found' field")
-    in_air = found <= 0
-    if in_air.ndim > 2:
-      in_air = in_air.any(dim=tuple(range(2, in_air.ndim)))
+    contact = found > 0
+    if contact.ndim > 2:
+      contact = contact.any(dim=tuple(range(2, contact.ndim)))
+    if contact.ndim != 2 or contact.shape[1] != 2:
+      raise RuntimeError("CBF contact sensor must resolve to two feet")
+    if self.cfg.deployment_contact_delay_steps:
+      new_ids = ~self._deployment_contact_queue_initialized
+      if bool(new_ids.any()):
+        self._deployment_contact_queue[new_ids] = contact[new_ids].unsqueeze(1)
+        self._deployment_contact_queue_initialized[new_ids] = True
+      self._deployment_contact_queue[:, 1:] = (
+        self._deployment_contact_queue[:, :-1].clone()
+      )
+      self._deployment_contact_queue[:, 0] = contact
+      contact = self._deployment_contact_queue[
+        :, self.cfg.deployment_contact_delay_steps
+      ]
+    in_air = ~contact
     air_time = self._contact_sensor.data.current_air_time
     if air_time is None:
       scores = in_air.float()
@@ -334,6 +394,8 @@ class StairCbfJointPositionAction(JointPositionAction):
     self.safe_raw_action[env_ids] = 0.0
     self.executed_raw_action[env_ids] = 0.0
     self._deployment_action_queue[env_ids] = 0.0
+    self._deployment_contact_queue[env_ids] = False
+    self._deployment_contact_queue_initialized[env_ids] = False
     self.barrier_derivative[env_ids] = 0.0
     self.predicted_h[env_ids] = 1.0
     self.h_history[env_ids] = 1.0

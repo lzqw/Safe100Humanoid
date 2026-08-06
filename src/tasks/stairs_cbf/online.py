@@ -34,6 +34,7 @@ BEHAVIOR_LOG_PROB_ATOL = 5.0e-4
 BEHAVIOR_DISTRIBUTION_PARAM_ATOL = 2.0e-5
 FULL_ACTOR_LAYER_MULTIPLIERS = (1.0, 1.0, 1.0, 1.0)
 CONSERVATIVE_ACTOR_LAYER_MULTIPLIERS = (0.10, 0.25, 0.50, 1.0)
+V19_DEPLOYABLE_FAILURE_OBSERVATION_DIM = 5
 
 
 def brief_actor_layer_profile_is_valid(
@@ -97,6 +98,58 @@ def validate_behavior_distribution_params(
       f"{maximum_error}"
     )
   return maximum_error
+
+
+def normalize_v19_grouped_advantages(
+  advantages: torch.Tensor,
+  failure_mask: torch.Tensor,
+  success_mask: torch.Tensor,
+  *,
+  failure_weight: float = 1.0,
+  success_weight: float = 1.25,
+) -> tuple[torch.Tensor, dict[str, float]]:
+  """Normalize normal/failure/success advantages independently, then weight.
+
+  The masks refer to transitions, not merely episode starts: persistent replay
+  slots keep the requested 40/12/12 mixture throughout each rollout.  This
+  function is intentionally independent of ``RolloutStorage`` so the exact
+  same operation is applied jointly across both v19 rollout batches.
+  """
+  if advantages.shape != failure_mask.shape or advantages.shape != success_mask.shape:
+    raise ValueError("v19 advantage tensors and replay masks must have equal shape")
+  if bool((failure_mask & success_mask).any()):
+    raise ValueError("v19 failure and success replay masks must be disjoint")
+  if not bool(torch.isfinite(advantages).all()):
+    raise RuntimeError("v19 advantages contain non-finite values")
+  masks = {
+    "normal": ~(failure_mask | success_mask),
+    "failure": failure_mask,
+    "success": success_mask,
+  }
+  if any(not bool(mask.any()) for mask in masks.values()):
+    missing = [name for name, mask in masks.items() if not bool(mask.any())]
+    raise RuntimeError(f"v19 grouped advantage normalization has empty groups: {missing}")
+  normalized = torch.empty_like(advantages)
+  metrics: dict[str, float] = {}
+  for name, mask in masks.items():
+    values = advantages[mask]
+    mean = values.mean()
+    std = values.std(unbiased=False)
+    normalized[mask] = (values - mean) / (std + 1.0e-8)
+    metrics[f"v19_{name}_advantage_count"] = float(mask.sum())
+    metrics[f"v19_{name}_advantage_mean_before"] = float(mean)
+    metrics[f"v19_{name}_advantage_std_before"] = float(std)
+  weights = torch.ones_like(normalized)
+  weights[failure_mask] = failure_weight
+  weights[success_mask] = success_weight
+  weighted = normalized * weights
+  metrics.update(
+    v19_failure_policy_weight=float(failure_weight),
+    v19_success_policy_weight=float(success_weight),
+    v19_weighted_advantage_mean=float(weighted.mean()),
+    v19_weighted_advantage_std=float(weighted.std(unbiased=False)),
+  )
+  return weighted, metrics
 
 
 @dataclass(frozen=True)
@@ -1430,6 +1483,7 @@ class OnlineSafePpoAlgorithmCfg(RslRlPpoAlgorithmCfg):
   task_first_constrained: bool = False
   brief_ppo_refinement: bool = False
   failure_focused_refinement: bool = False
+  observable_failure_conditioned_refinement: bool = False
   kl_early_stopping: bool = False
   fall_redistribution_horizon: int = 100
   fall_redistribution_decay: float = 0.97
@@ -1448,6 +1502,33 @@ class OnlineSafePpoAlgorithmCfg(RslRlPpoAlgorithmCfg):
   risk_horizon: int = 50
   strong_intervention_fraction: float = 0.5
   risk_loss_coef: float = 1.0
+
+
+@dataclass
+class OnlineRolloutBatch:
+  """Detached, immutable-in-practice snapshot of one complete PPO rollout.
+
+  v19 collects two of these snapshots under the exact same actor/critic and
+  then performs paired loss averaging.  Keeping the snapshots independent of
+  ``RolloutStorage.clear()`` also makes the behavior-policy audit and
+  candidate-family KL checks cover both batches.
+  """
+
+  observations: Any
+  actions: torch.Tensor
+  values: torch.Tensor
+  returns: torch.Tensor
+  advantages: torch.Tensor
+  actions_log_prob: torch.Tensor
+  distribution_params: tuple[torch.Tensor, ...]
+  rewards: torch.Tensor
+  dones: torch.Tensor
+  hard_case_transitions: torch.Tensor
+  success_counterexample_transitions: torch.Tensor
+  actual_cbf_intervened: torch.Tensor
+  fall_events: torch.Tensor
+  stair_indices: torch.Tensor
+  metrics: dict[str, Any]
 
 
 class OnlineSafePPO(PPO):
@@ -1481,6 +1562,7 @@ class OnlineSafePPO(PPO):
     task_first_constrained: bool = False,
     brief_ppo_refinement: bool = False,
     failure_focused_refinement: bool = False,
+    observable_failure_conditioned_refinement: bool = False,
     kl_early_stopping: bool = False,
     fall_redistribution_horizon: int = 100,
     fall_redistribution_decay: float = 0.97,
@@ -1529,6 +1611,9 @@ class OnlineSafePPO(PPO):
     self.task_first_constrained = task_first_constrained
     self.brief_ppo_refinement = brief_ppo_refinement
     self.failure_focused_refinement = failure_focused_refinement
+    self.observable_failure_conditioned_refinement = (
+      observable_failure_conditioned_refinement
+    )
     self.kl_early_stopping = kl_early_stopping
     self.fall_redistribution_horizon = fall_redistribution_horizon
     self.fall_redistribution_decay = fall_redistribution_decay
@@ -1618,6 +1703,12 @@ class OnlineSafePPO(PPO):
       raise ValueError("brief PPO cannot enable task-first constrained heads")
     if self.failure_focused_refinement and not self.brief_ppo_refinement:
       raise ValueError("failure-focused refinement must use brief PPO")
+    if self.observable_failure_conditioned_refinement and not (
+      self.failure_focused_refinement and self.brief_ppo_refinement
+    ):
+      raise ValueError(
+        "observable failure-conditioned refinement requires failure-focused brief PPO"
+      )
     if self.fall_redistribution_horizon < 1:
       raise ValueError("fall redistribution horizon must be positive")
     if not 0.0 < self.fall_redistribution_decay <= 1.0:
@@ -1702,7 +1793,13 @@ class OnlineSafePPO(PPO):
         self.critic_learning_rate, 1.0e-4, rel_tol=0.0, abs_tol=1.0e-15
       ):
         raise ValueError("failure-focused brief PPO requires critic LR 1e-4")
-      required_hard_weight = 0.75 if self.failure_focused_refinement else 0.5
+      required_hard_weight = (
+        1.0
+        if self.observable_failure_conditioned_refinement
+        else 0.75
+        if self.failure_focused_refinement
+        else 0.5
+      )
       if not math.isclose(
         self.hard_case_policy_weight,
         required_hard_weight,
@@ -1711,6 +1808,26 @@ class OnlineSafePPO(PPO):
       ):
         raise ValueError(
           f"brief PPO mode requires hard-case actor weight {required_hard_weight}"
+        )
+      required_success_weight = (
+        1.25 if self.observable_failure_conditioned_refinement else 1.5
+      )
+      if self.failure_focused_refinement and not math.isclose(
+        self.success_counterexample_policy_weight,
+        required_success_weight,
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
+      ):
+        raise ValueError(
+          "failure-focused brief PPO requires success-counterexample actor "
+          f"weight {required_success_weight}"
+        )
+      if self.observable_failure_conditioned_refinement and not (
+        self.num_mini_batches == 4
+        and self.normalize_advantage_per_mini_batch
+      ):
+        raise ValueError(
+          "v19 requires four paired minibatches and deferred grouped advantage normalization"
         )
 
     # The task critic retains the pretrained value representation.  Cost and
@@ -1774,6 +1891,7 @@ class OnlineSafePPO(PPO):
     self._pending_fall_values: torch.Tensor | None = None
     self._pending_intervention_values: torch.Tensor | None = None
     self.last_update_metrics: dict[str, float] = {}
+    self.last_dual_rollout_batches: tuple[OnlineRolloutBatch, ...] = ()
 
   def _build_separate_optimizer(self) -> None:
     layers = [module for module in self.actor.mlp if isinstance(module, torch.nn.Linear)]
@@ -2506,6 +2624,75 @@ class OnlineSafePPO(PPO):
     self.last_update_metrics.update(metrics)
     return metrics
 
+  def capture_rollout_batch(self) -> OnlineRolloutBatch:
+    """Clone one complete rollout before clearing reusable storage buffers."""
+    if self.storage.step != self.storage.num_transitions_per_env:
+      raise RuntimeError(
+        "cannot snapshot an incomplete rollout: "
+        f"{self.storage.step}/{self.storage.num_transitions_per_env}"
+      )
+    return OnlineRolloutBatch(
+      observations=self.storage.observations.clone(),
+      actions=self.storage.actions.detach().clone(),
+      values=self.storage.values.detach().clone(),
+      returns=self.storage.returns.detach().clone(),
+      advantages=self.storage.advantages.detach().clone(),
+      actions_log_prob=self.storage.actions_log_prob.detach().clone(),
+      distribution_params=tuple(
+        value.detach().clone() for value in self.storage.distribution_params
+      ),
+      rewards=self.storage.rewards.detach().clone(),
+      dones=self.storage.dones.detach().clone(),
+      hard_case_transitions=self.hard_case_transitions.detach().clone(),
+      success_counterexample_transitions=(
+        self.success_counterexample_transitions.detach().clone()
+      ),
+      actual_cbf_intervened=self.actual_cbf_intervened.detach().clone(),
+      fall_events=self.fall_events.detach().clone(),
+      stair_indices=self.stair_indices.detach().clone(),
+      metrics=copy.deepcopy(self.last_update_metrics),
+    )
+
+  def clear_captured_rollout(self) -> None:
+    """Reset reusable buffers after a detached rollout snapshot is secured."""
+    self.storage.clear()
+    self.clear_cbf_rollout()
+    self.last_update_metrics = {}
+
+  @staticmethod
+  def _concatenate_observations(batches: tuple[OnlineRolloutBatch, ...]):
+    return torch.cat(
+      [batch.observations.flatten(0, 1) for batch in batches], dim=0
+    )
+
+  def latest_policy_evaluation_data(self):
+    """Return the on-policy data used for candidate-family KL diagnostics."""
+    if self.last_dual_rollout_batches:
+      batches = self.last_dual_rollout_batches
+      return (
+        self._concatenate_observations(batches),
+        torch.cat([batch.actions.flatten(0, 1) for batch in batches], dim=0),
+        torch.cat(
+          [batch.actions_log_prob.flatten(0, 1) for batch in batches], dim=0
+        ),
+        tuple(
+          torch.cat(
+            [batch.distribution_params[index].flatten(0, 1) for batch in batches],
+            dim=0,
+          )
+          for index in range(len(batches[0].distribution_params))
+        ),
+      )
+    return (
+      self.storage.observations.flatten(0, 1),
+      self.storage.actions.flatten(0, 1),
+      self.storage.actions_log_prob.flatten(0, 1),
+      tuple(
+        parameter.flatten(0, 1)
+        for parameter in self.storage.distribution_params
+      ),
+    )
+
   def shape_intervention_advantages(self) -> dict[str, float]:
     """Apply an immediate policy-only penalty for CBF correction magnitude.
 
@@ -2873,6 +3060,318 @@ class OnlineSafePPO(PPO):
         intervention_value_delta
       ),
     }
+
+  def update_dual_rollouts(
+    self, batches: tuple[OnlineRolloutBatch, OnlineRolloutBatch]
+  ) -> dict[str, Any]:
+    """Average PPO losses from two independently seeded frozen-policy batches."""
+    if not self.observable_failure_conditioned_refinement:
+      raise RuntimeError("dual-rollout updates are reserved for the v19 protocol")
+    if len(batches) != 2:
+      raise ValueError("v19 requires exactly two rollout batches")
+    if self._critic_only:
+      raise RuntimeError("v19 dual-rollout PPO cannot run in critic-only mode")
+    if self.task_first_constrained or any(
+      value != 0.0
+      for value in (
+        self.base_anchor_weight,
+        self.d0_retention_anchor_weight,
+        self.neighbor_retention_anchor_weight,
+        self.safe_bc_weight,
+        self.correction_distillation_weight,
+      )
+    ):
+      raise RuntimeError("v19 dual-rollout PPO requires one unanchored scalar objective")
+    if self.rnd or self.symmetry or self.actor.is_recurrent or self.critic.is_recurrent:
+      raise RuntimeError("v19 dual-rollout PPO requires feed-forward PPO without auxiliaries")
+    if self.schedule != "fixed" or self.num_learning_epochs != 1:
+      raise RuntimeError("v19 dual-rollout PPO requires one fixed-rate epoch")
+
+    flattened_advantages = torch.cat(
+      [batch.advantages.squeeze(-1).flatten() for batch in batches], dim=0
+    )
+    flattened_failure = torch.cat(
+      [batch.hard_case_transitions.flatten() for batch in batches], dim=0
+    )
+    flattened_success = torch.cat(
+      [batch.success_counterexample_transitions.flatten() for batch in batches],
+      dim=0,
+    )
+    weighted_advantages, grouped_metrics = normalize_v19_grouped_advantages(
+      flattened_advantages,
+      flattened_failure,
+      flattened_success,
+      failure_weight=self.hard_case_policy_weight,
+      success_weight=self.success_counterexample_policy_weight,
+    )
+    batch_size = batches[0].actions.shape[0] * batches[0].actions.shape[1]
+    if any(
+      batch.actions.shape[0] * batch.actions.shape[1] != batch_size
+      for batch in batches
+    ):
+      raise ValueError("v19 dual rollout batches must have equal transition counts")
+    if batch_size % self.num_mini_batches:
+      raise ValueError("v19 rollout size must divide into exact paired minibatches")
+    weighted_by_batch = (
+      weighted_advantages[:batch_size], weighted_advantages[batch_size:]
+    )
+
+    old_log_prob_max_error = 0.0
+    old_distribution_param_max_error = 0.0
+    with torch.inference_mode():
+      for batch in batches:
+        observations = batch.observations.flatten(0, 1)
+        actions = batch.actions.flatten(0, 1)
+        self.actor(observations, stochastic_output=True)
+        old_distribution_param_max_error = max(
+          old_distribution_param_max_error,
+          validate_behavior_distribution_params(
+            tuple(value.flatten(0, 1) for value in batch.distribution_params),
+            tuple(self.actor.output_distribution_params),
+          ),
+        )
+        old_log_prob_max_error = max(
+          old_log_prob_max_error,
+          validate_behavior_log_prob(
+            batch.actions_log_prob.flatten(0, 1).squeeze(-1),
+            self.actor.get_output_log_prob(actions),
+          ),
+        )
+
+    # Diagnostic only: compute the full actor-MLP surrogate gradient from each
+    # rollout separately.  Its cosine is logged and never enters a gate.
+    actor_parameters = tuple(self.actor.mlp.parameters())
+    diagnostic_gradients: list[torch.Tensor] = []
+    diagnostic_chunk = batch_size // self.num_mini_batches
+    for batch, advantages in zip(batches, weighted_by_batch, strict=True):
+      self.actor.zero_grad(set_to_none=True)
+      for start in range(0, batch_size, diagnostic_chunk):
+        stop = start + diagnostic_chunk
+        observations = batch.observations.flatten(0, 1)[start:stop]
+        actions = batch.actions.flatten(0, 1)[start:stop]
+        old_log_prob = batch.actions_log_prob.flatten(0, 1)[start:stop].squeeze(-1)
+        self.actor(observations, stochastic_output=True)
+        ratio = torch.exp(self.actor.get_output_log_prob(actions) - old_log_prob)
+        advantage = advantages[start:stop]
+        surrogate = -advantage * ratio
+        surrogate_clipped = -advantage * torch.clamp(
+          ratio, 1.0 - self.clip_param, 1.0 + self.clip_param
+        )
+        loss = torch.max(surrogate, surrogate_clipped).mean()
+        (loss / self.num_mini_batches).backward()
+      diagnostic_gradients.append(
+        torch.cat(
+          [
+            torch.zeros_like(parameter).flatten()
+            if parameter.grad is None
+            else parameter.grad.detach().flatten().clone()
+            for parameter in actor_parameters
+          ]
+        )
+      )
+    self.actor.zero_grad(set_to_none=True)
+    first_gradient, second_gradient = diagnostic_gradients
+    first_norm = torch.linalg.vector_norm(first_gradient)
+    second_norm = torch.linalg.vector_norm(second_gradient)
+    denominator = first_norm * second_norm
+    gradient_cosine = (
+      float(torch.dot(first_gradient, second_gradient) / denominator)
+      if float(denominator) > 0.0
+      else 0.0
+    )
+
+    permutations = [
+      torch.randperm(batch_size, device=self.device) for _ in batches
+    ]
+    mini_batch_size = batch_size // self.num_mini_batches
+    mean_value_loss = 0.0
+    mean_surrogate_loss = 0.0
+    mean_entropy = 0.0
+    maximum_actor_gradient_norm = 0.0
+    maximum_critic_gradient_norm = 0.0
+    maximum_preupdate_kl = 0.0
+    completed_updates = 0
+    attempted_batches = 0
+    kl_early_stopped = False
+
+    for mini_batch_index in range(self.num_mini_batches):
+      rollout_losses = []
+      rollout_preupdate_kls = []
+      for rollout_index, (batch, advantages) in enumerate(
+        zip(batches, weighted_by_batch, strict=True)
+      ):
+        start = mini_batch_index * mini_batch_size
+        stop = start + mini_batch_size
+        indices = permutations[rollout_index][start:stop]
+        observations = batch.observations.flatten(0, 1)[indices]
+        actions = batch.actions.flatten(0, 1)[indices]
+        old_log_prob = batch.actions_log_prob.flatten(0, 1)[indices].squeeze(-1)
+        old_params = tuple(
+          value.flatten(0, 1)[indices] for value in batch.distribution_params
+        )
+        old_values = batch.values.flatten(0, 1)[indices]
+        returns = batch.returns.flatten(0, 1)[indices]
+
+        self.actor(observations, stochastic_output=True)
+        actions_log_prob = self.actor.get_output_log_prob(actions)
+        current_params = tuple(self.actor.output_distribution_params)
+        entropy = self.actor.output_entropy.mean()
+        values = self.critic(observations)
+        with torch.inference_mode():
+          rollout_preupdate_kls.append(
+            self.actor.get_kl_divergence(old_params, current_params).mean()
+          )
+        ratio = torch.exp(actions_log_prob - old_log_prob)
+        advantage = advantages[indices]
+        surrogate = -advantage * ratio
+        surrogate_clipped = -advantage * torch.clamp(
+          ratio, 1.0 - self.clip_param, 1.0 + self.clip_param
+        )
+        surrogate_loss = torch.max(surrogate, surrogate_clipped).mean()
+        if self.use_clipped_value_loss:
+          value_clipped = old_values + (values - old_values).clamp(
+            -self.clip_param, self.clip_param
+          )
+          value_loss = torch.max(
+            (values - returns).square(),
+            (value_clipped - returns).square(),
+          ).mean()
+        else:
+          value_loss = (returns - values).square().mean()
+        rollout_losses.append((surrogate_loss, value_loss, entropy))
+
+      attempted_batches += 1
+      preupdate_kl = torch.stack(rollout_preupdate_kls).mean()
+      if not bool(torch.isfinite(preupdate_kl)):
+        raise RuntimeError("v19 pre-update PPO KL is non-finite")
+      maximum_preupdate_kl = max(maximum_preupdate_kl, float(preupdate_kl))
+      if completed_updates > 0 and preupdate_kl > float(self.desired_kl):
+        kl_early_stopped = True
+        break
+      surrogate_loss = torch.stack([item[0] for item in rollout_losses]).mean()
+      value_loss = torch.stack([item[1] for item in rollout_losses]).mean()
+      entropy = torch.stack([item[2] for item in rollout_losses]).mean()
+      loss = (
+        surrogate_loss
+        + self.value_loss_coef * value_loss
+        - self.entropy_coef * entropy
+      )
+      self.optimizer.zero_grad(set_to_none=True)
+      loss.backward()
+      actor_gradient_norm = torch.nn.utils.clip_grad_norm_(
+        self.actor.parameters(), self.max_grad_norm
+      )
+      critic_gradient_norm = torch.nn.utils.clip_grad_norm_(
+        self.critic.parameters(), self.max_grad_norm
+      )
+      self.optimizer.step()
+      completed_updates += 1
+      mean_surrogate_loss += float(surrogate_loss)
+      mean_value_loss += float(value_loss)
+      mean_entropy += float(entropy)
+      maximum_actor_gradient_norm = max(
+        maximum_actor_gradient_norm, float(actor_gradient_norm)
+      )
+      maximum_critic_gradient_norm = max(
+        maximum_critic_gradient_norm, float(critic_gradient_norm)
+      )
+
+    if completed_updates < 1:
+      raise RuntimeError("v19 PPO update completed no paired minibatches")
+    self.clamp_online_std()
+
+    post_kl = []
+    post_clip_fraction = []
+    post_saturation = []
+    with torch.inference_mode():
+      for batch in batches:
+        observations = batch.observations.flatten(0, 1)
+        actions = batch.actions.flatten(0, 1)
+        old_log_prob = batch.actions_log_prob.flatten(0, 1).squeeze(-1)
+        old_params = tuple(
+          value.flatten(0, 1) for value in batch.distribution_params
+        )
+        self.actor(observations, stochastic_output=True)
+        new_log_prob = self.actor.get_output_log_prob(actions)
+        new_params = tuple(self.actor.output_distribution_params)
+        ratio = torch.exp(new_log_prob - old_log_prob)
+        post_kl.append(self.actor.get_kl_divergence(old_params, new_params).mean())
+        post_clip_fraction.append(
+          (torch.abs(ratio - 1.0) > self.clip_param).float().mean()
+        )
+        post_saturation.append((self.actor.output_mean.abs() > 0.95).float().mean())
+
+    returns_before = torch.cat(
+      [batch.returns.flatten() for batch in batches], dim=0
+    )
+    values_before = torch.cat(
+      [batch.values.flatten() for batch in batches], dim=0
+    )
+    explained_variance = 1.0 - torch.var(
+      returns_before - values_before, unbiased=False
+    ) / torch.var(returns_before, unbiased=False).clamp_min(1.0e-8)
+    centered_returns = returns_before - returns_before.mean()
+    centered_values = values_before - values_before.mean()
+    return_value_correlation = torch.sum(centered_returns * centered_values) / (
+      torch.sqrt(
+        torch.sum(centered_returns.square())
+        * torch.sum(centered_values.square())
+      ).clamp_min(1.0e-8)
+    )
+    value_calibration = critic_calibration_by_riser(
+      torch.cat([batch.values.squeeze(-1) for batch in batches], dim=1),
+      torch.cat([batch.returns.squeeze(-1) for batch in batches], dim=1),
+      torch.cat([batch.stair_indices for batch in batches], dim=1),
+    )
+    combined_rollout_metrics = {
+      "dual_rollout_batch_metrics": [
+        copy.deepcopy(batch.metrics) for batch in batches
+      ],
+      "dual_rollout_batch_count": 2,
+      "dual_rollout_transitions_per_batch": batch_size,
+      "hard_case_transition_fraction": float(flattened_failure.float().mean()),
+      "success_counterexample_transition_fraction": float(
+        flattened_success.float().mean()
+      ),
+    }
+    losses: dict[str, Any] = {
+      "value": mean_value_loss / completed_updates,
+      "surrogate": mean_surrogate_loss / completed_updates,
+      "entropy": mean_entropy / completed_updates,
+      "ppo_minibatches_attempted": attempted_batches,
+      "ppo_minibatches_completed": completed_updates,
+      "target_kl_early_stopped": kl_early_stopped,
+      "maximum_preupdate_minibatch_kl": maximum_preupdate_kl,
+      "mean_kl": float(torch.stack(post_kl).mean()),
+      "clip_fraction": float(torch.stack(post_clip_fraction).mean()),
+      "action_saturation_fraction": float(torch.stack(post_saturation).mean()),
+      "actor_learning_rate": float(self.actor_learning_rate),
+      "action_std_mean": float(self.actor.output_std.mean()),
+      "actor_gradient_norm_pre_clip_max": maximum_actor_gradient_norm,
+      "critic_gradient_norm_pre_clip_max": maximum_critic_gradient_norm,
+      "dual_rollout_actor_gradient_cosine": gradient_cosine,
+      "dual_rollout_actor_gradient_norm_1": float(first_norm),
+      "dual_rollout_actor_gradient_norm_2": float(second_norm),
+      "dual_rollout_gradient_cosine_is_gate": False,
+      "explained_variance_before_update": float(explained_variance),
+      "return_value_correlation_before_update": float(return_value_correlation),
+      "critic_calibration_by_riser": value_calibration,
+      "policy_old_log_prob_max_abs_error": old_log_prob_max_error,
+      "policy_old_distribution_param_max_abs_error": (
+        old_distribution_param_max_error
+      ),
+      "base_anchor_kl_loss": 0.0,
+      "d0_retention_anchor_kl_loss": 0.0,
+      "neighbor_retention_anchor_kl_loss": 0.0,
+      "safe_bc_loss": 0.0,
+      "correction_distillation_weight": 0.0,
+      **grouped_metrics,
+      **combined_rollout_metrics,
+    }
+    self.last_dual_rollout_batches = batches
+    self.storage.clear()
+    self.last_update_metrics = {}
+    return losses
 
   def update(self) -> dict[str, Any]:
     """Run one exact single-clipped PPO update with optional legacy anchors."""
@@ -3305,6 +3804,114 @@ class OnlineSafeRefinementRunner(VelocityOnPolicyRunner):
 
   alg: OnlineSafePPO
 
+  def _load_actor_with_expansion(
+    self, source: dict[str, torch.Tensor]
+  ) -> dict[str, bool | float | int | str]:
+    """Append zero-weight deployable inputs while preserving π0 exactly."""
+    target = self.alg.actor.state_dict()
+    source_width = int(source["mlp.0.weight"].shape[1])
+    target_width = int(target["mlp.0.weight"].shape[1])
+    if source_width == target_width:
+      self.alg.actor.load_state_dict(source, strict=True)
+      return {
+        "source_actor_width": source_width,
+        "expanded_actor_width": target_width,
+        "actor_layout": "exact",
+        "zero_initialized_actor_columns": 0,
+        "legacy_tensor_copy_max_abs_error": 0.0,
+        "new_first_layer_column_max_abs": 0.0,
+        "new_normalizer_identity_max_abs_error": 0.0,
+        "pi0_exact_preservation_proof": True,
+      }
+    added = target_width - source_width
+    if added != V19_DEPLOYABLE_FAILURE_OBSERVATION_DIM:
+      raise RuntimeError(
+        "actor warm start supports only the five-column v19 append: "
+        f"source={source_width}, target={target_width}"
+      )
+    unexpected = sorted(set(source) - set(target))
+    if unexpected:
+      raise RuntimeError(f"actor checkpoint has unexpected tensors: {unexpected}")
+    with torch.no_grad():
+      for key, target_value in target.items():
+        if key == "mlp.0.weight":
+          target_value.zero_()
+          target_value[:, :source_width].copy_(
+            source[key].to(target_value.device, target_value.dtype)
+          )
+        elif key.startswith("obs_normalizer._") and target_value.ndim == 2:
+          if key.endswith("_var") or key.endswith("_std"):
+            target_value.fill_(1.0)
+          else:
+            target_value.zero_()
+          target_value[:, :source_width].copy_(
+            source[key].to(target_value.device, target_value.dtype)
+          )
+        else:
+          if key not in source or source[key].shape != target_value.shape:
+            raise RuntimeError(
+              f"actor tensor is incompatible outside the v19 input append: {key}"
+            )
+          target_value.copy_(
+            source[key].to(target_value.device, target_value.dtype)
+          )
+    self.alg.actor.load_state_dict(target, strict=True)
+    loaded = self.alg.actor.state_dict()
+    legacy_copy_error = 0.0
+    normalizer_identity_error = 0.0
+    for key, source_value in source.items():
+      loaded_value = loaded[key]
+      if key == "mlp.0.weight" or (
+        key.startswith("obs_normalizer._") and loaded_value.ndim == 2
+      ):
+        comparable = loaded_value[:, :source_width]
+      else:
+        comparable = loaded_value
+      legacy_copy_error = max(
+        legacy_copy_error,
+        float(
+          torch.max(
+            torch.abs(
+              comparable
+              - source_value.to(comparable.device, comparable.dtype)
+            )
+          )
+        )
+        if comparable.numel()
+        else 0.0,
+      )
+    new_column_max_abs = float(
+      loaded["mlp.0.weight"][:, source_width:].abs().max()
+    )
+    for key, loaded_value in loaded.items():
+      if not key.startswith("obs_normalizer._") or loaded_value.ndim != 2:
+        continue
+      appended = loaded_value[:, source_width:]
+      expected = (
+        torch.ones_like(appended)
+        if key.endswith("_var") or key.endswith("_std")
+        else torch.zeros_like(appended)
+      )
+      normalizer_identity_error = max(
+        normalizer_identity_error,
+        float(torch.max(torch.abs(appended - expected))) if appended.numel() else 0.0,
+      )
+    exact_preservation = (
+      legacy_copy_error == 0.0
+      and new_column_max_abs == 0.0
+      and normalizer_identity_error == 0.0
+    )
+    return {
+      "source_actor_width": source_width,
+      "expanded_actor_width": target_width,
+      "actor_layout": "legacy_prefix_plus_v19_deployable_failure",
+      "zero_initialized_actor_columns": added,
+      "legacy_tensor_copy_max_abs_error": legacy_copy_error,
+      "new_first_layer_column_max_abs": new_column_max_abs,
+      "new_normalizer_identity_max_abs_error": normalizer_identity_error,
+      "pi0_exact_preservation_proof": exact_preservation,
+    }
+
   def _load_critic_with_expansion(
     self,
     source: dict[str, torch.Tensor],
@@ -3375,7 +3982,7 @@ class OnlineSafeRefinementRunner(VelocityOnPolicyRunner):
   def load_base_checkpoint(self, path: str, map_location: str | None = None) -> dict:
     """Warm-start actor and expand the old critic at its observation offset."""
     loaded = torch.load(path, map_location=map_location, weights_only=False)
-    self.alg.actor.load_state_dict(loaded["actor_state_dict"], strict=True)
+    actor_expansion = self._load_actor_with_expansion(loaded["actor_state_dict"])
     expansion = self._load_critic_with_expansion(
       loaded["critic_state_dict"], source_is_base_critic=True
     )
@@ -3384,7 +3991,7 @@ class OnlineSafeRefinementRunner(VelocityOnPolicyRunner):
     if not self.alg.brief_ppo_refinement:
       self.alg.set_base_actor_reference()
     self.current_learning_iteration = 0
-    return expansion | {
+    return actor_expansion | expansion | {
       "source_iteration": int(loaded.get("iter", -1)),
       "legacy_critic_width": expansion["source_critic_width"],
       "legacy_critic_offset": expansion["source_critic_offset"],
@@ -3395,7 +4002,7 @@ class OnlineSafeRefinementRunner(VelocityOnPolicyRunner):
   ) -> dict[str, Any]:
     """Resume an accepted online actor and expand an older full critic."""
     loaded = torch.load(path, map_location=map_location, weights_only=False)
-    self.alg.actor.load_state_dict(loaded["actor_state_dict"], strict=True)
+    actor_expansion = self._load_actor_with_expansion(loaded["actor_state_dict"])
     expansion = self._load_critic_with_expansion(
       loaded["critic_state_dict"], source_is_base_critic=False
     )
@@ -3410,7 +4017,7 @@ class OnlineSafeRefinementRunner(VelocityOnPolicyRunner):
     self.alg.reset_online_optimizer()
     self.alg._std_initialized = True
     self.current_learning_iteration = int(loaded.get("iter", 0))
-    return expansion | {
+    return actor_expansion | expansion | {
       "source_iteration": int(loaded.get("iter", -1)),
       "optimizer_reset": True,
       "loaded_task_first_heads": loaded_task_first_heads,

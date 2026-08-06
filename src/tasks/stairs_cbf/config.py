@@ -537,3 +537,87 @@ def g1_online_stairs_runner_cfg():
     max_grad_norm=0.5,
   )
   return cfg
+
+
+def configure_v19_observable_refinement_env(
+  cfg: ManagerBasedRlEnvCfg,
+  *,
+  mode: str,
+  contact_observation_delay_steps: int = 0,
+  phase_offset: float = 0.0,
+  reward_parameters: dict | None = None,
+) -> dict[str, object]:
+  """Append exactly five deployable actor inputs and install the v19 reward."""
+  if mode not in ("lateral", "contact_stability"):
+    raise ValueError(f"unsupported v19 specialist mode: {mode!r}")
+  if contact_observation_delay_steps < 0:
+    raise ValueError("v19 contact observation delay must be non-negative")
+  effective_delay = (
+    contact_observation_delay_steps if mode == "contact_stability" else 0
+  )
+  cfg.observations["deployable_failure"] = ObservationGroupCfg(
+    terms={
+      "failure_state": ObservationTermCfg(
+        func=mdp.v19_deployable_failure_observation,
+        params={
+          "mode": mode,
+          "command_name": "twist",
+          "action_name": "joint_pos",
+          "asset_name": "robot",
+          "sensor_name": "feet_ground_contact",
+          "phase_offset": float(phase_offset),
+        },
+        delay_min_lag=effective_delay,
+        delay_max_lag=effective_delay,
+        history_length=0,
+      )
+    },
+    concatenate_terms=True,
+    enable_corruption=False,
+    history_length=None,
+  )
+  reward_parameters = dict(reward_parameters or {})
+  if mode == "lateral":
+    reward_func = mdp.V19LateralRecoveryReward
+    default_parameters = {
+      "command_name": "twist",
+      "action_name": "joint_pos",
+      "asset_name": "robot",
+      "sensor_name": "feet_ground_contact",
+    }
+  else:
+    reward_func = mdp.V19ContactRecoveryReward
+    default_parameters = {
+      "action_name": "joint_pos",
+      "asset_name": "robot",
+      "sensor_name": "feet_ground_contact",
+      "phase_offset": float(phase_offset),
+    }
+  default_parameters.update(reward_parameters)
+  cfg.rewards["specialist_failure_signal"] = RewardTermCfg(
+    func=reward_func,
+    weight=1.0,
+    params=default_parameters,
+  )
+  return {
+    "mode": mode,
+    "actor_feature_count": 5,
+    "contact_observation_delay_steps": effective_delay,
+    "phase_offset": float(phase_offset),
+    "reward_class": reward_func.__name__,
+  }
+
+
+def configure_v19_observable_refinement_runner(cfg) -> None:
+  """Keep legacy actor/critic columns as prefixes and append five new inputs."""
+  cfg.obs_groups = {
+    "actor": ("actor", "deployable_failure"),
+    # Appending after the historical 838-D prefix lets old online critics be
+    # expanded by zero columns without moving any pretrained feature.
+    "critic": (
+      "actor",
+      "critic",
+      "online_privileged",
+      "deployable_failure",
+    ),
+  }

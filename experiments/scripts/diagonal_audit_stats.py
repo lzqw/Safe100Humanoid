@@ -7,21 +7,17 @@ from typing import Any
 import torch
 
 
-def hierarchical_paired_scene_interval(
+def _hierarchical_paired_scene_interval(
   seed_episode_deltas: list[torch.Tensor],
   *,
-  bootstrap_samples: int = 10000,
-  bootstrap_seed: int = 0,
+  required_seed_count: int,
+  bootstrap_samples: int,
+  bootstrap_seed: int,
 ) -> tuple[float, float, float]:
-  """Return a two-level paired-bootstrap interval for one specialist scene.
-
-  The formal protocol has three independently adapted actors. Each bootstrap
-  draw resamples those adaptation seeds and then resamples paired episodes
-  within each selected seed. It never resamples baseline and final outcomes
-  independently.
-  """
-  if len(seed_episode_deltas) != 3:
-    raise ValueError("scene bootstrap requires exactly three adaptation seeds")
+  if len(seed_episode_deltas) != required_seed_count:
+    raise ValueError(
+      f"scene bootstrap requires exactly {required_seed_count} adaptation seeds"
+    )
   if bootstrap_samples < 1000:
     raise ValueError("formal scene bootstrap requires at least 1000 samples")
   if any(group.ndim != 1 for group in seed_episode_deltas):
@@ -62,6 +58,44 @@ def hierarchical_paired_scene_interval(
   return float(values.mean()), float(lower), float(upper)
 
 
+def hierarchical_paired_scene_interval(
+  seed_episode_deltas: list[torch.Tensor],
+  *,
+  bootstrap_samples: int = 10000,
+  bootstrap_seed: int = 0,
+) -> tuple[float, float, float]:
+  """Return a two-level paired-bootstrap interval for one specialist scene.
+
+  The formal protocol has three independently adapted actors. Each bootstrap
+  draw resamples those adaptation seeds and then resamples paired episodes
+  within each selected seed. It never resamples baseline and final outcomes
+  independently.
+  """
+  if len(seed_episode_deltas) != 3:
+    raise ValueError("scene bootstrap requires exactly three adaptation seeds")
+  return _hierarchical_paired_scene_interval(
+    seed_episode_deltas,
+    required_seed_count=3,
+    bootstrap_samples=bootstrap_samples,
+    bootstrap_seed=bootstrap_seed,
+  )
+
+
+def hierarchical_paired_scene_interval_v19(
+  seed_episode_deltas: list[torch.Tensor],
+  *,
+  bootstrap_samples: int = 10000,
+  bootstrap_seed: int = 0,
+) -> tuple[float, float, float]:
+  """Five-adaptation-seed paired bootstrap for one v19 diagonal scene."""
+  return _hierarchical_paired_scene_interval(
+    seed_episode_deltas,
+    required_seed_count=5,
+    bootstrap_samples=bootstrap_samples,
+    bootstrap_seed=bootstrap_seed,
+  )
+
+
 def independent_diagonal_scene_gate(
   *,
   diagonal_success_delta: float,
@@ -97,6 +131,47 @@ def independent_diagonal_scene_gate(
     "thresholds": {
       "mean_diagonal_success_delta_strictly_above": 0.0,
       "minimum_positive_adaptation_seed_count": 2,
+      "maximum_diagonal_fall_increase": 0.03,
+      "minimum_d0_success_delta": -0.05,
+    },
+  }
+
+
+def independent_diagonal_scene_gate_v19(
+  *,
+  diagonal_success_delta: float,
+  per_seed_success_deltas: list[float],
+  diagonal_fall_delta: float,
+  d0_success_delta: float,
+) -> dict[str, Any]:
+  """Apply the frozen five-seed v19 gate to one specialist independently."""
+  if len(per_seed_success_deltas) != 5:
+    raise ValueError("v19 independent scene gate requires exactly five seed deltas")
+  values = torch.tensor(
+    [
+      diagonal_success_delta,
+      *per_seed_success_deltas,
+      diagonal_fall_delta,
+      d0_success_delta,
+    ],
+    dtype=torch.float64,
+  )
+  if not bool(torch.isfinite(values).all()):
+    raise ValueError("v19 independent scene gate inputs must be finite")
+  positive_seed_count = sum(delta > 0.0 for delta in per_seed_success_deltas)
+  criteria = {
+    "mean_diagonal_success_gain_positive": diagonal_success_delta > 0.0,
+    "at_least_four_of_five_seed_gains_positive": positive_seed_count >= 4,
+    "diagonal_fall_increase_at_most_3pp": diagonal_fall_delta <= 0.03,
+    "d0_success_drop_at_most_5pp": d0_success_delta >= -0.05,
+  }
+  return {
+    "criteria": criteria,
+    "passed": all(criteria.values()),
+    "positive_adaptation_seed_count": positive_seed_count,
+    "thresholds": {
+      "mean_diagonal_success_delta_strictly_above": 0.0,
+      "minimum_positive_adaptation_seed_count": 4,
       "maximum_diagonal_fall_increase": 0.03,
       "minimum_d0_success_delta": -0.05,
     },

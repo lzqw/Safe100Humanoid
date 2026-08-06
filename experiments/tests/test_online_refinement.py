@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import copy
+import math
+from types import SimpleNamespace
 
 import pytest
 import torch
@@ -55,6 +57,7 @@ from src.tasks.stairs_cbf.online import (
   adaptive_cbf_std_factor,
   validate_behavior_log_prob,
   validate_behavior_distribution_params,
+  normalize_v19_grouped_advantages,
   specialist_candidate_gate,
   specialist_candidate_precheck,
   specialist_d0_retention_gate,
@@ -81,6 +84,10 @@ from src.tasks.stairs_cbf.hard_cases import (
   select_specialist_success_candidates,
   specialist_destination_ids,
   specialist_history_window,
+  classify_v19_failure_mode,
+  select_v19_contact_candidates,
+  select_v19_lateral_failure_candidates,
+  select_v19_lateral_success_candidates,
 )
 from src.tasks.stairs_cbf.deployment_context import (
   FAILURE_FOCUSED_CALIBRATION_KIND,
@@ -92,6 +99,10 @@ from src.tasks.stairs_cbf.deployment_context import (
   validate_calibrated_deployment_context,
   validate_calibrated_specialist_context,
   validate_frozen_deployment_context,
+  V19_CALIBRATION_KIND,
+  V19_SPECIALIST_FAILURE_TYPES,
+  generate_v19_specialist_context,
+  validate_calibrated_v19_context,
 )
 from src.tasks.stairs_cbf.retention import (
   RETENTION_BANK_KIND,
@@ -1919,3 +1930,227 @@ def test_retention_reference_restore_ignores_transient_inference_distribution() 
   identity = id(reference)
   algorithm._set_retention_actor_reference(state)
   assert id(algorithm.retention_actor_reference) == identity
+
+
+def test_v19_grouped_advantages_normalize_before_replay_weighting() -> None:
+  advantages = torch.tensor([1.0, 3.0, 10.0, 14.0, -5.0, 1.0])
+  failure = torch.tensor([False, False, True, True, False, False])
+  success = torch.tensor([False, False, False, False, True, True])
+  weighted, metrics = normalize_v19_grouped_advantages(
+    advantages, failure, success
+  )
+  normal = ~(failure | success)
+  assert float(weighted[normal].mean()) == pytest.approx(0.0, abs=1e-7)
+  assert float(weighted[failure].mean()) == pytest.approx(0.0, abs=1e-7)
+  assert float(weighted[success].mean()) == pytest.approx(0.0, abs=1e-7)
+  assert float(weighted[normal].std(unbiased=False)) == pytest.approx(1.0)
+  assert float(weighted[failure].std(unbiased=False)) == pytest.approx(1.0)
+  assert float(weighted[success].std(unbiased=False)) == pytest.approx(1.25)
+  assert metrics["v19_failure_policy_weight"] == 1.0
+  assert metrics["v19_success_policy_weight"] == 1.25
+
+
+def test_v19_zero_column_actor_expansion_preserves_every_legacy_output() -> None:
+  torch.manual_seed(1901)
+  legacy = torch.nn.Sequential(
+    torch.nn.Linear(405, 8),
+    torch.nn.Tanh(),
+    torch.nn.Linear(8, 3),
+  )
+  expanded = torch.nn.Sequential(
+    torch.nn.Linear(410, 8),
+    torch.nn.Tanh(),
+    torch.nn.Linear(8, 3),
+  )
+  legacy_actor = torch.nn.Module()
+  legacy_actor.mlp = legacy
+  expanded_actor = torch.nn.Module()
+  expanded_actor.mlp = expanded
+  runner = SimpleNamespace(alg=SimpleNamespace(actor=expanded_actor))
+  proof = OnlineSafeRefinementRunner._load_actor_with_expansion(
+    runner, legacy_actor.state_dict()
+  )
+  old_observation = torch.randn(32, 405)
+  arbitrary_new_features = torch.randn(32, 5) * 100.0
+  with torch.no_grad():
+    expected = legacy_actor.mlp(old_observation)
+    actual = expanded_actor.mlp(
+      torch.cat((old_observation, arbitrary_new_features), dim=1)
+    )
+  # The parameter mapping is bit-exact.  Different-width GEMM kernels may
+  # reorder floating-point accumulation even though the five added products
+  # are exactly zero, so compare the realized outputs at one-ULP scale.
+  torch.testing.assert_close(actual, expected, rtol=0.0, atol=1.0e-6)
+  assert proof["pi0_exact_preservation_proof"] is True
+  assert proof["legacy_tensor_copy_max_abs_error"] == 0.0
+  assert proof["new_first_layer_column_max_abs"] == 0.0
+
+
+def test_v19_contexts_are_observable_and_contact_context_is_mechanism_pure() -> None:
+  contexts = {
+    "lateral": generate_v19_specialist_context("lateral", 4107),
+    "contact_stability": generate_v19_specialist_context(
+      "contact_stability", 4207
+    ),
+  }
+  assert contexts["lateral"]["parameters_sha256"] != contexts[
+    "contact_stability"
+  ]["parameters_sha256"]
+  contact = contexts["contact_stability"]
+  target = contact["target"]
+  scenario = contact["scenario"]
+  assert target["num_steps"] == 24
+  assert target["action_bias"] == (0.0,) * 12
+  assert target["encoder_bias"] == 0.0
+  assert target["action_delay_steps"] == 0
+  assert target["command_delay_s"] == 0.0
+  assert target["command_forward_scale"] == 1.0
+  assert scenario["foot_friction"] >= 0.35
+  assert scenario["contact_observation_delay_steps"] in (1, 2)
+  assert abs(scenario["left_response_scale"] - 1.0) <= 0.04
+  assert abs(scenario["right_response_scale"] - 1.0) <= 0.04
+  assert abs(scenario["left_response_scale"] - scenario["right_response_scale"]) <= 0.04
+  assert scenario["lateral_command_bias"] == 0.0
+  assert scenario["yaw_command_bias"] == 0.0
+
+  for mode, context in contexts.items():
+    minimum_purity = 0.80 if mode == "lateral" else 0.75
+    maximum_second = 0.30 if mode == "lateral" else 0.20
+    attempt = {
+      "candidate_seed": context["calibration_candidate_seed"],
+      "parameters_sha256": context["parameters_sha256"],
+      "base_policy_only": True,
+      "num_episodes": 512,
+      "success_rate": 0.80,
+      "fall_count": 103,
+      "target_failure_type": V19_SPECIALIST_FAILURE_TYPES[mode],
+      "target_failure_fraction": minimum_purity + 0.01,
+      "second_failure_fraction": maximum_second - 0.01,
+      "qualifies": True,
+    }
+    context["calibration"] = {
+      "kind": V19_CALIBRATION_KIND,
+      "success_rate_bounds": [0.70, 0.85],
+      "minimum_target_failure_fraction": minimum_purity,
+      "maximum_second_failure_fraction": maximum_second,
+      "minimum_fall_count": 100,
+      "episodes_per_candidate": 512,
+      "candidate_seeds": [context["calibration_candidate_seed"]],
+      "attempts": [attempt],
+      "selected_candidate_seed": context["calibration_candidate_seed"],
+      "selected_parameters_sha256": context["parameters_sha256"],
+      "adapted_policy_evaluations_used": False,
+    }
+    assert validate_calibrated_v19_context(context)["specialist_mode"] == mode
+
+
+def test_v19_failure_classifier_uses_contact_mechanism_not_attitude_outcome() -> None:
+  common = {
+    "side_edge_breach": False,
+    "max_abs_centerline_error": 0.1,
+    "max_abs_heading_error": 0.1,
+    "correction_max": 0.1,
+    "stair_half_width": 1.2,
+  }
+  assert classify_v19_failure_mode(
+    **common,
+    maximum_left_slip_speed=0.35,
+    maximum_right_slip_speed=0.1,
+    mean_contact_mismatch=0.1,
+  ) == "contact_stability"
+  assert classify_v19_failure_mode(
+    **common,
+    maximum_left_slip_speed=0.8,
+    maximum_right_slip_speed=0.7,
+    mean_contact_mismatch=0.4,
+    first_contact_event_step=20,
+    first_lateral_event_step=80,
+  ) == "contact_stability"
+  assert classify_v19_failure_mode(
+    **common,
+    maximum_left_slip_speed=0.1,
+    maximum_right_slip_speed=0.1,
+    mean_contact_mismatch=0.35,
+  ) == "contact_stability"
+  assert classify_v19_failure_mode(
+    **{**common, "correction_max": 0.6},
+    maximum_left_slip_speed=0.1,
+    maximum_right_slip_speed=0.1,
+    mean_contact_mismatch=0.1,
+  ) == "non_lateral_high_cbf_demand"
+
+
+def test_v19_banks_select_lateral_strata_and_touchdown_centered_contact_states() -> None:
+  length = 201
+  time = torch.linspace(0.0, 1.0, length)
+  riser = torch.floor(1.0 + 10.0 * time).long()
+  phase = (torch.arange(length, dtype=torch.float32) * 0.01) % 1.0
+  support = (torch.arange(length) % 2).long()
+  command = torch.stack((0.4 + 0.05 * time, 0.03 * time, 0.1 * time), dim=1)
+  velocity = torch.stack((0.3 + 0.05 * time, 0.02 * time, 0.0 * time), dim=1)
+  cbf = torch.zeros(length, dtype=torch.bool)
+  signed_wave = torch.sin(torch.linspace(-2.0 * math.pi, 2.0 * math.pi, length))
+  components = {
+    "centerline": signed_wave.abs(),
+    "heading": torch.cos(torch.linspace(0.0, 3.0 * math.pi, length)).abs(),
+    "centerline_signed": signed_wave,
+    "heading_signed": torch.cos(torch.linspace(0.0, 3.0 * math.pi, length)),
+    "centerline_rate": torch.gradient(signed_wave)[0] * 30.0,
+    "heading_rate": torch.gradient(torch.cos(torch.linspace(0.0, 3.0 * math.pi, length)))[0] * 30.0,
+    "contact_mismatch": 0.1 + 0.5 * time,
+    "left_slip": torch.zeros(length),
+    "right_slip": torch.zeros(length),
+  }
+  lateral = select_v19_lateral_failure_candidates(
+    riser,
+    components,
+    phase,
+    support,
+    command,
+    velocity,
+    cbf,
+    minimum_riser=1,
+    total_risers=11,
+    maximum_candidates=16,
+  )
+  assert lateral
+  assert {candidate.centerline_sign for candidate in lateral} == {-1, 1}
+  assert {candidate.heading_sign for candidate in lateral} == {-1, 1}
+  successes = select_v19_lateral_success_candidates(
+    riser,
+    components,
+    phase,
+    support,
+    command,
+    velocity,
+    cbf,
+    minimum_riser=1,
+    total_risers=11,
+  )
+  assert successes
+
+  touchdown = torch.zeros(length, 2, dtype=torch.bool)
+  touchdown[60, 0] = True
+  touchdown[140, 1] = True
+  phase[60] = 0.90  # early relative to left touchdown at phase zero
+  phase[140] = 0.60  # delayed relative to right touchdown at phase 0.5
+  components["left_slip"][60:121] = 0.6
+  components["right_slip"][140:201] = 0.7
+  contact = select_v19_contact_candidates(
+    riser,
+    components,
+    phase,
+    support,
+    command,
+    velocity,
+    cbf,
+    touchdown,
+    minimum_riser=1,
+    outcome="failure",
+    maximum_candidates=16,
+  )
+  assert contact
+  assert {candidate.touchdown_foot for candidate in contact} == {0, 1}
+  assert {candidate.slip_foot for candidate in contact} == {0, 1}
+  assert {candidate.contact_timing for candidate in contact} == {"early", "delayed"}
+  assert {candidate.contact_window_side for candidate in contact} == {"pre", "post"}

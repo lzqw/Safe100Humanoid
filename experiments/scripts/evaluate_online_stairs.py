@@ -39,6 +39,7 @@ def evaluate_policy(
   one_episode_per_env: bool = False,
   deployment_context: dict[str, Any] | None = None,
   deployment_context_role: str | None = None,
+  v19_context: dict[str, Any] | None = None,
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
   from mjlab.envs import ManagerBasedRlEnv
   from mjlab.rl import RslRlVecEnvWrapper
@@ -70,6 +71,16 @@ def evaluate_policy(
     context_metadata = apply_frozen_deployment_context(
       cfg, deployment_context, role=role
     )
+  if v19_context is not None and (
+    deployment_context is None
+    or deployment_context.get("kind")
+    != "observable_failure_conditioned_brief_ppo_v19"
+  ):
+    from src.tasks.stairs_cbf.deployment_context import (
+      configure_v19_actor_interface,
+    )
+
+    configure_v19_actor_interface(cfg, v19_context)
   cfg.scene.num_envs = num_envs
   cfg.seed = seed
   cfg.actions["joint_pos"].enabled = runtime_filter
@@ -110,7 +121,19 @@ def evaluate_policy(
       "_deployment_action_queue",
       torch.zeros(num_envs, 1, action_term.action_dim, device=device),
     ),
+    getattr(
+      action_term,
+      "_deployment_contact_queue",
+      torch.zeros(num_envs, 1, 2, dtype=torch.bool, device=device),
+    ),
+    getattr(
+      action_term,
+      "_deployment_contact_queue_initialized",
+      torch.zeros(num_envs, dtype=torch.bool, device=device),
+    ),
   ]
+  if "deployable_failure" in obs:
+    initial_tensors.insert(1, obs["deployable_failure"])
   for tensor in initial_tensors:
     signature.update(tensor.detach().cpu().contiguous().numpy().tobytes())
   initial_state_signature = signature.hexdigest()
@@ -144,7 +167,14 @@ def evaluate_policy(
   max_pitch_signal = torch.zeros(num_envs, device=device)
   max_angular_velocity_signal = torch.zeros(num_envs, device=device)
   slip_signal_integral = torch.zeros(num_envs, device=device)
+  max_left_slip_speed = torch.zeros(num_envs, device=device)
+  max_right_slip_speed = torch.zeros(num_envs, device=device)
   contact_mismatch_integral = torch.zeros(num_envs, device=device)
+  first_lateral_event_step = torch.full(
+    (num_envs,), -1, dtype=torch.long, device=device
+  )
+  first_contact_event_step = torch.full_like(first_lateral_event_step, -1)
+  contact_instability_streak = torch.zeros_like(first_lateral_event_step)
   correction_history = torch.zeros(
     num_envs, max_episode_steps, device=device
   )
@@ -236,6 +266,12 @@ def evaluate_policy(
           specialist_components["angular_velocity"],
         )
         slip_signal_integral += specialist_components["slip"]
+        max_left_slip_speed = torch.maximum(
+          max_left_slip_speed, specialist_components["left_slip"]
+        )
+        max_right_slip_speed = torch.maximum(
+          max_right_slip_speed, specialist_components["right_slip"]
+        )
         contact_mismatch_integral += specialist_components["contact_mismatch"]
         centerline_error = getattr(
           command_term,
@@ -273,6 +309,34 @@ def evaluate_policy(
         min_foot_edge_clearance = torch.minimum(
           min_foot_edge_clearance, foot_edge_clearance
         )
+        severe_contact_slip = torch.maximum(
+          specialist_components["left_slip"],
+          specialist_components["right_slip"],
+        ) >= 0.50
+        contact_instability_streak = torch.where(
+          severe_contact_slip,
+          contact_instability_streak + 1,
+          torch.zeros_like(contact_instability_streak),
+        )
+        new_contact_event = (
+          (first_contact_event_step < 0)
+          & (contact_instability_streak >= 3)
+        )
+        first_contact_event_step = torch.where(
+          new_contact_event,
+          (steps.long() - 2).clamp_min(0),
+          first_contact_event_step,
+        )
+        lateral_event = (
+          (abs_centerline_error >= (2.0 / 3.0) * stair_half_width)
+          | (torch.abs(heading_error) >= torch.pi / 2.0)
+          | (foot_edge_clearance < 0.0)
+        )
+        first_lateral_event_step = torch.where(
+          (first_lateral_event_step < 0) & lateral_event,
+          steps.long(),
+          first_lateral_event_step,
+        )
         correction_active = getattr(
           command_term,
           "correction_active",
@@ -289,7 +353,10 @@ def evaluate_policy(
         fell_all = base_env.termination_manager.get_term("fell_over")
         timeout_all = base_env.termination_manager.get_term("time_out")
         success_all = base_env.termination_manager.get_term("reached_top")
-        from src.tasks.stairs_cbf.hard_cases import classify_target_failure_mode
+        from src.tasks.stairs_cbf.hard_cases import (
+          classify_target_failure_mode,
+          classify_v19_failure_mode,
+        )
 
         for env_id in record_ids.tolist():
           reached = int(max_riser[env_id])
@@ -302,8 +369,39 @@ def evaluate_policy(
           )
           fell = bool(fell_all[env_id])
           success = bool(success_all[env_id])
-          failure_type = (
-            classify_target_failure_mode(
+          if fell and v19_context is not None:
+            failure_type = classify_v19_failure_mode(
+              side_edge_breach=bool(
+                (min_root_edge_clearance[env_id] < 0.0)
+                | (min_foot_edge_clearance[env_id] < 0.0)
+              ),
+              max_abs_centerline_error=float(max_abs_centerline_error[env_id]),
+              max_abs_heading_error=float(max_abs_heading_error[env_id]),
+              correction_max=float(correction_max[env_id]),
+              maximum_left_slip_speed=float(
+                max_left_slip_speed[env_id]
+              ),
+              maximum_right_slip_speed=float(
+                max_right_slip_speed[env_id]
+              ),
+              mean_contact_mismatch=float(
+                contact_mismatch_integral[env_id] / episode_steps
+              ),
+              stair_half_width=stair_half_width,
+              first_lateral_event_step=(
+                None
+                if int(first_lateral_event_step[env_id]) < 0
+                else int(first_lateral_event_step[env_id])
+              ),
+              first_contact_event_step=(
+                None
+                if int(first_contact_event_step[env_id]) < 0
+                else int(first_contact_event_step[env_id])
+              ),
+            )
+          else:
+            failure_type = (
+              classify_target_failure_mode(
               side_edge_breach=bool(
                 (min_root_edge_clearance[env_id] < 0.0)
                 | (min_foot_edge_clearance[env_id] < 0.0)
@@ -315,11 +413,11 @@ def evaluate_policy(
               correction_max=float(correction_max[env_id]),
               stair_half_width=stair_half_width,
             )
-            if fell
-            else "success"
-            if success
-            else "timeout_or_other_nonfall"
-          )
+              if fell
+              else "success"
+              if success
+              else "timeout_or_other_nonfall"
+            )
           completed.append(
             {
               "episode": len(completed),
@@ -422,6 +520,18 @@ def evaluate_policy(
                 slip_signal_integral[env_id]
                 / max(1.0, float(steps[env_id]))
               ),
+              "maximum_left_contact_slip_speed": float(
+                max_left_slip_speed[env_id]
+              ),
+              "maximum_right_contact_slip_speed": float(
+                max_right_slip_speed[env_id]
+              ),
+              "first_lateral_event_step": int(
+                first_lateral_event_step[env_id]
+              ),
+              "first_contact_event_step": int(
+                first_contact_event_step[env_id]
+              ),
               "contact_mismatch_fraction": float(
                 contact_mismatch_integral[env_id]
                 / max(1.0, float(steps[env_id]))
@@ -460,7 +570,12 @@ def evaluate_policy(
         max_pitch_signal[done_ids] = 0.0
         max_angular_velocity_signal[done_ids] = 0.0
         slip_signal_integral[done_ids] = 0.0
+        max_left_slip_speed[done_ids] = 0.0
+        max_right_slip_speed[done_ids] = 0.0
         contact_mismatch_integral[done_ids] = 0.0
+        first_lateral_event_step[done_ids] = -1
+        first_contact_event_step[done_ids] = -1
+        contact_instability_streak[done_ids] = 0
         correction_history[done_ids] = 0.0
         counterfactual_correction_history[done_ids] = 0.0
         steps_by_riser[done_ids] = 0.0
@@ -507,8 +622,10 @@ def evaluate_policy(
     )
     for failure_type in (
       "lateral_heading_drift",
+      "contact_stability",
       "non_lateral_high_cbf_demand",
       "non_lateral_balance_or_phase",
+      "other_non_lateral",
     )
   }
   fall_count = sum(failure_type_counts.values())
@@ -639,6 +756,9 @@ def evaluate_policy(
     "conditional_failure_hazard": hazard,
     "per_riser_cbf": per_riser,
     "deployment_context": context_metadata,
+    "v19_specialist_mode": (
+      None if v19_context is None else v19_context["specialist_mode"]
+    ),
   }
   return summary, completed
 
@@ -662,6 +782,11 @@ def main() -> None:
   parser.add_argument("--output-csv", type=Path, required=True)
   parser.add_argument("--deployment-context", type=Path)
   parser.add_argument(
+    "--v19-context",
+    type=Path,
+    help="v19 actor-interface context; also required for v19 D0 evaluation.",
+  )
+  parser.add_argument(
     "--deployment-context-role", choices=("target", "neighbor")
   )
   args = parser.parse_args()
@@ -683,6 +808,22 @@ def main() -> None:
     if args.deployment_context is not None
     else None
   )
+  v19_context = (
+    load_frozen_deployment_context(args.v19_context)
+    if args.v19_context is not None
+    else None
+  )
+  if (
+    v19_context is None
+    and deployment_context is not None
+    and deployment_context.get("kind")
+    == "observable_failure_conditioned_brief_ppo_v19"
+  ):
+    v19_context = deployment_context
+  if v19_context is not None and v19_context.get("kind") != (
+    "observable_failure_conditioned_brief_ppo_v19"
+  ):
+    raise ValueError("--v19-context is not a v19 observable-failure context")
   inferred_role = deployment_context_role_for_task(args.task)
   context_role = args.deployment_context_role or inferred_role
   if inferred_role is not None and deployment_context is None:
@@ -695,10 +836,26 @@ def main() -> None:
     apply_frozen_deployment_context(
       env_cfg, deployment_context, role=context_role
     )
+  if v19_context is not None and (
+    deployment_context is None
+    or deployment_context.get("kind")
+    != "observable_failure_conditioned_brief_ppo_v19"
+  ):
+    from src.tasks.stairs_cbf.deployment_context import (
+      configure_v19_actor_interface,
+    )
+
+    configure_v19_actor_interface(env_cfg, v19_context)
   env_cfg.scene.num_envs = 1
   env_cfg.seed = args.seed
   base_env = ManagerBasedRlEnv(env_cfg, device=args.device)
   agent_cfg = load_rl_cfg(args.task)
+  if v19_context is not None:
+    from src.tasks.stairs_cbf.config import (
+      configure_v19_observable_refinement_runner,
+    )
+
+    configure_v19_observable_refinement_runner(agent_cfg)
   env = RslRlVecEnvWrapper(base_env, clip_actions=agent_cfg.clip_actions)
   runner_cls = load_runner_cls(args.task) or MjlabOnPolicyRunner
   runner = runner_cls(env, asdict(agent_cfg), device=args.device)
@@ -723,6 +880,7 @@ def main() -> None:
     one_episode_per_env=args.one_episode_per_env,
     deployment_context=deployment_context,
     deployment_context_role=context_role,
+    v19_context=v19_context,
   )
   summary["checkpoint"] = str(args.checkpoint)
   summary["actor_state_sha256"] = actor_state_sha256

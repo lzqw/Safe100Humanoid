@@ -20,17 +20,26 @@ MIXED_FAILURE_TYPE = "mixed"
 LATERAL_HEADING_DRIFT_FAILURE_TYPE = "lateral_heading_drift"
 NON_LATERAL_HIGH_CBF_FAILURE_TYPE = "non_lateral_high_cbf_demand"
 NON_LATERAL_BALANCE_FAILURE_TYPE = "non_lateral_balance_or_phase"
+CONTACT_STABILITY_FAILURE_TYPE = "contact_stability"
+OTHER_NON_LATERAL_FAILURE_TYPE = "other_non_lateral"
 TARGET_FAILURE_TYPES = (
   LATERAL_HEADING_DRIFT_FAILURE_TYPE,
   NON_LATERAL_HIGH_CBF_FAILURE_TYPE,
   NON_LATERAL_BALANCE_FAILURE_TYPE,
 )
-SPECIALIST_MODES = ("lateral", "cbf", "balance")
+SPECIALIST_MODES = ("lateral", "cbf", "balance", "contact_stability")
 SPECIALIST_FAILURE_TYPES = {
   "lateral": LATERAL_HEADING_DRIFT_FAILURE_TYPE,
   "cbf": NON_LATERAL_HIGH_CBF_FAILURE_TYPE,
   "balance": NON_LATERAL_BALANCE_FAILURE_TYPE,
+  "contact_stability": CONTACT_STABILITY_FAILURE_TYPE,
 }
+V19_FAILURE_TYPES = (
+  LATERAL_HEADING_DRIFT_FAILURE_TYPE,
+  CONTACT_STABILITY_FAILURE_TYPE,
+  NON_LATERAL_HIGH_CBF_FAILURE_TYPE,
+  OTHER_NON_LATERAL_FAILURE_TYPE,
+)
 SPECIALIST_FAILURE_BANK_KIND = "specialist_failure_precursor"
 SPECIALIST_SUCCESS_POOL_KIND = "specialist_success_pool"
 SPECIALIST_SUCCESS_BANK_KIND = "specialist_success_counterexample"
@@ -87,6 +96,72 @@ def classify_target_failure_mode(
   return NON_LATERAL_BALANCE_FAILURE_TYPE
 
 
+def classify_v19_failure_mode(
+  *,
+  side_edge_breach: bool,
+  max_abs_centerline_error: float,
+  max_abs_heading_error: float,
+  correction_max: float,
+  maximum_left_slip_speed: float,
+  maximum_right_slip_speed: float,
+  mean_contact_mismatch: float,
+  stair_half_width: float = 1.2,
+  slip_speed_threshold: float = 0.30,
+  contact_mismatch_threshold: float = 0.30,
+  first_lateral_event_step: int | None = None,
+  first_contact_event_step: int | None = None,
+) -> str:
+  """Classify v19 falls by observable mechanism, never attitude outcome.
+
+  When causal event times are available, the first severe observable event
+  wins.  This prevents a support-foot slip from being relabeled as lateral
+  merely because the eventual fall later crosses a stair edge.
+  """
+  values = torch.tensor(
+    (
+      max_abs_centerline_error,
+      max_abs_heading_error,
+      correction_max,
+      maximum_left_slip_speed,
+      maximum_right_slip_speed,
+      mean_contact_mismatch,
+      stair_half_width,
+    ),
+    dtype=torch.float64,
+  )
+  if not bool(torch.isfinite(values).all()) or bool((values < 0.0).any()):
+    raise ValueError("v19 failure classification inputs must be finite and non-negative")
+  for name, event_step in (
+    ("lateral", first_lateral_event_step),
+    ("contact", first_contact_event_step),
+  ):
+    if event_step is not None and event_step < 0:
+      raise ValueError(f"first {name} event step must be non-negative")
+  if first_contact_event_step is not None and (
+    first_lateral_event_step is None
+    or first_contact_event_step < first_lateral_event_step
+  ):
+    return CONTACT_STABILITY_FAILURE_TYPE
+  if first_lateral_event_step is not None:
+    return LATERAL_HEADING_DRIFT_FAILURE_TYPE
+  if (
+    side_edge_breach
+    or max_abs_centerline_error
+    >= LATERAL_CENTERLINE_WIDTH_FRACTION * stair_half_width
+    or max_abs_heading_error >= LATERAL_HEADING_THRESHOLD_RAD
+  ):
+    return LATERAL_HEADING_DRIFT_FAILURE_TYPE
+  if (
+    max(maximum_left_slip_speed, maximum_right_slip_speed)
+    >= slip_speed_threshold
+    or mean_contact_mismatch >= contact_mismatch_threshold
+  ):
+    return CONTACT_STABILITY_FAILURE_TYPE
+  if correction_max >= HIGH_CBF_CORRECTION_THRESHOLD:
+    return NON_LATERAL_HIGH_CBF_FAILURE_TYPE
+  return OTHER_NON_LATERAL_FAILURE_TYPE
+
+
 _ACTION_MANAGER_ATTRS = ("_action", "_prev_action", "_prev_prev_action")
 _ACTION_TERM_ATTRS = (
   "_raw_actions",
@@ -115,6 +190,8 @@ _ACTION_TERM_ATTRS = (
   "h_history",
   "correction_history",
   "_deployment_action_queue",
+  "_deployment_contact_queue",
+  "_deployment_contact_queue_initialized",
 )
 _COMMAND_ATTRS = (
   "time_left",
@@ -131,6 +208,9 @@ _COMMAND_ATTRS = (
   "_released",
   "centerline_error",
   "heading_error",
+  "centerline_error_rate",
+  "heading_error_rate",
+  "_failure_error_initialized",
   "operator_correction",
   "correction_active",
 )
@@ -221,7 +301,14 @@ def capture_hard_case_state(
       state[f"reward/{name}/previous_x_relative"] = (
         previous_x.detach().clone() - origins[:, 0]
       )
-    for attr in ("_initialized", "_previous_index", "_paid"):
+    for attr in (
+      "_initialized",
+      "_previous_index",
+      "_paid",
+      "_previous_potential",
+      "_previous_contact",
+      "_contact_window_remaining",
+    ):
       value = getattr(term, attr, None)
       if isinstance(value, torch.Tensor):
         state[f"reward/{name}/{attr}"] = value.detach().clone()
@@ -381,7 +468,14 @@ def restore_hard_case_state(
       term._previous_x[env_ids] = state[previous_key].to(env.device) + (
         env.scene.env_origins[env_ids, 0]
       )
-    for attr in ("_initialized", "_previous_index", "_paid"):
+    for attr in (
+      "_initialized",
+      "_previous_index",
+      "_paid",
+      "_previous_potential",
+      "_previous_contact",
+      "_contact_window_remaining",
+    ):
       key = f"reward/{name}/{attr}"
       target = getattr(term, attr, None)
       if key in state and isinstance(target, torch.Tensor):
@@ -413,6 +507,14 @@ class HardCaseEntry:
   matched_failure_index: int | None = None
   match_distance: float | None = None
   success_pool_index: int | None = None
+  centerline_sign: int = 0
+  heading_sign: int = 0
+  error_growth_rate: float = 0.0
+  riser_stage: str | None = None
+  touchdown_foot: int | None = None
+  slip_foot: int | None = None
+  contact_timing: str | None = None
+  contact_window_side: str | None = None
 
 
 @dataclass(frozen=True)
@@ -445,6 +547,14 @@ class SpecialistBankCandidate:
   selection_signal: float
   outcome: str
   failure_type: str
+  centerline_sign: int = 0
+  heading_sign: int = 0
+  error_growth_rate: float = 0.0
+  riser_stage: str | None = None
+  touchdown_foot: int | None = None
+  slip_foot: int | None = None
+  contact_timing: str | None = None
+  contact_window_side: str | None = None
 
 
 def specialist_history_window(mode: str) -> tuple[int, int]:
@@ -782,6 +892,337 @@ def select_specialist_success_candidates(
   return tuple(ordered[:maximum_candidates])
 
 
+def _v19_sign(value: float) -> int:
+  return 1 if value >= 0.0 else -1
+
+
+def _v19_riser_stage(riser: int, total_risers: int) -> str:
+  fraction = riser / max(1, total_risers)
+  if fraction < 1.0 / 3.0:
+    return "early"
+  if fraction < 2.0 / 3.0:
+    return "mid"
+  return "late"
+
+
+def _v19_phase_bin(phase: float) -> int:
+  return min(3, max(0, int(math.floor((phase % 1.0) * 4.0))))
+
+
+def _v19_lateral_candidate(
+  *,
+  index: int,
+  length: int,
+  riser_history: torch.Tensor,
+  component_histories: dict[str, torch.Tensor],
+  gait_phase_history: torch.Tensor,
+  support_foot_history: torch.Tensor,
+  delivered_command_history: torch.Tensor,
+  root_velocity_history: torch.Tensor,
+  cbf_active_history: torch.Tensor,
+  total_risers: int,
+  outcome: str,
+  priority: float,
+) -> SpecialistBankCandidate:
+  riser = int(riser_history[index])
+  phase = float(gait_phase_history[index]) % 1.0
+  support = int(support_foot_history[index])
+  centerline_sign = _v19_sign(float(component_histories["centerline_signed"][index]))
+  heading_sign = _v19_sign(float(component_histories["heading_signed"][index]))
+  growth = abs(float(component_histories["centerline_rate"][index])) + 0.5 * abs(
+    float(component_histories["heading_rate"][index])
+  )
+  stage = _v19_riser_stage(riser, total_risers)
+  growth_bin = "high" if growth >= 0.25 else "low"
+  bucket = (
+    f"ey:{centerline_sign:+d}/epsi:{heading_sign:+d}/stage:{stage}/"
+    f"support:{support}/growth:{growth_bin}"
+  )
+  signal = 0.55 * component_histories["centerline"][index] + 0.45 * component_histories[
+    "heading"
+  ][index]
+  return SpecialistBankCandidate(
+    history_index=index,
+    steps_before_terminal=length - 1 - index,
+    riser_index=riser,
+    gait_phase=phase,
+    support_foot=support,
+    delivered_command=tuple(float(value) for value in delivered_command_history[index]),
+    root_velocity=tuple(float(value) for value in root_velocity_history[index]),
+    cbf_active=bool(cbf_active_history[index]),
+    priority=float(priority),
+    balance_bucket=bucket,
+    selection_signal=float(signal),
+    outcome=outcome,
+    failure_type=(
+      LATERAL_HEADING_DRIFT_FAILURE_TYPE if outcome == "failure" else MIXED_FAILURE_TYPE
+    ),
+    centerline_sign=centerline_sign,
+    heading_sign=heading_sign,
+    error_growth_rate=growth,
+    riser_stage=stage,
+  )
+
+
+def select_v19_lateral_failure_candidates(
+  riser_history: torch.Tensor,
+  component_histories: dict[str, torch.Tensor],
+  gait_phase_history: torch.Tensor,
+  support_foot_history: torch.Tensor,
+  delivered_command_history: torch.Tensor,
+  root_velocity_history: torch.Tensor,
+  cbf_active_history: torch.Tensor,
+  *,
+  minimum_riser: int,
+  total_risers: int,
+  maximum_candidates: int = 8,
+) -> tuple[SpecialistBankCandidate, ...]:
+  """Balance lateral precursors across signs, stage, support, and growth."""
+  required = {
+    "centerline",
+    "heading",
+    "centerline_signed",
+    "heading_signed",
+    "centerline_rate",
+    "heading_rate",
+  }
+  if required - set(component_histories):
+    raise ValueError("v19 lateral histories are missing observable error components")
+  length = len(riser_history)
+  if any(
+    len(value) != length
+    for value in (
+      gait_phase_history,
+      support_foot_history,
+      delivered_command_history,
+      root_velocity_history,
+      cbf_active_history,
+      *(component_histories[name] for name in required),
+    )
+  ):
+    raise ValueError("v19 lateral histories must have equal length")
+  best: dict[str, SpecialistBankCandidate] = {}
+  minimum_offset, maximum_offset = 50, min(150, length - 1)
+  if maximum_offset < minimum_offset:
+    return ()
+  signal = 0.55 * component_histories["centerline"] + 0.45 * component_histories[
+    "heading"
+  ]
+  for offset in range(minimum_offset, maximum_offset + 1):
+    index = length - 1 - offset
+    if int(riser_history[index]) < minimum_riser:
+      continue
+    future = signal[index:]
+    future_peak = float(future.max())
+    if future_peak < 0.20:
+      continue
+    growth = max(0.0, future_peak - float(signal[index]))
+    candidate = _v19_lateral_candidate(
+      index=index,
+      length=length,
+      riser_history=riser_history,
+      component_histories=component_histories,
+      gait_phase_history=gait_phase_history,
+      support_foot_history=support_foot_history,
+      delivered_command_history=delivered_command_history,
+      root_velocity_history=root_velocity_history,
+      cbf_active_history=cbf_active_history,
+      total_risers=total_risers,
+      outcome="failure",
+      priority=(
+        float(riser_history[index])
+        + 3.0 * future_peak
+        + 2.0 * float(future.mean())
+        + 2.0 * growth
+      ),
+    )
+    previous = best.get(candidate.balance_bucket)
+    if previous is None or candidate.priority > previous.priority:
+      best[candidate.balance_bucket] = candidate
+  return tuple(
+    sorted(best.values(), key=lambda item: (-item.priority, item.balance_bucket))[
+      :maximum_candidates
+    ]
+  )
+
+
+def select_v19_lateral_success_candidates(
+  riser_history: torch.Tensor,
+  component_histories: dict[str, torch.Tensor],
+  gait_phase_history: torch.Tensor,
+  support_foot_history: torch.Tensor,
+  delivered_command_history: torch.Tensor,
+  root_velocity_history: torch.Tensor,
+  cbf_active_history: torch.Tensor,
+  *,
+  minimum_riser: int,
+  total_risers: int,
+  maximum_candidates: int = 16,
+) -> tuple[SpecialistBankCandidate, ...]:
+  length = len(riser_history)
+  stop = max(0, length - min(10, length))
+  best: dict[str, SpecialistBankCandidate] = {}
+  for index in range(stop):
+    if int(riser_history[index]) < minimum_riser:
+      continue
+    candidate = _v19_lateral_candidate(
+      index=index,
+      length=length,
+      riser_history=riser_history,
+      component_histories=component_histories,
+      gait_phase_history=gait_phase_history,
+      support_foot_history=support_foot_history,
+      delivered_command_history=delivered_command_history,
+      root_velocity_history=root_velocity_history,
+      cbf_active_history=cbf_active_history,
+      total_risers=total_risers,
+      outcome="success",
+      priority=(
+        1.0
+        + float(component_histories["centerline"][index])
+        + float(component_histories["heading"][index])
+      ),
+    )
+    previous = best.get(candidate.balance_bucket)
+    if previous is None or candidate.priority > previous.priority:
+      best[candidate.balance_bucket] = candidate
+  return tuple(
+    sorted(
+      best.values(),
+      key=lambda item: (item.riser_index, _v19_phase_bin(item.gait_phase), -item.priority),
+    )[:maximum_candidates]
+  )
+
+
+def _v19_contact_candidate(
+  *,
+  index: int,
+  touchdown_index: int,
+  touchdown_foot: int,
+  length: int,
+  riser_history: torch.Tensor,
+  component_histories: dict[str, torch.Tensor],
+  gait_phase_history: torch.Tensor,
+  support_foot_history: torch.Tensor,
+  delivered_command_history: torch.Tensor,
+  root_velocity_history: torch.Tensor,
+  cbf_active_history: torch.Tensor,
+  outcome: str,
+) -> SpecialistBankCandidate:
+  phase_at_touchdown = float(gait_phase_history[touchdown_index]) % 1.0
+  scheduled = 0.0 if touchdown_foot == 0 else 0.5
+  phase_error = ((phase_at_touchdown - scheduled + 0.5) % 1.0) - 0.5
+  timing = "early" if phase_error < 0.0 else "delayed"
+  future_stop = min(length, touchdown_index + 61)
+  left_peak = float(component_histories["left_slip"][touchdown_index:future_stop].max())
+  right_peak = float(component_histories["right_slip"][touchdown_index:future_stop].max())
+  slip_foot = 0 if left_peak >= right_peak else 1
+  window_side = "pre" if index < touchdown_index else "post"
+  riser = int(riser_history[index])
+  phase = float(gait_phase_history[index]) % 1.0
+  support = int(support_foot_history[index])
+  signal = (
+    max(
+      float(component_histories["left_slip"][index]),
+      float(component_histories["right_slip"][index]),
+    )
+    + float(component_histories["contact_mismatch"][index])
+  )
+  bucket = (
+    f"touchdown:{touchdown_foot}/slip:{slip_foot}/timing:{timing}/"
+    f"window:{window_side}/support:{support}"
+  )
+  return SpecialistBankCandidate(
+    history_index=index,
+    steps_before_terminal=length - 1 - index,
+    riser_index=riser,
+    gait_phase=phase,
+    support_foot=support,
+    delivered_command=tuple(float(value) for value in delivered_command_history[index]),
+    root_velocity=tuple(float(value) for value in root_velocity_history[index]),
+    cbf_active=bool(cbf_active_history[index]),
+    priority=float(riser + 3.0 * signal + 1.0 / (1 + abs(index - touchdown_index))),
+    balance_bucket=bucket,
+    selection_signal=signal,
+    outcome=outcome,
+    failure_type=CONTACT_STABILITY_FAILURE_TYPE if outcome == "failure" else MIXED_FAILURE_TYPE,
+    touchdown_foot=touchdown_foot,
+    slip_foot=slip_foot,
+    contact_timing=timing,
+    contact_window_side=window_side,
+  )
+
+
+def select_v19_contact_candidates(
+  riser_history: torch.Tensor,
+  component_histories: dict[str, torch.Tensor],
+  gait_phase_history: torch.Tensor,
+  support_foot_history: torch.Tensor,
+  delivered_command_history: torch.Tensor,
+  root_velocity_history: torch.Tensor,
+  cbf_active_history: torch.Tensor,
+  touchdown_history: torch.Tensor,
+  *,
+  minimum_riser: int,
+  outcome: str,
+  maximum_candidates: int = 12,
+) -> tuple[SpecialistBankCandidate, ...]:
+  """Select touchdown-centered states 20--40 pre and 20--60 post event."""
+  if outcome not in ("failure", "success"):
+    raise ValueError("v19 contact candidate outcome must be failure or success")
+  required = {"left_slip", "right_slip", "contact_mismatch"}
+  length = len(riser_history)
+  if touchdown_history.shape != (length, 2):
+    raise ValueError("v19 touchdown history must have shape [steps, 2]")
+  if required - set(component_histories):
+    raise ValueError("v19 contact histories are missing slip/mismatch components")
+  best: dict[str, SpecialistBankCandidate] = {}
+  event_indices = touchdown_history.nonzero(as_tuple=False)
+  for touchdown_index_tensor, foot_tensor in event_indices:
+    touchdown_index = int(touchdown_index_tensor)
+    foot = int(foot_tensor)
+    if int(riser_history[touchdown_index]) < minimum_riser:
+      continue
+    ranges = (
+      range(max(0, touchdown_index - 40), max(0, touchdown_index - 19)),
+      range(min(length, touchdown_index + 20), min(length, touchdown_index + 61)),
+    )
+    for candidate_range in ranges:
+      indices = list(candidate_range)
+      if not indices:
+        continue
+      index = max(
+        indices,
+        key=lambda item: float(component_histories["contact_mismatch"][item])
+        + max(
+          float(component_histories["left_slip"][item]),
+          float(component_histories["right_slip"][item]),
+        ),
+      )
+      candidate = _v19_contact_candidate(
+        index=index,
+        touchdown_index=touchdown_index,
+        touchdown_foot=foot,
+        length=length,
+        riser_history=riser_history,
+        component_histories=component_histories,
+        gait_phase_history=gait_phase_history,
+        support_foot_history=support_foot_history,
+        delivered_command_history=delivered_command_history,
+        root_velocity_history=root_velocity_history,
+        cbf_active_history=cbf_active_history,
+        outcome=outcome,
+      )
+      previous = best.get(candidate.balance_bucket)
+      if previous is None or candidate.priority > previous.priority:
+        best[candidate.balance_bucket] = candidate
+  return tuple(
+    sorted(best.values(), key=lambda item: (-item.priority, item.balance_bucket))[
+      :maximum_candidates
+    ]
+  )
+
+
 def select_late_failure_candidate(
   riser_history: torch.Tensor,
   centerline_error_history: torch.Tensor,
@@ -1097,6 +1538,14 @@ class HardCaseStateBank:
       actor_observation=actor_observation.detach().cpu().clone(),
       balance_bucket=candidate.balance_bucket,
       selection_signal=candidate.selection_signal,
+      centerline_sign=candidate.centerline_sign,
+      heading_sign=candidate.heading_sign,
+      error_growth_rate=candidate.error_growth_rate,
+      riser_stage=candidate.riser_stage,
+      touchdown_foot=candidate.touchdown_foot,
+      slip_foot=candidate.slip_foot,
+      contact_timing=candidate.contact_timing,
+      contact_window_side=candidate.contact_window_side,
     )
     return self._insert_entry(entry)
 
@@ -1138,6 +1587,14 @@ class HardCaseStateBank:
       matched_failure_index=failure_index,
       match_distance=distance,
       success_pool_index=success_pool_index,
+      centerline_sign=source.centerline_sign,
+      heading_sign=source.heading_sign,
+      error_growth_rate=source.error_growth_rate,
+      riser_stage=source.riser_stage,
+      touchdown_foot=source.touchdown_foot,
+      slip_foot=source.slip_foot,
+      contact_timing=source.contact_timing,
+      contact_window_side=source.contact_window_side,
     )
     return self._insert_entry(entry)
 
@@ -1204,6 +1661,14 @@ class HardCaseStateBank:
           "matched_failure_index": entry.matched_failure_index,
           "match_distance": entry.match_distance,
           "success_pool_index": entry.success_pool_index,
+          "centerline_sign": entry.centerline_sign,
+          "heading_sign": entry.heading_sign,
+          "error_growth_rate": entry.error_growth_rate,
+          "riser_stage": entry.riser_stage,
+          "touchdown_foot": entry.touchdown_foot,
+          "slip_foot": entry.slip_foot,
+          "contact_timing": entry.contact_timing,
+          "contact_window_side": entry.contact_window_side,
         }
         for entry in self.entries
       ],
@@ -1285,6 +1750,20 @@ class HardCaseStateBank:
           if item.get("success_pool_index") is None
           else int(item["success_pool_index"])
         ),
+        centerline_sign=int(item.get("centerline_sign", 0)),
+        heading_sign=int(item.get("heading_sign", 0)),
+        error_growth_rate=float(item.get("error_growth_rate", 0.0)),
+        riser_stage=item.get("riser_stage"),
+        touchdown_foot=(
+          None
+          if item.get("touchdown_foot") is None
+          else int(item["touchdown_foot"])
+        ),
+        slip_foot=(
+          None if item.get("slip_foot") is None else int(item["slip_foot"])
+        ),
+        contact_timing=item.get("contact_timing"),
+        contact_window_side=item.get("contact_window_side"),
       )
       for item in payload.get("entries", [])
     ]
@@ -1393,6 +1872,46 @@ class HardCaseStateBank:
             for entry in self.entries
             if entry.support_foot is not None
           }
+        )
+      },
+      "centerline_sign_counts": {
+        str(sign): sum(entry.centerline_sign == sign for entry in self.entries)
+        for sign in sorted({entry.centerline_sign for entry in self.entries})
+      },
+      "heading_sign_counts": {
+        str(sign): sum(entry.heading_sign == sign for entry in self.entries)
+        for sign in sorted({entry.heading_sign for entry in self.entries})
+      },
+      "riser_stage_counts": {
+        str(stage): sum(entry.riser_stage == stage for entry in self.entries)
+        for stage in sorted(
+          {entry.riser_stage for entry in self.entries if entry.riser_stage is not None}
+        )
+      },
+      "error_growth_bin_counts": {
+        ("high" if entry.error_growth_rate >= 0.25 else "low"): sum(
+          (other.error_growth_rate >= 0.25)
+          == (entry.error_growth_rate >= 0.25)
+          for other in self.entries
+        )
+        for entry in self.entries
+      },
+      "touchdown_foot_counts": {
+        str(foot): sum(entry.touchdown_foot == foot for entry in self.entries)
+        for foot in sorted(
+          {entry.touchdown_foot for entry in self.entries if entry.touchdown_foot is not None}
+        )
+      },
+      "slip_foot_counts": {
+        str(foot): sum(entry.slip_foot == foot for entry in self.entries)
+        for foot in sorted(
+          {entry.slip_foot for entry in self.entries if entry.slip_foot is not None}
+        )
+      },
+      "contact_timing_counts": {
+        str(timing): sum(entry.contact_timing == timing for entry in self.entries)
+        for timing in sorted(
+          {entry.contact_timing for entry in self.entries if entry.contact_timing is not None}
         )
       },
       "matched_entry_count": sum(
@@ -1519,6 +2038,123 @@ def match_specialist_success_counterexamples(
     "unique_success_source_count": len(used_sources),
     "one_match_per_replayed_failure": len(success_bank)
     == min(len(failure_bank), success_bank.capacity),
+    "matches": matches,
+  }
+
+
+def _v19_required_match(failure: HardCaseEntry, success: HardCaseEntry) -> bool:
+  if failure.riser_index != success.riser_index:
+    return False
+  if failure.support_foot != success.support_foot:
+    return False
+  if _v19_phase_bin(float(failure.gait_phase)) != _v19_phase_bin(
+    float(success.gait_phase)
+  ):
+    return False
+  if failure.specialist_mode == "lateral":
+    return (
+      failure.centerline_sign == success.centerline_sign
+      and failure.heading_sign == success.heading_sign
+    )
+  return failure.specialist_mode == "contact_stability"
+
+
+def _v19_match_distance(failure: HardCaseEntry, success: HardCaseEntry) -> float:
+  if failure.actor_observation is None or success.actor_observation is None:
+    raise ValueError("v19 matching requires actor observations")
+  if failure.actor_observation.shape != success.actor_observation.shape:
+    raise ValueError("v19 actor-observation shapes do not match")
+  observation_distance = float(
+    torch.sqrt(
+      torch.mean(
+        (failure.actor_observation.float() - success.actor_observation.float()).square()
+      )
+    )
+  )
+  command_a = torch.tensor(failure.delivered_command, dtype=torch.float64)
+  command_b = torch.tensor(success.delivered_command, dtype=torch.float64)
+  velocity_a = torch.tensor(failure.root_velocity, dtype=torch.float64)
+  velocity_b = torch.tensor(success.root_velocity, dtype=torch.float64)
+  phase_delta = abs(float(failure.gait_phase) - float(success.gait_phase))
+  phase_delta = min(phase_delta, 1.0 - phase_delta)
+  return (
+    observation_distance
+    + phase_delta
+    + 0.75 * float(torch.linalg.vector_norm(command_a - command_b))
+    + 0.75 * float(torch.linalg.vector_norm(velocity_a - velocity_b))
+  )
+
+
+def match_v19_success_counterexamples(
+  failure_bank: HardCaseStateBank,
+  success_pool: HardCaseStateBank,
+  success_bank: HardCaseStateBank,
+) -> dict[str, Any]:
+  """Match only same-riser/support/gait successes, plus lateral error signs."""
+  mode = failure_bank.specialist_mode
+  if (
+    mode not in ("lateral", "contact_stability")
+    or failure_bank.bank_kind != SPECIALIST_FAILURE_BANK_KIND
+    or success_pool.bank_kind != SPECIALIST_SUCCESS_POOL_KIND
+    or success_bank.bank_kind != SPECIALIST_SUCCESS_BANK_KIND
+    or success_pool.specialist_mode != mode
+    or success_bank.specialist_mode != mode
+  ):
+    raise ValueError("v19 match banks have incompatible roles or modes")
+  success_bank.clear()
+  used_sources: set[int] = set()
+  matches: list[dict[str, Any]] = []
+  unmatched_failure_indices: list[int] = []
+  ordered_failures = sorted(
+    enumerate(failure_bank.entries),
+    key=lambda item: (-item[1].priority, item[0]),
+  )
+  for failure_index, failure in ordered_failures[: success_bank.capacity]:
+    compatible = [
+      (_v19_match_distance(failure, success), success_index)
+      for success_index, success in enumerate(success_pool.entries)
+      if _v19_required_match(failure, success)
+    ]
+    if not compatible:
+      unmatched_failure_indices.append(failure_index)
+      continue
+    unused = [item for item in compatible if item[1] not in used_sources]
+    distance, success_index = min(unused or compatible)
+    source = success_pool.entries[success_index]
+    if success_bank.add_matched_success(
+      source,
+      failure_index=failure_index,
+      success_pool_index=success_index,
+      distance=distance,
+    ) != 1:
+      raise RuntimeError("v19 matched success bank rejected a counterexample")
+    used_sources.add(success_index)
+    matches.append(
+      {
+        "failure_index": failure_index,
+        "success_pool_index": success_index,
+        "distance": distance,
+        "riser": failure.riser_index,
+        "support_foot": failure.support_foot,
+        "gait_phase_bin": _v19_phase_bin(float(failure.gait_phase)),
+        "centerline_sign": failure.centerline_sign,
+        "heading_sign": failure.heading_sign,
+        "required_fields_match": True,
+      }
+    )
+  return {
+    "specialist_mode": mode,
+    "failure_entry_count": len(failure_bank),
+    "success_pool_entry_count": len(success_pool),
+    "matched_entry_count": len(success_bank),
+    "unique_success_source_count": len(used_sources),
+    "unmatched_failure_indices": unmatched_failure_indices,
+    "all_matches_satisfy_required_fields": all(
+      item["required_fields_match"] for item in matches
+    ),
+    "one_match_per_replayed_failure": (
+      len(success_bank) == min(len(failure_bank), success_bank.capacity)
+    ),
     "matches": matches,
   }
 

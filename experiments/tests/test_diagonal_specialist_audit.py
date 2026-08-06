@@ -15,9 +15,14 @@ import torch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from audit_specialists_diagonal_v18 import _validate_protocol
+from audit_specialists_diagonal_v19 import (
+  _validate_protocol as _validate_protocol_v19,
+)
 from diagonal_audit_stats import (
   hierarchical_paired_scene_interval,
+  hierarchical_paired_scene_interval_v19,
   independent_diagonal_scene_gate,
+  independent_diagonal_scene_gate_v19,
 )
 
 
@@ -64,6 +69,37 @@ def test_independent_gate_accepts_small_positive_gain_without_two_pp_floor() -> 
   assert gate["passed"] is True
   assert gate["positive_adaptation_seed_count"] == 2
   assert "diagonal_success_gain_above_2pp" not in gate["criteria"]
+
+
+def test_v19_bootstrap_and_four_of_five_gate_are_deterministic() -> None:
+  groups = [
+    torch.tensor(([1.0] * count) + ([0.0] * (100 - count)), dtype=torch.float64)
+    for count in (8, 10, 12, 14, 16)
+  ]
+  first = hierarchical_paired_scene_interval_v19(
+    groups, bootstrap_samples=1000, bootstrap_seed=1900
+  )
+  second = hierarchical_paired_scene_interval_v19(
+    groups, bootstrap_samples=1000, bootstrap_seed=1900
+  )
+  assert first == second
+  assert first[0] == pytest.approx(0.12)
+  gate = independent_diagonal_scene_gate_v19(
+    diagonal_success_delta=0.001,
+    per_seed_success_deltas=[0.01, 0.01, 0.01, 0.01, -0.01],
+    diagonal_fall_delta=0.03,
+    d0_success_delta=-0.05,
+  )
+  assert gate["passed"] is True
+  assert gate["positive_adaptation_seed_count"] == 4
+  failed = independent_diagonal_scene_gate_v19(
+    diagonal_success_delta=0.001,
+    per_seed_success_deltas=[0.01, 0.01, 0.01, 0.0, -0.01],
+    diagonal_fall_delta=0.03,
+    d0_success_delta=-0.05,
+  )
+  assert failed["passed"] is False
+  assert failed["criteria"]["at_least_four_of_five_seed_gains_positive"] is False
 
 
 @pytest.mark.parametrize(
@@ -128,6 +164,32 @@ def test_frozen_protocol_accepts_only_the_declared_formal_runtime() -> None:
   changed.target_episodes = 256
   with pytest.raises(ValueError, match="runtime mismatch"):
     _validate_protocol(protocol, changed)
+
+
+def test_frozen_v19_protocol_accepts_only_two_diagonals_and_five_seeds() -> None:
+  repo = Path(__file__).resolve().parents[2]
+  protocol = json.loads(
+    (repo / "results/online/specialist_v19/protocol.json").read_text()
+  )
+  arguments = SimpleNamespace(
+    smoke=False,
+    adaptation_seeds=[43, 143, 243, 343, 443],
+    audit_seed=5_100_000,
+    bootstrap_seed=6_000_000,
+    eval_batch_size=128,
+    target_episodes=512,
+    d0_episodes=256,
+    bootstrap_samples=10000,
+  )
+  _validate_protocol_v19(protocol, arguments)
+  changed = copy.deepcopy(protocol)
+  changed["evaluation"]["filter_free_evaluation"] = True
+  with pytest.raises(ValueError, match="protocol file mismatch"):
+    _validate_protocol_v19(changed, arguments)
+  changed_args = copy.deepcopy(arguments)
+  changed_args.adaptation_seeds = [43, 143, 243]
+  with pytest.raises(ValueError, match="runtime mismatch"):
+    _validate_protocol_v19(protocol, changed_args)
 
 
 def test_protocol_sealed_context_hashes_match_published_v17_evidence() -> None:

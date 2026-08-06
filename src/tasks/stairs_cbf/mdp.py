@@ -145,6 +145,261 @@ def online_safety_telemetry(
   return torch.zeros(env.num_envs, dtype=torch.float32, device=env.device)
 
 
+def _foot_contact_and_slip(
+  env: ManagerBasedRlEnv,
+  *,
+  action_name: str = "joint_pos",
+  asset_name: str = "robot",
+  sensor_name: str = "feet_ground_contact",
+) -> tuple[torch.Tensor, torch.Tensor]:
+  """Return two deployable contact flags and tangential foot-speed magnitudes."""
+  action = _cbf_term(env, action_name)
+  robot = env.scene[asset_name]
+  found = env.scene[sensor_name].data.found
+  if found is None:
+    raise RuntimeError("v19 deployable observation requires foot-contact state")
+  if found.ndim == 3 and found.shape[-1] == 1:
+    found = found.squeeze(-1)
+  if found.ndim != 2 or found.shape[1] != 2:
+    raise RuntimeError("v19 foot-contact state must have shape [num_envs, 2]")
+  contact = found > 0
+  tangential_velocity = robot.data.site_lin_vel_w[
+    :, action._site_local_ids, :2
+  ]
+  # Swing-foot velocity is not slip.  Zero it here so every consumer—the
+  # actor feature, recovery reward, failure classifier, and replay bank—uses
+  # the support/contact-foot definition declared by v19.
+  slip_speed = (
+    torch.linalg.vector_norm(tangential_velocity, dim=-1) * contact.float()
+  )
+  return contact, slip_speed
+
+
+def _phase_contact_mismatch(
+  env: ManagerBasedRlEnv,
+  contact: torch.Tensor,
+  *,
+  period: float = 0.6,
+  stance_fraction: float = 0.56,
+  phase_offset: float = 0.0,
+) -> torch.Tensor:
+  phase = ((env.episode_length_buf * env.step_dt) / period).unsqueeze(1)
+  offsets = torch.tensor((0.0, 0.5), device=env.device).view(1, 2)
+  expected_stance = ((phase + offsets + phase_offset) % 1.0) < stance_fraction
+  return (expected_stance != contact).float().mean(dim=1)
+
+
+def v19_deployable_failure_observation(
+  env: ManagerBasedRlEnv,
+  mode: str,
+  command_name: str = "twist",
+  action_name: str = "joint_pos",
+  asset_name: str = "robot",
+  sensor_name: str = "feet_ground_contact",
+  centerline_rate_scale: float = 0.5,
+  heading_rate_scale: float = 2.0,
+  slip_speed_scale: float = 1.0,
+  phase_offset: float = 0.0,
+) -> torch.Tensor:
+  """Five real-robot-obtainable failure coordinates appended to the actor."""
+  if mode == "lateral":
+    command = env.command_manager.get_term(command_name)
+    centerline = getattr(
+      command, "centerline_error", torch.zeros(env.num_envs, device=env.device)
+    )
+    heading = getattr(
+      command, "heading_error", torch.zeros(env.num_envs, device=env.device)
+    )
+    centerline_rate = getattr(
+      command,
+      "centerline_error_rate",
+      torch.zeros(env.num_envs, device=env.device),
+    )
+    heading_rate = getattr(
+      command,
+      "heading_error_rate",
+      torch.zeros(env.num_envs, device=env.device),
+    )
+    stair_half_width = float(getattr(command.cfg, "stair_half_width", 1.20))
+    return torch.stack(
+      (
+        (centerline / stair_half_width).clamp(-1.5, 1.5),
+        torch.sin(heading),
+        torch.cos(heading),
+        (centerline_rate / centerline_rate_scale).clamp(-2.0, 2.0),
+        (heading_rate / heading_rate_scale).clamp(-2.0, 2.0),
+      ),
+      dim=1,
+    )
+  if mode != "contact_stability":
+    raise ValueError(f"unsupported v19 deployable observation mode: {mode!r}")
+  contact, slip_speed = _foot_contact_and_slip(
+    env,
+    action_name=action_name,
+    asset_name=asset_name,
+    sensor_name=sensor_name,
+  )
+  mismatch = _phase_contact_mismatch(
+    env, contact, phase_offset=phase_offset
+  )
+  return torch.cat(
+    (
+      contact.float(),
+      (slip_speed / slip_speed_scale).clamp(0.0, 2.0),
+      mismatch.unsqueeze(1),
+    ),
+    dim=1,
+  )
+
+
+class V19LateralRecoveryReward:
+  """Potential progress in centerline/heading recovery plus one edge cost."""
+
+  def __init__(self, cfg, env: ManagerBasedRlEnv):
+    del cfg
+    self._env = env
+    self._previous_potential = torch.zeros(env.num_envs, device=env.device)
+    self._initialized = torch.zeros(
+      env.num_envs, dtype=torch.bool, device=env.device
+    )
+
+  def reset(self, env_ids: torch.Tensor | slice | None) -> None:
+    self._previous_potential[env_ids] = 0.0
+    self._initialized[env_ids] = False
+
+  def __call__(
+    self,
+    env: ManagerBasedRlEnv,
+    command_name: str = "twist",
+    action_name: str = "joint_pos",
+    asset_name: str = "robot",
+    sensor_name: str = "feet_ground_contact",
+    gamma: float = 0.99,
+    centerline_coefficient: float = 0.60,
+    heading_coefficient: float = 0.40,
+    recovery_scale: float = 0.50,
+    edge_penalty_scale: float = 0.20,
+  ) -> torch.Tensor:
+    components = specialist_failure_signal_components(
+      env,
+      command_name=command_name,
+      action_name=action_name,
+      asset_name=asset_name,
+      sensor_name=sensor_name,
+    )
+    potential = -(
+      centerline_coefficient * components["centerline"]
+      + heading_coefficient * components["heading"]
+    )
+    progress = gamma * potential - self._previous_potential
+    progress = torch.where(
+      self._initialized, progress, torch.zeros_like(progress)
+    )
+    self._previous_potential[:] = potential
+    self._initialized[:] = True
+    reward = (
+      recovery_scale * progress / env.step_dt
+      - edge_penalty_scale * components["edge"]
+    )
+    env.extras["log"]["V19/lateral_recovery_progress"] = progress.mean()
+    env.extras["log"]["V19/lateral_edge_fraction"] = components["edge"].mean()
+    return reward
+
+
+class V19ContactRecoveryReward:
+  """Contact-window potential progress for slip, mismatch, and angular recovery."""
+
+  def __init__(self, cfg, env: ManagerBasedRlEnv):
+    del cfg
+    self._env = env
+    self._previous_potential = torch.zeros(env.num_envs, device=env.device)
+    self._previous_contact = torch.zeros(
+      env.num_envs, 2, dtype=torch.bool, device=env.device
+    )
+    self._contact_window_remaining = torch.zeros(
+      env.num_envs, dtype=torch.long, device=env.device
+    )
+    self._initialized = torch.zeros(
+      env.num_envs, dtype=torch.bool, device=env.device
+    )
+
+  def reset(self, env_ids: torch.Tensor | slice | None) -> None:
+    self._previous_potential[env_ids] = 0.0
+    self._previous_contact[env_ids] = False
+    self._contact_window_remaining[env_ids] = 0
+    self._initialized[env_ids] = False
+
+  def __call__(
+    self,
+    env: ManagerBasedRlEnv,
+    action_name: str = "joint_pos",
+    asset_name: str = "robot",
+    sensor_name: str = "feet_ground_contact",
+    period: float = 0.6,
+    stance_fraction: float = 0.56,
+    phase_offset: float = 0.0,
+    gamma: float = 0.99,
+    slip_coefficient: float = 0.45,
+    mismatch_coefficient: float = 0.35,
+    angular_velocity_coefficient: float = 0.20,
+    recovery_scale: float = 0.40,
+    pre_touchdown_steps: int = 30,
+    post_touchdown_steps: int = 45,
+  ) -> torch.Tensor:
+    contact, slip_speed = _foot_contact_and_slip(
+      env,
+      action_name=action_name,
+      asset_name=asset_name,
+      sensor_name=sensor_name,
+    )
+    mismatch = _phase_contact_mismatch(
+      env,
+      contact,
+      period=period,
+      stance_fraction=stance_fraction,
+      phase_offset=phase_offset,
+    )
+    touchdown = contact & ~self._previous_contact & self._initialized.unsqueeze(1)
+    touched = touchdown.any(dim=1)
+    self._contact_window_remaining = torch.where(
+      touched,
+      torch.full_like(self._contact_window_remaining, post_touchdown_steps),
+      (self._contact_window_remaining - 1).clamp_min(0),
+    )
+    phase = ((env.episode_length_buf * env.step_dt) / period).unsqueeze(1)
+    offsets = torch.tensor((0.0, 0.5), device=env.device).view(1, 2)
+    shifted_phase = (phase + offsets + phase_offset) % 1.0
+    steps_until_scheduled_touchdown = (
+      (1.0 - shifted_phase) % 1.0
+    ) * period / env.step_dt
+    pre_window = (steps_until_scheduled_touchdown <= pre_touchdown_steps).any(dim=1)
+    contact_window = pre_window | (self._contact_window_remaining > 0) | touched
+    robot = env.scene[asset_name]
+    angular_velocity = (
+      torch.linalg.vector_norm(robot.data.root_link_ang_vel_b, dim=1) / 4.0
+    ).square().clamp(0.0, 1.0)
+    contact_slip = torch.sum(slip_speed * contact.float(), dim=1).clamp(0.0, 2.0)
+    potential = -(
+      slip_coefficient * contact_slip
+      + mismatch_coefficient * mismatch
+      + angular_velocity_coefficient * angular_velocity
+    )
+    progress = gamma * potential - self._previous_potential
+    progress = torch.where(
+      self._initialized & contact_window,
+      progress,
+      torch.zeros_like(progress),
+    )
+    self._previous_potential[:] = potential
+    self._previous_contact[:] = contact
+    self._initialized[:] = True
+    env.extras["v19_touchdown_left"] = touchdown[:, 0].detach().clone()
+    env.extras["v19_touchdown_right"] = touchdown[:, 1].detach().clone()
+    env.extras["log"]["V19/contact_window_fraction"] = contact_window.float().mean()
+    env.extras["log"]["V19/contact_recovery_progress"] = progress.mean()
+    return recovery_scale * progress / env.step_dt
+
+
 def specialist_failure_signal_components(
   env: ManagerBasedRlEnv,
   *,
@@ -162,6 +417,16 @@ def specialist_failure_signal_components(
   )
   heading_error = getattr(
     command, "heading_error", torch.zeros(env.num_envs, device=env.device)
+  )
+  centerline_rate = getattr(
+    command,
+    "centerline_error_rate",
+    torch.zeros(env.num_envs, device=env.device),
+  )
+  heading_rate = getattr(
+    command,
+    "heading_error_rate",
+    torch.zeros(env.num_envs, device=env.device),
   )
   stair_half_width = float(getattr(command.cfg, "stair_half_width", 1.20))
   centerline_threshold = (2.0 / 3.0) * stair_half_width
@@ -197,26 +462,26 @@ def specialist_failure_signal_components(
     torch.linalg.vector_norm(robot.data.root_link_ang_vel_b, dim=1) / 4.0
   ).square().clamp(0.0, 1.0)
 
-  sensor = env.scene[sensor_name]
-  found = sensor.data.found
-  if found is None:
-    raise RuntimeError("specialist balance signal requires foot-contact state")
-  if found.ndim == 3 and found.shape[-1] == 1:
-    found = found.squeeze(-1)
-  in_contact = found > 0
-  foot_velocity = robot.data.site_lin_vel_w[:, action._site_local_ids, :2]
+  in_contact, slip_speed = _foot_contact_and_slip(
+    env,
+    action_name=action_name,
+    asset_name=asset_name,
+    sensor_name=sensor_name,
+  )
   slip = (
     torch.sum(
-      torch.linalg.vector_norm(foot_velocity, dim=-1).square()
-      * in_contact.float(),
+      slip_speed.square() * in_contact.float(),
       dim=1,
     )
     / 1.0
   ).clamp(0.0, 1.0)
-  phase = ((env.episode_length_buf * env.step_dt) / 0.6).unsqueeze(1)
-  offsets = torch.tensor((0.0, 0.5), device=env.device).view(1, 2)
-  expected_stance = ((phase + offsets) % 1.0) < 0.56
-  contact_mismatch = (expected_stance != in_contact).float().mean(dim=1)
+  contact_mismatch = _phase_contact_mismatch(
+    env,
+    in_contact,
+    phase_offset=float(
+      getattr(action.cfg, "deployment_contact_phase_offset", 0.0)
+    ),
+  )
   return {
     "centerline": centerline,
     "heading": heading,
@@ -228,6 +493,14 @@ def specialist_failure_signal_components(
     "angular_velocity": angular_velocity,
     "slip": slip,
     "contact_mismatch": contact_mismatch,
+    "centerline_signed": (centerline_error / stair_half_width).clamp(-1.5, 1.5),
+    "heading_signed": (heading_error / (math.pi / 2.0)).clamp(-2.0, 2.0),
+    "centerline_rate": (centerline_rate / 0.5).clamp(-2.0, 2.0),
+    "heading_rate": (heading_rate / 2.0).clamp(-2.0, 2.0),
+    "left_contact": in_contact[:, 0].float(),
+    "right_contact": in_contact[:, 1].float(),
+    "left_slip": slip_speed[:, 0].clamp(0.0, 2.0),
+    "right_slip": slip_speed[:, 1].clamp(0.0, 2.0),
   }
 
 

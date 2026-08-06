@@ -56,6 +56,7 @@ def _evaluate_state(
   artifact_dir: Path | None = None,
   resume: bool = False,
   deployment_context: Path | None = None,
+  v19_context: Path | None = None,
 ) -> dict[str, dict[str, Any]]:
   """Evaluate one actor in isolated CUDA processes.
 
@@ -72,6 +73,7 @@ def _evaluate_state(
   output: dict[str, dict[str, Any]] = {}
   repo = Path(__file__).resolve().parents[2]
   context_hash = None
+  v19_mode = None
   actor_state_sha256 = _actor_state_sha256(actor_state)
   if deployment_context is not None:
     from src.tasks.stairs_cbf.deployment_context import (
@@ -79,9 +81,22 @@ def _evaluate_state(
     )
 
     deployment_context = deployment_context.resolve()
-    context_hash = load_frozen_deployment_context(deployment_context)[
-      "parameters_sha256"
-    ]
+    loaded_context = load_frozen_deployment_context(deployment_context)
+    context_hash = loaded_context["parameters_sha256"]
+    if loaded_context.get("kind") == "observable_failure_conditioned_brief_ppo_v19":
+      v19_context = deployment_context
+      v19_mode = loaded_context["specialist_mode"]
+  if v19_context is not None:
+    from src.tasks.stairs_cbf.deployment_context import (
+      V19_CONTEXT_KIND,
+      load_frozen_deployment_context,
+    )
+
+    v19_context = v19_context.resolve()
+    loaded_v19 = load_frozen_deployment_context(v19_context)
+    if loaded_v19.get("kind") != V19_CONTEXT_KIND:
+      raise ValueError("--v19-context must identify an observable v19 context")
+    v19_mode = loaded_v19["specialist_mode"]
   checkpoint_payload = runner.alg.save()
   checkpoint_payload["actor_state_dict"] = {
     key: value.detach().cpu() for key, value in actor_state.items()
@@ -160,6 +175,8 @@ def _evaluate_state(
           "--output-csv",
           str(output_csv),
         ]
+        if v19_context is not None:
+          command.extend(("--v19-context", str(v19_context)))
         if context_role is not None:
           assert deployment_context is not None
           command.extend(
@@ -197,6 +214,7 @@ def _evaluate_state(
           summary["initial_state_signature"] for summary in replicate_summaries
         ],
         "actor_state_sha256": actor_state_sha256,
+        "v19_specialist_mode": v19_mode,
       }
       for key in (
         "success_rate",
@@ -257,8 +275,10 @@ def _evaluate_state(
         )
         for failure_type in (
           "lateral_heading_drift",
+          "contact_stability",
           "non_lateral_high_cbf_demand",
           "non_lateral_balance_or_phase",
+          "other_non_lateral",
         )
       }
       fall_count = sum(failure_type_counts.values())
@@ -276,7 +296,7 @@ def _total_actor_kl(
   base_state: dict[str, torch.Tensor],
   actor_state: dict[str, torch.Tensor] | None = None,
 ) -> float:
-  obs = runner.alg.storage.observations.flatten(0, 1)
+  obs, _, _, _ = runner.alg.latest_policy_evaluation_data()
   current_state = _actor_state(runner.alg.actor)
   evaluated_state = current_state if actor_state is None else actor_state
   with torch.no_grad():
@@ -302,13 +322,10 @@ def _policy_step_metrics(
   base_metrics: dict[str, Any],
 ) -> dict[str, Any]:
   """Recompute PPO precheck metrics for a candidate-family actor state."""
-  observations = runner.alg.storage.observations.flatten(0, 1)
-  actions = runner.alg.storage.actions.flatten(0, 1)
-  old_log_prob = runner.alg.storage.actions_log_prob.flatten(0, 1).squeeze(-1)
-  old_params = tuple(
-    parameter.flatten(0, 1)
-    for parameter in runner.alg.storage.distribution_params
+  observations, actions, old_log_prob, old_params = (
+    runner.alg.latest_policy_evaluation_data()
   )
+  old_log_prob = old_log_prob.squeeze(-1)
   current_state = _actor_state(runner.alg.actor)
   with torch.no_grad():
     runner.alg.actor.load_state_dict(actor_state, strict=True)
@@ -722,25 +739,40 @@ def _collect_and_update_specialist(
   success_fraction: float,
   specialist_generator: torch.Generator,
   minimum_riser: int,
+  protocol_version: int = 17,
+  defer_update: bool = False,
 ):
-  """Collect one v17 on-policy rollout and update its single PPO actor/critic."""
+  """Collect one specialist rollout; v19 may defer a paired PPO update."""
   from rsl_rl.utils import check_nan
   from src.tasks.stairs_cbf.hard_cases import (
     SPECIALIST_FAILURE_TYPES,
     capture_hard_case_state,
     classify_target_failure_mode,
+    classify_v19_failure_mode,
     hard_case_state_shape_mismatches,
     match_specialist_success_counterexamples,
+    match_v19_success_counterexamples,
     reset_rollout_with_specialist_banks,
     restore_hard_case_state,
     select_specialist_failure_candidates,
     select_specialist_success_candidates,
+    select_v19_contact_candidates,
+    select_v19_lateral_failure_candidates,
+    select_v19_lateral_success_candidates,
     specialist_history_window,
   )
   from src.tasks.stairs_cbf.mdp import specialist_failure_signal_components
 
-  if specialist_mode not in SPECIALIST_FAILURE_TYPES:
+  if protocol_version not in (17, 19):
+    raise ValueError("specialist collector protocol must be v17 or v19")
+  v19 = protocol_version == 19
+  allowed_modes = (
+    ("lateral", "contact_stability") if v19 else ("lateral", "cbf", "balance")
+  )
+  if specialist_mode not in allowed_modes:
     raise ValueError(f"unsupported specialist mode: {specialist_mode!r}")
+  if defer_update and not v19:
+    raise ValueError("deferred specialist rollout updates are reserved for v19")
   if minimum_riser < 1:
     raise ValueError("specialist minimum riser must be positive")
   runner.alg.set_critic_only(critic_only)
@@ -770,7 +802,13 @@ def _collect_and_update_specialist(
     success_slots[success_ids] = True
   normal_slots = ~(failure_slots | success_slots)
   persistent_slots = bool(failure_fraction or success_fraction)
-  _, maximum_history_steps = specialist_history_window(specialist_mode)
+  maximum_history_steps = (
+    150
+    if v19 and specialist_mode == "lateral"
+    else 100
+    if v19
+    else specialist_history_window(specialist_mode)[1]
+  )
   history_capacity = max(maximum_history_steps + 1, 384)
   state_history = deque(maxlen=history_capacity)
   actor_observation_history = deque(maxlen=history_capacity)
@@ -780,6 +818,7 @@ def _collect_and_update_specialist(
   delivered_command_history = deque(maxlen=history_capacity)
   root_velocity_history = deque(maxlen=history_capacity)
   cbf_active_history = deque(maxlen=history_capacity)
+  touchdown_history = deque(maxlen=history_capacity)
   component_history = {
     name: deque(maxlen=history_capacity)
     for name in (
@@ -793,6 +832,14 @@ def _collect_and_update_specialist(
       "angular_velocity",
       "slip",
       "contact_mismatch",
+      "centerline_signed",
+      "heading_signed",
+      "centerline_rate",
+      "heading_rate",
+      "left_contact",
+      "right_contact",
+      "left_slip",
+      "right_slip",
     )
   }
   valid_steps = torch.zeros(
@@ -806,6 +853,24 @@ def _collect_and_update_specialist(
     episode_max_abs_centerline_error
   )
   episode_correction_max = torch.zeros_like(episode_max_abs_centerline_error)
+  episode_max_left_slip = torch.zeros_like(episode_max_abs_centerline_error)
+  episode_max_right_slip = torch.zeros_like(episode_max_abs_centerline_error)
+  episode_contact_mismatch_sum = torch.zeros_like(
+    episode_max_abs_centerline_error
+  )
+  episode_first_lateral_event_step = torch.full(
+    (runner.env.num_envs,), -1, dtype=torch.long, device=device
+  )
+  episode_first_contact_event_step = torch.full_like(
+    episode_first_lateral_event_step, -1
+  )
+  episode_contact_instability_streak = torch.zeros_like(
+    episode_first_lateral_event_step
+  )
+  contact_history_initialized = torch.zeros_like(failure_slots)
+  previous_contact = torch.zeros(
+    runner.env.num_envs, 2, dtype=torch.bool, device=device
+  )
   failure_added = 0
   success_pool_added = 0
   target_falls_seen = 0
@@ -848,6 +913,14 @@ def _collect_and_update_specialist(
       if contact.ndim == 3 and contact.shape[-1] == 1:
         contact = contact.squeeze(-1)
       contact = contact.bool()
+      touchdown = (
+        contact
+        & ~previous_contact
+        & contact_history_initialized.unsqueeze(1)
+      )
+      touchdown_history.append(touchdown.detach().clone())
+      previous_contact[:] = contact
+      contact_history_initialized[:] = True
       scheduled_support = (phase >= 0.5).long()
       support = torch.where(
         contact[:, 0] & ~contact[:, 1],
@@ -888,6 +961,13 @@ def _collect_and_update_specialist(
       episode_correction_max = torch.maximum(
         episode_correction_max, action_term.target_intervention_norm
       )
+      episode_max_left_slip = torch.maximum(
+        episode_max_left_slip, components["left_slip"]
+      )
+      episode_max_right_slip = torch.maximum(
+        episode_max_right_slip, components["right_slip"]
+      )
+      episode_contact_mismatch_sum += components["contact_mismatch"]
       patches = terrain.flat_patches["stair_targets"][
         terrain.terrain_levels, terrain.terrain_types
       ]
@@ -899,6 +979,33 @@ def _collect_and_update_specialist(
       episode_side_edge_breach |= (
         centerline_error.abs() >= stair_half_width
       ) | foot_edge_breach
+      severe_contact_slip = torch.maximum(
+        components["left_slip"], components["right_slip"]
+      ) >= 0.50
+      episode_contact_instability_streak = torch.where(
+        severe_contact_slip,
+        episode_contact_instability_streak + 1,
+        torch.zeros_like(episode_contact_instability_streak),
+      )
+      new_contact_event = (
+        (episode_first_contact_event_step < 0)
+        & (episode_contact_instability_streak >= 3)
+      )
+      episode_first_contact_event_step = torch.where(
+        new_contact_event,
+        (valid_steps - 2).clamp_min(0),
+        episode_first_contact_event_step,
+      )
+      lateral_event = (
+        (centerline_error.abs() >= (2.0 / 3.0) * stair_half_width)
+        | (heading_error.abs() >= math.pi / 2.0)
+        | foot_edge_breach
+      )
+      episode_first_lateral_event_step = torch.where(
+        (episode_first_lateral_event_step < 0) & lateral_event,
+        valid_steps,
+        episode_first_lateral_event_step,
+      )
 
       actions = runner.alg.act(obs)
       obs, rewards, dones, extras = runner.env.step(actions.to(device))
@@ -940,6 +1047,7 @@ def _collect_and_update_specialist(
           "command": list(delivered_command_history),
           "velocity": list(root_velocity_history),
           "cbf_active": list(cbf_active_history),
+          "touchdown": list(touchdown_history),
           "components": {
             name: list(values) for name, values in component_history.items()
           },
@@ -950,14 +1058,46 @@ def _collect_and_update_specialist(
         start = len(histories["states"]) - episode_steps
         if bool(fell[env_id]):
           target_falls_seen += 1
-          failure_type = classify_target_failure_mode(
-            side_edge_breach=bool(episode_side_edge_breach[env_id]),
-            max_abs_centerline_error=float(
-              episode_max_abs_centerline_error[env_id]
-            ),
-            max_abs_heading_error=float(episode_max_abs_heading_error[env_id]),
-            correction_max=float(episode_correction_max[env_id]),
-            stair_half_width=stair_half_width,
+          failure_type = (
+            classify_v19_failure_mode(
+              side_edge_breach=bool(episode_side_edge_breach[env_id]),
+              max_abs_centerline_error=float(
+                episode_max_abs_centerline_error[env_id]
+              ),
+              max_abs_heading_error=float(
+                episode_max_abs_heading_error[env_id]
+              ),
+              correction_max=float(episode_correction_max[env_id]),
+              maximum_left_slip_speed=float(episode_max_left_slip[env_id]),
+              maximum_right_slip_speed=float(episode_max_right_slip[env_id]),
+              mean_contact_mismatch=float(
+                episode_contact_mismatch_sum[env_id]
+                / max(1, episode_steps)
+              ),
+              stair_half_width=stair_half_width,
+              first_lateral_event_step=(
+                None
+                if int(episode_first_lateral_event_step[env_id]) < 0
+                else int(episode_first_lateral_event_step[env_id])
+              ),
+              first_contact_event_step=(
+                None
+                if int(episode_first_contact_event_step[env_id]) < 0
+                else int(episode_first_contact_event_step[env_id])
+              ),
+            )
+            if v19
+            else classify_target_failure_mode(
+              side_edge_breach=bool(episode_side_edge_breach[env_id]),
+              max_abs_centerline_error=float(
+                episode_max_abs_centerline_error[env_id]
+              ),
+              max_abs_heading_error=float(
+                episode_max_abs_heading_error[env_id]
+              ),
+              correction_max=float(episode_correction_max[env_id]),
+              stair_half_width=stair_half_width,
+            )
           )
           if failure_type != SPECIALIST_FAILURE_TYPES[specialist_mode]:
             rejected_failure_type_counts[failure_type] = (
@@ -965,8 +1105,7 @@ def _collect_and_update_specialist(
             )
             continue
           target_failures_admitted += 1
-          candidates = select_specialist_failure_candidates(
-            specialist_mode,
+          selection_args = (
             torch.stack(histories["riser"][start:])[:, env_id],
             {
               name: torch.stack(values[start:])[:, env_id]
@@ -977,9 +1116,27 @@ def _collect_and_update_specialist(
             torch.stack(histories["command"][start:])[:, env_id],
             torch.stack(histories["velocity"][start:])[:, env_id],
             torch.stack(histories["cbf_active"][start:])[:, env_id],
-            minimum_riser=minimum_riser,
-            failure_type=failure_type,
           )
+          if v19 and specialist_mode == "lateral":
+            candidates = select_v19_lateral_failure_candidates(
+              *selection_args,
+              minimum_riser=minimum_riser,
+              total_risers=edge_x.shape[1],
+            )
+          elif v19:
+            candidates = select_v19_contact_candidates(
+              *selection_args,
+              torch.stack(histories["touchdown"][start:])[:, env_id],
+              minimum_riser=minimum_riser,
+              outcome="failure",
+            )
+          else:
+            candidates = select_specialist_failure_candidates(
+              specialist_mode,
+              *selection_args,
+              minimum_riser=minimum_riser,
+              failure_type=failure_type,
+            )
           for candidate in candidates:
             history_index = start + candidate.history_index
             failure_added += failure_bank.add_specialist_candidate(
@@ -990,8 +1147,7 @@ def _collect_and_update_specialist(
             )
         else:
           successful_episodes_seen += 1
-          candidates = select_specialist_success_candidates(
-            specialist_mode,
+          selection_args = (
             torch.stack(histories["riser"][start:])[:, env_id],
             {
               name: torch.stack(values[start:])[:, env_id]
@@ -1002,8 +1158,26 @@ def _collect_and_update_specialist(
             torch.stack(histories["command"][start:])[:, env_id],
             torch.stack(histories["velocity"][start:])[:, env_id],
             torch.stack(histories["cbf_active"][start:])[:, env_id],
-            minimum_riser=minimum_riser,
           )
+          if v19 and specialist_mode == "lateral":
+            candidates = select_v19_lateral_success_candidates(
+              *selection_args,
+              minimum_riser=minimum_riser,
+              total_risers=edge_x.shape[1],
+            )
+          elif v19:
+            candidates = select_v19_contact_candidates(
+              *selection_args,
+              torch.stack(histories["touchdown"][start:])[:, env_id],
+              minimum_riser=minimum_riser,
+              outcome="success",
+            )
+          else:
+            candidates = select_specialist_success_candidates(
+              specialist_mode,
+              *selection_args,
+              minimum_riser=minimum_riser,
+            )
           for candidate in candidates:
             history_index = start + candidate.history_index
             success_pool_added += success_pool.add_specialist_candidate(
@@ -1070,14 +1244,28 @@ def _collect_and_update_specialist(
       episode_max_abs_centerline_error[done_mask] = 0.0
       episode_max_abs_heading_error[done_mask] = 0.0
       episode_correction_max[done_mask] = 0.0
+      episode_max_left_slip[done_mask] = 0.0
+      episode_max_right_slip[done_mask] = 0.0
+      episode_contact_mismatch_sum[done_mask] = 0.0
+      episode_first_lateral_event_step[done_mask] = -1
+      episode_first_contact_event_step[done_mask] = -1
+      episode_contact_instability_streak[done_mask] = 0
+      contact_history_initialized[done_mask] = False
+      previous_contact[done_mask] = False
       obs = obs.to(runner.device)
       rewards = rewards.to(runner.device)
       dones = dones.to(runner.device)
       runner.alg.process_env_step(obs, rewards, dones, extras)
 
     matching = (
-      match_specialist_success_counterexamples(
-        failure_bank, success_pool, success_bank
+      (
+        match_v19_success_counterexamples(
+          failure_bank, success_pool, success_bank
+        )
+        if v19
+        else match_specialist_success_counterexamples(
+          failure_bank, success_pool, success_bank
+        )
       )
       if len(failure_bank) and len(success_pool)
       else {
@@ -1098,10 +1286,26 @@ def _collect_and_update_specialist(
       "normal_start_success_rate": normal_successes / max(1, normal_completed),
       "normal_start_fall_rate": normal_falls / max(1, normal_completed),
     }
-    runner.alg.last_update_metrics.update(completion_metrics)
+    rollout_metadata = {
+      **completion_metrics,
+      **start_metrics,
+      "specialist_mode": specialist_mode,
+      "protocol_version": protocol_version,
+    }
+    runner.alg.last_update_metrics.update(rollout_metadata)
     runner.alg.compute_returns(obs)
-    advantage_metrics = runner.alg.prepare_constrained_advantages()
-  losses = runner.alg.update()
+    if defer_update:
+      advantage_metrics = {
+        "v19_grouped_advantage_normalization_deferred": True,
+      }
+      rollout_batch = runner.alg.capture_rollout_batch()
+      runner.alg.clear_captured_rollout()
+      losses: dict[str, Any] = {}
+    else:
+      advantage_metrics = runner.alg.prepare_constrained_advantages()
+      rollout_batch = None
+  if not defer_update:
+    losses = runner.alg.update()
   losses.update(credit_metrics)
   losses.update(fall_credit_metrics)
   losses.update(advantage_metrics)
@@ -1128,6 +1332,8 @@ def _collect_and_update_specialist(
       "success_matching": matching,
     }
   )
+  if defer_update:
+    return obs, losses, rollout_batch
   return obs, losses
 
 

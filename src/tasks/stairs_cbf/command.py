@@ -160,6 +160,11 @@ class JoystickVelocityCommand(CommandTerm):
     )
     self.centerline_error = torch.zeros(self.num_envs, device=self.device)
     self.heading_error = torch.zeros(self.num_envs, device=self.device)
+    self.centerline_error_rate = torch.zeros(self.num_envs, device=self.device)
+    self.heading_error_rate = torch.zeros(self.num_envs, device=self.device)
+    self._failure_error_initialized = torch.zeros(
+      self.num_envs, dtype=torch.bool, device=self.device
+    )
     self.operator_correction = torch.zeros_like(self.raw_command)
     self.correction_active = torch.zeros(
       self.num_envs, dtype=torch.bool, device=self.device
@@ -217,6 +222,9 @@ class JoystickVelocityCommand(CommandTerm):
     self._released[env_ids] = False
     self.centerline_error[env_ids] = 0.0
     self.heading_error[env_ids] = 0.0
+    self.centerline_error_rate[env_ids] = 0.0
+    self.heading_error_rate[env_ids] = 0.0
+    self._failure_error_initialized[env_ids] = False
     self.operator_correction[env_ids] = 0.0
     self.correction_active[env_ids] = False
 
@@ -253,6 +261,8 @@ class JoystickVelocityCommand(CommandTerm):
     patches = self._env_patches(env_ids)
     root_position = self.robot.data.root_link_pos_w
     center_y = patches[:, 0, 1]
+    previous_centerline = self.centerline_error.clone()
+    previous_heading = self.heading_error.clone()
     self.centerline_error[:] = root_position[:, 1] - center_y
 
     lookahead_w = torch.zeros_like(root_position)
@@ -262,6 +272,25 @@ class JoystickVelocityCommand(CommandTerm):
       self.robot.data.root_link_quat_w, lookahead_w
     )
     self.heading_error[:] = torch.atan2(lookahead_b[:, 1], lookahead_b[:, 0])
+    centerline_rate = (
+      self.centerline_error - previous_centerline
+    ) / self._env.step_dt
+    heading_delta = torch.atan2(
+      torch.sin(self.heading_error - previous_heading),
+      torch.cos(self.heading_error - previous_heading),
+    )
+    heading_rate = heading_delta / self._env.step_dt
+    self.centerline_error_rate[:] = torch.where(
+      self._failure_error_initialized,
+      centerline_rate,
+      torch.zeros_like(centerline_rate),
+    )
+    self.heading_error_rate[:] = torch.where(
+      self._failure_error_initialized,
+      heading_rate,
+      torch.zeros_like(heading_rate),
+    )
+    self._failure_error_initialized[:] = True
     correction = centerline_feedback_command(
       self.raw_command[:, 0],
       lookahead_b[:, 1],
