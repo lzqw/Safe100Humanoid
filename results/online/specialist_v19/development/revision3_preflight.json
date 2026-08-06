@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "development_preflight_exact_fallback_validated_formal_rerun_not_started",
+  "status": "development_ablation_passed_revision3_not_yet_frozen",
   "formal_claim": false,
   "parent_commit": "900b379294043897f233b3419afac8a767e26ce3",
   "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
@@ -115,6 +115,86 @@
     "process_terminated": true,
     "follow_up": "An exact bounded integer feasibility search now runs whenever the diverse multi-start heuristic does not reach the required balance. A regression fixture reproduces the old local optimum and now reaches zero imbalance."
   },
+  "development_ablation_attempt_2": {
+    "formal_claim": false,
+    "source_commit": "d5e0d278985f20a839ce5551e7c2596368eb653f",
+    "artifact_name": "lateral_seed143_ablation_d5e0d27",
+    "seed": 143,
+    "status": "completed",
+    "exit_code": 0,
+    "formal_protocol": false,
+    "development_run": true,
+    "protocol_completed": true,
+    "round_protocol": {
+      "actual_rounds": 8,
+      "accepted_updates": 6,
+      "maximum_rounds": 8,
+      "minimum_accepted_updates": 3,
+      "rejection_patience_after_minimum": 2,
+      "stop_reason": "maximum_rounds"
+    },
+    "accepted_rounds": [
+      1,
+      3,
+      5,
+      6,
+      7,
+      8
+    ],
+    "round_confirmation_success_deltas": [
+      0.0078125,
+      -0.0390625,
+      0.046875,
+      -0.015625,
+      0.0234375,
+      0.0078125,
+      0.015625,
+      0.0078125
+    ],
+    "round_confirmation_fall_deltas": [
+      -0.0078125,
+      0.0390625,
+      -0.046875,
+      0.015625,
+      -0.0234375,
+      -0.0078125,
+      -0.015625,
+      -0.0078125
+    ],
+    "all_16_rollout_replay_audits_exact": true,
+    "maximum_replay_marginal_imbalance": 0,
+    "all_8_d0_checks_passed": true,
+    "legacy_input_column_change_max_abs": 0.0,
+    "new_input_column_max_abs_after_adaptation": 7.332721725106239e-05,
+    "new_input_column_rms_after_adaptation": 2.3381468054139987e-05,
+    "training_diagnostic_only_128_episodes": {
+      "target": {
+        "base_success_rate": 0.6953125,
+        "final_success_rate": 0.7109375,
+        "success_delta": 0.015625,
+        "base_fall_rate": 0.3046875,
+        "final_fall_rate": 0.2890625,
+        "fall_delta": -0.015625
+      },
+      "D0": {
+        "base_success_rate": 0.8671875,
+        "final_success_rate": 0.953125,
+        "success_delta": 0.0859375,
+        "base_fall_rate": 0.0078125,
+        "final_fall_rate": 0.0078125,
+        "fall_delta": 0.0
+      }
+    },
+    "initial_actor_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+    "final_actor_sha256": "3ccd6cae4d1dc3b999aac2c70b2f49f0845232a139d9f941577afdfb1cec3729",
+    "source_manifest_matches_clean_commit": true,
+    "external_artifact_sha256": {
+      "accepted_final.pt": "d767cf6a8cce0247710430937360061806521268d78053649fb981dd99f9296c",
+      "online_rounds.json": "6328f719a9db29b6064317a226be532c3f9ca970aa793862f7c498f11451f39a",
+      "specialist_summary.json": "02d88cf372d25a22fff898155e772160a86a1260e89153cbe912fe3b1beafed9"
+    },
+    "interpretation": "The previously weak and now exposed seed 143 exceeds the three-update development gate under the corrected mechanics. This justifies prospectively freezing a new protocol, but cannot itself enter any formal claim."
+  },
   "saved_bank_replay_validation": {
     "sample_count": 12,
     "sampling_seed": 1901,
@@ -218,5 +298,5 @@
     "experiments/scripts/audit_specialists_diagonal_v19.py": "eedd5c98b798120bc3fd94258620e22e6d042d784aab2265987a011387858b97",
     "experiments/tests/test_online_refinement.py": "e68955df3fc0a82e306c8b5e30e6f71f24eae29d5780d853f21b33027056e9fb"
   },
-  "next_step": "Restart the known revision-2 weak seed 143 from the exact fallback commit as a nonformal, full-sized development ablation. Freeze unseen revision-3 formal seeds only if that development run completes the minimum-update protocol."
+  "next_step": "Prospectively freeze revision 3 with unseen adaptation, audit, and bootstrap seeds. Do not include development seed 143 in the formal claim."
 }

@@ -64,8 +64,12 @@ the explicit no-formal-claim boundary are recorded in
 [`development/revision3_preflight.json`](development/revision3_preflight.json).
 
 No revision-3 formal protocol has been frozen and no revision-3 formal run has
-started. The next check uses the already exposed weak seed 143 strictly as a
-development ablation; it cannot enter a later formal claim.
+started. A clean full-sized rerun of the already exposed weak seed 143 completed
+eight rounds with six accepted updates; all 16 replay audits had zero marginal
+imbalance, all D0 checks passed, and the legacy input-column change was exactly
+zero. Its final 128-episode target/D0 numbers remain training diagnostics only.
+Seed 143 cannot enter a later formal claim; the next step is a prospective
+revision-3 freeze using entirely unseen adaptation and audit randomness.
 
 Development smoke runs and exploratory context probes are intentionally not
 copied here and are not formal evidence. A future prospectively refrozen run
