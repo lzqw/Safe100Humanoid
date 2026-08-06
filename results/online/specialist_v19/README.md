@@ -86,6 +86,19 @@ therefore supports no formal specialist claim. Exact round records, marginal
 counts, external artifact hashes, and the stop boundary are preserved in
 [`training/revision3_training_stop.json`](training/revision3_training_stop.json).
 
+The revision-4 development successor adds an explicit joint-feasibility gate
+after every discovery rollout, transactional bank updates during adaptation,
+and a final feasibility proof before checkpointing. A full-sized, explicitly
+nonformal rerun of the already exposed lateral seed 153 completed six rounds
+with three accepted updates. All 12 replay audits were exact with zero marginal
+imbalance, all 12 bank transactions retained a feasible next replay, and the
+legacy actor-input columns remained bitwise unchanged. The rollback branch is
+covered by a regression fixture reproducing the revision-3 infeasible joint
+marginals. Exact diagnostics and hashes are in
+[`development/revision4_joint_feasibility_preflight.json`](development/revision4_joint_feasibility_preflight.json).
+No revision-4 protocol has yet been frozen, and this development result is not
+formal evidence.
+
 Development smoke runs and exploratory context probes are intentionally not
 copied here and are not formal evidence. A future prospectively refrozen run
 may add a compact training manifest, paired CSV, audit summary, verifier
