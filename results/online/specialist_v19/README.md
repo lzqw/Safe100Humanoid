@@ -27,8 +27,23 @@ The exact contexts are [`contexts/lateral.json`](contexts/lateral.json) and
 hashes, selection path, and external log/summary hashes are in
 [`calibration_summary.json`](calibration_summary.json).
 
+## Revision-2 formal-training stop
+
+The frozen training queue stopped before the formal diagonal audit. Lateral
+seed 43 completed eight rounds with five accepted updates, but lateral seed
+143 completed all eight rounds with only one accepted update. This is below
+the prospectively frozen minimum of three, so the runner raised an error and
+the `set -e` queue stopped before the remaining eight adaptation runs.
+
+No formal claim is made from revision 2. In particular, the per-run
+128-episode evaluations are training diagnostics only and are not substitutes
+for the unstarted 512-target/256-D0 paired audit. The exact compact round
+records, artifact hashes, stop reason, and not-started seed list are retained
+in
+[`training/revision2_lateral_training_stop.json`](training/revision2_lateral_training_stop.json).
+
 Development smoke runs and exploratory context probes are intentionally not
-copied here and are not formal evidence. After the fresh audit, this directory
-will contain the compact training manifest, paired CSV,
-audit summary, verifier output, provenance, and checksums. Large checkpoints
-remain in the external artifact store and are identified by SHA-256.
+copied here and are not formal evidence. A future prospectively refrozen run
+may add a compact training manifest, paired CSV, audit summary, verifier
+output, provenance, and checksums. Large checkpoints remain in the external
+artifact store and are identified by SHA-256.
