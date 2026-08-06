@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -127,3 +128,30 @@ def test_frozen_protocol_accepts_only_the_declared_formal_runtime() -> None:
   changed.target_episodes = 256
   with pytest.raises(ValueError, match="runtime mismatch"):
     _validate_protocol(protocol, changed)
+
+
+def test_protocol_sealed_context_hashes_match_published_v17_evidence() -> None:
+  repo = Path(__file__).resolve().parents[2]
+  protocol = json.loads(
+    (repo / "results/online/specialist_v18/protocol.json").read_text()
+  )
+  manifest = json.loads(
+    (
+      repo
+      / "results/online/specialist_v17/formal/training_manifest.json"
+    ).read_text()
+  )
+  for mode in ("lateral", "cbf", "balance"):
+    context_path = repo / f"results/online/specialist_v17/contexts/{mode}.json"
+    context = json.loads(context_path.read_text())
+    sealed = protocol["sealed_inputs"]["contexts"][mode]
+    assert hashlib.sha256(context_path.read_bytes()).hexdigest() == sealed[
+      "file_sha256"
+    ]
+    assert context["parameters_sha256"] == sealed["parameters_sha256"]
+    run_hashes = {
+      record["deployment_context_parameters_sha256"]
+      for record in manifest["runs"]
+      if record["specialist_mode"] == mode
+    }
+    assert run_hashes == {sealed["parameters_sha256"]}

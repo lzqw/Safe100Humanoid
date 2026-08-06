@@ -34,6 +34,8 @@
   },
   "policy_method": "Failure-Mode-Conditioned Brief PPO v17",
   "protocol_id": "safe100-diagonal-specialist-v18",
+  "protocol_revision": 2,
+  "protocol_revision_note": "Before any fresh episode evaluation, the GPU smoke preflight caught two incorrectly transcribed full context-parameter hashes in revision 1. Revision 2 copies the exact hashes from the sealed context files and training manifest; no evaluation outcome was generated or inspected.",
   "removed_conditions": {
     "cbf_independence_gate": true,
     "cross_scene_all_pass_requirement": true,
@@ -50,11 +52,11 @@
       },
       "cbf": {
         "file_sha256": "a4f9ecf8b718e7da395d9c60d35e55d1bf1d0c5b5c71e6a70c7a69fc8b675beb",
-        "parameters_sha256": "da07fd6cc6062f1ea6e97409b65f4676e16a342462276f996018dcfcf0aae3d1"
+        "parameters_sha256": "da07fd6cc606c3cb1e8b7064a5712cbc31b26f978a36f1b250f41ae2b0aae3d1"
       },
       "lateral": {
         "file_sha256": "db4bb299278c02734aa54bfb4d94b8684a21d5bc731deff522964fba86650eb9",
-        "parameters_sha256": "e79dad659a304ab4260b74505f0de014cb999b8eb917f77cc486b7045173bf85"
+        "parameters_sha256": "e79dad659a30c99837c0c9ff11da2186a01b9dcbfd3bc1ee118e8f77b173bf85"
       }
     },
     "historical_v17_compact_audit_sha256": "62f3c84c5085e51c771ef67208e74a604e008f54056d34a0f090685ca816a458",
@@ -67,5 +69,6 @@
     "cbf",
     "balance"
   ],
-  "status": "frozen_before_fresh_audit"
+  "status": "frozen_before_fresh_audit",
+  "supersedes_protocol_commit": "a5834b3c4843e06f655f51b1349ff1e516fea1a0"
 }

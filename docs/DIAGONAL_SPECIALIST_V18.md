@@ -107,6 +107,13 @@ The machine-readable protocol is
 - write 6,912 paired rows (`3 modes × 3 seeds × (512 target + 256 D0)`);
 - preserve the v17 negative audit unchanged.
 
+Protocol revision 1 (`a5834b3`) was superseded before any fresh episode was
+evaluated: its smoke preflight rejected two full context-parameter hashes that
+had been transcribed incorrectly from abbreviated display strings. Revision 2
+copies the exact lateral and CBF hashes from both the sealed context files and
+training manifest. The preflight failure exposed no policy outcome and did not
+motivate any change to seeds, sample sizes, statistics, or acceptance gates.
+
 The formal launcher is:
 
 ```text

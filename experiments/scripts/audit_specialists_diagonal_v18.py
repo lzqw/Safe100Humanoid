@@ -116,6 +116,7 @@ def _validate_protocol(
 ) -> None:
   expected = {
     "protocol_id": PROTOCOL_ID,
+    "protocol_revision": 2,
     "status": "frozen_before_fresh_audit",
     "specialist_modes": list(MODES),
     "adaptation_seeds": FORMAL_ADAPTATION_SEEDS,
