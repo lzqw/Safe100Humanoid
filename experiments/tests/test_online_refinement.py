@@ -79,6 +79,7 @@ from src.tasks.stairs_cbf.hard_cases import (
   curriculum_destination_ids,
   hard_case_destination_ids,
   hard_case_state_shape_mismatches,
+  finalize_v19_replay_bank_update,
   perturb_joystick_command_state,
   match_specialist_success_counterexamples,
   match_v19_success_counterexamples,
@@ -92,6 +93,7 @@ from src.tasks.stairs_cbf.hard_cases import (
   select_v19_lateral_failure_candidates,
   select_v19_lateral_success_candidates,
   select_v19_balanced_restart_pairs,
+  v19_restart_pair_feasibility,
 )
 from src.tasks.stairs_cbf.deployment_context import (
   FAILURE_FOCUSED_CALIBRATION_KIND,
@@ -2424,3 +2426,108 @@ def test_v19_exact_quota_fallback_escapes_a_balanced_local_optimum() -> None:
     "support_foot": {"0": 6, "1": 6},
     "error_growth_bin": {"high": 6, "low": 6},
   }
+
+
+def test_v19_infeasible_joint_marginals_trigger_transactional_bank_rollback() -> None:
+  failure_bank = HardCaseStateBank(
+    capacity=32,
+    bank_kind=SPECIALIST_FAILURE_BANK_KIND,
+    source_domain="DQHMED",
+    context_sha256="context",
+    specialist_mode="lateral",
+  )
+  success_pool = HardCaseStateBank(
+    capacity=32,
+    bank_kind=SPECIALIST_SUCCESS_POOL_KIND,
+    source_domain="DQHMED",
+    context_sha256="context",
+    specialist_mode="lateral",
+  )
+  success_bank = HardCaseStateBank(
+    capacity=32,
+    bank_kind=SPECIALIST_SUCCESS_BANK_KIND,
+    source_domain="DQHMED",
+    context_sha256="context",
+    specialist_mode="lateral",
+  )
+
+  def load_strata(strata: tuple[tuple[int, int, str, int, str], ...]) -> None:
+    failure_bank.clear()
+    success_bank.clear()
+    for index, (centerline, heading, stage, support, growth) in enumerate(strata):
+      common = {
+        "state": {"state": torch.tensor([[float(index)]])},
+        "priority": 1.0 + index,
+        "riser_index": 5,
+        "terrain_type": 0,
+        "specialist_mode": "lateral",
+        "gait_phase": 0.25,
+        "support_foot": support,
+        "delivered_command": (0.4, 0.0, 0.0),
+        "root_velocity": (0.3, 0.0, 0.0),
+        "cbf_active": False,
+        "actor_observation": torch.tensor([float(index)]),
+        "centerline_sign": centerline,
+        "heading_sign": heading,
+        "riser_stage": stage,
+        "error_growth_rate": 0.4 if growth == "high" else 0.1,
+      }
+      failure_bank.entries.append(HardCaseEntry(**common, outcome="failure"))
+      success_bank.entries.append(
+        HardCaseEntry(
+          **common,
+          outcome="success",
+          matched_failure_index=index,
+          match_distance=0.01,
+          success_pool_index=index,
+        )
+      )
+
+  feasible = (
+    (-1, 1, "late", 1, "low"),
+    (-1, 1, "mid", 0, "high"),
+    (-1, 1, "mid", 0, "low"),
+    (1, -1, "early", 0, "high"),
+    (1, -1, "late", 1, "high"),
+    (1, -1, "mid", 1, "low"),
+  )
+  load_strata(feasible)
+  snapshots = (
+    failure_bank.state_dict(),
+    success_pool.state_dict(),
+    success_bank.state_dict(),
+  )
+  assert v19_restart_pair_feasibility(failure_bank, success_bank, 12)[
+    "passed"
+  ]
+
+  infeasible = (
+    (-1, 1, "mid", 0, "low"),
+    (-1, 1, "mid", 1, "high"),
+    (-1, -1, "early", 0, "low"),
+    (-1, -1, "late", 1, "high"),
+    (1, -1, "early", 1, "high"),
+    (1, -1, "late", 0, "low"),
+  )
+  load_strata(infeasible)
+  failed = v19_restart_pair_feasibility(failure_bank, success_bank, 12)
+  assert failed["passed"] is False
+  assert failed["error"] == (
+    "matched restart strata cannot realize balanced observable marginals"
+  )
+
+  transaction = finalize_v19_replay_bank_update(
+    failure_bank,
+    success_pool,
+    success_bank,
+    snapshots,
+    12,
+  )
+  assert transaction["attempted"] is True
+  assert transaction["committed"] is False
+  assert transaction["post_update_preflight"]["passed"] is False
+  assert transaction["restored_preflight"]["passed"] is True
+  assert transaction["usable_preflight"]["passed"] is True
+  assert v19_restart_pair_feasibility(failure_bank, success_bank, 12)[
+    "passed"
+  ]

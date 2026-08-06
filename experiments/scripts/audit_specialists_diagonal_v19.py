@@ -450,9 +450,36 @@ def _validate_training_artifacts(
           reasons.append(
             f"round {record.get('round')} balanced matched restart pairs differ"
           )
+        if not (
+          len(collector_metrics) == 2
+          and all(
+            (item.get("bank_update_transaction") or {}).get("attempted")
+            is True
+            and (
+              (item.get("bank_update_transaction") or {}).get(
+                "usable_preflight"
+              )
+              or {}
+            ).get("passed")
+            is True
+            for item in collector_metrics
+          )
+        ):
+          reasons.append(
+            f"round {record.get('round')} replay-bank transaction differs"
+          )
       failure = summary.get("failure_bank", {})
       success_pool = summary.get("success_pool", {})
       success = summary.get("success_counterexample_bank", {})
+      if not (
+        summary.get("bank_discovery_joint_balance_preflight", {}).get(
+          "passed"
+        )
+        is True
+        and
+        summary.get("bank_joint_balance_preflight", {}).get("passed") is True
+      ):
+        reasons.append("matched restart bank joint-feasibility proof differs")
       if failure.get("outcome_counts") != {"failure": failure.get("size")}:
         reasons.append("failure bank outcome purity failed")
       if success_pool.get("outcome_counts") != {"success": success_pool.get("size")}:

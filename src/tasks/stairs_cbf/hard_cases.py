@@ -2603,6 +2603,81 @@ def select_v19_balanced_restart_pairs(
   }
 
 
+def v19_restart_pair_feasibility(
+  failure_bank: HardCaseStateBank,
+  success_bank: HardCaseStateBank,
+  count: int,
+) -> dict[str, Any]:
+  """Audit joint marginal feasibility without consuming training randomness."""
+  generator = torch.Generator(device="cpu")
+  generator.manual_seed(0)
+  try:
+    _, _, audit = select_v19_balanced_restart_pairs(
+      failure_bank,
+      success_bank,
+      count,
+      generator=generator,
+    )
+  except RuntimeError as error:
+    return {
+      "passed": False,
+      "pair_count": count,
+      "error": str(error),
+      "audit": None,
+    }
+  return {
+    "passed": True,
+    "pair_count": count,
+    "error": None,
+    "audit": audit,
+  }
+
+
+def finalize_v19_replay_bank_update(
+  failure_bank: HardCaseStateBank,
+  success_pool: HardCaseStateBank,
+  success_bank: HardCaseStateBank,
+  snapshots: tuple[dict[str, Any], dict[str, Any], dict[str, Any]],
+  count: int,
+) -> dict[str, Any]:
+  """Commit a bank update only when the next balanced replay stays feasible."""
+  post_update = v19_restart_pair_feasibility(
+    failure_bank,
+    success_bank,
+    count,
+  )
+  if post_update["passed"]:
+    return {
+      "attempted": True,
+      "committed": True,
+      "rollback_reason": None,
+      "post_update_preflight": post_update,
+      "restored_preflight": None,
+      "usable_preflight": post_update,
+    }
+
+  banks = (failure_bank, success_pool, success_bank)
+  for bank, snapshot in zip(banks, snapshots, strict=True):
+    bank.load_state_dict(snapshot)
+  restored = v19_restart_pair_feasibility(
+    failure_bank,
+    success_bank,
+    count,
+  )
+  if not restored["passed"]:
+    raise RuntimeError(
+      "v19 replay-bank transaction could not restore a feasible snapshot"
+    )
+  return {
+    "attempted": True,
+    "committed": False,
+    "rollback_reason": post_update["error"],
+    "post_update_preflight": post_update,
+    "restored_preflight": restored,
+    "usable_preflight": restored,
+  }
+
+
 def specialist_destination_ids(
   num_envs: int,
   *,

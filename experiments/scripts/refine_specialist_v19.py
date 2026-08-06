@@ -389,6 +389,7 @@ def main() -> None:
     SPECIALIST_FAILURE_BANK_KIND,
     SPECIALIST_SUCCESS_BANK_KIND,
     SPECIALIST_SUCCESS_POOL_KIND,
+    v19_restart_pair_feasibility,
   )
   from src.tasks.stairs_cbf.online import backtrack_actor_state, specialist_d0_retention_gate
 
@@ -565,6 +566,14 @@ def main() -> None:
       minimum_required=min(required_failure_starts, required_success_starts),
       require_full_diversity=not args.smoke,
     )
+    joint_balance_preflight = v19_restart_pair_feasibility(
+      failure_bank,
+      success_bank,
+      min(required_failure_starts, required_success_starts),
+    )
+    metrics["joint_balance_preflight"] = joint_balance_preflight
+    if not joint_balance_preflight["passed"]:
+      reasons.append("matched restart marginals are not jointly feasible")
     if not reasons:
       break
   bank_reasons = _bank_invariant_reasons(
@@ -575,6 +584,13 @@ def main() -> None:
     minimum_required=min(required_failure_starts, required_success_starts),
     require_full_diversity=not args.smoke,
   )
+  joint_balance_preflight = v19_restart_pair_feasibility(
+    failure_bank,
+    success_bank,
+    min(required_failure_starts, required_success_starts),
+  )
+  if not joint_balance_preflight["passed"]:
+    bank_reasons.append("matched restart marginals are not jointly feasible")
   (output_dir / "bank_discovery.json").write_text(
     json.dumps(discovery, indent=2, sort_keys=True) + "\n"
   )
@@ -891,6 +907,13 @@ def main() -> None:
     deployment_context=context_path,
     v19_context=context_path,
   )
+  final_joint_balance_preflight = v19_restart_pair_feasibility(
+    failure_bank,
+    success_bank,
+    min(required_failure_starts, required_success_starts),
+  )
+  if not final_joint_balance_preflight["passed"]:
+    raise RuntimeError("v19 final replay bank lost joint marginal feasibility")
   final_path = output_dir / "accepted_final.pt"
   result = {
     "method": "Observable Failure-Conditioned Brief PPO v19",
@@ -981,6 +1004,8 @@ def main() -> None:
     "failure_bank": failure_bank.audit_metadata(),
     "success_pool": success_pool.audit_metadata(),
     "success_counterexample_bank": success_bank.audit_metadata(),
+    "bank_discovery_joint_balance_preflight": joint_balance_preflight,
+    "bank_joint_balance_preflight": final_joint_balance_preflight,
     "baseline_eval": baseline_eval,
     "rounds": rounds,
     "last_d0_safe_round": last_d0_safe_round,

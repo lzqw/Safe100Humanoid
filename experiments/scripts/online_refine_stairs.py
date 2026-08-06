@@ -752,6 +752,7 @@ def _collect_and_update_specialist(
     hard_case_state_shape_mismatches,
     match_specialist_success_counterexamples,
     match_v19_success_counterexamples,
+    finalize_v19_replay_bank_update,
     reset_rollout_with_specialist_banks,
     restore_hard_case_state,
     select_specialist_failure_candidates,
@@ -775,6 +776,16 @@ def _collect_and_update_specialist(
     raise ValueError("deferred specialist rollout updates are reserved for v19")
   if minimum_riser < 1:
     raise ValueError("specialist minimum riser must be positive")
+  persistent_slots = bool(failure_fraction or success_fraction)
+  bank_snapshots = (
+    (
+      failure_bank.state_dict(),
+      success_pool.state_dict(),
+      success_bank.state_dict(),
+    )
+    if v19 and persistent_slots
+    else None
+  )
   runner.alg.set_critic_only(critic_only)
   runner.alg.clear_cbf_rollout()
   runner.alg.train_mode()
@@ -802,7 +813,6 @@ def _collect_and_update_specialist(
   if len(success_ids):
     success_slots[success_ids] = True
   normal_slots = ~(failure_slots | success_slots)
-  persistent_slots = bool(failure_fraction or success_fraction)
   maximum_history_steps = (
     150
     if v19 and specialist_mode == "lateral"
@@ -1278,6 +1288,27 @@ def _collect_and_update_specialist(
         "matches": [],
       }
     )
+    bank_update_transaction = {
+      "attempted": False,
+      "committed": None,
+      "rollback_reason": None,
+      "post_update_preflight": None,
+      "restored_preflight": None,
+      "usable_preflight": None,
+    }
+    if bank_snapshots is not None:
+      pair_count = min(
+        int(start_metrics["failure_start_count"]),
+        int(start_metrics["success_start_count"]),
+      )
+      bank_update_transaction = finalize_v19_replay_bank_update(
+        failure_bank,
+        success_pool,
+        success_bank,
+        bank_snapshots,
+        pair_count,
+      )
+      matching["bank_update_committed"] = bank_update_transaction["committed"]
     credit_metrics = runner.alg.relabel_pre_intervention_costs()
     fall_credit_metrics = runner.alg.redistribute_failure_focused_fall_penalty()
     completion_metrics = {
@@ -1292,6 +1323,7 @@ def _collect_and_update_specialist(
       **start_metrics,
       "specialist_mode": specialist_mode,
       "protocol_version": protocol_version,
+      "bank_update_transaction": bank_update_transaction,
     }
     runner.alg.last_update_metrics.update(rollout_metadata)
     runner.alg.compute_returns(obs)
@@ -1331,6 +1363,7 @@ def _collect_and_update_specialist(
       "success_pool_audit": success_pool.audit_metadata(),
       "success_bank_audit": success_bank.audit_metadata(),
       "success_matching": matching,
+      "bank_update_transaction": bank_update_transaction,
     }
   )
   if defer_update:
