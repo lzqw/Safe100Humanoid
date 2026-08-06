@@ -2,15 +2,15 @@
 set -euo pipefail
 
 ROOT="${SAFE100_HUMANOID_ROOT:-/home/carla/LZQW/SAFE100/humanoid}"
-REPO="${SAFE100_MJLAB_REPO:-$ROOT/worktrees/v19_r3_formal}"
+REPO="${SAFE100_MJLAB_REPO:-$ROOT/worktrees/v19_r4_formal}"
 PYTHON="${SAFE100_PYTHON:-$ROOT/workspace/conda_env/bin/python}"
 BASELINE="${SAFE100_BASELINE_CHECKPOINT:-$ROOT/artifacts/retention_v13/arm_b_state_retention/accepted_final.pt}"
 CONTEXT_DIR="${SAFE100_SPECIALIST_CONTEXT_DIR:-$ROOT/artifacts/specialist_v19/contexts}"
-TRAINING_ROOT="${SAFE100_SPECIALIST_TRAINING_ROOT:-$ROOT/artifacts/specialist_v19_revision3/training}"
-PROTOCOL="${SAFE100_V19_PROTOCOL_FILE:-$REPO/results/online/specialist_v19/protocol_revision3.json}"
-PROTOCOL_COMMIT="${SAFE100_V19_REVISION3_PROTOCOL_COMMIT:?set SAFE100_V19_REVISION3_PROTOCOL_COMMIT to the frozen revision-3 commit}"
-OUTPUT="${SAFE100_V19_AUDIT_OUTPUT_DIR:-$ROOT/artifacts/specialist_v19_revision3/diagonal_audit}"
-LOG="${SAFE100_V19_AUDIT_LOG_PATH:-$ROOT/logs/specialist_v19_revision3/diagonal_audit.log}"
+TRAINING_ROOT="${SAFE100_SPECIALIST_TRAINING_ROOT:-$ROOT/artifacts/specialist_v19_revision4/training}"
+PROTOCOL="${SAFE100_V19_PROTOCOL_FILE:-$REPO/results/online/specialist_v19/protocol_revision4.json}"
+PROTOCOL_COMMIT="${SAFE100_V19_REVISION4_PROTOCOL_COMMIT:?set SAFE100_V19_REVISION4_PROTOCOL_COMMIT to the frozen revision-4 commit}"
+OUTPUT="${SAFE100_V19_AUDIT_OUTPUT_DIR:-$ROOT/artifacts/specialist_v19_revision4/diagonal_audit}"
+LOG="${SAFE100_V19_AUDIT_LOG_PATH:-$ROOT/logs/specialist_v19_revision4/diagonal_audit.log}"
 
 cd "$REPO"
 test "$(git rev-parse HEAD)" = "$PROTOCOL_COMMIT"
@@ -28,12 +28,12 @@ export PYTHONUNBUFFERED=1
   --protocol-file "$PROTOCOL" \
   --protocol-commit "$PROTOCOL_COMMIT" \
   --output-dir "$OUTPUT" \
-  --adaptation-seeds 53 153 253 353 453 \
+  --adaptation-seeds 63 163 263 363 463 \
   --eval-batch-size 128 \
   --target-episodes 512 \
   --d0-episodes 256 \
   --bootstrap-samples 10000 \
-  --audit-seed 5300000 \
-  --bootstrap-seed 6300000 \
+  --audit-seed 5400000 \
+  --bootstrap-seed 6400000 \
   --device cuda:0 \
   2>&1 | tee "$LOG"

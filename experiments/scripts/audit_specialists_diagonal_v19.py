@@ -24,9 +24,9 @@ from online_refine_stairs import _actor_state, _actor_state_sha256, _evaluate_st
 
 PROTOCOL_ID = "safe100-observable-failure-conditioned-v19"
 MODES = ("lateral", "contact_stability")
-FORMAL_ADAPTATION_SEEDS = [53, 153, 253, 353, 453]
-FORMAL_AUDIT_SEED = 5_300_000
-FORMAL_BOOTSTRAP_SEED = 6_300_000
+FORMAL_ADAPTATION_SEEDS = [63, 163, 263, 363, 463]
+FORMAL_AUDIT_SEED = 5_400_000
+FORMAL_BOOTSTRAP_SEED = 6_400_000
 
 
 def _sha256(path: Path) -> str:
@@ -144,8 +144,8 @@ def _parse_args() -> argparse.Namespace:
 def _validate_protocol(protocol: dict[str, Any], args: argparse.Namespace) -> None:
   expected = {
     "protocol_id": PROTOCOL_ID,
-    "protocol_revision": 3,
-    "status": "frozen_after_nonformal_seed143_development_before_revision3_formal_adaptation",
+    "protocol_revision": 4,
+    "status": "frozen_after_revision3_joint_feasibility_stop_and_nonformal_seed153_development_before_revision4_formal_adaptation",
     "policy_method": "Observable Failure-Conditioned Brief PPO v19",
     "specialist_modes": list(MODES),
     "adaptation_seeds": FORMAL_ADAPTATION_SEEDS,
@@ -193,13 +193,28 @@ def _validate_protocol(protocol: dict[str, Any], args: argparse.Namespace) -> No
   development_exclusions = protocol.get("development_exclusions", {})
   expected_exclusions = {
     "revision_2_declared_adaptation_seeds": [43, 143, 243, 343, 443],
-    "development_only_adaptation_seeds": [143],
-    "revision_3_formal_seed_overlap": False,
+    "revision_3_declared_adaptation_seeds": [53, 153, 253, 353, 453],
+    "development_only_adaptation_seeds": [143, 153],
+    "revision_4_formal_seed_overlap": False,
   }
   for key, value in expected_exclusions.items():
     if development_exclusions.get(key) != value:
       mismatches[f"development_exclusions.{key}"] = {
         "actual": development_exclusions.get(key),
+        "required": value,
+      }
+  method = protocol.get("method_invariants", {})
+  expected_method = {
+    "discovery_requires_joint_restart_feasibility": True,
+    "transactional_replay_bank_updates": True,
+    "final_restart_feasibility_proof": True,
+    "required_restart_marginals_jointly_balanced": True,
+    "exact_failure_success_restart_pairs": True,
+  }
+  for key, value in expected_method.items():
+    if method.get(key) != value:
+      mismatches[f"method_invariants.{key}"] = {
+        "actual": method.get(key),
         "required": value,
       }
   calibration = protocol.get("calibration", {})

@@ -96,8 +96,11 @@ legacy actor-input columns remained bitwise unchanged. The rollback branch is
 covered by a regression fixture reproducing the revision-3 infeasible joint
 marginals. Exact diagnostics and hashes are in
 [`development/revision4_joint_feasibility_preflight.json`](development/revision4_joint_feasibility_preflight.json).
-No revision-4 protocol has yet been frozen, and this development result is not
-formal evidence.
+Revision 4 is prospectively frozen in
+[`protocol_revision4.json`](protocol_revision4.json), with unseen adaptation
+seeds 63/163/263/363/463, audit seed 5,400,000, and bootstrap seed 6,400,000.
+No revision-4 formal adaptation or audit outcome was observed before this
+freeze; the seed-153 development result remains nonformal evidence only.
 
 Development smoke runs and exploratory context probes are intentionally not
 copied here and are not formal evidence. A future prospectively refrozen run

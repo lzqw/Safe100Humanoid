@@ -169,13 +169,13 @@ def test_frozen_protocol_accepts_only_the_declared_formal_runtime() -> None:
 def test_frozen_v19_protocol_accepts_only_two_diagonals_and_five_seeds() -> None:
   repo = Path(__file__).resolve().parents[2]
   protocol = json.loads(
-    (repo / "results/online/specialist_v19/protocol_revision3.json").read_text()
+    (repo / "results/online/specialist_v19/protocol_revision4.json").read_text()
   )
   arguments = SimpleNamespace(
     smoke=False,
-    adaptation_seeds=[53, 153, 253, 353, 453],
-    audit_seed=5_300_000,
-    bootstrap_seed=6_300_000,
+    adaptation_seeds=[63, 163, 263, 363, 463],
+    audit_seed=5_400_000,
+    bootstrap_seed=6_400_000,
     eval_batch_size=128,
     target_episodes=512,
     d0_episodes=256,
@@ -187,7 +187,7 @@ def test_frozen_v19_protocol_accepts_only_two_diagonals_and_five_seeds() -> None
   with pytest.raises(ValueError, match="protocol file mismatch"):
     _validate_protocol_v19(changed, arguments)
   changed_args = copy.deepcopy(arguments)
-  changed_args.adaptation_seeds = [53, 153, 253]
+  changed_args.adaptation_seeds = [63, 163, 263]
   with pytest.raises(ValueError, match="runtime mismatch"):
     _validate_protocol_v19(protocol, changed_args)
 
