@@ -103,11 +103,18 @@ def _balanced_restart_strata(audit: dict[str, Any]) -> bool:
     },
   }.get(audit.get("specialist_mode"))
   pair_count = audit.get("pair_count")
-  return bool(expected) and set(marginals) == set(expected) and all(
-    set(marginals[field]) == values
-    and sum(marginals[field].values()) == pair_count
-    and max(marginals[field].values()) - min(marginals[field].values()) <= 1
-    for field, values in expected.items()
+  return (
+    bool(expected)
+    and audit.get("quota_solver")
+    in {"heuristic_multi_start", "exact_search_fallback"}
+    and audit.get("maximum_marginal_imbalance") <= 1
+    and set(marginals) == set(expected)
+    and all(
+      set(marginals[field]) == values
+      and sum(marginals[field].values()) == pair_count
+      and max(marginals[field].values()) - min(marginals[field].values()) <= 1
+      for field, values in expected.items()
+    )
   )
 
 

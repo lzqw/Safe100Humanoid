@@ -52,11 +52,14 @@ pairs, jointly balances every required replay marginal, freezes the 405 legacy
 input columns, and trains only the five new columns at the full actor learning
 rate.
 
-The current allocator was replayed against both saved lateral banks and a saved
-contact bank. Every 12-state sample was exactly paired; lateral achieved 6/6
-for both signs, support, and growth plus 4/4/4 riser stages, while contact
-achieved 6/6 for touchdown, slip, timing, and support. The complete GPU test
-suite passes 88/88. Exact diagnostics, hashes, development-smoke outcomes, and
+The allocator was replayed against both saved lateral banks and a saved contact
+bank. Every 12-state sample was exactly paired; lateral achieved 6/6 for both
+signs, support, and growth plus 4/4/4 riser stages, while contact achieved 6/6
+for touchdown, slip, timing, and support. A first full-sized development attempt
+then exposed one heuristic local optimum at 7/5 heading balance, so it was
+intentionally stopped after round 1. An exact bounded-integer fallback and a
+reproducing regression test now prevent that silent drift. The complete GPU
+test suite passes 89/89. Exact diagnostics, hashes, development outcomes, and
 the explicit no-formal-claim boundary are recorded in
 [`development/revision3_preflight.json`](development/revision3_preflight.json).
 

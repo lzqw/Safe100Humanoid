@@ -2261,7 +2261,7 @@ def _balanced_restart_quota_score(
 
 
 @lru_cache(maxsize=128)
-def _balanced_restart_quotas(
+def _heuristic_balanced_restart_quotas(
   keys: tuple[tuple[Any, ...], ...], total: int
 ) -> tuple[int, ...]:
   """Use deterministic multi-start search to balance all full-stratum margins."""
@@ -2327,6 +2327,120 @@ def _balanced_restart_quotas(
   )
 
 
+def _exact_balanced_restart_quotas(
+  keys: tuple[tuple[Any, ...], ...], total: int
+) -> tuple[int, ...] | None:
+  """Find a balanced integer allocation exactly when the heuristic stalls."""
+  field_values = tuple(
+    tuple(sorted({key[field] for key in keys}, key=repr))
+    for field in range(len(keys[0]))
+  )
+  offsets: list[int] = []
+  category_count = 0
+  for values in field_values:
+    offsets.append(category_count)
+    category_count += len(values)
+  value_indices = tuple(
+    {value: offsets[field] + index for index, value in enumerate(values)}
+    for field, values in enumerate(field_values)
+  )
+  encoded_keys = tuple(
+    tuple(value_indices[field][value] for field, value in enumerate(key))
+    for key in keys
+  )
+  lower: list[int] = []
+  upper: list[int] = []
+  for values in field_values:
+    quotient, remainder = divmod(total, len(values))
+    lower.extend([quotient] * len(values))
+    upper.extend([quotient + int(remainder > 0)] * len(values))
+  lower_bounds = tuple(lower)
+  upper_bounds = tuple(upper)
+
+  @lru_cache(maxsize=None)
+  def search(counts: tuple[int, ...]) -> tuple[int, ...] | None:
+    first_start = offsets[0]
+    selected_count = sum(
+      counts[first_start : first_start + len(field_values[0])]
+    )
+    remaining = total - selected_count
+    if any(
+      count > maximum or count + remaining < minimum
+      for count, minimum, maximum in zip(
+        counts, lower_bounds, upper_bounds, strict=True
+      )
+    ):
+      return None
+    if remaining == 0:
+      return ()
+
+    valid_keys = [
+      key_index
+      for key_index, categories in enumerate(encoded_keys)
+      if all(counts[category] < upper_bounds[category] for category in categories)
+    ]
+    mandatory_categories = [
+      category
+      for category, (count, minimum) in enumerate(
+        zip(counts, lower_bounds, strict=True)
+      )
+      if count < minimum
+    ]
+    if mandatory_categories:
+      required = min(
+        mandatory_categories,
+        key=lambda category: (
+          sum(category in encoded_keys[index] for index in valid_keys),
+          -(lower_bounds[category] - counts[category]),
+          category,
+        ),
+      )
+      valid_keys = [
+        index for index in valid_keys if required in encoded_keys[index]
+      ]
+    valid_keys.sort(
+      key=lambda index: (
+        -sum(
+          counts[category] < lower_bounds[category]
+          for category in encoded_keys[index]
+        ),
+        index,
+      )
+    )
+    for key_index in valid_keys:
+      updated = list(counts)
+      for category in encoded_keys[key_index]:
+        updated[category] += 1
+      suffix = search(tuple(updated))
+      if suffix is not None:
+        return (key_index, *suffix)
+    return None
+
+  selected = search((0,) * category_count)
+  if selected is None:
+    return None
+  quotas = [0] * len(keys)
+  for key_index in selected:
+    quotas[key_index] += 1
+  return tuple(quotas)
+
+
+@lru_cache(maxsize=128)
+def _balanced_restart_quotas(
+  keys: tuple[tuple[Any, ...], ...], total: int
+) -> tuple[int, ...]:
+  """Prefer diverse heuristic quotas, with an exact feasibility fallback."""
+  heuristic = _heuristic_balanced_restart_quotas(keys, total)
+  if _balanced_restart_quota_score(keys, heuristic)[0] <= 1:
+    return heuristic
+  exact = _exact_balanced_restart_quotas(keys, total)
+  if exact is None or _balanced_restart_quota_score(keys, exact)[0] > 1:
+    raise RuntimeError(
+      "matched restart strata cannot realize balanced observable marginals"
+    )
+  return exact
+
+
 def _permuted_values(
   values: tuple[Any, ...], generator: torch.Generator | None
 ) -> tuple[Any, ...]:
@@ -2369,6 +2483,8 @@ def select_v19_balanced_restart_pairs(
       "primary_stratum_counts": {},
       "primary_marginal_counts": {},
       "secondary_stratum_counts": {},
+      "quota_solver": "not_applicable",
+      "maximum_marginal_imbalance": 0,
       "unique_failure_entry_count": 0,
       "unique_success_entry_count": 0,
     }
@@ -2404,6 +2520,15 @@ def select_v19_balanced_restart_pairs(
     )
   balance_keys = tuple(sorted(balance_groups, key=repr))
   balance_quotas = _balanced_restart_quotas(balance_keys, count)
+  heuristic_quotas = _heuristic_balanced_restart_quotas(balance_keys, count)
+  quota_solver = (
+    "heuristic_multi_start"
+    if _balanced_restart_quota_score(balance_keys, heuristic_quotas)[0] <= 1
+    else "exact_search_fallback"
+  )
+  maximum_marginal_imbalance = _balanced_restart_quota_score(
+    balance_keys, balance_quotas
+  )[0]
   selected: list[tuple[int, int]] = []
   for balance_key, balance_quota in zip(
     balance_keys, balance_quotas, strict=True
@@ -2471,6 +2596,8 @@ def select_v19_balanced_restart_pairs(
     "primary_stratum_counts": dict(sorted(primary_counts.items())),
     "primary_marginal_counts": primary_marginal_counts,
     "secondary_stratum_counts": dict(sorted(secondary_counts.items())),
+    "quota_solver": quota_solver,
+    "maximum_marginal_imbalance": maximum_marginal_imbalance,
     "unique_failure_entry_count": len(set(failure_indices)),
     "unique_success_entry_count": len(set(success_indices)),
   }
