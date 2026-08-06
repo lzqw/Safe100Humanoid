@@ -76,6 +76,16 @@ It reuses only the revision-2 base-policy-calibrated contexts and excludes all
 revision-2/development adaptation seeds. No revision-3 formal adaptation or
 audit outcome was observed before this freeze.
 
+Revision-3 formal training subsequently stopped fail-fast before the audit.
+Lateral seed 53 completed eight rounds with four accepted updates, but lateral
+seed 153 reached a jointly infeasible matched restart bank before its first PPO
+update: all four matched heading-positive strata were mid-stage, so the required
+6/6 heading split could not coexist with the required 4/4/4 stage split. The
+remaining eight jobs and the formal paired audit were not started. Revision 3
+therefore supports no formal specialist claim. Exact round records, marginal
+counts, external artifact hashes, and the stop boundary are preserved in
+[`training/revision3_training_stop.json`](training/revision3_training_stop.json).
+
 Development smoke runs and exploratory context probes are intentionally not
 copied here and are not formal evidence. A future prospectively refrozen run
 may add a compact training manifest, paired CSV, audit summary, verifier

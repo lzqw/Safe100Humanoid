@@ -1,0 +1,233 @@
+{
+  "artifact_policy": {
+    "compact_evidence_committed": true,
+    "full_checkpoints_remain_external": true,
+    "paths_are_external_gpu_paths": true
+  },
+  "completed_run": {
+    "accepted_final": {
+      "bytes": 66058321,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision3/training/lateral/seed53/accepted_final.pt",
+      "sha256": "c1591360c7b8b5ddad20629c1333b18916a789eef894ea5f670f5fb16166de70"
+    },
+    "actor_observation_expansion": {
+      "legacy_first_layer_input_column_change_max_abs": 0.0,
+      "new_first_layer_column_max_abs_after_adaptation": 6.56941847410053e-05
+    },
+    "development_run": false,
+    "final_actor_sha256": "f8b8d2670256efc57d459161cf3271dc63472d01ba0a3965e977cd757ebc73d2",
+    "final_eval_training_diagnostic_only": {
+      "D0": {
+        "baseline_fall_rate": 0.0078125,
+        "baseline_success_rate": 0.9609375,
+        "fall_delta": 0.03125,
+        "final_fall_rate": 0.0390625,
+        "final_success_rate": 0.8828125,
+        "success_delta": -0.078125
+      },
+      "target": {
+        "baseline_fall_rate": 0.3046875,
+        "baseline_success_rate": 0.6953125,
+        "fall_delta": -0.0625,
+        "final_fall_rate": 0.2421875,
+        "final_success_rate": 0.7578125,
+        "success_delta": 0.0625
+      }
+    },
+    "formal_protocol": true,
+    "initial_actor_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+    "mode": "lateral",
+    "online_rounds": {
+      "bytes": 8863367,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision3/training/lateral/seed53/online_rounds.json",
+      "sha256": "587e1563fbab8f4ba4f4bfb3653b1e6dc4383eba7113265ea98035df34fd574c"
+    },
+    "protocol_completed": true,
+    "round_protocol": {
+      "accepted_updates": 4,
+      "actual_rounds": 8,
+      "maximum_rounds": 8,
+      "minimum_accepted_updates": 3,
+      "rejection_patience_after_minimum": 2,
+      "stop_reason": "maximum_rounds"
+    },
+    "rounds": [
+      {
+        "accepted_update_count": 1,
+        "d0_rollback": false,
+        "maximum_replay_marginal_imbalance": 0,
+        "replay_exact": true,
+        "round": 1,
+        "selected_candidate_fraction": 1.0,
+        "target_gate_accepted": true
+      },
+      {
+        "accepted_update_count": 2,
+        "d0_rollback": false,
+        "maximum_replay_marginal_imbalance": 0,
+        "replay_exact": true,
+        "round": 2,
+        "selected_candidate_fraction": 0.5,
+        "target_gate_accepted": true
+      },
+      {
+        "accepted_update_count": 2,
+        "d0_rollback": false,
+        "maximum_replay_marginal_imbalance": 0,
+        "replay_exact": true,
+        "round": 3,
+        "selected_candidate_fraction": null,
+        "target_gate_accepted": false
+      },
+      {
+        "accepted_update_count": 2,
+        "d0_rollback": true,
+        "maximum_replay_marginal_imbalance": 0,
+        "replay_exact": true,
+        "round": 4,
+        "selected_candidate_fraction": 0.5,
+        "target_gate_accepted": true
+      },
+      {
+        "accepted_update_count": 2,
+        "d0_rollback": false,
+        "maximum_replay_marginal_imbalance": 0,
+        "replay_exact": true,
+        "round": 5,
+        "selected_candidate_fraction": null,
+        "target_gate_accepted": false
+      },
+      {
+        "accepted_update_count": 3,
+        "d0_rollback": false,
+        "maximum_replay_marginal_imbalance": 0,
+        "replay_exact": true,
+        "round": 6,
+        "selected_candidate_fraction": 1.5,
+        "target_gate_accepted": true
+      },
+      {
+        "accepted_update_count": 4,
+        "d0_rollback": false,
+        "maximum_replay_marginal_imbalance": 0,
+        "replay_exact": true,
+        "round": 7,
+        "selected_candidate_fraction": 1.0,
+        "target_gate_accepted": true
+      },
+      {
+        "accepted_update_count": 4,
+        "d0_rollback": false,
+        "maximum_replay_marginal_imbalance": 0,
+        "replay_exact": true,
+        "round": 8,
+        "selected_candidate_fraction": null,
+        "target_gate_accepted": false
+      }
+    ],
+    "seed": 53,
+    "specialist_summary": {
+      "bytes": 9461951,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision3/training/lateral/seed53/specialist_summary.json",
+      "sha256": "c58c416999b3fbad091c0fc4e30fe1b2629bde7e3de1dec781b583a6ef39d07b"
+    }
+  },
+  "failure": {
+    "error": "matched restart strata cannot realize balanced observable marginals",
+    "exit_code": 1,
+    "joint_feasibility_diagnosis": "All four matched heading-positive strata were mid-stage. A 6/6 heading split therefore requires six mid-stage selections, but the simultaneous 4/4/4 early/mid/late balance permits only four.",
+    "mode": "lateral",
+    "ppo_updates_started": false,
+    "seed": 153,
+    "stage": "first balanced restart selection after bank discovery"
+  },
+  "failed_run_artifacts": {
+    "bank_discovery": {
+      "bytes": 86975,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision3/training/lateral/seed153/bank_discovery.json",
+      "sha256": "6aa706bbef4e81d9d45b8bed307c2d52d8e8b8d4bc34f1649f2168248cb3a12f"
+    },
+    "baseline_eval": {
+      "bytes": 23403,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision3/training/lateral/seed153/baseline_eval.json",
+      "sha256": "67ec33d07b944d7df8a9053f9f7c0b8e10222057b61b8db51cca56ce679df602"
+    },
+    "failure_bank_marginals": {
+      "centerline_sign": {
+        "-1": 32,
+        "1": 224
+      },
+      "error_growth_bin": {
+        "high": 176,
+        "low": 80
+      },
+      "heading_sign": {
+        "-1": 244,
+        "1": 12
+      },
+      "riser_stage": {
+        "early": 69,
+        "late": 67,
+        "mid": 120
+      },
+      "size": 256,
+      "support_foot": {
+        "0": 120,
+        "1": 136
+      }
+    },
+    "matched_bank_marginals": {
+      "centerline_sign": {
+        "-1": 23,
+        "1": 204
+      },
+      "error_growth_bin": {
+        "high": 120,
+        "low": 107
+      },
+      "heading_sign": {
+        "-1": 223,
+        "1": 4
+      },
+      "riser_stage": {
+        "early": 65,
+        "late": 47,
+        "mid": 115
+      },
+      "size": 227,
+      "support_foot": {
+        "0": 105,
+        "1": 122
+      }
+    }
+  },
+  "formal_audit_started": false,
+  "formal_claim": "none",
+  "not_started_after_fail_fast_stop": {
+    "contact_stability": [
+      53,
+      153,
+      253,
+      353,
+      453
+    ],
+    "lateral": [
+      253,
+      353,
+      453
+    ]
+  },
+  "protocol_commit": "833f78148a4747815dc9c8f6a79b650e266d5d41",
+  "protocol_file": "results/online/specialist_v19/protocol_revision3.json",
+  "queue": {
+    "failed_utc": "2026-08-06T12:57:59Z",
+    "log": {
+      "bytes": 9487939,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v19_revision3/formal_queue.log",
+      "sha256": "c014f1082e6894f0a9959722287f0e8176038478faa70fa5642367168a71e65b"
+    },
+    "sequential_fail_fast": true,
+    "started_utc": "2026-08-06T12:28:00Z"
+  },
+  "status": "revision3_formal_training_stopped_before_audit"
+}
