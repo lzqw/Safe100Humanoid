@@ -49,4 +49,4 @@ export PYTHONUNBUFFERED=1
   --eval-batch-size 128 \
   --evaluation-seed-base "$EVALUATION_SEED_BASE" \
   --device cuda:0 \
-  2>&1 | tee "$LOG"
+  2>&1 | tee -a "$LOG"

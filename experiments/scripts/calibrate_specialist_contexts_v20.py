@@ -202,6 +202,7 @@ def main() -> None:
   alg_cfg.critic_learning_rate = 1.0e-4
   alg_cfg.actor_layer_multipliers = (0.10, 0.25, 0.50, 1.0)
   alg_cfg.log_std_learning_rate = 0.0
+  alg_cfg.std_scale_from_base = 0.35
   alg_cfg.pre_intervention_weight = 0.0
   alg_cfg.intervention_advantage_weight = 0.0
   alg_cfg.base_anchor_weight = 0.0
@@ -213,6 +214,9 @@ def main() -> None:
   alg_cfg.brief_ppo_refinement = True
   alg_cfg.failure_focused_refinement = True
   alg_cfg.observable_failure_conditioned_refinement = True
+  alg_cfg.actor_new_feature_count = 5
+  alg_cfg.actor_new_feature_learning_rate_multiplier = 1.0
+  alg_cfg.freeze_legacy_actor_input_columns = True
   alg_cfg.kl_early_stopping = True
   alg_cfg.hard_case_policy_weight = 1.0
   alg_cfg.success_counterexample_policy_weight = 1.25
@@ -221,6 +225,7 @@ def main() -> None:
   alg_cfg.num_learning_epochs = 1
   alg_cfg.num_mini_batches = 4
   alg_cfg.schedule = "fixed"
+  alg_cfg.entropy_coef = 0.0
   alg_cfg.normalize_advantage_per_mini_batch = True
   base_env = ManagerBasedRlEnv(env_cfg, device=args.device)
   env = RslRlVecEnvWrapper(base_env, clip_actions=agent_cfg.clip_actions)

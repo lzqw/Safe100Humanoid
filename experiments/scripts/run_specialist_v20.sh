@@ -62,4 +62,4 @@ export PYTHONUNBUFFERED=1
   --fall-redistribution-amount 2.0 \
   --device cuda:0 \
   --gate-device cuda:0 \
-  2>&1 | tee "$LOG"
+  2>&1 | tee -a "$LOG"

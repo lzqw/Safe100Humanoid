@@ -43,7 +43,7 @@ export PYTHONUNBUFFERED=1
   --audit-seed 5500000 \
   --bootstrap-seed 6500000 \
   --device cuda:0 \
-  2>&1 | tee "$LOG"
+  2>&1 | tee -a "$LOG"
 
 "$PYTHON" experiments/scripts/verify_specialist_audit_v20.py \
   --repo "$REPO" \

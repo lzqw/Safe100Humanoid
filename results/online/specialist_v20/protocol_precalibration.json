@@ -98,6 +98,13 @@
   "prospective_amendments": [
     {
       "adaptation_or_calibration_outcomes_observed_before_amendment": false,
+      "amends_git_commit": "a65cc0d9e8f9d67b3fb41dfb3a5d53eee3ece210",
+      "field": "experiments/scripts/calibrate_specialist_contexts_v20.py",
+      "reason": "the first lateral calibration invocation stopped during runner construction, before candidate generation/evaluation, because the calibration wrapper omitted the already-frozen Revision-4 full-rate five-column adapter flags; align initialization with the unchanged v19-R4 core and preserve retry logs",
+      "replacement": "set actor_new_feature_count=5, actor_new_feature_learning_rate_multiplier=1.0, freeze_legacy_actor_input_columns=true, std_scale_from_base=0.35, and entropy_coef=0.0"
+    },
+    {
+      "adaptation_or_calibration_outcomes_observed_before_amendment": false,
       "amends_git_commit": "6c75cdce5dbef03cf99a1544df9ea2f37f389c62",
       "field": "calibration.contact_stability_candidate_seeds",
       "reason": "the frozen v19 context generator accepts candidate IDs ending only in 00 through 19; replace the invalid 8220 through 8224 suffixes before any fresh calibration",

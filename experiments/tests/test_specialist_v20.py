@@ -69,6 +69,20 @@ def test_v20_calibration_candidates_are_valid_v19_generator_ids() -> None:
   assert len(combined) == len(set(combined))
 
 
+def test_v20_calibration_uses_revision4_full_rate_adapter() -> None:
+  source = (
+    REPO / "experiments/scripts/calibrate_specialist_contexts_v20.py"
+  ).read_text()
+  for assignment in (
+    "alg_cfg.actor_new_feature_count = 5",
+    "alg_cfg.actor_new_feature_learning_rate_multiplier = 1.0",
+    "alg_cfg.freeze_legacy_actor_input_columns = True",
+    "alg_cfg.std_scale_from_base = 0.35",
+    "alg_cfg.entropy_coef = 0.0",
+  ):
+    assert assignment in source
+
+
 def test_v20_pairs_raw_rows_by_seed_and_environment_not_finish_order() -> None:
   baseline = [
     {"evaluation_seed": "10", "environment_id": "1"},
