@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import argparse
 import csv
-from dataclasses import asdict
 import hashlib
 import json
 import random
-from pathlib import Path
 import sys
+from dataclasses import asdict
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -40,6 +40,8 @@ def evaluate_policy(
   deployment_context: dict[str, Any] | None = None,
   deployment_context_role: str | None = None,
   v19_context: dict[str, Any] | None = None,
+  telemetry_env_id: int | None = None,
+  telemetry_output_csv: Path | None = None,
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
   from mjlab.envs import ManagerBasedRlEnv
   from mjlab.rl import RslRlVecEnvWrapper
@@ -57,6 +59,14 @@ def evaluate_policy(
       "strict paired evaluation requires num_episodes == num_envs so every "
       "initial environment contributes exactly one episode"
     )
+  if (telemetry_env_id is None) != (telemetry_output_csv is None):
+    raise ValueError(
+      "mechanism telemetry requires both an environment ID and output CSV"
+    )
+  if telemetry_env_id is not None and not 0 <= telemetry_env_id < num_envs:
+    raise ValueError("mechanism telemetry environment ID is out of range")
+  if telemetry_env_id is not None and not one_episode_per_env:
+    raise ValueError("mechanism telemetry requires one initial episode per env")
   cfg = load_env_cfg(task, play=True)
   context_metadata = None
   if deployment_context is not None:
@@ -183,6 +193,7 @@ def evaluate_policy(
   interventions_by_riser = torch.zeros_like(steps_by_riser)
   counterfactual_interventions_by_riser = torch.zeros_like(steps_by_riser)
   completed: list[dict[str, Any]] = []
+  telemetry_rows: list[dict[str, Any]] = []
   initial_episode_recorded = torch.zeros(
     num_envs, dtype=torch.bool, device=device
   )
@@ -344,6 +355,73 @@ def evaluate_policy(
         )
         operator_correction_steps += correction_active.float()
 
+        if (
+          telemetry_env_id is not None
+          and not bool(initial_episode_recorded[telemetry_env_id])
+        ):
+          env_id = telemetry_env_id
+          command = base_env.command_manager.get_command("twist")[env_id]
+          gravity = base_env.scene["robot"].data.projected_gravity_b[env_id]
+          roll_angle = torch.atan2(gravity[1], -gravity[2])
+          pitch_angle = torch.atan2(
+            -gravity[0],
+            torch.sqrt(gravity[1].square() + gravity[2].square()),
+          )
+          angular_velocity = torch.linalg.vector_norm(
+            base_env.scene["robot"].data.root_link_ang_vel_b[env_id]
+          )
+          left_contact = bool(specialist_components["left_contact"][env_id])
+          right_contact = bool(
+            specialist_components["right_contact"][env_id]
+          )
+          support_foot = (
+            0
+            if left_contact and not right_contact
+            else 1
+            if right_contact and not left_contact
+            else -1
+          )
+          telemetry_rows.append(
+            {
+              "evaluation_seed": seed,
+              "environment_id": env_id,
+              "step": int(steps[env_id]),
+              "time_s": float(steps[env_id]) * step_dt,
+              "centerline_error": float(centerline_error[env_id]),
+              "heading_error": float(heading_error[env_id]),
+              "centerline_error_rate": float(
+                command_term.centerline_error_rate[env_id]
+              ),
+              "heading_error_rate": float(
+                command_term.heading_error_rate[env_id]
+              ),
+              "command_vy": float(command[1]),
+              "command_wz": float(command[2]),
+              "root_edge_margin": float(
+                stair_half_width - abs_centerline_error[env_id]
+              ),
+              "foot_edge_margin": float(foot_edge_clearance[env_id]),
+              "left_contact": int(left_contact),
+              "right_contact": int(right_contact),
+              "support_foot": support_foot,
+              "left_slip_speed": float(
+                specialist_components["left_slip"][env_id]
+              ),
+              "right_slip_speed": float(
+                specialist_components["right_slip"][env_id]
+              ),
+              "contact_phase_mismatch": float(
+                specialist_components["contact_mismatch"][env_id]
+              ),
+              "roll_rad": float(roll_angle),
+              "pitch_rad": float(pitch_angle),
+              "angular_velocity_norm": float(angular_velocity),
+              "cbf_correction_norm": float(
+                action_term.target_intervention_norm[env_id]
+              ),
+            }
+          )
+
         done_ids = done.nonzero(as_tuple=False).flatten()
         if len(done_ids) == 0:
           continue
@@ -422,6 +500,8 @@ def evaluate_policy(
           completed.append(
             {
               "episode": len(completed),
+              "evaluation_seed": seed,
+              "environment_id": env_id,
               "success": success,
               "fell": fell,
               "timed_out": bool(timeout_all[env_id]),
@@ -760,7 +840,21 @@ def evaluate_policy(
     "v19_specialist_mode": (
       None if v19_context is None else v19_context["specialist_mode"]
     ),
+    "mechanism_telemetry_environment_id": telemetry_env_id,
+    "mechanism_telemetry_row_count": len(telemetry_rows),
   }
+  if telemetry_output_csv is not None:
+    if not telemetry_rows:
+      raise RuntimeError("mechanism telemetry produced no rows")
+    telemetry_output_csv.parent.mkdir(parents=True, exist_ok=True)
+    temporary = telemetry_output_csv.with_name(
+      f".{telemetry_output_csv.name}.tmp"
+    )
+    with temporary.open("w", newline="") as handle:
+      writer = csv.DictWriter(handle, fieldnames=list(telemetry_rows[0]))
+      writer.writeheader()
+      writer.writerows(telemetry_rows)
+    temporary.replace(telemetry_output_csv)
   return summary, completed
 
 
@@ -790,14 +884,17 @@ def main() -> None:
   parser.add_argument(
     "--deployment-context-role", choices=("target", "neighbor")
   )
+  parser.add_argument("--telemetry-env-id", type=int)
+  parser.add_argument("--telemetry-output-csv", type=Path)
   args = parser.parse_args()
   sys.path.insert(0, str(args.repo.resolve()))
 
   import mjlab.tasks  # noqa: F401
-  import src.tasks  # noqa: F401
   from mjlab.envs import ManagerBasedRlEnv
   from mjlab.rl import MjlabOnPolicyRunner, RslRlVecEnvWrapper
   from mjlab.tasks.registry import load_env_cfg, load_rl_cfg, load_runner_cls
+
+  import src.tasks  # noqa: F401
   from src.tasks.stairs_cbf.deployment_context import (
     apply_frozen_deployment_context,
     deployment_context_role_for_task,
@@ -882,6 +979,8 @@ def main() -> None:
     deployment_context=deployment_context,
     deployment_context_role=context_role,
     v19_context=v19_context,
+    telemetry_env_id=args.telemetry_env_id,
+    telemetry_output_csv=args.telemetry_output_csv,
   )
   summary["checkpoint"] = str(args.checkpoint)
   summary["actor_state_sha256"] = actor_state_sha256

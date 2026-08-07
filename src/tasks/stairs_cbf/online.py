@@ -149,9 +149,16 @@ def normalize_v19_grouped_advantages(
     mean = values.mean()
     std = values.std(unbiased=False)
     normalized[mask] = (values - mean) / (std + 1.0e-8)
+    normalized_values = normalized[mask]
     metrics[f"v19_{name}_advantage_count"] = float(mask.sum())
     metrics[f"v19_{name}_advantage_mean_before"] = float(mean)
     metrics[f"v19_{name}_advantage_std_before"] = float(std)
+    metrics[f"v19_{name}_advantage_mean_after_normalization"] = float(
+      normalized_values.mean()
+    )
+    metrics[f"v19_{name}_advantage_std_after_normalization"] = float(
+      normalized_values.std(unbiased=False)
+    )
   weights = torch.ones_like(normalized)
   weights[failure_mask] = failure_weight
   weights[success_mask] = success_weight
