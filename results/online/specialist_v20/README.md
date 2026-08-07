@@ -27,8 +27,17 @@ amended from `8217…8224` to valid generator IDs `8212…8219`; v19 context IDs
 must end in `00…19`. The protocol records the prior commit and explicitly
 states that no calibration or adaptation outcome had been observed.
 
-Current evidence status: **implementation/pre-calibration only**. No v20
-adaptation, formal audit, or performance result exists yet.
+Fresh base-policy-only calibration is complete and sealed in `protocol.json`:
+
+- lateral candidate `8312`: 74.805% base success, 129 falls, 89.922%
+  lateral purity, 10.078% second mechanism;
+- contact-stability candidate `8212`: 72.656% base success, 140 falls,
+  96.429% contact purity, 3.571% second mechanism.
+
+Both were the first candidate in their prospectively frozen lists and satisfy
+every declared gate. Current evidence status: **final protocol frozen before
+formal adaptation**. No v20 adaptation, formal audit, or performance result
+exists yet.
 
 ## 中文
 
@@ -41,10 +50,11 @@ Lateral 与 contact-stability 使用完全独立的五 seed 队列、审计目�
 科学结论；其中一条队列的失败不能阻止另一条审计。v20 不定义 joint claim、
 macro gate、off-diagonal、filter-free 或 CBF-independence gate。
 
-新的 adaptation/audit/bootstrap/calibration 随机性碰撞检查已经通过。当前只到
-实现与 calibration 前冻结阶段，尚无任何 v20 adaptation、formal audit 或性能
-结果。在两个 fresh base-policy-only context 及其哈希写入后续 `protocol.json`
-并提交以前，不得启动正式训练。
+新的 adaptation/audit/bootstrap/calibration 随机性碰撞检查已经通过。两个
+fresh base-policy-only context 都是预先冻结列表中的第一个候选且全部通过门槛：
+lateral `8312` 的基础成功率为 74.805%、129 次跌倒、89.922% 目标纯度；contact
+`8212` 为 72.656%、140 次跌倒、96.429% 目标纯度。上下文、校准证据和哈希现已
+写入 `protocol.json`。当前仍没有任何 v20 adaptation、formal audit 或性能结果。
 
 ## Planned evidence package
 

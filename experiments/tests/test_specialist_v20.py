@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -334,3 +335,29 @@ def test_v20_queues_are_mode_local_and_protocol_is_precalibration_only() -> None
   assert protocol["fresh_evidence_boundary"][
     "formal_adaptation_must_follow_a_second_commit_sealing_selected_contexts"
   ] is True
+
+
+def test_v20_final_protocol_seals_fresh_contexts_before_adaptation() -> None:
+  protocol = json.loads(
+    (REPO / "results/online/specialist_v20/protocol.json").read_text()
+  )
+  assert protocol["protocol_revision"] == 1
+  assert protocol["status"] == "prospectively_frozen_before_formal_adaptation"
+  assert protocol["fresh_evidence_boundary"][
+    "formal_adaptation_or_audit_outcomes_seen"
+  ] is False
+  expected_seeds = {"lateral": 8312, "contact_stability": 8212}
+  for mode, seed in expected_seeds.items():
+    sealed = protocol["sealed_inputs"]["contexts"][mode]
+    path = REPO / sealed["file"]
+    assert sealed["selected_calibration_seed"] == seed
+    assert all(sealed["validation_checks"].values())
+    assert hashlib.sha256(path.read_bytes()).hexdigest() == sealed[
+      "file_sha256"
+    ]
+  for relative, expected_hash in protocol["sealed_inputs"][
+    "source_file_sha256"
+  ].items():
+    assert hashlib.sha256((REPO / relative).read_bytes()).hexdigest() == (
+      expected_hash
+    )

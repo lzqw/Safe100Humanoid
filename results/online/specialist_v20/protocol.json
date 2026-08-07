@@ -1,0 +1,349 @@
+{
+  "adaptation_seeds": [
+    73,
+    173,
+    273,
+    373,
+    473
+  ],
+  "calibration": {
+    "adapted_policy_evaluations_used": false,
+    "base_policy_only": true,
+    "contact_stability_candidate_seeds": [
+      8212,
+      8213,
+      8214,
+      8215,
+      8216,
+      8217,
+      8218,
+      8219
+    ],
+    "contact_stability_evaluation_seed_base": 4810000,
+    "contact_stability_maximum_second_failure_fraction": 0.2,
+    "contact_stability_minimum_target_failure_fraction": 0.75,
+    "episodes_per_candidate": 512,
+    "eval_batch_size": 128,
+    "first_qualifying_candidate_is_frozen": true,
+    "fresh_contexts_required": true,
+    "lateral_candidate_seeds": [
+      8312,
+      8313,
+      8314,
+      8315,
+      8316,
+      8317,
+      8318,
+      8319
+    ],
+    "lateral_evaluation_seed_base": 4820000,
+    "lateral_maximum_second_failure_fraction": 0.3,
+    "lateral_minimum_target_failure_fraction": 0.8,
+    "minimum_fall_count": 100,
+    "success_rate_bounds_inclusive": [
+      0.7,
+      0.85
+    ]
+  },
+  "created_date": "2026-08-07",
+  "evaluation": {
+    "audit_seed": 5500000,
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 6500000,
+    "cbf_independence_gate": false,
+    "d0_paired_episodes_per_adaptation_seed": 256,
+    "eval_batch_size": 128,
+    "filter_free_evaluation": false,
+    "macro_average_computed": false,
+    "off_diagonal_evaluation": false,
+    "paired_baseline_and_final_randomness": true,
+    "runtime_cbf": true,
+    "specialists_audited_independently": true,
+    "target_paired_episodes_per_adaptation_seed": 512
+  },
+  "execution_isolation": {
+    "contact_audit_runs_immediately_after_five_contact_jobs": true,
+    "joint_two_specialist_claim_defined": false,
+    "lateral_audit_runs_immediately_after_five_lateral_jobs": true,
+    "one_specialist_failure_cannot_invalidate_or_suppress_the_other": true,
+    "queue_argument_is_one_specialist_only": true
+  },
+  "fresh_evidence_boundary": {
+    "adapted_policy_evaluations_used_for_context_selection": false,
+    "base_policy_only_calibration_completed": true,
+    "formal_adaptation_or_audit_outcomes_seen": false,
+    "formal_protocol_must_be_committed_before_adaptation": true,
+    "historical_v17_v18_v19_evidence_may_not_be_relabelled": true
+  },
+  "independent_specialist_acceptance": {
+    "confidence_interval_is_a_gate": false,
+    "joint_two_specialist_claim_defined": false,
+    "lcb95_positive_is_strong_evidence_only": true,
+    "maximum_diagonal_fall_increase": 0.03,
+    "mean_diagonal_success_delta_strictly_above": 0.0,
+    "minimum_d0_success_delta": -0.05,
+    "minimum_positive_adaptation_seed_count": 4
+  },
+  "infrastructure_history_before_formal_adaptation": [
+    {
+      "corrected_commit": "7206d120d30610f562921ea43c805e19244d6a51",
+      "external_log_sha256": "ef2ef592665eacc0a33bffb7275d0e86562a4b22a9fb2d59960660bee3efcb5d",
+      "failure": "missing already-frozen Revision-4 full-rate adapter flags in the calibration wrapper",
+      "mode": "lateral",
+      "outcome_observed": false,
+      "retry_same_context_candidates_and_randomness": true,
+      "stage": "calibration_runner_initialization"
+    }
+  ],
+  "method_invariants": {
+    "actor_count": 1,
+    "actor_observation_width": 410,
+    "candidate_rollback": true,
+    "critic_count": 1,
+    "critic_observation_width": 843,
+    "deployable_failure_feature_count": 5,
+    "exact_failure_success_restart_pairs": true,
+    "learning_core": "v19 Revision-4 Observable Failure-Conditioned Brief PPO",
+    "legacy_actor_input_columns_frozen_during_adaptation": true,
+    "new_actor_input_columns_use_full_actor_learning_rate": true,
+    "privileged_critic": true,
+    "raw_policy_action_stored_for_ppo": true,
+    "required_restart_marginals_jointly_balanced": true,
+    "runtime_cbf": true,
+    "scalar_reward": true,
+    "transactional_replay_bank_updates": true
+  },
+  "policy_method": "Fixed-Budget Observable Failure-Conditioned Brief PPO v20",
+  "precalibration_protocol": {
+    "file": "results/online/specialist_v20/protocol_precalibration.json",
+    "git_commit": "7206d120d30610f562921ea43c805e19244d6a51",
+    "sha256": "8f78ac22500b0f503c4c6bd9ee4ab55e08c091020cd6489a0621ee318904e7b8"
+  },
+  "prospective_amendments": [
+    {
+      "adaptation_or_calibration_outcomes_observed_before_amendment": false,
+      "amends_git_commit": "a65cc0d9e8f9d67b3fb41dfb3a5d53eee3ece210",
+      "field": "experiments/scripts/calibrate_specialist_contexts_v20.py",
+      "reason": "the first lateral calibration invocation stopped during runner construction, before candidate generation/evaluation, because the calibration wrapper omitted the already-frozen Revision-4 full-rate five-column adapter flags; align initialization with the unchanged v19-R4 core and preserve retry logs",
+      "replacement": "set actor_new_feature_count=5, actor_new_feature_learning_rate_multiplier=1.0, freeze_legacy_actor_input_columns=true, std_scale_from_base=0.35, and entropy_coef=0.0"
+    },
+    {
+      "adaptation_or_calibration_outcomes_observed_before_amendment": false,
+      "amends_git_commit": "6c75cdce5dbef03cf99a1544df9ea2f37f389c62",
+      "field": "calibration.contact_stability_candidate_seeds",
+      "reason": "the frozen v19 context generator accepts candidate IDs ending only in 00 through 19; replace the invalid 8220 through 8224 suffixes before any fresh calibration",
+      "replacement": [
+        8212,
+        8213,
+        8214,
+        8215,
+        8216,
+        8217,
+        8218,
+        8219
+      ]
+    }
+  ],
+  "protocol_id": "safe100-fixed-budget-observable-failure-conditioned-v20",
+  "protocol_revision": 1,
+  "randomness_preflight": {
+    "collisions": {
+      "adaptation": [],
+      "audit_or_bootstrap": [],
+      "calibration": []
+    },
+    "file": "results/online/specialist_v20/fresh_randomness_preflight.json",
+    "passed": true,
+    "sha256": "3de9c81286640e37f1daa1c259602f702dafa3a7107e27f9c9d1b396035eed37"
+  },
+  "sealed_inputs": {
+    "base_expanded_actor_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+    "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+    "calibration_external_logs": {
+      "contact_stability": {
+        "sha256": "ba6df453c5ffafd74762709ade3bd0278714a879bea9541984baac236cc4f8d2"
+      },
+      "lateral": {
+        "sha256": "ef2ef592665eacc0a33bffb7275d0e86562a4b22a9fb2d59960660bee3efcb5d"
+      }
+    },
+    "contexts": {
+      "contact_stability": {
+        "calibration_progress": {
+          "file": "results/online/specialist_v20/calibration/contact_progress.json",
+          "sha256": "6ada8cde996f32aa40d43556ffad1a63efd7da24ce18067097425a5cb1339cef"
+        },
+        "calibration_summary": {
+          "file": "results/online/specialist_v20/calibration/contact_summary.json",
+          "sha256": "3b96894d74af82e896472ecc7f4147ab26dd98815d5fc5a7577b0366fb3ba682"
+        },
+        "file": "results/online/specialist_v20/contexts/contact_stability.json",
+        "file_sha256": "cd0423b8f7ece3962f4d8fff4458c2f4639a303d40da48cc57b919a9b05d0f34",
+        "parameters_sha256": "9cd591c555b08323ad780f50a80e769052a849748e298c06252a9f9b56b220a9",
+        "selected_base_success_rate": 0.7265625,
+        "selected_calibration_seed": 8212,
+        "selected_fall_count": 140,
+        "selected_second_failure_fraction": 0.03571428571428571,
+        "selected_target_failure_fraction": 0.9642857142857143,
+        "validation_checks": {
+          "adapted_policy_absent": true,
+          "base_checkpoint_hash": true,
+          "base_policy_only": true,
+          "context_mode": true,
+          "context_parameter_hash": true,
+          "episodes": true,
+          "fall_gate": true,
+          "first_declared_qualifier": true,
+          "preprotocol_commit": true,
+          "preprotocol_hash": true,
+          "progress_matches": true,
+          "purity_gate": true,
+          "second_failure_gate": true,
+          "selected_seed": true,
+          "success_gate": true,
+          "summary_context_file_hash": true
+        }
+      },
+      "lateral": {
+        "calibration_progress": {
+          "file": "results/online/specialist_v20/calibration/lateral_progress.json",
+          "sha256": "ac1246c0a59baa52ac029e56206244cab1a1a3239b901ea882b4e7b681e591b3"
+        },
+        "calibration_summary": {
+          "file": "results/online/specialist_v20/calibration/lateral_summary.json",
+          "sha256": "76cf5e0aef9b4c06faf0d710b8f74ff98d1a6058f90d75f52427d59d80bc8c1a"
+        },
+        "file": "results/online/specialist_v20/contexts/lateral.json",
+        "file_sha256": "27f16a28bb0f362c784c26962af412ffa15b728fd8946876e91189350c6eb45d",
+        "parameters_sha256": "1086042d993357bf0a048fd1901e781f2b372f2d6b16c0310e9d37ec11bb124d",
+        "selected_base_success_rate": 0.748046875,
+        "selected_calibration_seed": 8312,
+        "selected_fall_count": 129,
+        "selected_second_failure_fraction": 0.10077519379844961,
+        "selected_target_failure_fraction": 0.8992248062015504,
+        "validation_checks": {
+          "adapted_policy_absent": true,
+          "base_checkpoint_hash": true,
+          "base_policy_only": true,
+          "context_mode": true,
+          "context_parameter_hash": true,
+          "episodes": true,
+          "fall_gate": true,
+          "first_declared_qualifier": true,
+          "preprotocol_commit": true,
+          "preprotocol_hash": true,
+          "progress_matches": true,
+          "purity_gate": true,
+          "second_failure_gate": true,
+          "selected_seed": true,
+          "success_gate": true,
+          "summary_context_file_hash": true
+        }
+      }
+    },
+    "formal_protocol_git_binding": "the Git commit containing this protocol.json; every formal launcher requires that exact HEAD and verifies this file against its Git blob",
+    "implementation_and_calibration_commit": "7206d120d30610f562921ea43c805e19244d6a51",
+    "postcalibration_packaging_files": [
+      "experiments/scripts/freeze_specialist_v20_protocol.py",
+      "experiments/tests/test_specialist_v20.py"
+    ],
+    "source_commit": "the git commit containing this pre-calibration protocol",
+    "source_file_sha256": {
+      "experiments/scripts/audit_specialist_diagonal_v20.py": "7b897b27880646715b9331d64632839ec14410d8f9778350dc31a7c84959796a",
+      "experiments/scripts/audit_specialists_diagonal_v19.py": "0b35d5f862dbca90f42cf9223c001ca77b837f3329dafb966fd9bb90e1852f65",
+      "experiments/scripts/build_specialist_v20_evidence.py": "cf02ddcefc920ae6590cb9a24dcec70a34145d4b7143e6f295f40ee4df97cce2",
+      "experiments/scripts/calibrate_specialist_contexts_v20.py": "75b0352d4461fe619a61a3710a85a30ea9b472500d536312b6ec0e04f28434d9",
+      "experiments/scripts/collect_mechanism_telemetry_v20.py": "1f4c13f1edee78d4cd079ed570f9084d1a115bb4e61b394c07d3edab100f6e04",
+      "experiments/scripts/diagonal_audit_stats.py": "9cd2caec8e4ece1b969488b74eb8e71ad562bf5a1bde8350c019a54a67f695a5",
+      "experiments/scripts/evaluate_online_stairs.py": "0d0960f3f2f88b66b8613b2481da45cd7a21ef584606bfe0b91317422dd92bcf",
+      "experiments/scripts/freeze_specialist_v20_protocol.py": "5c25e9a2e38bd9657a65fad487d20d276d7b16eb704977704c2b6a1c44258ae3",
+      "experiments/scripts/online_refine_stairs.py": "e0176eec024c8a0fb2c6012bdf4660888ee5969fa2a5b364d9fb0acf907b7cde",
+      "experiments/scripts/plot_specialist_v20.py": "cd719a46a561a7392086f8782c5518a2f3764a9d507a50207a3bb1ff05e0d241",
+      "experiments/scripts/refine_specialist_v20.py": "cf1b1dec4e104debb5d507d5ad982432e4a4ba9502b1d896666920348a39d667",
+      "experiments/scripts/run_specialist_calibration_v20.sh": "8b0436f30d3d748e850e84a21f31cd30f92c809401ff8f59ef103db7aebe46ed",
+      "experiments/scripts/run_specialist_diagonal_audit_v20.sh": "c3bb691dfb1984adbec3af944d928445a85317daedb25e329571a44b4108a27b",
+      "experiments/scripts/run_specialist_queue_v20.sh": "89a991981ee4b4be379416550a22a1718907eddbd161081697ce67ba1ce2b197",
+      "experiments/scripts/run_specialist_v20.sh": "6d7d620210cefc96371616e34acfd78723b5adcd99650688a130ec2aee08d764",
+      "experiments/scripts/specialist_v20_protocol.py": "d93a27ec6ba7c2bf7fcca9211fb15f6f8c21d8ac01ca38d27b79ecb76d11cc3f",
+      "experiments/scripts/specialist_v20_tables.py": "a65c701eba17ce88715833a551067139e4fac08d7ff4b8843eb421fca0d19f29",
+      "experiments/scripts/verify_specialist_audit_v20.py": "0d6bc37713be7241c2edada3b36a569128766e440f9b06c981bb1f4459c0a502",
+      "experiments/tests/test_specialist_v20.py": "94a3d29c62aec3d5cf8b8c70866f9947fe25b15fba3c136aa9b8eca2a8228f00",
+      "src/tasks/stairs_cbf/actions.py": "e04354c1bb9bfe4f57055a98dde22a1e13a30ff3a7b02af93633bd90001a5514",
+      "src/tasks/stairs_cbf/command.py": "af568a025f275fa018aeb97e8a1c341ee7bfa07d4b04be73b48caed7f794ab43",
+      "src/tasks/stairs_cbf/config.py": "22a57df095616e1f19f7cf6f18d7ba173ecef7901bf2a85da2a5faaa11c32f8a",
+      "src/tasks/stairs_cbf/deployment_context.py": "8344ae02ae062cfb542df68f3327e208120f3af94e43228b4f47d5f8e25eaff6",
+      "src/tasks/stairs_cbf/hard_cases.py": "b20cd15228dcdfcc6ad16955b5177ff4c3c714237b73c9a0e02eb316ab90f430",
+      "src/tasks/stairs_cbf/mdp.py": "631a9fefcf2026521c1c43ecf2dc1851124ce47921a1ddf4191ae7db31475754",
+      "src/tasks/stairs_cbf/online.py": "7a20fea7e487a6b484e6fd23b225b7cdaab4e0764d377d5867805829d5a0b5e5",
+      "src/tasks/velocity/mdp/observations.py": "5e759917b7d3132b4bd7c640eae14d472f01b175f222d6358330ae9a159becd1"
+    },
+    "source_files": [
+      "src/tasks/velocity/mdp/observations.py",
+      "src/tasks/stairs_cbf/actions.py",
+      "src/tasks/stairs_cbf/command.py",
+      "src/tasks/stairs_cbf/config.py",
+      "src/tasks/stairs_cbf/deployment_context.py",
+      "src/tasks/stairs_cbf/hard_cases.py",
+      "src/tasks/stairs_cbf/mdp.py",
+      "src/tasks/stairs_cbf/online.py",
+      "experiments/scripts/evaluate_online_stairs.py",
+      "experiments/scripts/online_refine_stairs.py",
+      "experiments/scripts/audit_specialists_diagonal_v19.py",
+      "experiments/scripts/diagonal_audit_stats.py",
+      "experiments/scripts/calibrate_specialist_contexts_v20.py",
+      "experiments/scripts/run_specialist_calibration_v20.sh",
+      "experiments/scripts/refine_specialist_v20.py",
+      "experiments/scripts/run_specialist_v20.sh",
+      "experiments/scripts/run_specialist_queue_v20.sh",
+      "experiments/scripts/specialist_v20_protocol.py",
+      "experiments/scripts/specialist_v20_tables.py",
+      "experiments/scripts/audit_specialist_diagonal_v20.py",
+      "experiments/scripts/run_specialist_diagonal_audit_v20.sh",
+      "experiments/scripts/verify_specialist_audit_v20.py",
+      "experiments/scripts/collect_mechanism_telemetry_v20.py",
+      "experiments/scripts/build_specialist_v20_evidence.py",
+      "experiments/scripts/plot_specialist_v20.py",
+      "experiments/tests/test_specialist_v20.py",
+      "experiments/scripts/freeze_specialist_v20_protocol.py"
+    ]
+  },
+  "specialist_modes": [
+    "lateral",
+    "contact_stability"
+  ],
+  "status": "prospectively_frozen_before_formal_adaptation",
+  "training": {
+    "accepted_update_count_is_validity_gate": false,
+    "actor_learning_rate": 5e-06,
+    "advantage_normalization": "separate normal/failure/success across both rollout batches",
+    "candidate_confirmation_paired_episodes": 128,
+    "candidate_fractions": [
+      0.5,
+      1.0,
+      1.5
+    ],
+    "candidate_screen_paired_episodes_per_fraction": 64,
+    "clip": 0.05,
+    "critic_learning_rate": 0.0001,
+    "early_termination_enabled": false,
+    "exact_pair_sampling": true,
+    "failure_policy_weight": 1.0,
+    "fixed_round_budget": 8,
+    "hard_kl_ceiling": 0.01,
+    "minimum_accepted_updates": null,
+    "ppo_epochs": 1,
+    "ppo_minibatches": 4,
+    "rejection_patience": null,
+    "rollout_batches_per_round": 2,
+    "rollout_environments_per_batch": 64,
+    "rollout_steps_per_environment": 1024,
+    "start_mixture_per_batch": {
+      "failure": 12,
+      "normal": 40,
+      "success": 12
+    },
+    "success_policy_weight": 1.25,
+    "target_kl": 0.003,
+    "zero_to_eight_retained_updates_are_valid": true
+  }
+}

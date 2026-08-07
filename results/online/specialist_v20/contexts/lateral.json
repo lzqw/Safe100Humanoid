@@ -1,0 +1,156 @@
+{
+  "calibration": {
+    "adapted_policy_evaluations_used": false,
+    "attempts": [
+      {
+        "base_policy_only": true,
+        "candidate_seed": 8312,
+        "evaluation_seed_start": 4820000,
+        "evaluation_seeds": [
+          4820000,
+          4820001,
+          4820002,
+          4820003
+        ],
+        "failure_type_counts": {
+          "contact_stability": 13,
+          "lateral_heading_drift": 116,
+          "non_lateral_balance_or_phase": 0,
+          "non_lateral_high_cbf_demand": 0,
+          "other_non_lateral": 0
+        },
+        "failure_type_fractions": {
+          "contact_stability": 0.10077519379844961,
+          "lateral_heading_drift": 0.8992248062015504,
+          "non_lateral_balance_or_phase": 0.0,
+          "non_lateral_high_cbf_demand": 0.0,
+          "other_non_lateral": 0.0
+        },
+        "fall_count": 129,
+        "fall_rate": 0.251953125,
+        "mean_reached_riser": 10.53125,
+        "num_episodes": 512,
+        "parameters_sha256": "1086042d993357bf0a048fd1901e781f2b372f2d6b16c0310e9d37ec11bb124d",
+        "qualifies": true,
+        "second_failure_fraction": 0.10077519379844961,
+        "success_rate": 0.748046875,
+        "target_failure_fraction": 0.8992248062015504,
+        "target_failure_type": "lateral_heading_drift"
+      }
+    ],
+    "base_policy_checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/retention_v13/arm_b_state_retention/accepted_final.pt",
+    "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+    "candidate_seeds": [
+      8312,
+      8313,
+      8314,
+      8315,
+      8316,
+      8317,
+      8318,
+      8319
+    ],
+    "episodes_per_candidate": 512,
+    "kind": "base_policy_observable_failure_first_qualifying_v1",
+    "maximum_second_failure_fraction": 0.3,
+    "minimum_fall_count": 100,
+    "minimum_target_failure_fraction": 0.8,
+    "prospective_protocol_file_sha256": "8f78ac22500b0f503c4c6bd9ee4ab55e08c091020cd6489a0621ee318904e7b8",
+    "prospective_protocol_git_commit": "7206d120d30610f562921ea43c805e19244d6a51",
+    "selected_candidate_seed": 8312,
+    "selected_parameters_sha256": "1086042d993357bf0a048fd1901e781f2b372f2d6b16c0310e9d37ec11bb124d",
+    "selection_metric_fields": [
+      "success_rate",
+      "fall_count",
+      "failure_type_counts"
+    ],
+    "selection_rule": "select the first base-only context satisfying all frozen gates",
+    "success_rate_bounds": [
+      0.7,
+      0.85
+    ],
+    "v18_audit_seeds_used": false,
+    "v20_policy_method": "Fixed-Budget Observable Failure-Conditioned Brief PPO v20",
+    "v20_protocol_id": "safe100-fixed-budget-observable-failure-conditioned-v20"
+  },
+  "calibration_candidate_seed": 8312,
+  "kind": "observable_failure_conditioned_brief_ppo_v19",
+  "parameters_sha256": "1086042d993357bf0a048fd1901e781f2b372f2d6b16c0310e9d37ec11bb124d",
+  "scenario": {
+    "centerline_heading_gain": 0.657895,
+    "centerline_lateral_gain": 0.365789,
+    "centerline_max_lateral_velocity": 0.092105,
+    "centerline_max_yaw_velocity": 0.264211,
+    "contact_observation_delay_steps": 0,
+    "disturbance_pulses_with_centering": true,
+    "edge_penalty_scale": 0.2,
+    "foot_friction": 0.65,
+    "gait_phase_offset": 0.0,
+    "lateral_command_bias": 0.050526,
+    "lateral_pulse_max": 0.141316,
+    "lateral_pulse_min": 0.066579,
+    "left_response_scale": 1.0,
+    "pulse_duration_max_s": 0.676316,
+    "pulse_duration_min_s": 0.313158,
+    "pulse_interval_max_s": 3.094737,
+    "pulse_interval_min_s": 1.484211,
+    "recovery_reward_scale": 0.5,
+    "right_response_scale": 1.0,
+    "toe_margin": 0.075,
+    "yaw_command_bias": -0.101053,
+    "yaw_pulse_max": 0.347895,
+    "yaw_pulse_min": 0.152632
+  },
+  "schema_version": 1,
+  "specialist_mode": "lateral",
+  "target": {
+    "action_bias": [
+      0.006844,
+      -0.007947,
+      -0.004343,
+      -0.005434,
+      0.010943,
+      0.009265,
+      0.001719,
+      0.011252,
+      -0.011659,
+      0.010553,
+      -0.00067,
+      0.00826
+    ],
+    "action_delay_steps": 1,
+    "action_gain": 0.99,
+    "command_delay_s": 0.297895,
+    "command_forward_scale": 1.015263,
+    "command_low_pass_s": 0.271579,
+    "encoder_bias": -0.000976,
+    "episode_length_s": 40.0,
+    "num_steps": 11,
+    "rise_profile": [
+      0.136011,
+      0.137179,
+      0.141129,
+      0.140185,
+      0.138157,
+      0.140771,
+      0.135027,
+      0.136341,
+      0.139308,
+      0.135632,
+      0.13826
+    ],
+    "tread_profile": [
+      0.332083,
+      0.343579,
+      0.338777,
+      0.345174,
+      0.333847,
+      0.33299,
+      0.337715,
+      0.341057,
+      0.344632,
+      0.334821,
+      0.333324
+    ]
+  }
+}
