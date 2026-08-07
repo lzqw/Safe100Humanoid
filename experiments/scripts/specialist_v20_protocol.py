@@ -22,7 +22,7 @@ FORMAL_D0_EPISODES = 256
 FORMAL_BOOTSTRAP_SAMPLES = 10_000
 CALIBRATION_CANDIDATE_SEEDS = {
   "lateral": tuple(range(8312, 8320)),
-  "contact_stability": tuple(range(8217, 8225)),
+  "contact_stability": tuple(range(8212, 8220)),
 }
 CALIBRATION_EVALUATION_SEED_BASE = {
   "lateral": 4_820_000,

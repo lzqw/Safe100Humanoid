@@ -22,6 +22,11 @@ first-qualifying base-policy-only rule are frozen in
 adaptation must not begin until both selected contexts and their hashes are
 sealed in `protocol.json` by a later commit.
 
+Before any fresh calibration was run, the initial contact candidate list was
+amended from `8217…8224` to valid generator IDs `8212…8219`; v19 context IDs
+must end in `00…19`. The protocol records the prior commit and explicitly
+states that no calibration or adaptation outcome had been observed.
+
 Current evidence status: **implementation/pre-calibration only**. No v20
 adaptation, formal audit, or performance result exists yet.
 

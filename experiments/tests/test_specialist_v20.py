@@ -16,6 +16,7 @@ from audit_specialist_diagonal_v20 import _pair_raw_rows
 from collect_mechanism_telemetry_v20 import MECHANISM_FIELDS
 from plot_specialist_v20 import _validate_inputs
 from specialist_v20_protocol import (
+  CALIBRATION_CANDIDATE_SEEDS,
   FORMAL_ADAPTATION_SEEDS,
   fixed_budget_status,
   fresh_randomness_report,
@@ -57,6 +58,15 @@ def test_v20_randomness_is_fresh_and_collision_check_is_effective() -> None:
   )
   assert used["passed"] is False
   assert used["collisions"]["adaptation"] == [43, 143, 243, 343, 443]
+
+
+def test_v20_calibration_candidates_are_valid_v19_generator_ids() -> None:
+  combined = []
+  for seeds in CALIBRATION_CANDIDATE_SEEDS.values():
+    assert len(seeds) == 8
+    assert all(0 <= seed % 100 <= 19 for seed in seeds)
+    combined.extend(seeds)
+  assert len(combined) == len(set(combined))
 
 
 def test_v20_pairs_raw_rows_by_seed_and_environment_not_finish_order() -> None:

@@ -10,14 +10,14 @@
     "adapted_policy_evaluations_used": false,
     "base_policy_only": true,
     "contact_stability_candidate_seeds": [
+      8212,
+      8213,
+      8214,
+      8215,
+      8216,
       8217,
       8218,
-      8219,
-      8220,
-      8221,
-      8222,
-      8223,
-      8224
+      8219
     ],
     "contact_stability_evaluation_seed_base": 4810000,
     "contact_stability_maximum_second_failure_fraction": 0.2,
@@ -95,6 +95,24 @@
     "transactional_replay_bank_updates": true
   },
   "policy_method": "Fixed-Budget Observable Failure-Conditioned Brief PPO v20",
+  "prospective_amendments": [
+    {
+      "adaptation_or_calibration_outcomes_observed_before_amendment": false,
+      "amends_git_commit": "6c75cdce5dbef03cf99a1544df9ea2f37f389c62",
+      "field": "calibration.contact_stability_candidate_seeds",
+      "reason": "the frozen v19 context generator accepts candidate IDs ending only in 00 through 19; replace the invalid 8220 through 8224 suffixes before any fresh calibration",
+      "replacement": [
+        8212,
+        8213,
+        8214,
+        8215,
+        8216,
+        8217,
+        8218,
+        8219
+      ]
+    }
+  ],
   "protocol_id": "safe100-fixed-budget-observable-failure-conditioned-v20",
   "protocol_revision": 0,
   "randomness_preflight": {
@@ -105,7 +123,7 @@
     },
     "file": "results/online/specialist_v20/fresh_randomness_preflight.json",
     "passed": true,
-    "sha256": "5bc1e52c9e731d6589804bd8a9e4a9f6ac144e9f7955ce9c9d05e28c140dfa1e"
+    "sha256": "3de9c81286640e37f1daa1c259602f702dafa3a7107e27f9c9d1b396035eed37"
   },
   "sealed_inputs": {
     "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
