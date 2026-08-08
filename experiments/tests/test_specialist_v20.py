@@ -394,6 +394,22 @@ def test_v20_audit_uses_brief_checkpoint_loader_before_any_load() -> None:
   assert configuration in source
   assert first_load in source
   assert source.index(configuration) < source.index(first_load)
+  for assignment in (
+    "alg_cfg.actor_learning_rate = 5.0e-6",
+    "alg_cfg.critic_learning_rate = 1.0e-4",
+    "alg_cfg.actor_layer_multipliers = V20_ACTOR_LAYER_MULTIPLIERS",
+    "alg_cfg.pre_intervention_weight = 0.0",
+    "alg_cfg.intervention_advantage_weight = 0.0",
+    "alg_cfg.base_anchor_weight = 0.0",
+    "alg_cfg.safe_bc_weight = 0.0",
+    "alg_cfg.correction_distillation_weight = 0.0",
+    "alg_cfg.num_learning_epochs = 1",
+    "alg_cfg.num_mini_batches = 4",
+    "alg_cfg.desired_kl = 0.003",
+    "alg_cfg.hard_case_policy_weight = 1.0",
+    "alg_cfg.success_counterexample_policy_weight = 1.25",
+  ):
+    assert assignment in source
   assert "--audit-commit" in source
   assert "--audit-amendment" in source
   assert "actor_or_checkpoint_tensor_modified" in source

@@ -93,6 +93,7 @@ TRANSITION_CLASSES = (
 AUDIT_AMENDMENT_RELATIVE = Path(
   "results/online/specialist_v20/audit_amendment.json"
 )
+V20_ACTOR_LAYER_MULTIPLIERS = (0.10, 0.25, 0.50, 1.0)
 
 
 def _parse_args() -> argparse.Namespace:
@@ -249,7 +250,7 @@ def _validate_audit_amendment(
     raise RuntimeError("v20 audit amendment differs from its committed blob")
   amendment = json.loads(amendment_path.read_text())
   expected = {
-    "amendment_id": "safe100-specialist-v20-audit-infrastructure-amendment-1",
+    "amendment_id": "safe100-specialist-v20-audit-infrastructure-amendment-2",
     "schema_version": 1,
     "status": "prospectively_frozen_before_first_formal_audit_episode_outcome",
   }
@@ -733,15 +734,38 @@ def main() -> None:
   # that auxiliary state. Match the training loader semantics so only the
   # actor/critic are expanded; no checkpoint tensor or evaluated actor changes.
   alg_cfg = agent_cfg.algorithm
+  alg_cfg.actor_learning_rate = 5.0e-6
+  alg_cfg.critic_learning_rate = 1.0e-4
+  alg_cfg.actor_layer_multipliers = V20_ACTOR_LAYER_MULTIPLIERS
+  alg_cfg.log_std_learning_rate = 0.0
+  alg_cfg.std_scale_from_base = 0.35
+  alg_cfg.pre_intervention_weight = 0.0
+  alg_cfg.intervention_advantage_weight = 0.0
+  alg_cfg.base_anchor_weight = 0.0
   alg_cfg.brief_ppo_refinement = True
   alg_cfg.failure_focused_refinement = True
   alg_cfg.observable_failure_conditioned_refinement = True
   alg_cfg.task_first_constrained = False
   alg_cfg.d0_retention_anchor_weight = 0.0
   alg_cfg.neighbor_retention_anchor_weight = 0.0
+  alg_cfg.safe_bc_weight = 0.0
+  alg_cfg.correction_distillation_weight = 0.0
   alg_cfg.actor_new_feature_count = 5
   alg_cfg.actor_new_feature_learning_rate_multiplier = 1.0
   alg_cfg.freeze_legacy_actor_input_columns = True
+  alg_cfg.kl_early_stopping = True
+  alg_cfg.fall_redistribution_horizon = 100
+  alg_cfg.fall_redistribution_decay = 0.97
+  alg_cfg.fall_redistribution_amount = 2.0
+  alg_cfg.hard_case_policy_weight = 1.0
+  alg_cfg.success_counterexample_policy_weight = 1.25
+  alg_cfg.clip_param = 0.05
+  alg_cfg.desired_kl = 0.003
+  alg_cfg.num_learning_epochs = 1
+  alg_cfg.num_mini_batches = 4
+  alg_cfg.schedule = "fixed"
+  alg_cfg.entropy_coef = 0.0
+  alg_cfg.normalize_advantage_per_mini_batch = True
   base_env = ManagerBasedRlEnv(env_cfg, device=args.device)
   env = RslRlVecEnvWrapper(base_env, clip_actions=agent_cfg.clip_actions)
   runner_cls = load_runner_cls(task)
@@ -986,8 +1010,8 @@ def main() -> None:
   result = {
     "protocol_id": PROTOCOL_ID,
     "analysis_version": (
-      "v20 independent fixed-budget diagonal audit v2 "
-      "(audit-infrastructure amendment 1)"
+      "v20 independent fixed-budget diagonal audit v3 "
+      "(audit-infrastructure amendment 2)"
     ),
     "policy_method": POLICY_METHOD,
     "formal_protocol": not args.smoke,
@@ -1005,6 +1029,8 @@ def main() -> None:
       "failure_focused_refinement": True,
       "observable_failure_conditioned_refinement": True,
       "task_first_constrained": False,
+      "all_auxiliary_policy_losses_and_anchors_disabled": True,
+      "revision4_hyperparameters_restored_before_runner_construction": True,
       "legacy_constraint_payload_ignored": True,
       "actor_or_checkpoint_tensor_modified": False,
     },
