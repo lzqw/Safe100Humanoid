@@ -323,15 +323,23 @@ def _iter_declared_seeds(value: Any, path: str = "") -> Iterable[tuple[str, int]
 
 def fresh_randomness_report(repo: Path) -> dict[str, Any]:
   historical: list[dict[str, Any]] = []
+  scanned_files: list[dict[str, str]] = []
   for version in range(17, 21):
     root = repo / "results/online" / f"specialist_v{version}"
     if not root.is_dir():
       continue
     for path in sorted(root.rglob("*.json")):
       try:
-        payload = json.loads(path.read_text())
+        rendered = path.read_text()
+        payload = json.loads(rendered)
       except (json.JSONDecodeError, OSError):
         continue
+      scanned_files.append(
+        {
+          "file": str(path.relative_to(repo)),
+          "sha256": hashlib.sha256(rendered.encode()).hexdigest(),
+        }
+      )
       for json_path, seed in _iter_declared_seeds(payload):
         historical.append(
           {
@@ -361,13 +369,25 @@ def fresh_randomness_report(repo: Path) -> dict[str, Any]:
   ]
   historical_values = {record["seed"] for record in historical}
   collisions = sorted(proposed & historical_values)
+  collision_records = [
+    record for record in historical if record["seed"] in collisions
+  ]
   return {
     "schema_version": 1,
     "protocol_id": PROTOCOL_ID,
     "historical_versions_scanned": [17, 18, 19, 20],
-    "historical_declared_seed_records": historical,
+    "historical_json_file_count": len(scanned_files),
+    "historical_json_files_sha256": canonical_sha256(
+      {"files": scanned_files}
+    ),
+    "historical_declared_seed_record_count": len(historical),
+    "historical_unique_seed_count": len(historical_values),
+    "historical_declared_seed_records_sha256": canonical_sha256(
+      {"records": historical}
+    ),
     "proposed_seed_count": len(proposed),
     "collisions": collisions,
+    "collision_records": collision_records,
     "passed": not collisions,
   }
 
