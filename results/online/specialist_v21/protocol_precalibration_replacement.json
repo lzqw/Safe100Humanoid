@@ -1,0 +1,1487 @@
+{
+  "adaptation_seeds": {
+    "C1": 151201,
+    "C2": 151202,
+    "C3": 151203,
+    "C4": 151204,
+    "C5": 151205,
+    "C_dev": 151002,
+    "L1": 151101,
+    "L2": 151102,
+    "L3": 151103,
+    "L4": 151104,
+    "L5": 151105,
+    "L_dev": 151001
+  },
+  "analysis_plan": {
+    "candidate_selection_diagnostics_excluded_from_monitor_curves": true,
+    "control_gate_reported_descriptively": true,
+    "cross_context_interval": "bootstrap of five deployment-context point estimates",
+    "cross_context_statistical_unit": "deployment_context",
+    "formal_gate_applied_to": "v21 minus common base independently per mode",
+    "monitor_curves": "pi0 through pi8 on never-accessed E_curve only",
+    "per_context_episode_interval": "paired episode bootstrap",
+    "selectivity_comparison": "paired differences of base-referenced repair rate, regression rate, and repair-minus-regression across contexts",
+    "v21_minus_control_reported": true
+  },
+  "calibration": {
+    "adapted_policy_evaluations_used": false,
+    "base_policy_only": true,
+    "candidate_seeds": {
+      "C1": [
+        35808,
+        35809,
+        35810,
+        35811,
+        35812,
+        35813,
+        35814,
+        35815,
+        35816,
+        35817,
+        35818,
+        35819
+      ],
+      "C2": [
+        35908,
+        35909,
+        35910,
+        35911,
+        35912,
+        35913,
+        35914,
+        35915,
+        35916,
+        35917,
+        35918,
+        35919
+      ],
+      "C3": [
+        36008,
+        36009,
+        36010,
+        36011,
+        36012,
+        36013,
+        36014,
+        36015,
+        36016,
+        36017,
+        36018,
+        36019
+      ],
+      "C4": [
+        36108,
+        36109,
+        36110,
+        36111,
+        36112,
+        36113,
+        36114,
+        36115,
+        36116,
+        36117,
+        36118,
+        36119
+      ],
+      "C5": [
+        36208,
+        36209,
+        36210,
+        36211,
+        36212,
+        36213,
+        36214,
+        36215,
+        36216,
+        36217,
+        36218,
+        36219
+      ],
+      "C_dev": [
+        35208,
+        35209,
+        35210,
+        35211,
+        35212,
+        35213,
+        35214,
+        35215,
+        35216,
+        35217,
+        35218,
+        35219
+      ],
+      "L1": [
+        35308,
+        35309,
+        35310,
+        35311,
+        35312,
+        35313,
+        35314,
+        35315,
+        35316,
+        35317,
+        35318,
+        35319
+      ],
+      "L2": [
+        35408,
+        35409,
+        35410,
+        35411,
+        35412,
+        35413,
+        35414,
+        35415,
+        35416,
+        35417,
+        35418,
+        35419
+      ],
+      "L3": [
+        35508,
+        35509,
+        35510,
+        35511,
+        35512,
+        35513,
+        35514,
+        35515,
+        35516,
+        35517,
+        35518,
+        35519
+      ],
+      "L4": [
+        35608,
+        35609,
+        35610,
+        35611,
+        35612,
+        35613,
+        35614,
+        35615,
+        35616,
+        35617,
+        35618,
+        35619
+      ],
+      "L5": [
+        35708,
+        35709,
+        35710,
+        35711,
+        35712,
+        35713,
+        35714,
+        35715,
+        35716,
+        35717,
+        35718,
+        35719
+      ],
+      "L_dev": [
+        35108,
+        35109,
+        35110,
+        35111,
+        35112,
+        35113,
+        35114,
+        35115,
+        35116,
+        35117,
+        35118,
+        35119
+      ]
+    },
+    "contact_stability_maximum_second_failure_fraction": 0.2,
+    "contact_stability_minimum_target_failure_fraction": 0.75,
+    "episodes_per_candidate": 512,
+    "eval_batch_size": 128,
+    "evaluation_seed_bases": {
+      "C1": 70170000,
+      "C2": 70180000,
+      "C3": 70190000,
+      "C4": 70200000,
+      "C5": 70210000,
+      "C_dev": 70110000,
+      "L1": 70120000,
+      "L2": 70130000,
+      "L3": 70140000,
+      "L4": 70150000,
+      "L5": 70160000,
+      "L_dev": 70100000
+    },
+    "first_qualifying_candidate_is_frozen": true,
+    "lateral_maximum_second_failure_fraction": 0.3,
+    "lateral_minimum_target_failure_fraction": 0.8,
+    "minimum_fall_count": 100,
+    "range_feasibility_pilots_are_not_formal_selection": true,
+    "success_rate_bounds_inclusive": [
+      0.7,
+      0.85
+    ]
+  },
+  "context_matrix": {
+    "calibration_family_sweep": {
+      "adapted_policy_outcomes_used": false,
+      "candidate_indices_in_order": [
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "low_fixed_disturbance_pulses_in_L1_and_L4_are_excitation_carriers": true,
+      "normalized_action_bias_pattern_fixed_within_family": true,
+      "perturbation_direction_fixed_within_family": true,
+      "severity_increases_from_zero_to_one": true
+    },
+    "development_excluded_from_formal": [
+      "L_dev",
+      "C_dev"
+    ],
+    "formal": [
+      "L1",
+      "L2",
+      "L3",
+      "L4",
+      "L5",
+      "C1",
+      "C2",
+      "C3",
+      "C4",
+      "C5"
+    ],
+    "specifications": {
+      "C1": {
+        "candidate_seed_prefix": 358,
+        "direction": -1,
+        "family": "low_foot_friction",
+        "formal": true,
+        "mode": "contact_stability",
+        "ranges": {
+          "foot_friction": [
+            0.52,
+            0.25
+          ]
+        }
+      },
+      "C2": {
+        "candidate_seed_prefix": 359,
+        "direction": 1,
+        "family": "left_right_action_asymmetry",
+        "formal": true,
+        "mode": "contact_stability",
+        "ranges": {
+          "response_asymmetry_abs": [
+            0.04,
+            0.2
+          ]
+        }
+      },
+      "C3": {
+        "candidate_seed_prefix": 360,
+        "direction": -1,
+        "family": "action_gain_and_encoder_bias",
+        "formal": true,
+        "mode": "contact_stability",
+        "ranges": {
+          "action_gain": [
+            0.916,
+            0.9
+          ],
+          "encoder_bias_abs": [
+            0.014,
+            0.0162
+          ]
+        }
+      },
+      "C4": {
+        "candidate_seed_prefix": 361,
+        "direction": 1,
+        "family": "friction_and_command_dynamics_mismatch",
+        "formal": true,
+        "mode": "contact_stability",
+        "ranges": {
+          "action_gain": [
+            0.98,
+            0.82
+          ],
+          "command_forward_scale": [
+            1.02,
+            1.2
+          ],
+          "command_low_pass_s": [
+            0.02,
+            0.16
+          ],
+          "foot_friction": [
+            0.55,
+            0.32
+          ]
+        }
+      },
+      "C5": {
+        "candidate_seed_prefix": 362,
+        "direction": -1,
+        "family": "moderate_mixed_contact_shift",
+        "formal": true,
+        "mode": "contact_stability",
+        "ranges": {
+          "action_bias_abs": [
+            0.002,
+            0.025
+          ],
+          "action_gain": [
+            1.0,
+            0.94
+          ],
+          "contact_delay_steps": [
+            1,
+            2
+          ],
+          "foot_friction": [
+            0.54,
+            0.32
+          ],
+          "phase_offset_abs": [
+            0.02,
+            0.08
+          ],
+          "response_asymmetry_abs": [
+            0.01,
+            0.05
+          ]
+        }
+      },
+      "C_dev": {
+        "candidate_seed_prefix": 352,
+        "direction": 1,
+        "family": "excluded_development_mixed_contact",
+        "formal": false,
+        "mode": "contact_stability",
+        "ranges": {
+          "action_bias_abs": [
+            0.002,
+            0.025
+          ],
+          "action_gain": [
+            1.0,
+            0.94
+          ],
+          "contact_delay_steps": [
+            1,
+            2
+          ],
+          "foot_friction": [
+            0.52,
+            0.3
+          ],
+          "phase_offset_abs": [
+            0.02,
+            0.08
+          ],
+          "response_asymmetry_abs": [
+            0.01,
+            0.05
+          ]
+        }
+      },
+      "L1": {
+        "candidate_seed_prefix": 353,
+        "direction": 1,
+        "family": "command_delay_and_low_pass",
+        "formal": true,
+        "mode": "lateral",
+        "ranges": {
+          "action_bias_abs": [
+            0.01,
+            0.016
+          ],
+          "action_delay_steps": [
+            1,
+            1
+          ],
+          "action_gain": [
+            0.99,
+            0.97
+          ],
+          "centerline_heading_gain": [
+            0.82,
+            0.64
+          ],
+          "centerline_lateral_gain": [
+            0.48,
+            0.38
+          ],
+          "command_delay_s": [
+            0.14,
+            0.38
+          ],
+          "command_forward_scale": [
+            1.0,
+            1.03
+          ],
+          "command_low_pass_s": [
+            0.12,
+            0.36
+          ],
+          "encoder_bias_abs": [
+            0.002,
+            0.007
+          ],
+          "lateral_bias_abs": [
+            0.03,
+            0.075
+          ],
+          "lateral_pulse_max": [
+            0.105,
+            0.105
+          ],
+          "lateral_pulse_min": [
+            0.045,
+            0.045
+          ],
+          "rise_profile_half_width": [
+            0.0035,
+            0.0035
+          ],
+          "tread_profile_half_width": [
+            0.007,
+            0.007
+          ],
+          "yaw_bias_abs": [
+            0.06,
+            0.15
+          ],
+          "yaw_pulse_max": [
+            0.24,
+            0.24
+          ],
+          "yaw_pulse_min": [
+            0.1,
+            0.1
+          ]
+        }
+      },
+      "L2": {
+        "candidate_seed_prefix": 354,
+        "direction": -1,
+        "family": "narrow_stair_lateral_clearance",
+        "formal": true,
+        "mode": "lateral",
+        "ranges": {
+          "action_bias_abs": [
+            0.0,
+            0.0
+          ],
+          "action_delay_steps": [
+            0,
+            0
+          ],
+          "action_gain": [
+            1.0,
+            1.0
+          ],
+          "centerline_heading_gain": [
+            1.4,
+            1.4
+          ],
+          "centerline_heading_reference_bias_abs": [
+            0.0,
+            0.0
+          ],
+          "centerline_lateral_gain": [
+            0.8,
+            0.8
+          ],
+          "centerline_max_lateral_velocity": [
+            0.16,
+            0.16
+          ],
+          "centerline_max_yaw_velocity": [
+            0.45,
+            0.45
+          ],
+          "command_delay_s": [
+            0.08,
+            0.08
+          ],
+          "command_forward_scale": [
+            1.0,
+            1.0
+          ],
+          "command_low_pass_s": [
+            0.06,
+            0.06
+          ],
+          "encoder_bias_abs": [
+            0.0,
+            0.0
+          ],
+          "lateral_pulse_max": [
+            0.0,
+            0.0
+          ],
+          "lateral_pulse_min": [
+            0.0,
+            0.0
+          ],
+          "pulse_duration_max_s": [
+            0.55,
+            0.55
+          ],
+          "pulse_duration_min_s": [
+            0.25,
+            0.25
+          ],
+          "pulse_interval_max_s": [
+            3.6,
+            3.6
+          ],
+          "pulse_interval_min_s": [
+            1.8,
+            1.8
+          ],
+          "rise_profile_half_width": [
+            0.0,
+            0.0
+          ],
+          "stair_half_width": [
+            1.0,
+            0.89
+          ],
+          "tread_profile_half_width": [
+            0.0,
+            0.0
+          ],
+          "yaw_bias_abs": [
+            0.0,
+            0.0
+          ],
+          "yaw_pulse_max": [
+            0.0,
+            0.0
+          ],
+          "yaw_pulse_min": [
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "L3": {
+        "candidate_seed_prefix": 355,
+        "direction": 1,
+        "family": "lateral_bias_and_lateral_pulse",
+        "formal": true,
+        "mode": "lateral",
+        "ranges": {
+          "action_bias_abs": [
+            0.01,
+            0.016
+          ],
+          "action_delay_steps": [
+            1,
+            1
+          ],
+          "action_gain": [
+            0.99,
+            0.97
+          ],
+          "centerline_heading_gain": [
+            0.86,
+            0.58
+          ],
+          "centerline_lateral_gain": [
+            0.5,
+            0.34
+          ],
+          "command_delay_s": [
+            0.2,
+            0.24
+          ],
+          "command_forward_scale": [
+            1.0,
+            1.025
+          ],
+          "command_low_pass_s": [
+            0.18,
+            0.22
+          ],
+          "encoder_bias_abs": [
+            0.002,
+            0.007
+          ],
+          "lateral_bias_abs": [
+            0.05,
+            0.2
+          ],
+          "lateral_pulse_max": [
+            0.12,
+            0.32
+          ],
+          "lateral_pulse_min": [
+            0.05,
+            0.14
+          ],
+          "rise_profile_half_width": [
+            0.0035,
+            0.0035
+          ],
+          "tread_profile_half_width": [
+            0.007,
+            0.007
+          ],
+          "yaw_pulse_max": [
+            0.18,
+            0.18
+          ],
+          "yaw_pulse_min": [
+            0.08,
+            0.08
+          ]
+        }
+      },
+      "L4": {
+        "candidate_seed_prefix": 356,
+        "direction": -1,
+        "family": "weak_centerline_correction",
+        "formal": true,
+        "mode": "lateral",
+        "ranges": {
+          "action_bias_abs": [
+            0.004,
+            0.004
+          ],
+          "action_delay_steps": [
+            0,
+            0
+          ],
+          "action_gain": [
+            0.995,
+            0.995
+          ],
+          "centerline_heading_gain": [
+            0.95,
+            0.35
+          ],
+          "centerline_lateral_gain": [
+            0.55,
+            0.2
+          ],
+          "centerline_max_lateral_velocity": [
+            0.12,
+            0.07
+          ],
+          "centerline_max_yaw_velocity": [
+            0.32,
+            0.18
+          ],
+          "command_delay_s": [
+            0.14,
+            0.14
+          ],
+          "command_forward_scale": [
+            1.0,
+            1.0
+          ],
+          "command_low_pass_s": [
+            0.12,
+            0.12
+          ],
+          "encoder_bias_abs": [
+            0.001,
+            0.001
+          ],
+          "lateral_bias_abs": [
+            0.03,
+            0.03
+          ],
+          "lateral_pulse_max": [
+            0.105,
+            0.105
+          ],
+          "lateral_pulse_min": [
+            0.045,
+            0.045
+          ],
+          "rise_profile_half_width": [
+            0.0015,
+            0.0015
+          ],
+          "tread_profile_half_width": [
+            0.003,
+            0.003
+          ],
+          "yaw_bias_abs": [
+            0.06,
+            0.06
+          ],
+          "yaw_pulse_max": [
+            0.24,
+            0.24
+          ],
+          "yaw_pulse_min": [
+            0.1,
+            0.1
+          ]
+        }
+      },
+      "L5": {
+        "candidate_seed_prefix": 357,
+        "direction": 1,
+        "family": "moderate_mixed_lateral_shift",
+        "formal": true,
+        "mode": "lateral",
+        "ranges": {
+          "action_bias_abs": [
+            0.003,
+            0.008
+          ],
+          "action_delay_steps": [
+            0,
+            0
+          ],
+          "action_gain": [
+            0.998,
+            0.985
+          ],
+          "centerline_heading_gain": [
+            1.2,
+            0.75
+          ],
+          "centerline_lateral_gain": [
+            0.7,
+            0.45
+          ],
+          "centerline_max_lateral_velocity": [
+            0.16,
+            0.1
+          ],
+          "centerline_max_yaw_velocity": [
+            0.42,
+            0.25
+          ],
+          "command_delay_s": [
+            0.08,
+            0.18
+          ],
+          "command_forward_scale": [
+            1.0,
+            1.0
+          ],
+          "command_low_pass_s": [
+            0.06,
+            0.16
+          ],
+          "encoder_bias_abs": [
+            0.001,
+            0.004
+          ],
+          "lateral_bias_abs": [
+            0.015,
+            0.07
+          ],
+          "lateral_pulse_max": [
+            0.06,
+            0.15
+          ],
+          "lateral_pulse_min": [
+            0.025,
+            0.06
+          ],
+          "rise_profile_half_width": [
+            0.0015,
+            0.0015
+          ],
+          "tread_profile_half_width": [
+            0.003,
+            0.003
+          ],
+          "yaw_bias_abs": [
+            0.03,
+            0.14
+          ],
+          "yaw_pulse_max": [
+            0.14,
+            0.34
+          ],
+          "yaw_pulse_min": [
+            0.06,
+            0.15
+          ]
+        }
+      },
+      "L_dev": {
+        "candidate_seed_prefix": 351,
+        "direction": -1,
+        "family": "excluded_development_mixed_lateral",
+        "formal": false,
+        "mode": "lateral",
+        "ranges": {
+          "action_bias_abs": [
+            0.004,
+            0.004
+          ],
+          "action_delay_steps": [
+            0,
+            0
+          ],
+          "action_gain": [
+            0.995,
+            0.995
+          ],
+          "centerline_heading_gain": [
+            0.85,
+            0.85
+          ],
+          "centerline_lateral_gain": [
+            0.5,
+            0.5
+          ],
+          "centerline_max_lateral_velocity": [
+            0.12,
+            0.12
+          ],
+          "centerline_max_yaw_velocity": [
+            0.32,
+            0.32
+          ],
+          "command_delay_s": [
+            0.14,
+            0.14
+          ],
+          "command_forward_scale": [
+            1.0,
+            1.0
+          ],
+          "command_low_pass_s": [
+            0.12,
+            0.12
+          ],
+          "encoder_bias_abs": [
+            0.001,
+            0.001
+          ],
+          "lateral_bias_abs": [
+            0.03,
+            0.08
+          ],
+          "lateral_pulse_max": [
+            0.095,
+            0.17
+          ],
+          "lateral_pulse_min": [
+            0.04,
+            0.075
+          ],
+          "rise_profile_half_width": [
+            0.0015,
+            0.0015
+          ],
+          "tread_profile_half_width": [
+            0.003,
+            0.003
+          ],
+          "yaw_bias_abs": [
+            0.06,
+            0.16
+          ],
+          "yaw_pulse_max": [
+            0.22,
+            0.4
+          ],
+          "yaw_pulse_min": [
+            0.09,
+            0.18
+          ]
+        }
+      }
+    },
+    "specifications_sha256": "d09bc129391723db073f5bec2bea6d24b24e5e7a9d5b768d701ab660bf715f10"
+  },
+  "development": {
+    "beta_grid": [
+      0.0,
+      1.0,
+      4.0,
+      16.0
+    ],
+    "beta_zero_is_v20_style_control": true,
+    "contexts": [
+      "L_dev",
+      "C_dev"
+    ],
+    "evaluation_seeds": {
+      "C_dev": 70910000,
+      "L_dev": 70900000
+    },
+    "excluded_from_formal_claims": true,
+    "formal_beta_frozen_after_development": true,
+    "paired_evaluation_episodes_per_policy_per_context": 512,
+    "selection_metric": "mean across L_dev/C_dev of repair_rate - regression_rate",
+    "tie_breaks": [
+      "higher worst-context score",
+      "lower mean regression rate",
+      "lower beta"
+    ]
+  },
+  "experiment_unit": "one fixed deployment context plus pi0 plus exactly one adaptation plus fresh paired evaluation",
+  "formal": {
+    "audit_seeds": {
+      "C1": 71150000,
+      "C2": 71160000,
+      "C3": 71170000,
+      "C4": 71180000,
+      "C5": 71190000,
+      "L1": 71100000,
+      "L2": 71110000,
+      "L3": 71120000,
+      "L4": 71130000,
+      "L5": 71140000
+    },
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 73100000,
+    "contexts": [
+      "L1",
+      "L2",
+      "L3",
+      "L4",
+      "L5",
+      "C1",
+      "C2",
+      "C3",
+      "C4",
+      "C5"
+    ],
+    "d0_paired_episodes_per_context": 256,
+    "eval_batch_size": 128,
+    "lcb95_positive_is_strong_evidence_not_validity_gate": true,
+    "per_mode_gate": {
+      "maximum_mean_fall_delta": 0.03,
+      "mean_success_delta_strictly_positive": true,
+      "minimum_mean_d0_success_delta": -0.05,
+      "minimum_positive_contexts_out_of_five": 4
+    },
+    "runs_per_context": {
+      "control_beta_zero": 1,
+      "v21_selected_beta": 1
+    },
+    "same_evaluation_randomness_for_base_control_v21": true,
+    "same_pi0_context_and_deployment_seed": true,
+    "statistical_unit": "deployment_context",
+    "target_paired_episodes_per_context": 1024,
+    "total_adaptation_runs": 20
+  },
+  "fresh_evidence_boundary": {
+    "development_adaptation_outcomes_seen": false,
+    "formal_adaptation_or_audit_outcomes_seen": false,
+    "prior_base_only_range_outcomes_seen": true,
+    "replacement_base_only_calibration_outcomes_seen": false,
+    "this_protocol_must_be_committed_before_replacement_calibration": true
+  },
+  "mechanism_telemetry": {
+    "captured_inline_during_actual_formal_rollouts": true,
+    "compact_curve_construction": {
+      "mean_and_interquartile_band_across_traces": true,
+      "normalized_episode_phase_bins": 101,
+      "same_rollout_outcome_retained_per_trace": true,
+      "trace_level_interpolation_before_aggregation": true
+    },
+    "environment_id_per_evaluation_batch": 0,
+    "outcome_embedded_from_same_rollout": true,
+    "post_audit_replay_for_mechanism_curves": false
+  },
+  "monitor": {
+    "candidate_selection_diagnostics_used_for_curve": false,
+    "checkpoints": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "never_accessed_during_training": true,
+    "paired_conditions": 256,
+    "seeds": {
+      "C1": 72170000,
+      "C2": 72180000,
+      "C3": 72190000,
+      "C4": 72200000,
+      "C5": 72210000,
+      "C_dev": 72110000,
+      "L1": 72120000,
+      "L2": 72130000,
+      "L3": 72140000,
+      "L4": 72150000,
+      "L5": 72160000,
+      "L_dev": 72100000
+    }
+  },
+  "policy_method": "Local Matched-Success Preservation v21",
+  "protocol_id": "safe100-deployment-unit-local-matched-success-v21",
+  "protocol_revision": 0,
+  "randomness_preflight": {
+    "collision_records": [],
+    "collisions": [],
+    "historical_declared_seed_record_count": 4203,
+    "historical_declared_seed_records_sha256": "b69e87bc3b8ea448b837dd5f682af6576fdcc9d328fecc1534ccfea17c5b329b",
+    "historical_json_file_count": 124,
+    "historical_json_files_sha256": "5e6865298fe758e5b7236313dfab56d7fc75a12d7dd3733eed02bda60573a253",
+    "historical_unique_seed_count": 1679,
+    "historical_versions_scanned": [
+      17,
+      18,
+      19,
+      20,
+      21
+    ],
+    "passed": true,
+    "proposed_seed_count": 193,
+    "protocol_id": "safe100-deployment-unit-local-matched-success-v21",
+    "schema_version": 1
+  },
+  "range_feasibility_history": {
+    "adapted_policy_outcomes_used_for_range_design": false,
+    "all_twelve_context_families_feasible": true,
+    "base_policy_only_range_pilots": [
+      {
+        "adapted_policy_outcomes_observed": false,
+        "contexts": [
+          "L_dev",
+          "C_dev",
+          "L1",
+          "L2",
+          "L3",
+          "L4",
+          "L5",
+          "C1",
+          "C2",
+          "C3",
+          "C4",
+          "C5"
+        ],
+        "formal_context_selection": false,
+        "pilot_id": 1,
+        "protocol": {
+          "file": "results/online/specialist_v21/protocol_range_pilot_1.json",
+          "git_commit": "a70704a418c223aa4d3921efdaeb4dfcd78627a3",
+          "sha256": "ddde1a7128fe416e6c2829cfe0d7f99a2e3050ff47deed69ec6305ef29df7366"
+        },
+        "qualifying_contexts": {
+          "C1": [
+            11811,
+            11812,
+            11813
+          ],
+          "C2": [
+            11908
+          ],
+          "C4": [
+            12113
+          ],
+          "C5": [
+            12216,
+            12218
+          ],
+          "C_dev": [
+            11211,
+            11213
+          ],
+          "L1": [
+            11308,
+            11310,
+            11313,
+            11315,
+            11316,
+            11317,
+            11318,
+            11319
+          ],
+          "L3": [
+            11509,
+            11511,
+            11513
+          ]
+        },
+        "summary": {
+          "file": "results/online/specialist_v21/range_pilot/pilot_1/summary.json",
+          "git_commit": "a70704a418c223aa4d3921efdaeb4dfcd78627a3",
+          "sha256": "164f8bdf90011f5fcb252b8b9edf4e11f3cbdacf86fdbdd4ce42c2318cbc2cc4"
+        }
+      },
+      {
+        "adapted_policy_outcomes_observed": false,
+        "contexts": [
+          "L_dev",
+          "L2",
+          "L4",
+          "L5",
+          "C3"
+        ],
+        "formal_context_selection": false,
+        "pilot_id": 2,
+        "protocol": {
+          "file": "results/online/specialist_v21/protocol_range_pilot_2.json",
+          "git_commit": "43fdc3c2d2e1897bb47c2cd0d2131198ddd98715",
+          "sha256": "92e6003165d61c2128fb0267160f3645baecb10eb43ca673966c7cb01b5167dc"
+        },
+        "qualifying_contexts": {
+          "C3": [
+            14008,
+            14010,
+            14011,
+            14012,
+            14013
+          ],
+          "L2": [
+            13408
+          ],
+          "L4": [
+            13610,
+            13611,
+            13613,
+            13614,
+            13615,
+            13616,
+            13617,
+            13618,
+            13619
+          ],
+          "L5": [
+            13712,
+            13713,
+            13714,
+            13715
+          ],
+          "L_dev": [
+            13108,
+            13110
+          ]
+        },
+        "summary": {
+          "file": "results/online/specialist_v21/range_pilot/pilot_2/summary.json",
+          "git_commit": "43fdc3c2d2e1897bb47c2cd0d2131198ddd98715",
+          "sha256": "f5c6f8026de036a32b61a024e9a997f4bb25f8195c5eae339a0dd0e9253f1f75"
+        }
+      },
+      {
+        "adapted_policy_outcomes_observed": false,
+        "contexts": [
+          "L2"
+        ],
+        "formal_context_selection": false,
+        "pilot_id": 3,
+        "protocol": {
+          "file": "results/online/specialist_v21/protocol_range_pilot_3.json",
+          "git_commit": "ea3cd4879890457ecb0dca4875eb0e1a618fec74",
+          "sha256": "46e1f6429cc49f8d4c3dd40a2a3b9addd8172492bda15a4d41315c522151c00b"
+        },
+        "qualifying_contexts": {
+          "L2": [
+            15417
+          ]
+        },
+        "summary": {
+          "file": "results/online/specialist_v21/range_pilot/pilot_3/summary.json",
+          "git_commit": "ea3cd4879890457ecb0dca4875eb0e1a618fec74",
+          "sha256": "3cd4b48093b4827c988382a1bd00d18eecade39b3f6ef2e9985e2db8029814f8"
+        }
+      },
+      {
+        "adapted_policy_outcomes_observed": false,
+        "contexts": [
+          "L2"
+        ],
+        "formal_context_selection": false,
+        "pilot_id": 4,
+        "protocol": {
+          "file": "results/online/specialist_v21/protocol_range_pilot_4.json",
+          "git_commit": "6d4e39e40816ec286d911e43cd74556b901dfa96",
+          "sha256": "ba7b9f584e0595084c3371991fb0d51c8d26b005a84aeb1faca3d79899ce7af3"
+        },
+        "qualifying_contexts": {},
+        "summary": {
+          "file": "results/online/specialist_v21/range_pilot/pilot_4/summary.json",
+          "git_commit": "6d4e39e40816ec286d911e43cd74556b901dfa96",
+          "sha256": "29195dc3da9253f7c0909fb9f21b5857eb1cec13296b2d759309263241cbe254"
+        }
+      },
+      {
+        "adapted_policy_outcomes_observed": false,
+        "contexts": [
+          "L2"
+        ],
+        "formal_context_selection": false,
+        "pilot_id": 5,
+        "protocol": {
+          "file": "results/online/specialist_v21/protocol_range_pilot_5.json",
+          "git_commit": "9ba25913630fae83ce436558e3a27a7af7aa6856",
+          "sha256": "3d7169f273e71c47e5a69f752d2fbcb1607b048341829674908607993dced23b"
+        },
+        "qualifying_contexts": {},
+        "summary": {
+          "file": "results/online/specialist_v21/range_pilot/pilot_5/summary.json",
+          "git_commit": "9ba25913630fae83ce436558e3a27a7af7aa6856",
+          "sha256": "b7675f6e974b8723f8cf0b49163d73a933deb8343af44ad73a6ea74f92ffb866"
+        }
+      },
+      {
+        "adapted_policy_outcomes_observed": false,
+        "contexts": [
+          "L2"
+        ],
+        "formal_context_selection": false,
+        "pilot_id": 6,
+        "protocol": {
+          "file": "results/online/specialist_v21/protocol_range_pilot_6.json",
+          "git_commit": "17fd454a63feaa10a1ea198c6381630b38ab7b28",
+          "sha256": "f57f8db0143d9ff3a2dfb208e1132c68c606b5c8576f71311cd2c9ab8d88f823"
+        },
+        "qualifying_contexts": {},
+        "summary": {
+          "file": "results/online/specialist_v21/range_pilot/pilot_6/summary.json",
+          "git_commit": "17fd454a63feaa10a1ea198c6381630b38ab7b28",
+          "sha256": "e7af3e17fcfcc546ec1fe0a9a75695fc38b4228292fb26b40c3414938d9aee47"
+        }
+      },
+      {
+        "adapted_policy_outcomes_observed": false,
+        "contexts": [
+          "L2"
+        ],
+        "formal_context_selection": false,
+        "pilot_id": 7,
+        "protocol": {
+          "file": "results/online/specialist_v21/protocol_range_pilot_7.json",
+          "git_commit": "da3d327c09a7d5aba1ea0fe256738f27aca37a27",
+          "sha256": "324e40fbb5918104593beda62fd795a2eceb5c773a1ba18e426066461fb05e3d"
+        },
+        "qualifying_contexts": {},
+        "summary": {
+          "file": "results/online/specialist_v21/range_pilot/pilot_7/summary.json",
+          "git_commit": "da3d327c09a7d5aba1ea0fe256738f27aca37a27",
+          "sha256": "7f5b454a52ecb9e9d217750ccdd29d41a1e1cd237f53ba847f815119ac063ce9"
+        }
+      },
+      {
+        "adapted_policy_outcomes_observed": false,
+        "contexts": [
+          "L2"
+        ],
+        "formal_context_selection": false,
+        "pilot_id": 8,
+        "protocol": {
+          "file": "results/online/specialist_v21/protocol_range_pilot_8.json",
+          "git_commit": "c96bf071f9f6f545d2c90a2d20a0c56cd9000446",
+          "sha256": "df5e8ef38353912257727908175cb29c71da7a3ddecb9142834c6a9b248825a2"
+        },
+        "qualifying_contexts": {},
+        "summary": {
+          "file": "results/online/specialist_v21/range_pilot/pilot_8/summary.json",
+          "git_commit": "c96bf071f9f6f545d2c90a2d20a0c56cd9000446",
+          "sha256": "e44954883ebe1400326f7859048caa561e34726df95426be6c787658af84b1a4"
+        }
+      },
+      {
+        "adapted_policy_outcomes_observed": false,
+        "contexts": [
+          "L2"
+        ],
+        "formal_context_selection": false,
+        "pilot_id": 9,
+        "protocol": {
+          "file": "results/online/specialist_v21/protocol_range_pilot_9.json",
+          "git_commit": "f684b17d0208868aca36f4ce2c95f2b361e11439",
+          "sha256": "60f38baec35ec824501052a1e1ebf0d08dd3560bbe7aa49d1a087a475d4f406a"
+        },
+        "qualifying_contexts": {},
+        "summary": {
+          "file": "results/online/specialist_v21/range_pilot/pilot_9/summary.json",
+          "git_commit": "f684b17d0208868aca36f4ce2c95f2b361e11439",
+          "sha256": "7d037d9fea9ce499a4270bd49a82f51f88918249188a83303cf9c2ff208bb1a7"
+        }
+      },
+      {
+        "adapted_policy_outcomes_observed": false,
+        "contexts": [
+          "L2"
+        ],
+        "formal_context_selection": false,
+        "pilot_id": 10,
+        "protocol": {
+          "file": "results/online/specialist_v21/protocol_range_pilot_10.json",
+          "git_commit": "91d80f9aae84b0f503fd998c12227a9b03d37ad8",
+          "sha256": "6335208d0cc85cf32381d8e671df71dd6246046436758da47a5ca4cb1eaf33e3"
+        },
+        "qualifying_contexts": {},
+        "summary": {
+          "file": "results/online/specialist_v21/range_pilot/pilot_10/summary.json",
+          "git_commit": "91d80f9aae84b0f503fd998c12227a9b03d37ad8",
+          "sha256": "ab65d322d28ce4474de29252d2dfa37339abe09ae76aecb8f851c94af711a80c"
+        }
+      },
+      {
+        "adapted_policy_outcomes_observed": false,
+        "contexts": [
+          "L2"
+        ],
+        "formal_context_selection": false,
+        "pilot_id": 11,
+        "protocol": {
+          "file": "results/online/specialist_v21/protocol_range_pilot_11.json",
+          "git_commit": "75c4cedf121c7e1fcd44b29a90f343858cea8f03",
+          "sha256": "c64d8ee43fa5929e834adc9da15a8c326f3b8bc09381d1a3db1fa7c95df1b406"
+        },
+        "qualifying_contexts": {
+          "L2": [
+            33408,
+            33409,
+            33410
+          ]
+        },
+        "summary": {
+          "file": "results/online/specialist_v21/range_pilot/pilot_11/summary.json",
+          "git_commit": "75c4cedf121c7e1fcd44b29a90f343858cea8f03",
+          "sha256": "13a37a9cfd7788a9fb8e3e5330a1cea5bb3b4e9d48364ac9c2a6304f7d5d1b86"
+        }
+      }
+    ],
+    "failed_formal_calibration": {
+      "adaptation_process_started": false,
+      "failure_amendment": {
+        "file": "results/online/specialist_v21/calibration/final_revision0_L2_failure_amendment.json",
+        "git_commit": "b7d4950182f84e40f013c6e58c8e85b911d0f1e1",
+        "sha256": "829510c3af7d2116edfe607441c38546444d51bac76172dad1224719ddf244eb"
+      },
+      "failure_progress": {
+        "file": "results/online/specialist_v21/calibration/L2/calibration_progress.json",
+        "git_commit": "b7d4950182f84e40f013c6e58c8e85b911d0f1e1",
+        "sha256": "b75e80443f892ac22cf17abee2d96c26c4b33b28dc804bffa1f108b268009f81"
+      },
+      "protocol": {
+        "file": "results/online/specialist_v21/protocol_precalibration_final.json",
+        "git_commit": "b7d4950182f84e40f013c6e58c8e85b911d0f1e1",
+        "sha256": "177152643b52e4bc366f415cb40a854c3f6317644f836ca61884b875be376c39"
+      }
+    },
+    "pilot_outcomes_are_not_formal_context_selection": true
+  },
+  "retry_policy": {
+    "infrastructure_retry_only": true,
+    "infrastructure_retry_requires_identical_context_seed_commit_and_checkpoint": true,
+    "poor_algorithm_outcome_may_be_rerun": false,
+    "retry_provenance_required": true
+  },
+  "schema_version": 1,
+  "sealed_inputs": {
+    "base_policy_checkpoint_reference": "/home/carla/LZQW/SAFE100/humanoid/artifacts/retention_v13/arm_b_state_retention/accepted_final.pt",
+    "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+    "source_commit": "b7d4950182f84e40f013c6e58c8e85b911d0f1e1",
+    "source_file_sha256": {
+      "docs/DEPLOYMENT_V21_PROTOCOL.md": "d92a1cdba581cb304c2e408aa6e0989bb4359c05112e62f035322ce79009e65a",
+      "experiments/scripts/aggregate_deployment_v21.py": "106a25e82e94ce64f4a1414233d854354fcf7bddce87a63ba87ad987465159cb",
+      "experiments/scripts/audit_deployment_v21.py": "88e40a8f57a0ff2bfe2230064d85f18061531a0b06665d74a29d03a304b2bd96",
+      "experiments/scripts/calibrate_deployment_contexts_v21.py": "4f8c2374416abe4dcd89a77b55a482d8ac714635b59a1b376ef255da31ad89a2",
+      "experiments/scripts/evaluate_learning_curve_v21.py": "b94bddfd726e025c9a3d5a1d9e14d3df59249e3996e3bca8e230ed7f0ce533d6",
+      "experiments/scripts/evaluate_online_stairs.py": "8c1e474002768cbbd36bed0036572ca118652a6fc849829acd2ffa166d18c52b",
+      "experiments/scripts/freeze_specialist_v21_protocol.py": "06c449f265ec69a4cb506277e8105525f053f8e4a938e06f8e7e5dfbe50c8e4c",
+      "experiments/scripts/online_refine_stairs.py": "59e891a76ec7d59d209dc058e0b6b4d8b4f61a2d51cf9eeaf7574b647ed57aa0",
+      "experiments/scripts/plot_deployment_v21.py": "2e671ce53846b1d29a8a5bce55701f72a9b98c5de1c2ba6e3b4c6a5b64c945e7",
+      "experiments/scripts/refine_deployment_v21.py": "a110ccd63f2085321fcd2f6dea429e678e0b3b85a78dca19b890d8a3f3d2fa97",
+      "experiments/scripts/run_specialist_calibration_v21.sh": "6d7ce2234eadd24da8c3083231465ab5568c11d2e1fff4050c4458240316d7b8",
+      "experiments/scripts/run_specialist_queue_v21.sh": "78473172b28c5b6ac1e1c53de24dee2f81784ecb5d95de9e29381b20b35699aa",
+      "experiments/scripts/run_specialist_range_pilot_v21.sh": "3885d9fbdc30fcb621a7e80531de889665df984999e5c873adbaaa52dd984e13",
+      "experiments/scripts/run_specialist_v21.sh": "29976b9bb8f56d626f541c46bd87fa60e6e3c8cb89b22ce39fe9108eb93a1583",
+      "experiments/scripts/select_development_beta_v21.py": "f836c0dbed2c34d845b03ac567722b90bb2ad0cabad551b6064a22b11ba8a639",
+      "experiments/scripts/specialist_v21_protocol.py": "4864756df1c76a4d6dee0750a1a6d6c129919d92621111f7be589972ab53913f",
+      "experiments/scripts/specialist_v21_tables.py": "49cddd9e0023583e1f94139911ba02be0c949343ed7678d3381777fb587b6da7",
+      "experiments/tests/test_specialist_v21.py": "14ad0a0f632520899a0edc129015cc5f75537c20faa977dc112519d7aee4426e",
+      "src/tasks/stairs_cbf/actions.py": "e04354c1bb9bfe4f57055a98dde22a1e13a30ff3a7b02af93633bd90001a5514",
+      "src/tasks/stairs_cbf/command.py": "efd9ec3faed1f5aa14aff03802cf3cce4a9d61a8041fffc684e54d152a6a4104",
+      "src/tasks/stairs_cbf/config.py": "22a57df095616e1f19f7cf6f18d7ba173ecef7901bf2a85da2a5faaa11c32f8a",
+      "src/tasks/stairs_cbf/deployment_context.py": "8c66874e516a2d70a3bc5f30e847baa0dfce9b607bae28b3be49b1bd7b81558d",
+      "src/tasks/stairs_cbf/hard_cases.py": "b20cd15228dcdfcc6ad16955b5177ff4c3c714237b73c9a0e02eb316ab90f430",
+      "src/tasks/stairs_cbf/mdp.py": "631a9fefcf2026521c1c43ecf2dc1851124ce47921a1ddf4191ae7db31475754",
+      "src/tasks/stairs_cbf/online.py": "0b53dd2d58a2bc4745cb523b73853f5af5f172a6406c7d121415ad9ee18aa90a",
+      "src/tasks/stairs_cbf/teleop_math.py": "8d11ab241cb539224b485d53d1939d0b173a678947412dd7ad6e657ccfcdbae8",
+      "src/tasks/stairs_cbf/terrain.py": "f24dcfc9fb2d364c42e1b872a787dd940d4abee1656d2e9a840c19828075bcf8",
+      "src/tasks/velocity/mdp/observations.py": "5e759917b7d3132b4bd7c640eae14d472f01b175f222d6358330ae9a159becd1"
+    },
+    "source_files": [
+      "docs/DEPLOYMENT_V21_PROTOCOL.md",
+      "src/tasks/velocity/mdp/observations.py",
+      "src/tasks/stairs_cbf/actions.py",
+      "src/tasks/stairs_cbf/command.py",
+      "src/tasks/stairs_cbf/config.py",
+      "src/tasks/stairs_cbf/deployment_context.py",
+      "src/tasks/stairs_cbf/hard_cases.py",
+      "src/tasks/stairs_cbf/mdp.py",
+      "src/tasks/stairs_cbf/online.py",
+      "src/tasks/stairs_cbf/teleop_math.py",
+      "src/tasks/stairs_cbf/terrain.py",
+      "experiments/scripts/evaluate_online_stairs.py",
+      "experiments/scripts/online_refine_stairs.py",
+      "experiments/scripts/calibrate_deployment_contexts_v21.py",
+      "experiments/scripts/refine_deployment_v21.py",
+      "experiments/scripts/specialist_v21_protocol.py",
+      "experiments/scripts/specialist_v21_tables.py",
+      "experiments/scripts/select_development_beta_v21.py",
+      "experiments/scripts/evaluate_learning_curve_v21.py",
+      "experiments/scripts/audit_deployment_v21.py",
+      "experiments/scripts/aggregate_deployment_v21.py",
+      "experiments/scripts/plot_deployment_v21.py",
+      "experiments/scripts/freeze_specialist_v21_protocol.py",
+      "experiments/scripts/run_specialist_calibration_v21.sh",
+      "experiments/scripts/run_specialist_v21.sh",
+      "experiments/scripts/run_specialist_queue_v21.sh",
+      "experiments/scripts/run_specialist_range_pilot_v21.sh",
+      "experiments/tests/test_specialist_v21.py"
+    ]
+  },
+  "status": "prospectively_frozen_before_base_only_calibration_and_development",
+  "training": {
+    "accepted_update_count_is_validity_gate": false,
+    "broad_d0_or_global_retention_bank": false,
+    "candidate_d0_paired_episodes": 128,
+    "candidate_evaluation_episodes_per_round": 384,
+    "candidate_fractions": [
+      0.5,
+      1.0,
+      1.5
+    ],
+    "confirmation_blocks": 3,
+    "confirmation_maximum_mean_fall_delta": 0.03,
+    "confirmation_mean_success_delta_strictly_positive": true,
+    "confirmation_minimum_positive_blocks": 2,
+    "confirmation_paired_episodes_per_block": 64,
+    "critic_uses_all_transitions": true,
+    "d0_retention_must_pass": true,
+    "dual_rollouts_per_round": 2,
+    "fixed_round_budget": 8,
+    "matched_success_actor_advantage_excluded_only_when_beta_positive": true,
+    "normal_failure_success_start_slots": [
+      40,
+      12,
+      12
+    ],
+    "rollout_steps_per_environment": 1024,
+    "screening_paired_episodes_per_candidate": 64,
+    "zero_retained_updates_are_valid_and_final_equals_pi0": true
+  }
+}
