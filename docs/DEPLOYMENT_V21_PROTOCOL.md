@@ -20,10 +20,13 @@ purity. Pilot 5 returned to command-side yaw and found three adjacent high-end
 near misses: one was a single fall short, one was 0.69 percentage points short
 on purity, and one was three falls short. Pilot 6 doubled the sample size and
 varied only persistent yaw bias; two mechanism-pure candidates missed the
-scaled fall gate by two and three falls. No adaptation, monitor, or audit was
-started. The current boundary is a seventh non-formal base-only confirmation
-with 256 episodes per candidate. It keeps a narrow persistent-bias sweep and
-adds one fixed low-amplitude yaw-pulse carrier with entirely fresh randomness.
+scaled fall gate by two and three falls. Pilot 7 added a fixed low-amplitude
+yaw-pulse carrier; candidates that reached the fall-count gate lost lateral
+purity, and pooled purity fell below the pulse-free pilot. No adaptation,
+monitor, or audit was started. The current boundary is an eighth non-formal
+base-only confirmation with 256 episodes per candidate. It disables all pulses
+and extends persistent yaw bias from 0.65 to 0.95 with entirely fresh
+randomness.
 
 本文记录 v21 的前瞻性实验设计。第一轮修正并预先冻结的 `L_dev` base-only sweep
 完成了全部 12 个候选，但因没有候选满足校准门槛而停止。随后一轮非正式 base-only
@@ -38,10 +41,11 @@ actuator 零偏移；它产生了明显的难度 cliff，但没有合格点：ma
 53.57% lateral purity，最接近目标机制的点成功率已低于 70%，purity 也仍低于 80%。
 pilot 5 回到 command-side yaw 后，在高端找到三个相邻近失配点：一个只差 1 次跌倒，
 一个 purity 只差 0.69 个百分点，另一个差 3 次跌倒。pilot 6 将样本数加倍并只改变
-持续 yaw bias；两个机制纯的候选分别比 scaled fall gate 少 2 次和 3 次跌倒。没有
-启动 adaptation、monitor 或 audit。当前边界是第七轮非正式 base-only confirmation：
-每候选 256 episodes，保留狭窄的持续 bias sweep，并加入一个固定的低幅 yaw-pulse
-carrier，使用全新随机数。
+持续 yaw bias；两个机制纯的候选分别比 scaled fall gate 少 2 次和 3 次跌倒。pilot 7
+加入固定低幅 yaw-pulse carrier 后，达到 fall-count 门槛的候选失去了 lateral purity，
+合并 purity 也低于无 pulse 的 pilot。没有启动 adaptation、monitor 或 audit。当前
+边界是第八轮非正式 base-only confirmation：每候选 256 episodes，关闭全部 pulse，
+把持续 yaw bias 从 0.65 扩展到 0.95，并使用全新随机数。
 
 ## 实验单位 / Experimental unit
 
@@ -68,7 +72,7 @@ claim. The ten formal contexts are:
 | Mode | Context | Primary frozen deployment shift |
 | --- | --- | --- |
 | Lateral | L1 | command delay + low-pass |
-| Lateral | L2 | persistent yaw bias + fixed yaw-pulse carrier |
+| Lateral | L2 | strong persistent yaw bias above centering authority |
 | Lateral | L3 | lateral bias + lateral pulse |
 | Lateral | L4 | weak centerline correction |
 | Lateral | L5 | moderate mixed lateral shift |
@@ -102,9 +106,11 @@ Pilot 5 returned to the higher-purity command-side yaw mechanism and found a
 narrow high-end near-qualifying cluster, but 128 episodes did not establish a
 strict qualifier. Pilot 6 doubled the sample size and removed pulse
 confounding. It produced two mechanism-pure candidates only two or three falls
-short of the scaled gate. Pilot 7 therefore retains persistent yaw bias as the
-only swept axis, narrows it to 0.50--0.72, and adds one fixed yaw-only pulse
-carrier (`0.24--0.50`) whose amplitude and timing never vary with severity. It
+short of the scaled gate. Pilot 7 retained persistent yaw bias as the only
+swept axis and added one fixed yaw-only pulse carrier. The carrier supplied
+failures but diluted purity, so it is rejected. Pilot 8 disables every pulse
+and extends the clean persistent-bias axis to 0.65--0.95, while all geometry,
+actuator, encoder, command dynamics, and centering terms remain fixed. It
 remains distinct from `L1` command latency, `L3` lateral commands, `L4`
 centering, and the `L5` mixed shift. It is base-policy range evidence, not
 formal selection.
