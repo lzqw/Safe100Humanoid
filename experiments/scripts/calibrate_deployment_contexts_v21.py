@@ -97,7 +97,15 @@ def main() -> None:
   if hashlib.sha256(frozen_protocol).hexdigest() != _sha256(protocol_path):
     raise RuntimeError("v21 calibration protocol differs from its committed blob")
   declared = protocol.get("calibration", {})
-  expected_revision: int | str = "range-pilot-1" if args.exploratory else 0
+  range_pilot = protocol.get("range_pilot", {})
+  pilot_id = range_pilot.get("pilot_id") if args.exploratory else None
+  if args.exploratory and (
+    not isinstance(pilot_id, int) or isinstance(pilot_id, bool) or pilot_id <= 0
+  ):
+    raise RuntimeError("v21 exploratory calibration lacks a valid pilot ID")
+  expected_revision: int | str = (
+    f"range-pilot-{pilot_id}" if args.exploratory else 0
+  )
   expected_status = (
     "base_policy_only_context_range_feasibility_pilot_not_formal"
     if args.exploratory
@@ -136,12 +144,12 @@ def main() -> None:
   if failures:
     raise RuntimeError(f"v21 calibration protocol mismatch: {failures}")
   if args.exploratory:
-    range_pilot = protocol.get("range_pilot", {})
     if (
       range_pilot.get("not_formal_context_selection") is not True
       or range_pilot.get("evaluate_every_declared_candidate") is not True
       or range_pilot.get("base_policy_only") is not True
       or range_pilot.get("adapted_policy_evaluations_used") is not False
+      or context_id not in range_pilot.get("contexts", [])
     ):
       raise RuntimeError("v21 exploratory calibration lacks a range-pilot seal")
   if not tracked_clean:

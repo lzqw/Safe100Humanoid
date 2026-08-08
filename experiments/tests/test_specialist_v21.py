@@ -22,6 +22,8 @@ from specialist_v21_protocol import (
   FORMAL_D0_EPISODES,
   FORMAL_MONITOR_EPISODES,
   FORMAL_TARGET_EPISODES,
+  RANGE_PILOT_CONTEXTS,
+  RANGE_PILOT_ID,
   V21_DEVELOPMENT_CONTEXTS,
   V21_FORMAL_CONTEXTS,
   confirmation_block_gate,
@@ -91,12 +93,12 @@ def test_v21_formal_family_primary_perturbations_are_distinct() -> None:
   assert contexts["L2"]["scenario"]["lateral_command_bias"] == 0.0
   assert contexts["L3"]["scenario"]["lateral_command_bias"] != 0.0
   assert contexts["L3"]["scenario"]["yaw_command_bias"] == 0.0
-  assert contexts["L4"]["scenario"]["centerline_lateral_gain"] == 0.08
+  assert contexts["L4"]["scenario"]["centerline_lateral_gain"] == 0.2
   assert contexts["L5"]["target"]["command_delay_s"] > 0.0
   assert contexts["C1"]["scenario"]["foot_friction"] == 0.25
   assert contexts["C2"]["scenario"]["left_response_scale"] != 1.0
-  assert contexts["C3"]["target"]["action_gain"] == 0.8
-  assert abs(contexts["C3"]["target"]["encoder_bias"]) == 0.03
+  assert contexts["C3"]["target"]["action_gain"] == 0.9
+  assert abs(contexts["C3"]["target"]["encoder_bias"]) == 0.0162
   assert contexts["C4"]["target"]["command_forward_scale"] == 1.2
   assert contexts["C5"]["scenario"]["contact_observation_delay_steps"] == 2
 
@@ -106,11 +108,21 @@ def test_v21_lateral_range_pilot_uses_frozen_difficulty_carriers() -> None:
     prefix = int(V21_CONTEXT_SPECS[context_id]["candidate_seed_prefix"])
     first = generate_v21_specialist_context(context_id, prefix * 100 + 8)
     last = generate_v21_specialist_context(context_id, prefix * 100 + 19)
-    assert first["target"]["action_delay_steps"] == 1
-    assert last["target"]["action_delay_steps"] == 1
     assert len(set(first["target"]["rise_profile"])) > 1
     assert len(set(first["target"]["tread_profile"])) > 1
     assert any(value != 0.0 for value in first["target"]["action_bias"])
+  for context_id in ("L1", "L3"):
+    prefix = int(V21_CONTEXT_SPECS[context_id]["candidate_seed_prefix"])
+    first = generate_v21_specialist_context(context_id, prefix * 100 + 8)
+    last = generate_v21_specialist_context(context_id, prefix * 100 + 19)
+    assert first["target"]["action_delay_steps"] == 1
+    assert last["target"]["action_delay_steps"] == 1
+  for context_id in ("L_dev", "L2", "L4", "L5"):
+    prefix = int(V21_CONTEXT_SPECS[context_id]["candidate_seed_prefix"])
+    first = generate_v21_specialist_context(context_id, prefix * 100 + 8)
+    last = generate_v21_specialist_context(context_id, prefix * 100 + 19)
+    assert first["target"]["action_delay_steps"] == 0
+    assert last["target"]["action_delay_steps"] == 0
   for context_id in ("L1", "L4"):
     prefix = int(V21_CONTEXT_SPECS[context_id]["candidate_seed_prefix"])
     first = generate_v21_specialist_context(context_id, prefix * 100 + 8)
@@ -127,6 +139,52 @@ def test_v21_lateral_range_pilot_uses_frozen_difficulty_carriers() -> None:
     assert first["scenario"]["yaw_pulse_max"] == last["scenario"][
       "yaw_pulse_max"
     ]
+
+
+def test_v21_range_pilot_2_is_fresh_and_restricted_to_failed_families() -> None:
+  assert RANGE_PILOT_ID == 2
+  assert RANGE_PILOT_CONTEXTS == ("L_dev", "L2", "L4", "L5", "C3")
+  assert [
+    V21_CONTEXT_SPECS[context_id]["candidate_seed_prefix"]
+    for context_id in CONTEXTS
+  ] == list(range(131, 143))
+
+
+def test_v21_range_pilot_2_isolates_failed_family_severity_axes() -> None:
+  contexts = {}
+  for context_id in RANGE_PILOT_CONTEXTS:
+    prefix = int(V21_CONTEXT_SPECS[context_id]["candidate_seed_prefix"])
+    contexts[context_id] = (
+      generate_v21_specialist_context(context_id, prefix * 100 + 8),
+      generate_v21_specialist_context(context_id, prefix * 100 + 19),
+    )
+  for context_id in ("L_dev", "L2", "L4"):
+    first, last = contexts[context_id]
+    for field in (
+      "command_delay_s",
+      "command_low_pass_s",
+      "action_gain",
+      "action_bias",
+      "encoder_bias",
+    ):
+      assert first["target"][field] == last["target"][field]
+  l2_first, l2_last = contexts["L2"]
+  assert abs(l2_last["scenario"]["yaw_command_bias"]) > abs(
+    l2_first["scenario"]["yaw_command_bias"]
+  )
+  l4_first, l4_last = contexts["L4"]
+  assert l4_last["scenario"]["centerline_lateral_gain"] < l4_first[
+    "scenario"
+  ]["centerline_lateral_gain"]
+  l5_first, l5_last = contexts["L5"]
+  assert l5_first["target"]["command_delay_s"] < l5_last["target"][
+    "command_delay_s"
+  ]
+  c3_first, c3_last = contexts["C3"]
+  assert c3_first["target"]["action_gain"] == 0.916
+  assert c3_last["target"]["action_gain"] == 0.9
+  assert abs(c3_first["target"]["encoder_bias"]) == 0.014
+  assert abs(c3_last["target"]["encoder_bias"]) == 0.0162
 
 
 def test_v21_confirmation_uses_three_independent_positive_block_rule() -> None:

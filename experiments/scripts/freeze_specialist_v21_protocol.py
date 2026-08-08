@@ -37,6 +37,8 @@ from specialist_v21_protocol import (
   FORMAL_TARGET_EPISODES,
   POLICY_METHOD,
   PROTOCOL_ID,
+  RANGE_PILOT_CONTEXTS,
+  RANGE_PILOT_ID,
   TELEMETRY_ENVIRONMENT_ID_PER_BATCH,
   V21_CONTEXT_SPECS,
   V21_DEVELOPMENT_CONTEXTS,
@@ -402,6 +404,15 @@ def _range_pilot(args: argparse.Namespace) -> dict[str, Any]:
   payload = _precalibration(args)
   repo = args.repo.resolve()
   current_commit = _git_output(repo, "rev-parse", "HEAD")
+  pilot_contexts = tuple(args.pilot_contexts)
+  if args.pilot_id != RANGE_PILOT_ID or pilot_contexts != RANGE_PILOT_CONTEXTS:
+    raise ValueError(
+      "v21 range-pilot identity or contexts differ from the source freeze"
+    )
+  if len(set(pilot_contexts)) != len(pilot_contexts) or not set(
+    pilot_contexts
+  ).issubset(CONTEXTS):
+    raise ValueError("v21 range-pilot contexts are duplicated or unknown")
   failed_protocol_path = args.failed_protocol.resolve()
   failure_amendment_path = args.calibration_failure_amendment.resolve()
   failure_progress_path = args.calibration_failure_progress.resolve()
@@ -420,14 +431,43 @@ def _range_pilot(args: argparse.Namespace) -> dict[str, Any]:
     or any(attempt.get("qualifies") for attempt in failure_progress["attempts"])
   ):
     raise RuntimeError("invalid v21 failed-calibration evidence boundary")
-  payload["protocol_revision"] = "range-pilot-1"
+  prior_protocol_path = args.prior_pilot_protocol.resolve()
+  prior_summary_path = args.prior_pilot_summary.resolve()
+  prior_protocol = json.loads(prior_protocol_path.read_text())
+  prior_summary = json.loads(prior_summary_path.read_text())
+  if (
+    prior_protocol.get("protocol_id") != PROTOCOL_ID
+    or prior_protocol.get("protocol_revision")
+    != f"range-pilot-{args.pilot_id - 1}"
+    or prior_summary.get("protocol_id") != PROTOCOL_ID
+    or prior_summary.get("stage")
+    != "base_policy_only_context_range_feasibility_pilot"
+    or prior_summary.get("formal_context_selection") is not False
+    or prior_summary.get("adaptation_process_started") is not False
+    or prior_summary.get("adapted_policy_outcomes_observed") is not False
+    or prior_summary.get("contexts_without_qualifier") != list(pilot_contexts)
+    or prior_summary.get("prospective_protocol", {}).get("sha256")
+    != _sha256(prior_protocol_path)
+  ):
+    raise RuntimeError("invalid v21 prior range-pilot evidence boundary")
+  payload["protocol_revision"] = f"range-pilot-{args.pilot_id}"
   payload["status"] = (
     "base_policy_only_context_range_feasibility_pilot_not_formal"
   )
   payload["calibration"]["first_qualifying_candidate_is_frozen"] = False
   payload["calibration"]["episodes_per_candidate"] = args.pilot_episodes
   payload["calibration"]["eval_batch_size"] = args.pilot_batch_size
+  payload["calibration"]["candidate_seeds"] = {
+    context_id: list(CONTEXT_CALIBRATION_CANDIDATE_SEEDS[context_id])
+    for context_id in pilot_contexts
+  }
+  payload["calibration"]["evaluation_seed_bases"] = {
+    context_id: CONTEXT_CALIBRATION_EVALUATION_SEEDS[context_id]
+    for context_id in pilot_contexts
+  }
   payload["range_pilot"] = {
+    "pilot_id": args.pilot_id,
+    "contexts": list(pilot_contexts),
     "not_formal_context_selection": True,
     "evaluate_every_declared_candidate": True,
     "base_policy_only": True,
@@ -444,11 +484,18 @@ def _range_pilot(args: argparse.Namespace) -> dict[str, Any]:
     "failure_progress": _verify_protocol_blob(
       repo, failure_progress_path, current_commit
     ),
+    "prior_pilot_protocol": _verify_protocol_blob(
+      repo, prior_protocol_path, args.prior_pilot_commit
+    ),
+    "prior_pilot_summary": _verify_protocol_blob(
+      repo, prior_summary_path, args.prior_pilot_commit
+    ),
     "range_changes_may_use_only_base_policy_evidence": True,
     "replacement_formal_calibration_requires_new_randomness": True,
   }
   payload["fresh_evidence_boundary"] = {
     "prior_base_only_range_failure_seen": True,
+    "prior_base_only_range_pilot_seen": True,
     "adapted_policy_outcomes_seen": False,
     "formal_adaptation_or_audit_outcomes_seen": False,
     "pilot_is_not_formal_context_selection": True,
@@ -521,6 +568,13 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--failed-protocol", type=Path)
   parser.add_argument("--calibration-failure-amendment", type=Path)
   parser.add_argument("--calibration-failure-progress", type=Path)
+  parser.add_argument("--prior-pilot-protocol", type=Path)
+  parser.add_argument("--prior-pilot-summary", type=Path)
+  parser.add_argument("--prior-pilot-commit")
+  parser.add_argument("--pilot-id", type=int, default=RANGE_PILOT_ID)
+  parser.add_argument(
+    "--pilot-contexts", nargs="+", default=list(RANGE_PILOT_CONTEXTS)
+  )
   parser.add_argument("--pilot-episodes", type=int, default=128)
   parser.add_argument("--pilot-batch-size", type=int, default=128)
   return parser.parse_args()
@@ -539,6 +593,9 @@ def main() -> None:
       "failed_protocol",
       "calibration_failure_amendment",
       "calibration_failure_progress",
+      "prior_pilot_protocol",
+      "prior_pilot_summary",
+      "prior_pilot_commit",
     ),
     "development": ("input_protocol", "input_commit", "context_dir"),
     "formal": (
