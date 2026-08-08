@@ -89,8 +89,10 @@ def test_v21_formal_family_primary_perturbations_are_distinct() -> None:
       context_id, prefix * 100 + 19
     )
   assert contexts["L1"]["target"]["command_delay_s"] == 0.38
-  assert contexts["L2"]["scenario"]["yaw_command_bias"] != 0.0
+  assert contexts["L2"]["scenario"]["yaw_command_bias"] == 0.0
   assert contexts["L2"]["scenario"]["lateral_command_bias"] == 0.0
+  assert contexts["L2"]["target"]["action_bias"][2] == -0.45
+  assert contexts["L2"]["target"]["action_bias"][8] == -0.45
   assert contexts["L3"]["scenario"]["lateral_command_bias"] != 0.0
   assert contexts["L3"]["scenario"]["yaw_command_bias"] == 0.0
   assert contexts["L4"]["scenario"]["centerline_lateral_gain"] == 0.2
@@ -128,8 +130,12 @@ def test_v21_lateral_range_pilot_uses_frozen_difficulty_carriers() -> None:
   l2_last = generate_v21_specialist_context("L2", l2_prefix * 100 + 19)
   assert len(set(l2_first["target"]["rise_profile"])) == 1
   assert len(set(l2_first["target"]["tread_profile"])) == 1
-  assert not any(l2_first["target"]["action_bias"])
-  assert not any(l2_last["target"]["action_bias"])
+  assert {
+    index for index, value in enumerate(l2_first["target"]["action_bias"]) if value
+  } == {2, 8}
+  assert {
+    index for index, value in enumerate(l2_last["target"]["action_bias"]) if value
+  } == {2, 8}
   for context_id in ("L1", "L4"):
     prefix = int(V21_CONTEXT_SPECS[context_id]["candidate_seed_prefix"])
     first = generate_v21_specialist_context(context_id, prefix * 100 + 8)
@@ -148,16 +154,16 @@ def test_v21_lateral_range_pilot_uses_frozen_difficulty_carriers() -> None:
     ]
 
 
-def test_v21_replacement_calibration_has_a_fresh_seed_namespace() -> None:
-  assert RANGE_PILOT_ID == 3
+def test_v21_recovery_pilot_has_a_fresh_seed_namespace() -> None:
+  assert RANGE_PILOT_ID == 4
   assert RANGE_PILOT_CONTEXTS == ("L2",)
   assert [
     V21_CONTEXT_SPECS[context_id]["candidate_seed_prefix"]
     for context_id in CONTEXTS
-  ] == list(range(171, 183))
+  ] == list(range(191, 203))
 
 
-def test_v21_range_pilot_3_isolates_the_L2_yaw_severity_axis() -> None:
+def test_v21_range_pilot_4_isolates_the_L2_hip_yaw_offset_axis() -> None:
   prefix = int(V21_CONTEXT_SPECS["L2"]["candidate_seed_prefix"])
   l2_first = generate_v21_specialist_context("L2", prefix * 100 + 8)
   l2_last = generate_v21_specialist_context("L2", prefix * 100 + 19)
@@ -167,18 +173,17 @@ def test_v21_range_pilot_3_isolates_the_L2_yaw_severity_axis() -> None:
     "command_delay_s",
     "command_low_pass_s",
     "action_gain",
-    "action_bias",
     "encoder_bias",
   ):
     assert l2_first["target"][field] == l2_last["target"][field]
   assert l2_first["target"]["action_gain"] == 1.0
   assert l2_first["target"]["encoder_bias"] == 0.0
-  assert abs(l2_last["scenario"]["yaw_command_bias"]) > abs(
-    l2_first["scenario"]["yaw_command_bias"]
-  )
-  assert l2_last["scenario"]["yaw_pulse_max"] > l2_first["scenario"][
-    "yaw_pulse_max"
-  ]
+  assert l2_first["target"]["action_bias"][2] == -0.05
+  assert l2_first["target"]["action_bias"][8] == -0.05
+  assert l2_last["target"]["action_bias"][2] == -0.45
+  assert l2_last["target"]["action_bias"][8] == -0.45
+  assert l2_first["scenario"]["yaw_command_bias"] == 0.0
+  assert l2_last["scenario"]["yaw_pulse_max"] == 0.0
 
 
 def test_v21_confirmation_uses_three_independent_positive_block_rule() -> None:
@@ -323,3 +328,4 @@ def test_v21_replacement_freeze_binds_all_base_only_range_evidence() -> None:
   assert '"all_twelve_context_families_feasible": True' in freezer
   assert '"adapted_policy_outcomes_used_for_range_design": False' in freezer
   assert '"replacement_base_only_calibration_outcomes_seen": False' in freezer
+  assert '"replacement_calibration_failure_amendment"' in freezer

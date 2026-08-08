@@ -54,21 +54,21 @@ CALIBRATION_EPISODES = 512
 CALIBRATION_BATCH_SIZE = 128
 TELEMETRY_ENVIRONMENT_ID_PER_BATCH = 0
 CONTEXTS = (*V21_DEVELOPMENT_CONTEXTS, *V21_FORMAL_CONTEXTS)
-RANGE_PILOT_ID = 3
+RANGE_PILOT_ID = 4
 RANGE_PILOT_CONTEXTS = ("L2",)
 CONTEXT_ADAPTATION_SEEDS = {
-  "L_dev": 61_001,
-  "C_dev": 61_002,
-  "L1": 61_101,
-  "L2": 61_102,
-  "L3": 61_103,
-  "L4": 61_104,
-  "L5": 61_105,
-  "C1": 61_201,
-  "C2": 61_202,
-  "C3": 61_203,
-  "C4": 61_204,
-  "C5": 61_205,
+  "L_dev": 71_001,
+  "C_dev": 71_002,
+  "L1": 71_101,
+  "L2": 71_102,
+  "L3": 71_103,
+  "L4": 71_104,
+  "L5": 71_105,
+  "C1": 71_201,
+  "C2": 71_202,
+  "C3": 71_203,
+  "C4": 71_204,
+  "C5": 71_205,
 }
 CONTEXT_CALIBRATION_CANDIDATE_SEEDS = {
   context_id: tuple(
@@ -80,22 +80,22 @@ CONTEXT_CALIBRATION_CANDIDATE_SEEDS = {
   for context_id in CONTEXTS
 }
 CONTEXT_CALIBRATION_EVALUATION_SEEDS = {
-  context_id: 26_100_000 + 10_000 * index
+  context_id: 31_100_000 + 10_000 * index
   for index, context_id in enumerate(CONTEXTS)
 }
 CONTEXT_FORMAL_AUDIT_SEEDS = {
-  context_id: 27_100_000 + 10_000 * index
+  context_id: 32_100_000 + 10_000 * index
   for index, context_id in enumerate(V21_FORMAL_CONTEXTS)
 }
 CONTEXT_DEVELOPMENT_SELECTION_SEEDS = {
-  context_id: 26_900_000 + 10_000 * index
+  context_id: 31_900_000 + 10_000 * index
   for index, context_id in enumerate(V21_DEVELOPMENT_CONTEXTS)
 }
 CONTEXT_MONITOR_SEEDS = {
-  context_id: 28_100_000 + 10_000 * index
+  context_id: 33_100_000 + 10_000 * index
   for index, context_id in enumerate(CONTEXTS)
 }
-FORMAL_BOOTSTRAP_SEED = 29_100_000
+FORMAL_BOOTSTRAP_SEED = 34_100_000
 
 
 @dataclass(frozen=True)

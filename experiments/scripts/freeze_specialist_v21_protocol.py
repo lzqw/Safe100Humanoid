@@ -576,6 +576,27 @@ def _range_pilot(args: argparse.Namespace) -> dict[str, Any]:
   prior_next_contexts = list(
     dict.fromkeys([*without_qualifier, *robustness_confirmation])
   )
+  replacement_protocol_path = args.replacement_calibration_protocol.resolve()
+  replacement_failure_path = (
+    args.replacement_calibration_failure_amendment.resolve()
+  )
+  replacement_protocol = json.loads(replacement_protocol_path.read_text())
+  replacement_failure = json.loads(replacement_failure_path.read_text())
+  if (
+    replacement_protocol.get("protocol_id") != PROTOCOL_ID
+    or replacement_protocol.get("protocol_revision") != 0
+    or replacement_failure.get("protocol_id") != PROTOCOL_ID
+    or replacement_failure.get("stage")
+    != "replacement_base_policy_only_calibration"
+    or replacement_failure.get("failed_context_id") not in pilot_contexts
+    or replacement_failure.get("base_policy_calibration_outcomes_observed")
+    is not True
+    or replacement_failure.get("adaptation_process_started") is not False
+    or replacement_failure.get("adapted_policy_outcomes_observed") is not False
+    or replacement_failure.get("prospective_protocol", {}).get("sha256")
+    != _sha256(replacement_protocol_path)
+  ):
+    raise RuntimeError("invalid v21 replacement-calibration failure boundary")
   if (
     prior_protocol.get("protocol_id") != PROTOCOL_ID
     or prior_protocol.get("protocol_revision")
@@ -586,8 +607,8 @@ def _range_pilot(args: argparse.Namespace) -> dict[str, Any]:
     or prior_summary.get("formal_context_selection") is not False
     or prior_summary.get("adaptation_process_started") is not False
     or prior_summary.get("adapted_policy_outcomes_observed") is not False
-    or prior_summary.get("formal_calibration_ready") is not False
-    or prior_next_contexts != list(pilot_contexts)
+    or prior_summary.get("formal_calibration_ready") is not True
+    or prior_next_contexts != []
     or prior_summary.get("prospective_protocol", {}).get("sha256")
     != _sha256(prior_protocol_path)
   ):
@@ -632,12 +653,19 @@ def _range_pilot(args: argparse.Namespace) -> dict[str, Any]:
     "prior_pilot_summary": _verify_protocol_blob(
       repo, prior_summary_path, args.prior_pilot_commit
     ),
+    "replacement_calibration_protocol": _verify_protocol_blob(
+      repo, replacement_protocol_path, args.replacement_calibration_commit
+    ),
+    "replacement_calibration_failure_amendment": _verify_protocol_blob(
+      repo, replacement_failure_path, args.replacement_calibration_commit
+    ),
     "range_changes_may_use_only_base_policy_evidence": True,
     "replacement_formal_calibration_requires_new_randomness": True,
   }
   payload["fresh_evidence_boundary"] = {
     "prior_base_only_range_failure_seen": True,
     "prior_base_only_range_pilot_seen": True,
+    "replacement_base_only_calibration_failure_seen": True,
     "adapted_policy_outcomes_seen": False,
     "formal_adaptation_or_audit_outcomes_seen": False,
     "pilot_is_not_formal_context_selection": True,
@@ -719,6 +747,11 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--prior-pilot-protocol", type=Path)
   parser.add_argument("--prior-pilot-summary", type=Path)
   parser.add_argument("--prior-pilot-commit")
+  parser.add_argument("--replacement-calibration-protocol", type=Path)
+  parser.add_argument(
+    "--replacement-calibration-failure-amendment", type=Path
+  )
+  parser.add_argument("--replacement-calibration-commit")
   parser.add_argument("--range-pilot-protocols", nargs="+", type=Path)
   parser.add_argument("--range-pilot-summaries", nargs="+", type=Path)
   parser.add_argument("--range-pilot-commits", nargs="+")
@@ -747,6 +780,9 @@ def main() -> None:
       "prior_pilot_protocol",
       "prior_pilot_summary",
       "prior_pilot_commit",
+      "replacement_calibration_protocol",
+      "replacement_calibration_failure_amendment",
+      "replacement_calibration_commit",
     ),
     "replacement-precalibration": (
       "base_checkpoint_reference",
