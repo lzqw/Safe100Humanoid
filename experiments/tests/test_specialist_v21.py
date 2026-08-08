@@ -107,7 +107,7 @@ def test_v21_formal_family_primary_perturbations_are_distinct() -> None:
   assert contexts["C2"]["scenario"]["left_response_scale"] != 1.0
   assert contexts["C3"]["target"]["action_gain"] == 0.9
   assert abs(contexts["C3"]["target"]["encoder_bias"]) == 0.0162
-  assert contexts["C4"]["target"]["command_forward_scale"] == 1.2
+  assert contexts["C4"]["target"]["command_forward_scale"] == 1.101
   assert contexts["C5"]["scenario"]["contact_observation_delay_steps"] == 2
 
 
@@ -156,13 +156,13 @@ def test_v21_lateral_range_pilot_uses_frozen_difficulty_carriers() -> None:
     ]
 
 
-def test_v21_replacement_calibration_has_a_fresh_seed_namespace() -> None:
-  assert RANGE_PILOT_ID == 11
-  assert RANGE_PILOT_CONTEXTS == ("L2",)
+def test_v21_c4_range_pilot_has_a_fresh_seed_namespace() -> None:
+  assert RANGE_PILOT_ID == 12
+  assert RANGE_PILOT_CONTEXTS == ("C4",)
   assert [
     V21_CONTEXT_SPECS[context_id]["candidate_seed_prefix"]
     for context_id in CONTEXTS
-  ] == list(range(351, 363))
+  ] == list(range(371, 383))
 
 
 def test_v21_replacement_l2_varies_only_physical_lateral_clearance() -> None:
@@ -214,6 +214,20 @@ def test_v21_replacement_l2_varies_only_physical_lateral_clearance() -> None:
   assert l2_first["scenario"]["centerline_heading_gain"] == 1.40
   assert l2_first["scenario"]["centerline_max_yaw_velocity"] == 0.45
   assert l2_last["scenario"]["centerline_max_yaw_velocity"] == 0.45
+
+
+def test_v21_range_pilot_12_finely_brackets_c4_cliff() -> None:
+  prefix = int(V21_CONTEXT_SPECS["C4"]["candidate_seed_prefix"])
+  first = generate_v21_specialist_context("C4", prefix * 100 + 8)
+  last = generate_v21_specialist_context("C4", prefix * 100 + 19)
+  assert first["scenario"]["foot_friction"] == 0.4626
+  assert last["scenario"]["foot_friction"] == 0.4465
+  assert first["target"]["command_forward_scale"] == 1.0884
+  assert last["target"]["command_forward_scale"] == 1.101
+  assert first["target"]["command_low_pass_s"] == 0.0732
+  assert last["target"]["command_low_pass_s"] == 0.083
+  assert first["target"]["action_gain"] == 0.9192
+  assert last["target"]["action_gain"] == 0.908
 
 
 def test_v21_confirmation_uses_three_independent_positive_block_rule() -> None:

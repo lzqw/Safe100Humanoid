@@ -37,9 +37,13 @@ of 71.33%, so that mechanism is rejected. Pilot 11 then held command, feedback,
 action, encoder, rise, and tread terms nominal while narrowing only the physical
 stair half-width from 1.00 to 0.45 m. Three contiguous candidates at 1.00,
 0.95, and 0.90 m passed every scaled gate; the full sweep had 95.17% pooled
-target purity. The current boundary is a prospectively frozen replacement
-512-episode base-only calibration. Its `L2` family finely sweeps 1.00--0.89 m
-with entirely fresh candidate and evaluation randomness.
+target purity. The next 512-episode replacement calibration confirmed the new
+`L2` mechanism and froze ten contexts, but stopped at `C4`. Its coarse grid
+jumped from 91 falls at severity 0.363636 to 358/512 successes at severity
+0.454545, exactly one success below the lower gate; every stronger point was
+over-difficult. No adaptation started. The current boundary is a non-formal,
+base-policy-only Pilot 12 that finely scans the same `C4` mechanism over the
+original severity interval 0.38--0.45 with entirely fresh randomness.
 
 本文记录 v21 的前瞻性实验设计。第一轮修正并预先冻结的 `L_dev` base-only sweep
 完成了全部 12 个候选，但因没有候选满足校准门槛而停止。随后一轮非正式 base-only
@@ -67,8 +71,11 @@ pilot 10 恢复正常反馈、移除 raw yaw bias，只把有界的视觉 headin
 71.33%，因此该机制也被否决。pilot 11 随后保持 command、feedback、action、encoder、
 rise 和 tread 为 nominal，只把物理 stair half-width 从 1.00 缩小到 0.45 m。
 1.00、0.95、0.90 m 三个连续候选通过全部 scaled gate，整条 sweep 的目标池化 purity
-为 95.17%。当前边界是前瞻冻结的 replacement 512-episode base-only calibration；
-其中 `L2` 使用全新的候选与评估随机数，在 1.00--0.89 m 内进行细扫。
+为 95.17%。随后 512-episode replacement calibration 验证了新 `L2` 机制并冻结 10 个
+context，但在 `C4` 停止：粗网格从 severity 0.363636 的 91 次跌倒跳到 severity
+0.454545 的 358/512 次成功，距离成功率下限恰好少 1 次成功；更强的点全部过难。
+没有启动 adaptation。当前边界是非正式、仅基础策略的 Pilot 12：保留相同 `C4`
+机制，在原始 severity 0.38--0.45 内细扫，并使用全新随机数。
 
 ## 实验单位 / Experimental unit
 
@@ -148,9 +155,15 @@ drove tread geometry, root/foot edge-clearance telemetry, and the
 geometry-derived classifier threshold. Candidates at 1.00, 0.95, and 0.90 m
 all qualified, followed by a mechanism-pure over-difficult transition at
 0.85 m. This was base-policy range evidence, not formal selection. The
-replacement calibration preserves this mechanism, narrows the prospective
-`L2` sweep to 1.00--0.89 m, uses 512 episodes per candidate, and replaces every
-candidate and evaluation seed before any new outcome is observed.
+replacement calibration preserved this mechanism, narrowed `L2` to
+1.00--0.89 m, and replaced every candidate and evaluation seed. `L2` then
+qualified immediately at 512 episodes with 75.59% success, 125 falls, and
+84.80% target purity. Nine other contexts also froze, but `C4` exposed a coarse
+difficulty cliff: severity 0.363636 had 91 falls, while severity 0.454545 was
+one success below the lower gate and the stronger half of the sweep was far too
+difficult. Pilot 12 therefore keeps the same mechanism and finely brackets only
+the original severity interval 0.38--0.45. It remains base-policy-only range
+evidence and uses fresh randomness before any new outcome is observed.
 
 ## Algorithm
 

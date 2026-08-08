@@ -6,7 +6,7 @@ REPO="${SAFE100_V21_REPO:-$ROOT/worktrees/v21_range_pilot}"
 PYTHON="${SAFE100_PYTHON:-$ROOT/workspace/conda_env/bin/python}"
 BASELINE="${SAFE100_BASELINE_CHECKPOINT:-$ROOT/artifacts/retention_v13/arm_b_state_retention/accepted_final.pt}"
 PROTOCOL_COMMIT="${SAFE100_V21_PROTOCOL_COMMIT:?set SAFE100_V21_PROTOCOL_COMMIT}"
-PROTOCOL="${SAFE100_V21_PROTOCOL_FILE:-$REPO/results/online/specialist_v21/protocol_range_pilot_11.json}"
+PROTOCOL="${SAFE100_V21_PROTOCOL_FILE:-$REPO/results/online/specialist_v21/protocol_range_pilot_12.json}"
 
 mapfile -t PILOT_METADATA < <(
   "$PYTHON" -c '

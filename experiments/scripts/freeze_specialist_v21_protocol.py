@@ -601,7 +601,7 @@ def _range_pilot(args: argparse.Namespace) -> dict[str, Any]:
     != _sha256(replacement_protocol_path)
   ):
     raise RuntimeError("invalid v21 replacement-calibration failure boundary")
-  if args.pilot_id == 4:
+  if args.pilot_id in (4, 12):
     prior_range_boundary_valid = (
       prior_summary.get("formal_calibration_ready") is True
       and prior_next_contexts == []
