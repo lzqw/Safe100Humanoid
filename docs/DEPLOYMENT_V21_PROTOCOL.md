@@ -7,19 +7,21 @@ prospectively frozen `L_dev` base-only sweep completed all 12 candidates and
 stopped because none satisfied the calibration gates. A subsequent non-formal
 base-only range pilot completed all 12 families: `C_dev`, `L1`, `L3`, `C1`,
 `C2`, `C4`, and `C5` produced qualifiers, while `L_dev`, `L2`, `L4`, `L5`, and
-`C3` did not. Both immutable results are range evidence, not algorithm results;
-no development or formal adaptation, monitor, or audit was started. The
-current boundary is a second base-only pilot restricted to those five failed
-families, explicitly excluded from formal context selection and using fresh
-randomness.
+`C3` did not. Pilot 2 then found qualifiers for all five failed families, but
+the only `L2` qualifier sat exactly on two gates and was not treated as robust.
+These immutable results are range evidence, not algorithm results; no
+development or formal adaptation, monitor, or audit was started. The current
+boundary is a third base-only pilot restricted to `L2`, explicitly excluded
+from formal context selection and using fresh randomness.
 
 本文记录 v21 的前瞻性实验设计。第一轮修正并预先冻结的 `L_dev` base-only sweep
 完成了全部 12 个候选，但因没有候选满足校准门槛而停止。随后一轮非正式 base-only
 范围 pilot 完成了全部 12 个 family：`C_dev`、`L1`、`L3`、`C1`、`C2`、`C4`、
-`C5` 找到了合格候选，`L_dev`、`L2`、`L4`、`L5`、`C3` 未找到。两轮不可变结果
-都只是范围证据，不是算法结果；尚未启动 development/formal adaptation、monitor 或
-audit。当前边界是仅针对上述 5 个失败 family 的第二轮 base-only pilot；它明确不属于
-formal context selection，并使用全新随机数。
+`C5` 找到了合格候选，`L_dev`、`L2`、`L4`、`L5`、`C3` 未找到。随后 pilot 2
+为这 5 个 family 都找到了合格点，但 `L2` 的唯一合格点恰好压在两条
+门槛上，因此不视为稳健。这些不可变结果都只是范围证据，不是算法结果；尚未启动
+development/formal adaptation、monitor 或 audit。当前边界是仅针对 `L2` 的第三轮
+base-only pilot；它明确不属于 formal context selection，并使用全新随机数。
 
 ## 实验单位 / Experimental unit
 
@@ -68,9 +70,12 @@ that the shared geometry/actuator carrier could dilute lateral purity in
 `C3` crossed a sharp action-gain/encoder-bias difficulty cliff. Pilot 2 holds
 command dynamics and low-amplitude actuator terms fixed in the first three
 families so their named lateral mechanism drives severity, lightens the whole
-`L5` carrier, and finely brackets the observed `C3` cliff. Pilot observations
-may revise ranges only. Replacement formal calibration must freeze another
-entirely new candidate and evaluation namespace before it starts.
+`L5` carrier, and finely brackets the observed `C3` cliff. Pilot 2 confirmed
+those four revisions but left `L2` on a two-gate boundary. Pilot 3 therefore
+removes the remaining geometry/action/encoder carrier from `L2` and strengthens
+only its yaw-dominant command disturbance. Pilot observations may revise ranges
+only. Replacement formal calibration must freeze another entirely new
+candidate and evaluation namespace before it starts.
 
 ## Algorithm
 

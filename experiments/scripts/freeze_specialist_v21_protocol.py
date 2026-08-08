@@ -435,6 +435,17 @@ def _range_pilot(args: argparse.Namespace) -> dict[str, Any]:
   prior_summary_path = args.prior_pilot_summary.resolve()
   prior_protocol = json.loads(prior_protocol_path.read_text())
   prior_summary = json.loads(prior_summary_path.read_text())
+  without_qualifier = prior_summary.get("contexts_without_qualifier", [])
+  robustness_confirmation = prior_summary.get(
+    "contexts_requiring_robustness_confirmation", []
+  )
+  if not isinstance(without_qualifier, list) or not isinstance(
+    robustness_confirmation, list
+  ):
+    raise RuntimeError("invalid v21 prior range-pilot next-context lists")
+  prior_next_contexts = list(
+    dict.fromkeys([*without_qualifier, *robustness_confirmation])
+  )
   if (
     prior_protocol.get("protocol_id") != PROTOCOL_ID
     or prior_protocol.get("protocol_revision")
@@ -445,7 +456,8 @@ def _range_pilot(args: argparse.Namespace) -> dict[str, Any]:
     or prior_summary.get("formal_context_selection") is not False
     or prior_summary.get("adaptation_process_started") is not False
     or prior_summary.get("adapted_policy_outcomes_observed") is not False
-    or prior_summary.get("contexts_without_qualifier") != list(pilot_contexts)
+    or prior_summary.get("formal_calibration_ready") is not False
+    or prior_next_contexts != list(pilot_contexts)
     or prior_summary.get("prospective_protocol", {}).get("sha256")
     != _sha256(prior_protocol_path)
   ):

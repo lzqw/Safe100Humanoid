@@ -104,7 +104,7 @@ def test_v21_formal_family_primary_perturbations_are_distinct() -> None:
 
 
 def test_v21_lateral_range_pilot_uses_frozen_difficulty_carriers() -> None:
-  for context_id in ("L_dev", "L1", "L2", "L3", "L4", "L5"):
+  for context_id in ("L_dev", "L1", "L3", "L4", "L5"):
     prefix = int(V21_CONTEXT_SPECS[context_id]["candidate_seed_prefix"])
     first = generate_v21_specialist_context(context_id, prefix * 100 + 8)
     last = generate_v21_specialist_context(context_id, prefix * 100 + 19)
@@ -123,6 +123,13 @@ def test_v21_lateral_range_pilot_uses_frozen_difficulty_carriers() -> None:
     last = generate_v21_specialist_context(context_id, prefix * 100 + 19)
     assert first["target"]["action_delay_steps"] == 0
     assert last["target"]["action_delay_steps"] == 0
+  l2_prefix = int(V21_CONTEXT_SPECS["L2"]["candidate_seed_prefix"])
+  l2_first = generate_v21_specialist_context("L2", l2_prefix * 100 + 8)
+  l2_last = generate_v21_specialist_context("L2", l2_prefix * 100 + 19)
+  assert len(set(l2_first["target"]["rise_profile"])) == 1
+  assert len(set(l2_first["target"]["tread_profile"])) == 1
+  assert not any(l2_first["target"]["action_bias"])
+  assert not any(l2_last["target"]["action_bias"])
   for context_id in ("L1", "L4"):
     prefix = int(V21_CONTEXT_SPECS[context_id]["candidate_seed_prefix"])
     first = generate_v21_specialist_context(context_id, prefix * 100 + 8)
@@ -141,50 +148,37 @@ def test_v21_lateral_range_pilot_uses_frozen_difficulty_carriers() -> None:
     ]
 
 
-def test_v21_range_pilot_2_is_fresh_and_restricted_to_failed_families() -> None:
-  assert RANGE_PILOT_ID == 2
-  assert RANGE_PILOT_CONTEXTS == ("L_dev", "L2", "L4", "L5", "C3")
+def test_v21_range_pilot_3_is_fresh_and_restricted_to_fragile_L2() -> None:
+  assert RANGE_PILOT_ID == 3
+  assert RANGE_PILOT_CONTEXTS == ("L2",)
   assert [
     V21_CONTEXT_SPECS[context_id]["candidate_seed_prefix"]
     for context_id in CONTEXTS
-  ] == list(range(131, 143))
+  ] == list(range(151, 163))
 
 
-def test_v21_range_pilot_2_isolates_failed_family_severity_axes() -> None:
-  contexts = {}
-  for context_id in RANGE_PILOT_CONTEXTS:
-    prefix = int(V21_CONTEXT_SPECS[context_id]["candidate_seed_prefix"])
-    contexts[context_id] = (
-      generate_v21_specialist_context(context_id, prefix * 100 + 8),
-      generate_v21_specialist_context(context_id, prefix * 100 + 19),
-    )
-  for context_id in ("L_dev", "L2", "L4"):
-    first, last = contexts[context_id]
-    for field in (
-      "command_delay_s",
-      "command_low_pass_s",
-      "action_gain",
-      "action_bias",
-      "encoder_bias",
-    ):
-      assert first["target"][field] == last["target"][field]
-  l2_first, l2_last = contexts["L2"]
+def test_v21_range_pilot_3_isolates_the_L2_yaw_severity_axis() -> None:
+  prefix = int(V21_CONTEXT_SPECS["L2"]["candidate_seed_prefix"])
+  l2_first = generate_v21_specialist_context("L2", prefix * 100 + 8)
+  l2_last = generate_v21_specialist_context("L2", prefix * 100 + 19)
+  for field in (
+    "rise_profile",
+    "tread_profile",
+    "command_delay_s",
+    "command_low_pass_s",
+    "action_gain",
+    "action_bias",
+    "encoder_bias",
+  ):
+    assert l2_first["target"][field] == l2_last["target"][field]
+  assert l2_first["target"]["action_gain"] == 1.0
+  assert l2_first["target"]["encoder_bias"] == 0.0
   assert abs(l2_last["scenario"]["yaw_command_bias"]) > abs(
     l2_first["scenario"]["yaw_command_bias"]
   )
-  l4_first, l4_last = contexts["L4"]
-  assert l4_last["scenario"]["centerline_lateral_gain"] < l4_first[
-    "scenario"
-  ]["centerline_lateral_gain"]
-  l5_first, l5_last = contexts["L5"]
-  assert l5_first["target"]["command_delay_s"] < l5_last["target"][
-    "command_delay_s"
+  assert l2_last["scenario"]["yaw_pulse_max"] > l2_first["scenario"][
+    "yaw_pulse_max"
   ]
-  c3_first, c3_last = contexts["C3"]
-  assert c3_first["target"]["action_gain"] == 0.916
-  assert c3_last["target"]["action_gain"] == 0.9
-  assert abs(c3_first["target"]["encoder_bias"]) == 0.014
-  assert abs(c3_last["target"]["encoder_bias"]) == 0.0162
 
 
 def test_v21_confirmation_uses_three_independent_positive_block_rule() -> None:
