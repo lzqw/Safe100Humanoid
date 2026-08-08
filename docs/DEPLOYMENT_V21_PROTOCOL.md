@@ -41,9 +41,16 @@ target purity. The next 512-episode replacement calibration confirmed the new
 `L2` mechanism and froze ten contexts, but stopped at `C4`. Its coarse grid
 jumped from 91 falls at severity 0.363636 to 358/512 successes at severity
 0.454545, exactly one success below the lower gate; every stronger point was
-over-difficult. No adaptation started. The current boundary is a non-formal,
-base-policy-only Pilot 12 that finely scans the same `C4` mechanism over the
-original severity interval 0.38--0.45 with entirely fresh randomness.
+over-difficult. No adaptation started. A non-formal, base-policy-only Pilot 12
+then finely scanned the same `C4` mechanism over the original severity
+interval 0.38--0.45 with entirely fresh randomness. Pilot 12
+completed all 12 candidates and produced ten qualifiers, including nine
+consecutive qualifiers from `38110` through `38118`; 721 of 735 falls were the
+target contact-stability failure. The light-side miss had only 49 falls, while
+the hard endpoint fell below 70% success. The next boundary is replacement-v2:
+a prospectively frozen 512-episode calibration using the strict-margin
+`38112`--`38118` interior, entirely new candidate/evaluation randomness, and
+isolated output paths. No adaptation, monitor, or formal audit has started.
 
 本文记录 v21 的前瞻性实验设计。第一轮修正并预先冻结的 `L_dev` base-only sweep
 完成了全部 12 个候选，但因没有候选满足校准门槛而停止。随后一轮非正式 base-only
@@ -74,8 +81,13 @@ rise 和 tread 为 nominal，只把物理 stair half-width 从 1.00 缩小到 0.
 为 95.17%。随后 512-episode replacement calibration 验证了新 `L2` 机制并冻结 10 个
 context，但在 `C4` 停止：粗网格从 severity 0.363636 的 91 次跌倒跳到 severity
 0.454545 的 358/512 次成功，距离成功率下限恰好少 1 次成功；更强的点全部过难。
-没有启动 adaptation。当前边界是非正式、仅基础策略的 Pilot 12：保留相同 `C4`
-机制，在原始 severity 0.38--0.45 内细扫，并使用全新随机数。
+没有启动 adaptation。随后，非正式、仅基础策略的 Pilot 12 保留相同 `C4` 机制，
+在原始 severity 0.38--0.45 内细扫，并使用全新随机数。Pilot 12 已完成全部
+12 个候选并得到 10 个合格点，其中 `38110` 至 `38118` 连续 9 个合格；735 次跌倒中
+721 次属于目标 contact-stability 失效。轻端未通过点只有 49 次跌倒，重端成功率低于
+70%。下一边界是 replacement-v2：在 `38112`--`38118` 严格余量内区间上进行前瞻冻结
+的 512-episode 校准，使用全新的候选与评估随机性，并写入隔离目录。仍未启动任何
+adaptation、monitor 或正式 audit。
 
 ## 实验单位 / Experimental unit
 
@@ -162,8 +174,15 @@ qualified immediately at 512 episodes with 75.59% success, 125 falls, and
 difficulty cliff: severity 0.363636 had 91 falls, while severity 0.454545 was
 one success below the lower gate and the stronger half of the sweep was far too
 difficult. Pilot 12 therefore keeps the same mechanism and finely brackets only
-the original severity interval 0.38--0.45. It remains base-policy-only range
-evidence and uses fresh randomness before any new outcome is observed.
+the original severity interval 0.38--0.45. It completed with ten qualifiers and
+a 98.10% pooled target-failure fraction. Replacement-v2 uses the stricter
+contiguous interior represented by `38112` through `38118`: friction
+0.456745--0.447964, forward scale 1.092982--1.099855, command low-pass
+0.076764--0.082109 s, and action gain 0.915127--0.909018. Candidate prefixes
+`391`--`402` and the 78--81 million evaluation/analysis seed namespaces are
+new, and replacement-v2 outputs are isolated from the preserved failed run.
+Pilot outcomes remain base-policy-only range evidence rather than formal
+selection.
 
 ## Algorithm
 

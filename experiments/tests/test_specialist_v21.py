@@ -107,7 +107,7 @@ def test_v21_formal_family_primary_perturbations_are_distinct() -> None:
   assert contexts["C2"]["scenario"]["left_response_scale"] != 1.0
   assert contexts["C3"]["target"]["action_gain"] == 0.9
   assert abs(contexts["C3"]["target"]["encoder_bias"]) == 0.0162
-  assert contexts["C4"]["target"]["command_forward_scale"] == 1.101
+  assert contexts["C4"]["target"]["command_forward_scale"] == 1.099855
   assert contexts["C5"]["scenario"]["contact_observation_delay_steps"] == 2
 
 
@@ -156,13 +156,13 @@ def test_v21_lateral_range_pilot_uses_frozen_difficulty_carriers() -> None:
     ]
 
 
-def test_v21_c4_range_pilot_has_a_fresh_seed_namespace() -> None:
+def test_v21_replacement_v2_has_a_fresh_seed_namespace() -> None:
   assert RANGE_PILOT_ID == 12
   assert RANGE_PILOT_CONTEXTS == ("C4",)
   assert [
     V21_CONTEXT_SPECS[context_id]["candidate_seed_prefix"]
     for context_id in CONTEXTS
-  ] == list(range(371, 383))
+  ] == list(range(391, 403))
 
 
 def test_v21_replacement_l2_varies_only_physical_lateral_clearance() -> None:
@@ -216,18 +216,18 @@ def test_v21_replacement_l2_varies_only_physical_lateral_clearance() -> None:
   assert l2_last["scenario"]["centerline_max_yaw_velocity"] == 0.45
 
 
-def test_v21_range_pilot_12_finely_brackets_c4_cliff() -> None:
+def test_v21_replacement_v2_uses_pilot_12_strict_margin_c4_interior() -> None:
   prefix = int(V21_CONTEXT_SPECS["C4"]["candidate_seed_prefix"])
   first = generate_v21_specialist_context("C4", prefix * 100 + 8)
   last = generate_v21_specialist_context("C4", prefix * 100 + 19)
-  assert first["scenario"]["foot_friction"] == 0.4626
-  assert last["scenario"]["foot_friction"] == 0.4465
-  assert first["target"]["command_forward_scale"] == 1.0884
-  assert last["target"]["command_forward_scale"] == 1.101
-  assert first["target"]["command_low_pass_s"] == 0.0732
-  assert last["target"]["command_low_pass_s"] == 0.083
-  assert first["target"]["action_gain"] == 0.9192
-  assert last["target"]["action_gain"] == 0.908
+  assert first["scenario"]["foot_friction"] == 0.456745
+  assert last["scenario"]["foot_friction"] == 0.447964
+  assert first["target"]["command_forward_scale"] == 1.092982
+  assert last["target"]["command_forward_scale"] == 1.099855
+  assert first["target"]["command_low_pass_s"] == 0.076764
+  assert last["target"]["command_low_pass_s"] == 0.082109
+  assert first["target"]["action_gain"] == 0.915127
+  assert last["target"]["action_gain"] == 0.909018
 
 
 def test_v21_confirmation_uses_three_independent_positive_block_rule() -> None:
@@ -371,6 +371,10 @@ def test_v21_replacement_freeze_binds_all_base_only_range_evidence() -> None:
   assert 'payload["range_feasibility_history"]' in freezer
   assert '"all_twelve_context_families_feasible": True' in freezer
   assert '"adapted_policy_outcomes_used_for_range_design": False' in freezer
+  assert (
+    '"replacement_v2_C4_range_matches_pilot_12_strict_margin_interior": True'
+    in freezer
+  )
   assert '"replacement_base_only_calibration_outcomes_seen": False' in freezer
   assert '"replacement_calibration_failure_amendment"' in freezer
   assert "prior_next_contexts == list(pilot_contexts)" in freezer

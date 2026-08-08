@@ -355,18 +355,30 @@ def _replacement_precalibration(args: argparse.Namespace) -> dict[str, Any]:
   failed_protocol = json.loads(failed_protocol_path.read_text())
   failure_amendment = json.loads(failure_amendment_path.read_text())
   failure_progress = json.loads(failure_progress_path.read_text())
+  failed_protocol_sha256 = _sha256(failed_protocol_path)
   if (
     failed_protocol.get("protocol_id") != PROTOCOL_ID
     or failed_protocol.get("protocol_revision") != 0
+    or "range_feasibility_history" not in failed_protocol
     or failure_amendment.get("protocol_id") != PROTOCOL_ID
+    or failure_amendment.get("stage")
+    != "replacement_base_policy_only_calibration"
     or failure_amendment.get("base_policy_calibration_outcomes_observed")
     is not True
     or failure_amendment.get("adaptation_process_started") is not False
     or failure_amendment.get("adapted_policy_outcomes_observed") is not False
+    or failure_amendment.get("prospective_protocol", {}).get("sha256")
+    != failed_protocol_sha256
     or failure_progress.get("protocol_id") != PROTOCOL_ID
+    or failure_progress.get("context_id")
+    != failure_amendment.get("failed_context_id")
+    or failure_progress.get("prospective_protocol_file_sha256")
+    != failed_protocol_sha256
     or any(attempt.get("qualifies") for attempt in failure_progress["attempts"])
   ):
-    raise RuntimeError("invalid v21 failed-calibration evidence boundary")
+    raise RuntimeError(
+      "invalid v21 failed replacement-calibration evidence boundary"
+    )
 
   pilot_protocol_paths = [path.resolve() for path in args.range_pilot_protocols]
   pilot_summary_paths = [path.resolve() for path in args.range_pilot_summaries]
@@ -436,16 +448,20 @@ def _replacement_precalibration(args: argparse.Namespace) -> dict[str, Any]:
     )
 
   final_summary = json.loads(pilot_summary_paths[-1].read_text())
+  recommended_c4_ranges = final_summary.get("next_boundary", {}).get(
+    "recommended_C4_ranges"
+  )
   if (
     feasibility_contexts != set(CONTEXTS)
     or final_summary.get("formal_calibration_ready") is not True
     or final_summary.get("contexts_without_qualifier") != []
     or final_summary.get("contexts_requiring_robustness_confirmation") != []
+    or recommended_c4_ranges != V21_CONTEXT_SPECS["C4"]["ranges"]
   ):
     raise RuntimeError("v21 range feasibility is incomplete")
 
   payload["range_feasibility_history"] = {
-    "failed_formal_calibration": {
+    "failed_replacement_calibration": {
       "protocol": _verify_protocol_blob(
         repo, failed_protocol_path, current_commit
       ),
@@ -461,10 +477,17 @@ def _replacement_precalibration(args: argparse.Namespace) -> dict[str, Any]:
     "all_twelve_context_families_feasible": True,
     "pilot_outcomes_are_not_formal_context_selection": True,
     "adapted_policy_outcomes_used_for_range_design": False,
+    "replacement_v2_C4_range_matches_pilot_12_strict_margin_interior": True,
   }
   payload["calibration"]["range_feasibility_pilots_are_not_formal_selection"] = (
     True
   )
+  payload["calibration"]["C4_range_source"] = {
+    "pilot_id": RANGE_PILOT_ID,
+    "summary": pilot_history[-1]["summary"],
+    "recommended_ranges": recommended_c4_ranges,
+    "formal_calibration_uses_fresh_randomness": True,
+  }
   payload["fresh_evidence_boundary"] = {
     "prior_base_only_range_outcomes_seen": True,
     "replacement_base_only_calibration_outcomes_seen": False,

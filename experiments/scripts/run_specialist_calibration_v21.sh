@@ -2,15 +2,15 @@
 set -euo pipefail
 
 ROOT="${SAFE100_HUMANOID_ROOT:-/home/carla/LZQW/SAFE100/humanoid}"
-REPO="${SAFE100_V21_REPO:-$ROOT/worktrees/v21_final_calibration}"
+REPO="${SAFE100_V21_REPO:-$ROOT/worktrees/v21_final_calibration_v2}"
 PYTHON="${SAFE100_PYTHON:-$ROOT/workspace/conda_env/bin/python}"
 BASELINE="${SAFE100_BASELINE_CHECKPOINT:-$ROOT/artifacts/retention_v13/arm_b_state_retention/accepted_final.pt}"
 PROTOCOL_COMMIT="${SAFE100_V21_PROTOCOL_COMMIT:?set SAFE100_V21_PROTOCOL_COMMIT}"
-PROTOCOL="${SAFE100_V21_PROTOCOL_FILE:-$REPO/results/online/specialist_v21/protocol_precalibration_replacement.json}"
-ARTIFACT_ROOT="${SAFE100_V21_ARTIFACT_ROOT:-$ROOT/artifacts/specialist_v21_replacement}"
-LOG_ROOT="${SAFE100_V21_LOG_ROOT:-$ROOT/logs/specialist_v21_replacement}"
-CONTEXT_ROOT="${SAFE100_V21_CONTEXT_ROOT:-$REPO/results/online/specialist_v21/contexts_replacement}"
-CALIBRATION_SUMMARY_ROOT="${SAFE100_V21_CALIBRATION_SUMMARY_ROOT:-$REPO/results/online/specialist_v21/calibration/replacement}"
+PROTOCOL="${SAFE100_V21_PROTOCOL_FILE:-$REPO/results/online/specialist_v21/protocol_precalibration_replacement_v2.json}"
+ARTIFACT_ROOT="${SAFE100_V21_ARTIFACT_ROOT:-$ROOT/artifacts/specialist_v21_replacement_v2}"
+LOG_ROOT="${SAFE100_V21_LOG_ROOT:-$ROOT/logs/specialist_v21_replacement_v2}"
+CONTEXT_ROOT="${SAFE100_V21_CONTEXT_ROOT:-$REPO/results/online/specialist_v21/contexts_replacement_v2}"
+CALIBRATION_SUMMARY_ROOT="${SAFE100_V21_CALIBRATION_SUMMARY_ROOT:-$REPO/results/online/specialist_v21/calibration/replacement_v2}"
 CONTEXT_ID="${1:-}"
 
 case "$CONTEXT_ID" in
