@@ -1,0 +1,142 @@
+{
+  "attempts": [
+    {
+      "base_policy_only": true,
+      "candidate_seed": 35708,
+      "candidate_severity": 0.0,
+      "context_family": "moderate_mixed_lateral_shift",
+      "context_id": "L5",
+      "evaluation_seed_start": 70160000,
+      "evaluation_seeds": [
+        70160000,
+        70160001,
+        70160002,
+        70160003
+      ],
+      "failure_type_counts": {
+        "contact_stability": 12,
+        "lateral_heading_drift": 69,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "failure_type_fractions": {
+        "contact_stability": 0.14814814814814814,
+        "lateral_heading_drift": 0.8518518518518519,
+        "non_lateral_balance_or_phase": 0.0,
+        "non_lateral_high_cbf_demand": 0.0,
+        "other_non_lateral": 0.0
+      },
+      "fall_count": 81,
+      "fall_rate": 0.158203125,
+      "minimum_fall_count_gate": 100,
+      "num_episodes": 512,
+      "parameters_sha256": "09f8961b0bf7fac908d6fff7e2b5d9f0b65571bd76a4f6561e16ffd964edb04f",
+      "qualifies": false,
+      "second_failure_fraction": 0.14814814814814814,
+      "success_rate": 0.841796875,
+      "target_failure_fraction": 0.8518518518518519,
+      "target_failure_type": "lateral_heading_drift"
+    },
+    {
+      "base_policy_only": true,
+      "candidate_seed": 35709,
+      "candidate_severity": 0.090909090909,
+      "context_family": "moderate_mixed_lateral_shift",
+      "context_id": "L5",
+      "evaluation_seed_start": 70160100,
+      "evaluation_seeds": [
+        70160100,
+        70160101,
+        70160102,
+        70160103
+      ],
+      "failure_type_counts": {
+        "contact_stability": 19,
+        "lateral_heading_drift": 69,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "failure_type_fractions": {
+        "contact_stability": 0.2159090909090909,
+        "lateral_heading_drift": 0.7840909090909091,
+        "non_lateral_balance_or_phase": 0.0,
+        "non_lateral_high_cbf_demand": 0.0,
+        "other_non_lateral": 0.0
+      },
+      "fall_count": 88,
+      "fall_rate": 0.171875,
+      "minimum_fall_count_gate": 100,
+      "num_episodes": 512,
+      "parameters_sha256": "77069e69be82a5dd32fc1049af0c47f9baebdc5ef8be78a4e2d4e3676b6c23d0",
+      "qualifies": false,
+      "second_failure_fraction": 0.2159090909090909,
+      "success_rate": 0.828125,
+      "target_failure_fraction": 0.7840909090909091,
+      "target_failure_type": "lateral_heading_drift"
+    },
+    {
+      "base_policy_only": true,
+      "candidate_seed": 35710,
+      "candidate_severity": 0.181818181818,
+      "context_family": "moderate_mixed_lateral_shift",
+      "context_id": "L5",
+      "evaluation_seed_start": 70160200,
+      "evaluation_seeds": [
+        70160200,
+        70160201,
+        70160202,
+        70160203
+      ],
+      "failure_type_counts": {
+        "contact_stability": 18,
+        "lateral_heading_drift": 104,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "failure_type_fractions": {
+        "contact_stability": 0.14754098360655737,
+        "lateral_heading_drift": 0.8524590163934426,
+        "non_lateral_balance_or_phase": 0.0,
+        "non_lateral_high_cbf_demand": 0.0,
+        "other_non_lateral": 0.0
+      },
+      "fall_count": 122,
+      "fall_rate": 0.23828125,
+      "minimum_fall_count_gate": 100,
+      "num_episodes": 512,
+      "parameters_sha256": "84a351a1f1fe374cbc199511ae312c7d2d463a81bf689b7c016e06deaca35a54",
+      "qualifies": true,
+      "second_failure_fraction": 0.14754098360655737,
+      "success_rate": 0.76171875,
+      "target_failure_fraction": 0.8524590163934426,
+      "target_failure_type": "lateral_heading_drift"
+    }
+  ],
+  "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "base_policy_only": true,
+  "candidate_seeds": [
+    35708,
+    35709,
+    35710,
+    35711,
+    35712,
+    35713,
+    35714,
+    35715,
+    35716,
+    35717,
+    35718,
+    35719
+  ],
+  "context_id": "L5",
+  "exploratory": false,
+  "minimum_fall_count_gate": 100,
+  "mode": "lateral",
+  "policy_method": "Local Matched-Success Preservation v21",
+  "prospective_protocol_file_sha256": "b4426ae823538eb56978fd673cb3d357f85fbe616b60a877efb133e1c278211b",
+  "prospective_protocol_git_commit": "5eee8c9f20660f91bdac32f485d84471de630d9c",
+  "protocol_id": "safe100-deployment-unit-local-matched-success-v21"
+}

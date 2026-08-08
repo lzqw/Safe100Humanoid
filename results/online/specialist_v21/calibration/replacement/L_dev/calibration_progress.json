@@ -1,0 +1,104 @@
+{
+  "attempts": [
+    {
+      "base_policy_only": true,
+      "candidate_seed": 35108,
+      "candidate_severity": 0.0,
+      "context_family": "excluded_development_mixed_lateral",
+      "context_id": "L_dev",
+      "evaluation_seed_start": 70100000,
+      "evaluation_seeds": [
+        70100000,
+        70100001,
+        70100002,
+        70100003
+      ],
+      "failure_type_counts": {
+        "contact_stability": 14,
+        "lateral_heading_drift": 77,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "failure_type_fractions": {
+        "contact_stability": 0.15384615384615385,
+        "lateral_heading_drift": 0.8461538461538461,
+        "non_lateral_balance_or_phase": 0.0,
+        "non_lateral_high_cbf_demand": 0.0,
+        "other_non_lateral": 0.0
+      },
+      "fall_count": 91,
+      "fall_rate": 0.177734375,
+      "minimum_fall_count_gate": 100,
+      "num_episodes": 512,
+      "parameters_sha256": "fbbd87f9afc21e44137a962173b7ed3ff6378d2fd004d9ac12bf12aa297ae5fa",
+      "qualifies": false,
+      "second_failure_fraction": 0.15384615384615385,
+      "success_rate": 0.822265625,
+      "target_failure_fraction": 0.8461538461538461,
+      "target_failure_type": "lateral_heading_drift"
+    },
+    {
+      "base_policy_only": true,
+      "candidate_seed": 35109,
+      "candidate_severity": 0.090909090909,
+      "context_family": "excluded_development_mixed_lateral",
+      "context_id": "L_dev",
+      "evaluation_seed_start": 70100100,
+      "evaluation_seeds": [
+        70100100,
+        70100101,
+        70100102,
+        70100103
+      ],
+      "failure_type_counts": {
+        "contact_stability": 19,
+        "lateral_heading_drift": 81,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "failure_type_fractions": {
+        "contact_stability": 0.19,
+        "lateral_heading_drift": 0.81,
+        "non_lateral_balance_or_phase": 0.0,
+        "non_lateral_high_cbf_demand": 0.0,
+        "other_non_lateral": 0.0
+      },
+      "fall_count": 100,
+      "fall_rate": 0.1953125,
+      "minimum_fall_count_gate": 100,
+      "num_episodes": 512,
+      "parameters_sha256": "a1b27b000300fcc059a3e3514261f20431a3a3c5a3242f33156f8a559b470831",
+      "qualifies": true,
+      "second_failure_fraction": 0.19,
+      "success_rate": 0.8046875,
+      "target_failure_fraction": 0.81,
+      "target_failure_type": "lateral_heading_drift"
+    }
+  ],
+  "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "base_policy_only": true,
+  "candidate_seeds": [
+    35108,
+    35109,
+    35110,
+    35111,
+    35112,
+    35113,
+    35114,
+    35115,
+    35116,
+    35117,
+    35118,
+    35119
+  ],
+  "context_id": "L_dev",
+  "exploratory": false,
+  "minimum_fall_count_gate": 100,
+  "mode": "lateral",
+  "policy_method": "Local Matched-Success Preservation v21",
+  "prospective_protocol_file_sha256": "b4426ae823538eb56978fd673cb3d357f85fbe616b60a877efb133e1c278211b",
+  "prospective_protocol_git_commit": "5eee8c9f20660f91bdac32f485d84471de630d9c",
+  "protocol_id": "safe100-deployment-unit-local-matched-success-v21"
+}

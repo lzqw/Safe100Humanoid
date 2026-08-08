@@ -1,0 +1,66 @@
+{
+  "attempts": [
+    {
+      "base_policy_only": true,
+      "candidate_seed": 35308,
+      "candidate_severity": 0.0,
+      "context_family": "command_delay_and_low_pass",
+      "context_id": "L1",
+      "evaluation_seed_start": 70120000,
+      "evaluation_seeds": [
+        70120000,
+        70120001,
+        70120002,
+        70120003
+      ],
+      "failure_type_counts": {
+        "contact_stability": 16,
+        "lateral_heading_drift": 98,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "failure_type_fractions": {
+        "contact_stability": 0.14035087719298245,
+        "lateral_heading_drift": 0.8596491228070176,
+        "non_lateral_balance_or_phase": 0.0,
+        "non_lateral_high_cbf_demand": 0.0,
+        "other_non_lateral": 0.0
+      },
+      "fall_count": 114,
+      "fall_rate": 0.22265625,
+      "minimum_fall_count_gate": 100,
+      "num_episodes": 512,
+      "parameters_sha256": "e17a52b9b45d4e08d49ad0dd3cc7cc2d17829cd0c248c5b8f17f293cfb084bfb",
+      "qualifies": true,
+      "second_failure_fraction": 0.14035087719298245,
+      "success_rate": 0.77734375,
+      "target_failure_fraction": 0.8596491228070176,
+      "target_failure_type": "lateral_heading_drift"
+    }
+  ],
+  "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "base_policy_only": true,
+  "candidate_seeds": [
+    35308,
+    35309,
+    35310,
+    35311,
+    35312,
+    35313,
+    35314,
+    35315,
+    35316,
+    35317,
+    35318,
+    35319
+  ],
+  "context_id": "L1",
+  "exploratory": false,
+  "minimum_fall_count_gate": 100,
+  "mode": "lateral",
+  "policy_method": "Local Matched-Success Preservation v21",
+  "prospective_protocol_file_sha256": "b4426ae823538eb56978fd673cb3d357f85fbe616b60a877efb133e1c278211b",
+  "prospective_protocol_git_commit": "5eee8c9f20660f91bdac32f485d84471de630d9c",
+  "protocol_id": "safe100-deployment-unit-local-matched-success-v21"
+}
