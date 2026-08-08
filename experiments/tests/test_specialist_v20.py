@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 import hashlib
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -327,6 +328,9 @@ def test_v20_queues_are_mode_local_and_protocol_is_precalibration_only() -> None
   assert 'MODE="${1:-${SAFE100_SPECIALIST_MODE:-}}"' in queue
   assert "run_specialist_diagonal_audit_v20.sh" in queue
   assert "for mode in" not in queue.lower()
+  assert "SAFE100_V20_TRAINING_REPO" in queue
+  assert "SAFE100_V20_AUDIT_REPO" in queue
+  assert "SAFE100_V20_AUDIT_COMMIT" in queue
   protocol = json.loads(
     (REPO / "results/online/specialist_v20/protocol_precalibration.json").read_text()
   )
@@ -355,9 +359,41 @@ def test_v20_final_protocol_seals_fresh_contexts_before_adaptation() -> None:
     assert hashlib.sha256(path.read_bytes()).hexdigest() == sealed[
       "file_sha256"
     ]
+  protocol_commit = subprocess.run(
+    [
+      "git",
+      "log",
+      "-1",
+      "--format=%H",
+      "--",
+      "results/online/specialist_v20/protocol.json",
+    ],
+    cwd=REPO,
+    check=True,
+    capture_output=True,
+    text=True,
+  ).stdout.strip()
   for relative, expected_hash in protocol["sealed_inputs"][
     "source_file_sha256"
   ].items():
-    assert hashlib.sha256((REPO / relative).read_bytes()).hexdigest() == (
-      expected_hash
-    )
+    frozen_source = subprocess.run(
+      ["git", "show", f"{protocol_commit}:{relative}"],
+      cwd=REPO,
+      check=True,
+      capture_output=True,
+    ).stdout
+    assert hashlib.sha256(frozen_source).hexdigest() == expected_hash
+
+
+def test_v20_audit_uses_brief_checkpoint_loader_before_any_load() -> None:
+  source = (
+    REPO / "experiments/scripts/audit_specialist_diagonal_v20.py"
+  ).read_text()
+  configuration = "alg_cfg.brief_ppo_refinement = True"
+  first_load = "warm_start = runner.load_online_checkpoint("
+  assert configuration in source
+  assert first_load in source
+  assert source.index(configuration) < source.index(first_load)
+  assert "--audit-commit" in source
+  assert "--audit-amendment" in source
+  assert "actor_or_checkpoint_tensor_modified" in source

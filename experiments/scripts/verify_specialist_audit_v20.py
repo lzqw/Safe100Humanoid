@@ -13,6 +13,7 @@ from pathlib import Path
 
 import torch
 from audit_specialist_diagonal_v20 import (
+  AUDIT_AMENDMENT_RELATIVE,
   PAIRED_FIELDS,
   TRANSITION_CLASSES,
   _repair_summary,
@@ -99,6 +100,21 @@ def main() -> None:
   protocol_commit = summary.get("protocol_file", {}).get("git_commit", "")
   frozen_protocol = _git_blob(repo, protocol_commit, str(PROTOCOL_RELATIVE))
   protocol_hash = hashlib.sha256(frozen_protocol).hexdigest()
+  audit_implementation = summary.get("audit_implementation", {})
+  audit_commit = audit_implementation.get("git_commit", "")
+  amendment_relative = audit_implementation.get("relative_path", "")
+  if Path(amendment_relative) != AUDIT_AMENDMENT_RELATIVE:
+    raise RuntimeError("v20 audit amendment path differs")
+  amendment_blob = _git_blob(repo, audit_commit, amendment_relative)
+  amendment = json.loads(amendment_blob)
+  amendment_hash = hashlib.sha256(amendment_blob).hexdigest()
+  audit_source_checks = {
+    relative: hashlib.sha256(_git_blob(repo, audit_commit, relative)).hexdigest()
+    == expected_hash
+    for relative, expected_hash in amendment.get(
+      "source_file_sha256", {}
+    ).items()
+  }
   expected_rows = len(FORMAL_ADAPTATION_SEEDS) * (
     FORMAL_TARGET_EPISODES + FORMAL_D0_EPISODES
   )
@@ -112,6 +128,29 @@ def main() -> None:
       "tracked_worktree_and_index_clean"
     )
     is True,
+    "audit_amendment_hash": audit_implementation.get("sha256")
+    == amendment_hash
+    == _sha256(repo / AUDIT_AMENDMENT_RELATIVE),
+    "audit_amendment_status": amendment.get("status")
+    == "prospectively_frozen_before_first_formal_audit_episode_outcome",
+    "audit_amendment_boundary": amendment.get(
+      "fresh_audit_evidence_boundary", {}
+    ).get("formal_audit_episode_outcomes_observed")
+    is False,
+    "audit_source_hashes": bool(audit_source_checks)
+    and all(audit_source_checks.values()),
+    "brief_loader_semantics": summary.get(
+      "audit_loader_configuration", {}
+    ).get("brief_ppo_refinement")
+    is True
+    and summary.get("audit_loader_configuration", {}).get(
+      "legacy_constraint_payload_ignored"
+    )
+    is True
+    and summary.get("audit_loader_configuration", {}).get(
+      "actor_or_checkpoint_tensor_modified"
+    )
+    is False,
     "audit_seed": summary.get("audit_seed") == FORMAL_AUDIT_SEED,
     "bootstrap_seed": summary.get("bootstrap_seed")
     == FORMAL_BOOTSTRAP_SEED,
@@ -344,6 +383,12 @@ def main() -> None:
       "path": str(PROTOCOL_RELATIVE),
       "git_commit": protocol_commit,
       "sha256": protocol_hash,
+    },
+    "audit_implementation": {
+      "git_commit": audit_commit,
+      "amendment_path": amendment_relative,
+      "amendment_sha256": amendment_hash,
+      "source_checks": audit_source_checks,
     },
     "top_level_conditions": conditions,
     "protocol_commit_source_checks": source_checks,

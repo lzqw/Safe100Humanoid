@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="${SAFE100_HUMANOID_ROOT:-/home/carla/LZQW/SAFE100/humanoid}"
-REPO="${SAFE100_MJLAB_REPO:-$ROOT/worktrees/v20_formal}"
+REPO="${SAFE100_V20_AUDIT_REPO:-${SAFE100_MJLAB_REPO:-$ROOT/worktrees/v20_audit_amendment}}"
 PYTHON="${SAFE100_PYTHON:-$ROOT/workspace/conda_env/bin/python}"
 BASELINE="${SAFE100_BASELINE_CHECKPOINT:-$ROOT/artifacts/retention_v13/arm_b_state_retention/accepted_final.pt}"
 MODE="${SAFE100_SPECIALIST_MODE:?set SAFE100_SPECIALIST_MODE}"
@@ -10,6 +10,8 @@ CONTEXT="${SAFE100_SPECIALIST_CONTEXT:-$ROOT/artifacts/specialist_v20/contexts/$
 TRAINING_ROOT="${SAFE100_SPECIALIST_TRAINING_ROOT:-$ROOT/artifacts/specialist_v20/training}"
 PROTOCOL="${SAFE100_V20_PROTOCOL_FILE:-$REPO/results/online/specialist_v20/protocol.json}"
 PROTOCOL_COMMIT="${SAFE100_V20_PROTOCOL_COMMIT:?set SAFE100_V20_PROTOCOL_COMMIT}"
+AUDIT_COMMIT="${SAFE100_V20_AUDIT_COMMIT:?set SAFE100_V20_AUDIT_COMMIT}"
+AUDIT_AMENDMENT="${SAFE100_V20_AUDIT_AMENDMENT:-$REPO/results/online/specialist_v20/audit_amendment.json}"
 OUTPUT="${SAFE100_V20_AUDIT_OUTPUT_DIR:-$ROOT/artifacts/specialist_v20/audit/${MODE}}"
 LOG="${SAFE100_V20_AUDIT_LOG_PATH:-$ROOT/logs/specialist_v20/audit_${MODE}.log}"
 
@@ -19,7 +21,7 @@ case "$MODE" in
 esac
 
 cd "$REPO"
-test "$(git rev-parse HEAD)" = "$PROTOCOL_COMMIT"
+test "$(git rev-parse HEAD)" = "$AUDIT_COMMIT"
 git diff --quiet
 git diff --cached --quiet
 mkdir -p "$OUTPUT" "$(dirname "$LOG")"
@@ -34,6 +36,8 @@ export PYTHONUNBUFFERED=1
   --training-root "$TRAINING_ROOT" \
   --protocol-file "$PROTOCOL" \
   --protocol-commit "$PROTOCOL_COMMIT" \
+  --audit-commit "$AUDIT_COMMIT" \
+  --audit-amendment "$AUDIT_AMENDMENT" \
   --output-dir "$OUTPUT" \
   --adaptation-seeds 73 173 273 373 473 \
   --eval-batch-size 128 \

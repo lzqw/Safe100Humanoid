@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import math
+import subprocess
 import sys
 from dataclasses import asdict
 from pathlib import Path
@@ -88,6 +90,9 @@ TRANSITION_CLASSES = (
   "success_to_success",
   "failure_to_failure",
 )
+AUDIT_AMENDMENT_RELATIVE = Path(
+  "results/online/specialist_v20/audit_amendment.json"
+)
 
 
 def _parse_args() -> argparse.Namespace:
@@ -99,6 +104,8 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--training-root", type=Path, required=True)
   parser.add_argument("--protocol-file", type=Path, required=True)
   parser.add_argument("--protocol-commit", required=True)
+  parser.add_argument("--audit-commit", required=True)
+  parser.add_argument("--audit-amendment", type=Path, required=True)
   parser.add_argument("--output-dir", type=Path, required=True)
   parser.add_argument(
     "--adaptation-seeds",
@@ -206,6 +213,102 @@ def _validate_protocol(
   }
   if runtime_mismatches:
     raise ValueError(f"formal v20 audit runtime mismatch: {runtime_mismatches}")
+
+
+def _git_blob(repo: Path, commit: str, relative: str) -> bytes:
+  return subprocess.run(
+    ["git", "show", f"{commit}:{relative}"],
+    cwd=repo,
+    check=True,
+    capture_output=True,
+  ).stdout
+
+
+def _validate_audit_amendment(
+  *,
+  repo: Path,
+  protocol_path: Path,
+  protocol_commit: str,
+  audit_commit: str,
+  amendment_path: Path,
+) -> dict[str, Any]:
+  """Validate the post-training, pre-audit infrastructure amendment seal."""
+  try:
+    protocol_relative = str(protocol_path.relative_to(repo))
+    amendment_relative = str(amendment_path.relative_to(repo))
+  except ValueError as error:
+    raise RuntimeError("v20 audit seal files must live inside the repo") from error
+  if Path(amendment_relative) != AUDIT_AMENDMENT_RELATIVE:
+    raise RuntimeError("v20 audit amendment path differs from the declared path")
+  protocol_sha256 = _sha256(protocol_path)
+  if hashlib.sha256(
+    _git_blob(repo, protocol_commit, protocol_relative)
+  ).hexdigest() != protocol_sha256:
+    raise RuntimeError("v20 protocol differs from its frozen training commit")
+  if _git_blob(repo, audit_commit, amendment_relative) != amendment_path.read_bytes():
+    raise RuntimeError("v20 audit amendment differs from its committed blob")
+  amendment = json.loads(amendment_path.read_text())
+  expected = {
+    "amendment_id": "safe100-specialist-v20-audit-infrastructure-amendment-1",
+    "schema_version": 1,
+    "status": "prospectively_frozen_before_first_formal_audit_episode_outcome",
+  }
+  failures = [
+    name for name, value in expected.items() if amendment.get(name) != value
+  ]
+  training = amendment.get("training_protocol", {})
+  if not (
+    training.get("git_commit") == protocol_commit
+    and training.get("file") == protocol_relative
+    and training.get("sha256") == protocol_sha256
+  ):
+    failures.append("training_protocol")
+  boundary = amendment.get("fresh_audit_evidence_boundary", {})
+  if not (
+    boundary.get("formal_audit_episode_outcomes_observed") is False
+    and boundary.get("formal_audit_rows_written") == 0
+    and boundary.get("training_artifacts_rerun_or_modified") is False
+  ):
+    failures.append("fresh_audit_evidence_boundary")
+  fix = amendment.get("infrastructure_fix", {})
+  if not (
+    fix.get("scope") == "audit checkpoint loader configuration only"
+    and fix.get("brief_ppo_refinement_checkpoint_semantics_enabled") is True
+    and fix.get("actor_or_checkpoint_tensor_modified") is False
+  ):
+    failures.append("infrastructure_fix")
+  unchanged = amendment.get("unchanged_formal_evaluation", {})
+  required_unchanged = {
+    "adaptation_seeds": list(FORMAL_ADAPTATION_SEEDS),
+    "audit_seed": FORMAL_AUDIT_SEED,
+    "bootstrap_seed": FORMAL_BOOTSTRAP_SEED,
+    "bootstrap_samples": FORMAL_BOOTSTRAP_SAMPLES,
+    "target_paired_episodes_per_adaptation_seed": FORMAL_TARGET_EPISODES,
+    "d0_paired_episodes_per_adaptation_seed": FORMAL_D0_EPISODES,
+    "runtime_cbf": True,
+  }
+  if any(unchanged.get(key) != value for key, value in required_unchanged.items()):
+    failures.append("unchanged_formal_evaluation")
+  source_checks: dict[str, bool] = {}
+  for relative, expected_hash in amendment.get("source_file_sha256", {}).items():
+    source_checks[relative] = (
+      hashlib.sha256(_git_blob(repo, audit_commit, relative)).hexdigest()
+      == expected_hash
+      == _sha256(repo / relative)
+    )
+  if not source_checks or not all(source_checks.values()):
+    failures.append("source_file_sha256")
+  if failures:
+    raise RuntimeError(f"v20 audit amendment seal failed: {sorted(set(failures))}")
+  return {
+    "path": str(amendment_path),
+    "relative_path": amendment_relative,
+    "sha256": _sha256(amendment_path),
+    "git_commit": audit_commit,
+    "source_file_sha256_checks": source_checks,
+    "fresh_audit_evidence_boundary": boundary,
+    "infrastructure_fix": fix,
+  }
 
 
 def _validate_training_artifacts(
@@ -556,11 +659,18 @@ def main() -> None:
   ):
     raise ValueError("v20 audit counts must divide into full paired batches")
   current_commit = _git_output(repo, "rev-parse", "HEAD")
-  if current_commit != args.protocol_commit:
-    raise RuntimeError("v20 audit HEAD differs from the frozen protocol commit")
+  if current_commit != args.audit_commit:
+    raise RuntimeError("v20 audit HEAD differs from the frozen audit commit")
   tracked_clean = _tracked_worktree_is_clean(repo)
   if not args.smoke and not tracked_clean:
     raise RuntimeError("formal v20 audit requires a clean tracked worktree")
+  audit_amendment = _validate_audit_amendment(
+    repo=repo,
+    protocol_path=protocol_path,
+    protocol_commit=args.protocol_commit,
+    audit_commit=current_commit,
+    amendment_path=args.audit_amendment.resolve(),
+  )
 
   import mjlab.tasks  # noqa: F401
   from mjlab.envs import ManagerBasedRlEnv
@@ -606,7 +716,7 @@ def main() -> None:
     context=context,
     seeds=seeds,
     base_checkpoint_sha256=_sha256(checkpoint),
-    protocol_commit=current_commit,
+    protocol_commit=args.protocol_commit,
     protocol_sha256=_sha256(protocol_path),
   )
 
@@ -618,6 +728,20 @@ def main() -> None:
   env_cfg.actions["joint_pos"].enabled = True
   agent_cfg = load_rl_cfg(task)
   configure_v19_observable_refinement_runner(agent_cfg)
+  # The sealed base checkpoint predates the five-column observable append and
+  # carries a legacy retention-actor payload. v20 is Brief PPO and never uses
+  # that auxiliary state. Match the training loader semantics so only the
+  # actor/critic are expanded; no checkpoint tensor or evaluated actor changes.
+  alg_cfg = agent_cfg.algorithm
+  alg_cfg.brief_ppo_refinement = True
+  alg_cfg.failure_focused_refinement = True
+  alg_cfg.observable_failure_conditioned_refinement = True
+  alg_cfg.task_first_constrained = False
+  alg_cfg.d0_retention_anchor_weight = 0.0
+  alg_cfg.neighbor_retention_anchor_weight = 0.0
+  alg_cfg.actor_new_feature_count = 5
+  alg_cfg.actor_new_feature_learning_rate_multiplier = 1.0
+  alg_cfg.freeze_legacy_actor_input_columns = True
   base_env = ManagerBasedRlEnv(env_cfg, device=args.device)
   env = RslRlVecEnvWrapper(base_env, clip_actions=agent_cfg.clip_actions)
   runner_cls = load_runner_cls(task)
@@ -861,7 +985,10 @@ def main() -> None:
   }
   result = {
     "protocol_id": PROTOCOL_ID,
-    "analysis_version": "v20 independent fixed-budget diagonal audit v1",
+    "analysis_version": (
+      "v20 independent fixed-budget diagonal audit v2 "
+      "(audit-infrastructure amendment 1)"
+    ),
     "policy_method": POLICY_METHOD,
     "formal_protocol": not args.smoke,
     "evidence_role": "fresh paired audit never used by training gates",
@@ -869,8 +996,17 @@ def main() -> None:
     "protocol_file": {
       "path": str(protocol_path),
       "sha256": _sha256(protocol_path),
-      "git_commit": current_commit,
+      "git_commit": args.protocol_commit,
       "tracked_worktree_and_index_clean": tracked_clean,
+    },
+    "audit_implementation": audit_amendment,
+    "audit_loader_configuration": {
+      "brief_ppo_refinement": True,
+      "failure_focused_refinement": True,
+      "observable_failure_conditioned_refinement": True,
+      "task_first_constrained": False,
+      "legacy_constraint_payload_ignored": True,
+      "actor_or_checkpoint_tensor_modified": False,
     },
     "runtime_cbf": True,
     "adaptation_seeds": seeds,
