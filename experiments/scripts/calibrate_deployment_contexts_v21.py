@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import subprocess
 import sys
 from dataclasses import asdict
@@ -96,13 +97,16 @@ def main() -> None:
   if hashlib.sha256(frozen_protocol).hexdigest() != _sha256(protocol_path):
     raise RuntimeError("v21 calibration protocol differs from its committed blob")
   declared = protocol.get("calibration", {})
+  expected_revision: int | str = "range-pilot-1" if args.exploratory else 0
+  expected_status = (
+    "base_policy_only_context_range_feasibility_pilot_not_formal"
+    if args.exploratory
+    else "prospectively_frozen_before_base_only_calibration_and_development"
+  )
   mismatches = {
     "protocol_id": (protocol.get("protocol_id"), PROTOCOL_ID),
-    "revision": (protocol.get("protocol_revision"), 0),
-    "status": (
-      protocol.get("status"),
-      "prospectively_frozen_before_base_only_calibration_and_development",
-    ),
+    "revision": (protocol.get("protocol_revision"), expected_revision),
+    "status": (protocol.get("status"), expected_status),
     "randomness": (protocol.get("randomness_preflight", {}).get("passed"), True),
     "base_only": (declared.get("base_policy_only"), True),
     "adapted_policy_absent": (
@@ -111,7 +115,7 @@ def main() -> None:
     ),
     "first_qualifier": (
       declared.get("first_qualifying_candidate_is_frozen"),
-      True,
+      not args.exploratory,
     ),
     "candidate_seeds": (
       declared.get("candidate_seeds", {}).get(context_id),
@@ -131,8 +135,17 @@ def main() -> None:
   }
   if failures:
     raise RuntimeError(f"v21 calibration protocol mismatch: {failures}")
-  if not args.exploratory and not tracked_clean:
-    raise RuntimeError("formal v21 calibration requires a clean tracked worktree")
+  if args.exploratory:
+    range_pilot = protocol.get("range_pilot", {})
+    if (
+      range_pilot.get("not_formal_context_selection") is not True
+      or range_pilot.get("evaluate_every_declared_candidate") is not True
+      or range_pilot.get("base_policy_only") is not True
+      or range_pilot.get("adapted_policy_evaluations_used") is not False
+    ):
+      raise RuntimeError("v21 exploratory calibration lacks a range-pilot seal")
+  if not tracked_clean:
+    raise RuntimeError("v21 calibration requires a clean tracked worktree")
 
   sys.path.insert(0, str(repo))
   import mjlab.tasks  # noqa: F401
@@ -214,6 +227,11 @@ def main() -> None:
   target_failure_type = V19_SPECIALIST_FAILURE_TYPES[mode]
   minimum_purity = 0.80 if mode == "lateral" else 0.75
   maximum_second = 0.30 if mode == "lateral" else 0.20
+  minimum_fall_count = (
+    math.ceil(100 * args.num_episodes / CALIBRATION_EPISODES)
+    if args.exploratory
+    else 100
+  )
   repeats = args.num_episodes // args.eval_batch_size
   output_dir = args.output_dir.resolve()
   output_dir.mkdir(parents=True, exist_ok=True)
@@ -255,7 +273,7 @@ def main() -> None:
       second_fraction = ordered[1][1]
       qualifies = (
         0.70 <= success_rate <= 0.85
-        and fall_count >= 100
+        and fall_count >= minimum_fall_count
         and target_fraction >= minimum_purity
         and second_fraction <= maximum_second
       )
@@ -272,6 +290,7 @@ def main() -> None:
         "success_rate": success_rate,
         "fall_rate": float(evaluation["fall_rate"]),
         "fall_count": fall_count,
+        "minimum_fall_count_gate": minimum_fall_count,
         "failure_type_counts": counts,
         "failure_type_fractions": fractions,
         "target_failure_type": target_failure_type,
@@ -289,12 +308,16 @@ def main() -> None:
         "attempts": attempts,
         "base_policy_only": True,
         "exploratory": args.exploratory,
+        "prospective_protocol_file_sha256": _sha256(protocol_path),
+        "prospective_protocol_git_commit": current_commit,
+        "base_policy_checkpoint_sha256": _sha256(checkpoint),
+        "minimum_fall_count_gate": minimum_fall_count,
       }
       (output_dir / "calibration_progress.json").write_text(
         json.dumps(progress, indent=2, sort_keys=True) + "\n"
       )
       print(json.dumps(attempt, indent=2, sort_keys=True), flush=True)
-      if qualifies:
+      if qualifies and not args.exploratory:
         selected_payload = candidate
         break
   finally:

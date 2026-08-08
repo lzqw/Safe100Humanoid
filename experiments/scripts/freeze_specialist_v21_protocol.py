@@ -70,6 +70,7 @@ SOURCE_FILES = (
   "experiments/scripts/run_specialist_calibration_v21.sh",
   "experiments/scripts/run_specialist_v21.sh",
   "experiments/scripts/run_specialist_queue_v21.sh",
+  "experiments/scripts/run_specialist_range_pilot_v21.sh",
   "experiments/tests/test_specialist_v21.py",
 )
 
@@ -390,6 +391,72 @@ def _development(args: argparse.Namespace) -> dict[str, Any]:
   return payload
 
 
+def _range_pilot(args: argparse.Namespace) -> dict[str, Any]:
+  """Seal one base-only range-feasibility pilot after a failed frozen sweep."""
+  if (
+    args.pilot_episodes <= 0
+    or args.pilot_batch_size <= 0
+    or args.pilot_episodes % args.pilot_batch_size
+  ):
+    raise ValueError("v21 range-pilot episodes must divide into full batches")
+  payload = _precalibration(args)
+  repo = args.repo.resolve()
+  current_commit = _git_output(repo, "rev-parse", "HEAD")
+  failed_protocol_path = args.failed_protocol.resolve()
+  failure_amendment_path = args.calibration_failure_amendment.resolve()
+  failure_progress_path = args.calibration_failure_progress.resolve()
+  failed_protocol = json.loads(failed_protocol_path.read_text())
+  failure_amendment = json.loads(failure_amendment_path.read_text())
+  failure_progress = json.loads(failure_progress_path.read_text())
+  if (
+    failed_protocol.get("protocol_id") != PROTOCOL_ID
+    or failed_protocol.get("protocol_revision") != 0
+    or failure_amendment.get("protocol_id") != PROTOCOL_ID
+    or failure_amendment.get("base_policy_calibration_outcomes_observed")
+    is not True
+    or failure_amendment.get("adapted_policy_outcomes_observed") is not False
+    or failure_amendment.get("adaptation_process_started") is not False
+    or failure_progress.get("protocol_id") != PROTOCOL_ID
+    or any(attempt.get("qualifies") for attempt in failure_progress["attempts"])
+  ):
+    raise RuntimeError("invalid v21 failed-calibration evidence boundary")
+  payload["protocol_revision"] = "range-pilot-1"
+  payload["status"] = (
+    "base_policy_only_context_range_feasibility_pilot_not_formal"
+  )
+  payload["calibration"]["first_qualifying_candidate_is_frozen"] = False
+  payload["calibration"]["episodes_per_candidate"] = args.pilot_episodes
+  payload["calibration"]["eval_batch_size"] = args.pilot_batch_size
+  payload["range_pilot"] = {
+    "not_formal_context_selection": True,
+    "evaluate_every_declared_candidate": True,
+    "base_policy_only": True,
+    "adapted_policy_evaluations_used": False,
+    "formal_gate_minimum_fall_count_scaled_by_episode_fraction": True,
+    "episodes_per_candidate": args.pilot_episodes,
+    "eval_batch_size": args.pilot_batch_size,
+    "failed_protocol": _verify_protocol_blob(
+      repo, failed_protocol_path, current_commit
+    ),
+    "failure_amendment": _verify_protocol_blob(
+      repo, failure_amendment_path, current_commit
+    ),
+    "failure_progress": _verify_protocol_blob(
+      repo, failure_progress_path, current_commit
+    ),
+    "range_changes_may_use_only_base_policy_evidence": True,
+    "replacement_formal_calibration_requires_new_randomness": True,
+  }
+  payload["fresh_evidence_boundary"] = {
+    "prior_base_only_range_failure_seen": True,
+    "adapted_policy_outcomes_seen": False,
+    "formal_adaptation_or_audit_outcomes_seen": False,
+    "pilot_is_not_formal_context_selection": True,
+    "this_protocol_must_be_committed_before_range_pilot": True,
+  }
+  return payload
+
+
 def _formal(args: argparse.Namespace) -> dict[str, Any]:
   repo = args.repo.resolve()
   development_path = args.input_protocol.resolve()
@@ -438,7 +505,9 @@ def _parse_args() -> argparse.Namespace:
   parser = argparse.ArgumentParser()
   parser.add_argument("--repo", type=Path, required=True)
   parser.add_argument(
-    "--stage", choices=("precalibration", "development", "formal"), required=True
+    "--stage",
+    choices=("precalibration", "range-pilot", "development", "formal"),
+    required=True,
   )
   parser.add_argument("--output", type=Path, required=True)
   parser.add_argument("--base-checkpoint-reference")
@@ -449,6 +518,11 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--development-selection", type=Path)
   parser.add_argument("--superseded-protocol", type=Path)
   parser.add_argument("--execution-amendment", type=Path)
+  parser.add_argument("--failed-protocol", type=Path)
+  parser.add_argument("--calibration-failure-amendment", type=Path)
+  parser.add_argument("--calibration-failure-progress", type=Path)
+  parser.add_argument("--pilot-episodes", type=int, default=128)
+  parser.add_argument("--pilot-batch-size", type=int, default=128)
   return parser.parse_args()
 
 
@@ -458,6 +532,13 @@ def main() -> None:
     "precalibration": (
       "base_checkpoint_reference",
       "base_checkpoint_sha256",
+    ),
+    "range-pilot": (
+      "base_checkpoint_reference",
+      "base_checkpoint_sha256",
+      "failed_protocol",
+      "calibration_failure_amendment",
+      "calibration_failure_progress",
     ),
     "development": ("input_protocol", "input_commit", "context_dir"),
     "formal": (
@@ -471,6 +552,7 @@ def main() -> None:
     raise ValueError(f"v21 {args.stage} freeze is missing arguments: {missing}")
   payload = {
     "precalibration": _precalibration,
+    "range-pilot": _range_pilot,
     "development": _development,
     "formal": _formal,
   }[args.stage](args)

@@ -55,18 +55,18 @@ CALIBRATION_BATCH_SIZE = 128
 TELEMETRY_ENVIRONMENT_ID_PER_BATCH = 0
 CONTEXTS = (*V21_DEVELOPMENT_CONTEXTS, *V21_FORMAL_CONTEXTS)
 CONTEXT_ADAPTATION_SEEDS = {
-  "L_dev": 21_001,
-  "C_dev": 21_002,
-  "L1": 21_101,
-  "L2": 21_102,
-  "L3": 21_103,
-  "L4": 21_104,
-  "L5": 21_105,
-  "C1": 21_201,
-  "C2": 21_202,
-  "C3": 21_203,
-  "C4": 21_204,
-  "C5": 21_205,
+  "L_dev": 31_001,
+  "C_dev": 31_002,
+  "L1": 31_101,
+  "L2": 31_102,
+  "L3": 31_103,
+  "L4": 31_104,
+  "L5": 31_105,
+  "C1": 31_201,
+  "C2": 31_202,
+  "C3": 31_203,
+  "C4": 31_204,
+  "C5": 31_205,
 }
 CONTEXT_CALIBRATION_CANDIDATE_SEEDS = {
   context_id: tuple(
@@ -78,22 +78,22 @@ CONTEXT_CALIBRATION_CANDIDATE_SEEDS = {
   for context_id in CONTEXTS
 }
 CONTEXT_CALIBRATION_EVALUATION_SEEDS = {
-  context_id: 7_100_000 + 10_000 * index
+  context_id: 11_100_000 + 10_000 * index
   for index, context_id in enumerate(CONTEXTS)
 }
 CONTEXT_FORMAL_AUDIT_SEEDS = {
-  context_id: 8_100_000 + 10_000 * index
+  context_id: 12_100_000 + 10_000 * index
   for index, context_id in enumerate(V21_FORMAL_CONTEXTS)
 }
 CONTEXT_DEVELOPMENT_SELECTION_SEEDS = {
-  context_id: 7_900_000 + 10_000 * index
+  context_id: 11_900_000 + 10_000 * index
   for index, context_id in enumerate(V21_DEVELOPMENT_CONTEXTS)
 }
 CONTEXT_MONITOR_SEEDS = {
-  context_id: 9_100_000 + 10_000 * index
+  context_id: 13_100_000 + 10_000 * index
   for index, context_id in enumerate(CONTEXTS)
 }
-FORMAL_BOOTSTRAP_SEED = 10_100_000
+FORMAL_BOOTSTRAP_SEED = 14_100_000
 
 
 @dataclass(frozen=True)
@@ -324,7 +324,7 @@ def _iter_declared_seeds(value: Any, path: str = "") -> Iterable[tuple[str, int]
 def fresh_randomness_report(repo: Path) -> dict[str, Any]:
   historical: list[dict[str, Any]] = []
   scanned_files: list[dict[str, str]] = []
-  for version in range(17, 21):
+  for version in range(17, 22):
     root = repo / "results/online" / f"specialist_v{version}"
     if not root.is_dir():
       continue
@@ -375,7 +375,7 @@ def fresh_randomness_report(repo: Path) -> dict[str, Any]:
   return {
     "schema_version": 1,
     "protocol_id": PROTOCOL_ID,
-    "historical_versions_scanned": [17, 18, 19, 20],
+    "historical_versions_scanned": [17, 18, 19, 20, 21],
     "historical_json_file_count": len(scanned_files),
     "historical_json_files_sha256": canonical_sha256(
       {"files": scanned_files}

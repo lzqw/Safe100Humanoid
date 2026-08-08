@@ -50,158 +50,230 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "lateral",
     "family": "excluded_development_mixed_lateral",
     "formal": False,
-    "candidate_seed_prefix": 91,
+    "candidate_seed_prefix": 111,
     "direction": -1,
     "ranges": {
-      "command_delay_s": [0.10, 0.30],
-      "command_low_pass_s": [0.08, 0.28],
-      "lateral_bias_abs": [0.04, 0.12],
-      "yaw_bias_abs": [0.08, 0.24],
-      "lateral_pulse_max": [0.10, 0.20],
-      "yaw_pulse_max": [0.22, 0.44],
-      "centerline_lateral_gain": [0.60, 0.20],
-      "centerline_heading_gain": [1.00, 0.35],
+      "rise_profile_half_width": [0.0035, 0.0035],
+      "tread_profile_half_width": [0.007, 0.007],
+      "command_forward_scale": [1.00, 1.03],
+      "command_delay_s": [0.16, 0.34],
+      "command_low_pass_s": [0.14, 0.32],
+      "action_gain": [0.99, 0.97],
+      "action_bias_abs": [0.010, 0.016],
+      "action_delay_steps": [1, 1],
+      "encoder_bias_abs": [0.003, 0.008],
+      "lateral_bias_abs": [0.035, 0.100],
+      "yaw_bias_abs": [0.070, 0.200],
+      "lateral_pulse_min": [0.045, 0.090],
+      "lateral_pulse_max": [0.105, 0.210],
+      "yaw_pulse_min": [0.100, 0.220],
+      "yaw_pulse_max": [0.240, 0.500],
+      "centerline_lateral_gain": [0.55, 0.22],
+      "centerline_heading_gain": [0.95, 0.42],
+      "centerline_max_lateral_velocity": [0.12, 0.07],
+      "centerline_max_yaw_velocity": [0.32, 0.20],
     },
   },
   "C_dev": {
     "mode": "contact_stability",
     "family": "excluded_development_mixed_contact",
     "formal": False,
-    "candidate_seed_prefix": 92,
+    "candidate_seed_prefix": 112,
     "direction": 1,
     "ranges": {
-      "foot_friction": [0.55, 0.36],
+      "foot_friction": [0.52, 0.30],
       "contact_delay_steps": [1, 2],
-      "phase_offset_abs": [0.02, 0.075],
-      "response_asymmetry_abs": [0.008, 0.038],
-      "action_bias_abs": [0.0, 0.022],
+      "phase_offset_abs": [0.02, 0.08],
+      "response_asymmetry_abs": [0.010, 0.050],
+      "action_gain": [1.0, 0.94],
+      "action_bias_abs": [0.002, 0.025],
     },
   },
   "L1": {
     "mode": "lateral",
     "family": "command_delay_and_low_pass",
     "formal": True,
-    "candidate_seed_prefix": 93,
+    "candidate_seed_prefix": 113,
     "direction": 1,
     "ranges": {
-      "command_delay_s": [0.14, 0.40],
-      "command_low_pass_s": [0.12, 0.40],
-      "lateral_pulse_min": [0.035, 0.035],
-      "lateral_pulse_max": [0.085, 0.085],
-      "yaw_pulse_min": [0.08, 0.08],
-      "yaw_pulse_max": [0.19, 0.19],
+      "rise_profile_half_width": [0.0035, 0.0035],
+      "tread_profile_half_width": [0.007, 0.007],
+      "command_forward_scale": [1.00, 1.03],
+      "command_delay_s": [0.14, 0.38],
+      "command_low_pass_s": [0.12, 0.36],
+      "action_gain": [0.99, 0.97],
+      "action_bias_abs": [0.010, 0.016],
+      "action_delay_steps": [1, 1],
+      "encoder_bias_abs": [0.002, 0.007],
+      "lateral_bias_abs": [0.030, 0.075],
+      "yaw_bias_abs": [0.060, 0.150],
+      "lateral_pulse_min": [0.045, 0.045],
+      "lateral_pulse_max": [0.105, 0.105],
+      "yaw_pulse_min": [0.100, 0.100],
+      "yaw_pulse_max": [0.240, 0.240],
+      "centerline_lateral_gain": [0.48, 0.38],
+      "centerline_heading_gain": [0.82, 0.64],
     },
   },
   "L2": {
     "mode": "lateral",
     "family": "yaw_bias_and_yaw_pulse",
     "formal": True,
-    "candidate_seed_prefix": 94,
+    "candidate_seed_prefix": 114,
     "direction": -1,
     "ranges": {
-      "yaw_bias_abs": [0.10, 0.28],
-      "yaw_pulse_min": [0.08, 0.20],
-      "yaw_pulse_max": [0.20, 0.48],
+      "rise_profile_half_width": [0.0035, 0.0035],
+      "tread_profile_half_width": [0.007, 0.007],
+      "command_forward_scale": [1.00, 1.025],
+      "command_delay_s": [0.20, 0.24],
+      "command_low_pass_s": [0.18, 0.22],
+      "action_gain": [0.99, 0.97],
+      "action_bias_abs": [0.010, 0.016],
+      "action_delay_steps": [1, 1],
+      "encoder_bias_abs": [0.002, 0.007],
+      "yaw_bias_abs": [0.08, 0.28],
+      "lateral_pulse_min": [0.030, 0.030],
+      "lateral_pulse_max": [0.070, 0.070],
+      "yaw_pulse_min": [0.12, 0.28],
+      "yaw_pulse_max": [0.28, 0.62],
+      "centerline_lateral_gain": [0.50, 0.34],
+      "centerline_heading_gain": [0.86, 0.58],
     },
   },
   "L3": {
     "mode": "lateral",
     "family": "lateral_bias_and_lateral_pulse",
     "formal": True,
-    "candidate_seed_prefix": 95,
+    "candidate_seed_prefix": 115,
     "direction": 1,
     "ranges": {
-      "lateral_bias_abs": [0.05, 0.18],
-      "lateral_pulse_min": [0.035, 0.10],
-      "lateral_pulse_max": [0.09, 0.23],
+      "rise_profile_half_width": [0.0035, 0.0035],
+      "tread_profile_half_width": [0.007, 0.007],
+      "command_forward_scale": [1.00, 1.025],
+      "command_delay_s": [0.20, 0.24],
+      "command_low_pass_s": [0.18, 0.22],
+      "action_gain": [0.99, 0.97],
+      "action_bias_abs": [0.010, 0.016],
+      "action_delay_steps": [1, 1],
+      "encoder_bias_abs": [0.002, 0.007],
+      "lateral_bias_abs": [0.05, 0.20],
+      "lateral_pulse_min": [0.05, 0.14],
+      "lateral_pulse_max": [0.12, 0.32],
+      "yaw_pulse_min": [0.080, 0.080],
+      "yaw_pulse_max": [0.180, 0.180],
+      "centerline_lateral_gain": [0.50, 0.34],
+      "centerline_heading_gain": [0.86, 0.58],
     },
   },
   "L4": {
     "mode": "lateral",
     "family": "weak_centerline_correction",
     "formal": True,
-    "candidate_seed_prefix": 96,
+    "candidate_seed_prefix": 116,
     "direction": -1,
     "ranges": {
-      "centerline_lateral_gain": [0.62, 0.08],
-      "centerline_heading_gain": [1.05, 0.18],
+      "rise_profile_half_width": [0.0035, 0.0035],
+      "tread_profile_half_width": [0.007, 0.007],
+      "command_forward_scale": [1.00, 1.03],
+      "command_delay_s": [0.20, 0.26],
+      "command_low_pass_s": [0.18, 0.24],
+      "action_gain": [0.99, 0.97],
+      "action_bias_abs": [0.010, 0.016],
+      "action_delay_steps": [1, 1],
+      "encoder_bias_abs": [0.002, 0.007],
+      "lateral_bias_abs": [0.030, 0.075],
+      "yaw_bias_abs": [0.060, 0.150],
+      "centerline_lateral_gain": [0.65, 0.08],
+      "centerline_heading_gain": [1.10, 0.18],
       "centerline_max_lateral_velocity": [0.13, 0.045],
       "centerline_max_yaw_velocity": [0.34, 0.10],
-      "lateral_pulse_min": [0.040, 0.040],
-      "lateral_pulse_max": [0.095, 0.095],
-      "yaw_pulse_min": [0.09, 0.09],
-      "yaw_pulse_max": [0.22, 0.22],
+      "lateral_pulse_min": [0.045, 0.045],
+      "lateral_pulse_max": [0.105, 0.105],
+      "yaw_pulse_min": [0.100, 0.100],
+      "yaw_pulse_max": [0.240, 0.240],
     },
   },
   "L5": {
     "mode": "lateral",
     "family": "moderate_mixed_lateral_shift",
     "formal": True,
-    "candidate_seed_prefix": 97,
+    "candidate_seed_prefix": 117,
     "direction": 1,
     "ranges": {
-      "command_delay_s": [0.08, 0.24],
-      "command_low_pass_s": [0.06, 0.22],
-      "lateral_bias_abs": [0.035, 0.105],
-      "yaw_bias_abs": [0.07, 0.21],
-      "lateral_pulse_max": [0.085, 0.19],
-      "yaw_pulse_max": [0.19, 0.42],
-      "centerline_lateral_gain": [0.68, 0.24],
-      "centerline_heading_gain": [1.12, 0.40],
+      "rise_profile_half_width": [0.0035, 0.0035],
+      "tread_profile_half_width": [0.007, 0.007],
+      "command_forward_scale": [0.995, 1.035],
+      "command_delay_s": [0.14, 0.32],
+      "command_low_pass_s": [0.12, 0.30],
+      "action_gain": [0.99, 0.96],
+      "action_bias_abs": [0.010, 0.018],
+      "action_delay_steps": [1, 1],
+      "encoder_bias_abs": [0.003, 0.009],
+      "lateral_bias_abs": [0.035, 0.12],
+      "yaw_bias_abs": [0.07, 0.24],
+      "lateral_pulse_min": [0.045, 0.10],
+      "lateral_pulse_max": [0.105, 0.23],
+      "yaw_pulse_min": [0.10, 0.24],
+      "yaw_pulse_max": [0.24, 0.54],
+      "centerline_lateral_gain": [0.58, 0.20],
+      "centerline_heading_gain": [1.00, 0.36],
+      "centerline_max_lateral_velocity": [0.12, 0.065],
+      "centerline_max_yaw_velocity": [0.32, 0.18],
     },
   },
   "C1": {
     "mode": "contact_stability",
     "family": "low_foot_friction",
     "formal": True,
-    "candidate_seed_prefix": 98,
+    "candidate_seed_prefix": 118,
     "direction": -1,
-    "ranges": {"foot_friction": [0.56, 0.25]},
+    "ranges": {"foot_friction": [0.52, 0.25]},
   },
   "C2": {
     "mode": "contact_stability",
     "family": "left_right_action_asymmetry",
     "formal": True,
-    "candidate_seed_prefix": 99,
+    "candidate_seed_prefix": 119,
     "direction": 1,
-    "ranges": {"response_asymmetry_abs": [0.025, 0.150]},
+    "ranges": {"response_asymmetry_abs": [0.040, 0.200]},
   },
   "C3": {
     "mode": "contact_stability",
     "family": "action_gain_and_encoder_bias",
     "formal": True,
-    "candidate_seed_prefix": 100,
+    "candidate_seed_prefix": 120,
     "direction": -1,
     "ranges": {
-      "action_gain": [0.97, 0.80],
-      "encoder_bias_abs": [0.006, 0.030],
+      "action_gain": [0.96, 0.80],
+      "encoder_bias_abs": [0.008, 0.030],
     },
   },
   "C4": {
     "mode": "contact_stability",
     "family": "friction_and_command_dynamics_mismatch",
     "formal": True,
-    "candidate_seed_prefix": 101,
+    "candidate_seed_prefix": 121,
     "direction": 1,
     "ranges": {
-      "foot_friction": [0.58, 0.39],
-      "command_forward_scale": [1.02, 1.16],
-      "command_low_pass_s": [0.04, 0.18],
-      "action_gain": [0.99, 0.88],
+      "foot_friction": [0.55, 0.32],
+      "command_forward_scale": [1.02, 1.20],
+      "command_low_pass_s": [0.02, 0.16],
+      "action_gain": [0.98, 0.82],
     },
   },
   "C5": {
     "mode": "contact_stability",
     "family": "moderate_mixed_contact_shift",
     "formal": True,
-    "candidate_seed_prefix": 102,
+    "candidate_seed_prefix": 122,
     "direction": -1,
     "ranges": {
-      "foot_friction": [0.56, 0.40],
+      "foot_friction": [0.54, 0.32],
       "contact_delay_steps": [1, 2],
-      "phase_offset_abs": [0.018, 0.068],
-      "response_asymmetry_abs": [0.008, 0.034],
-      "action_bias_abs": [0.0, 0.020],
+      "phase_offset_abs": [0.02, 0.08],
+      "response_asymmetry_abs": [0.010, 0.050],
+      "action_gain": [1.0, 0.94],
+      "action_bias_abs": [0.002, 0.025],
     },
   },
 }
@@ -965,6 +1037,29 @@ def generate_v21_specialist_context(
   if mode == "lateral":
     num_steps = 11
     tread = 0.338
+    rise_center = _v21_range_value(ranges, "rise_center", severity, 0.138)
+    tread_center = _v21_range_value(ranges, "tread_center", severity, tread)
+    rise_half_width = _v21_range_value(
+      ranges, "rise_profile_half_width", severity, 0.0
+    )
+    tread_half_width = _v21_range_value(
+      ranges, "tread_profile_half_width", severity, 0.0
+    )
+    rise_profile = _rounded_profile(
+      rng,
+      count=num_steps,
+      center=rise_center,
+      half_width=rise_half_width,
+    )
+    tread_profile = _rounded_profile(
+      rng,
+      count=num_steps,
+      center=tread_center,
+      half_width=tread_half_width,
+    )
+    command_forward_scale = _v21_range_value(
+      ranges, "command_forward_scale", severity, 1.0
+    )
     command_delay = _v21_range_value(
       ranges, "command_delay_s", severity, 0.0
     )
@@ -972,6 +1067,11 @@ def generate_v21_specialist_context(
       ranges, "command_low_pass_s", severity, 0.0
     )
     action_gain = _v21_range_value(ranges, "action_gain", severity, 1.0)
+    action_delay = int(
+      round(
+        _v21_range_value(ranges, "action_delay_steps", severity, 0.0)
+      )
+    )
     encoder_bias = direction * _v21_range_value(
       ranges, "encoder_bias_abs", severity, 0.0
     )
@@ -1049,10 +1149,29 @@ def generate_v21_specialist_context(
       recovery_reward_scale=0.50,
       edge_penalty_scale=0.20,
     )
-    command_forward_scale = 1.0
   else:
     num_steps = 24
     tread = 0.355
+    rise_center = _v21_range_value(ranges, "rise_center", severity, 0.138)
+    tread_center = _v21_range_value(ranges, "tread_center", severity, tread)
+    rise_half_width = _v21_range_value(
+      ranges, "rise_profile_half_width", severity, 0.0
+    )
+    tread_half_width = _v21_range_value(
+      ranges, "tread_profile_half_width", severity, 0.0
+    )
+    rise_profile = _rounded_profile(
+      rng,
+      count=num_steps,
+      center=rise_center,
+      half_width=rise_half_width,
+    )
+    tread_profile = _rounded_profile(
+      rng,
+      count=num_steps,
+      center=tread_center,
+      half_width=tread_half_width,
+    )
     command_delay = _v21_range_value(
       ranges, "command_delay_s", severity, 0.0
     )
@@ -1063,6 +1182,11 @@ def generate_v21_specialist_context(
       ranges, "command_forward_scale", severity, 1.0
     )
     action_gain = _v21_range_value(ranges, "action_gain", severity, 1.0)
+    action_delay = int(
+      round(
+        _v21_range_value(ranges, "action_delay_steps", severity, 0.0)
+      )
+    )
     encoder_bias = direction * _v21_range_value(
       ranges, "encoder_bias_abs", severity, 0.0
     )
@@ -1113,14 +1237,14 @@ def generate_v21_specialist_context(
 
   target = DeploymentContextParameters(
     num_steps=num_steps,
-    rise_profile=(0.138,) * num_steps,
-    tread_profile=(tread,) * num_steps,
+    rise_profile=rise_profile,
+    tread_profile=tread_profile,
     command_forward_scale=round(command_forward_scale, 6),
     command_delay_s=round(command_delay, 6),
     command_low_pass_s=round(command_low_pass, 6),
     action_gain=round(action_gain, 6),
     action_bias=action_bias,
-    action_delay_steps=0,
+    action_delay_steps=action_delay,
     encoder_bias=round(encoder_bias, 6),
     episode_length_s=40.0,
   )

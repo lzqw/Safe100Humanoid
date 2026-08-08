@@ -86,7 +86,7 @@ def test_v21_formal_family_primary_perturbations_are_distinct() -> None:
     contexts[context_id] = generate_v21_specialist_context(
       context_id, prefix * 100 + 19
     )
-  assert contexts["L1"]["target"]["command_delay_s"] == 0.4
+  assert contexts["L1"]["target"]["command_delay_s"] == 0.38
   assert contexts["L2"]["scenario"]["yaw_command_bias"] != 0.0
   assert contexts["L2"]["scenario"]["lateral_command_bias"] == 0.0
   assert contexts["L3"]["scenario"]["lateral_command_bias"] != 0.0
@@ -97,8 +97,36 @@ def test_v21_formal_family_primary_perturbations_are_distinct() -> None:
   assert contexts["C2"]["scenario"]["left_response_scale"] != 1.0
   assert contexts["C3"]["target"]["action_gain"] == 0.8
   assert abs(contexts["C3"]["target"]["encoder_bias"]) == 0.03
-  assert contexts["C4"]["target"]["command_forward_scale"] == 1.16
+  assert contexts["C4"]["target"]["command_forward_scale"] == 1.2
   assert contexts["C5"]["scenario"]["contact_observation_delay_steps"] == 2
+
+
+def test_v21_lateral_range_pilot_uses_frozen_difficulty_carriers() -> None:
+  for context_id in ("L_dev", "L1", "L2", "L3", "L4", "L5"):
+    prefix = int(V21_CONTEXT_SPECS[context_id]["candidate_seed_prefix"])
+    first = generate_v21_specialist_context(context_id, prefix * 100 + 8)
+    last = generate_v21_specialist_context(context_id, prefix * 100 + 19)
+    assert first["target"]["action_delay_steps"] == 1
+    assert last["target"]["action_delay_steps"] == 1
+    assert len(set(first["target"]["rise_profile"])) > 1
+    assert len(set(first["target"]["tread_profile"])) > 1
+    assert any(value != 0.0 for value in first["target"]["action_bias"])
+  for context_id in ("L1", "L4"):
+    prefix = int(V21_CONTEXT_SPECS[context_id]["candidate_seed_prefix"])
+    first = generate_v21_specialist_context(context_id, prefix * 100 + 8)
+    last = generate_v21_specialist_context(context_id, prefix * 100 + 19)
+    assert first["scenario"]["lateral_pulse_min"] == last["scenario"][
+      "lateral_pulse_min"
+    ]
+    assert first["scenario"]["lateral_pulse_max"] == last["scenario"][
+      "lateral_pulse_max"
+    ]
+    assert first["scenario"]["yaw_pulse_min"] == last["scenario"][
+      "yaw_pulse_min"
+    ]
+    assert first["scenario"]["yaw_pulse_max"] == last["scenario"][
+      "yaw_pulse_max"
+    ]
 
 
 def test_v21_confirmation_uses_three_independent_positive_block_rule() -> None:

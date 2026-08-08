@@ -2,14 +2,19 @@
 
 ## 当前证据状态 / Current evidence status
 
-This document records the prospective v21 design. At this revision, the code
-and tests exist, but no v21 calibration, development, adaptation, monitor, or
-formal-audit outcome has been observed. Result claims must come only from the
-later committed protocol revisions and fresh evidence package.
+This document records the prospective v21 design. The first corrected,
+prospectively frozen `L_dev` base-only sweep completed all 12 candidates and
+stopped because none satisfied the calibration gates. That negative range
+result is committed separately and is not an algorithm result: no development
+or formal adaptation, monitor, or audit was started. The current boundary is a
+base-policy-only range-feasibility pilot; it is explicitly excluded from formal
+context selection and uses fresh randomness.
 
-本文记录 v21 的前瞻性实验设计。本修订版只有实现与测试，还没有观察任何 v21
-calibration、development、adaptation、monitor 或 formal audit 结果。后续结果声明
-只能来自已提交的协议修订版与 fresh evidence 包。
+本文记录 v21 的前瞻性实验设计。第一轮修正并预先冻结的 `L_dev` base-only sweep
+完成了全部 12 个候选，但因没有候选满足校准门槛而停止。该负面范围结果已单独提交，
+且不是算法结果：尚未启动 development/formal adaptation、monitor 或 audit。当前边界
+是仅使用基础策略的范围可行性 pilot；它明确不属于 formal context selection，并使用
+全新随机数。
 
 ## 实验单位 / Experimental unit
 
@@ -50,6 +55,14 @@ Each family freezes an ordered 12-candidate severity sweep. Perturbation
 direction and normalized bias pattern stay fixed within a family. Calibration
 uses only `pi0` and freezes the first candidate satisfying all predeclared
 success, fall-count, and failure-purity gates.
+
+The failed first `L_dev` sweep showed that command smoothing and weaker
+centering could make the nominally stronger candidates easier. The range pilot
+therefore adds a frozen, family-specific geometry/actuator carrier to lateral
+contexts while keeping the named mechanism dominant. `L1` and `L4` retain
+fixed low disturbance pulses. Pilot observations may revise ranges only; the
+replacement formal calibration must freeze new candidate and evaluation
+randomness before it starts.
 
 ## Algorithm
 
@@ -118,7 +131,11 @@ outcome binding.
 
 ## Evidence boundaries
 
-The experiment has three immutable Git boundaries:
+The failed revision-0 sweep and each base-only range pilot are immutable Git
+evidence, but neither is a formal context-selection boundary. After range
+feasibility is established, the replacement experiment has three immutable Git
+boundaries with candidate, evaluation, adaptation, monitor, and bootstrap
+randomness not used or proposed by a pilot:
 
 1. revision 0: source, ranges, randomness, base checkpoint, and analysis plan,
    committed before base-only calibration;
