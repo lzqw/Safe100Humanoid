@@ -391,13 +391,20 @@ def _replacement_precalibration(args: argparse.Namespace) -> dict[str, Any]:
     protocol = json.loads(protocol_path.read_text())
     summary = json.loads(summary_path.read_text())
     qualifying = summary.get("qualifying_contexts")
+    range_pilot = protocol.get("range_pilot", {})
+    declared_pilot_id = range_pilot.get("pilot_id")
+    declared_contexts = range_pilot.get("contexts")
+    if pilot_id == 1 and declared_pilot_id is None:
+      declared_pilot_id = 1
+    if pilot_id == 1 and declared_contexts is None:
+      declared_contexts = list(CONTEXTS)
     if (
       protocol.get("protocol_id") != PROTOCOL_ID
       or protocol.get("protocol_revision") != f"range-pilot-{pilot_id}"
-      or protocol.get("range_pilot", {}).get("pilot_id") != pilot_id
-      or protocol.get("range_pilot", {}).get("base_policy_only") is not True
-      or protocol.get("range_pilot", {}).get("adapted_policy_evaluations_used")
-      is not False
+      or declared_pilot_id != pilot_id
+      or not isinstance(declared_contexts, list)
+      or range_pilot.get("base_policy_only") is not True
+      or range_pilot.get("adapted_policy_evaluations_used") is not False
       or summary.get("protocol_id") != PROTOCOL_ID
       or summary.get("stage")
       != "base_policy_only_context_range_feasibility_pilot"
@@ -417,7 +424,7 @@ def _replacement_precalibration(args: argparse.Namespace) -> dict[str, Any]:
         "pilot_id": pilot_id,
         "protocol": _verify_protocol_blob(repo, protocol_path, commit),
         "summary": _verify_protocol_blob(repo, summary_path, commit),
-        "contexts": protocol["range_pilot"]["contexts"],
+        "contexts": declared_contexts,
         "qualifying_contexts": qualifying,
         "formal_context_selection": False,
         "adapted_policy_outcomes_observed": False,
