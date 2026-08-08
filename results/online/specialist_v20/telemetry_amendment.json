@@ -1,0 +1,86 @@
+{
+  "correction": {
+    "first_attempt_outputs_may_be_reused_but_not_overwritten": true,
+    "formal_audit_or_training_rerun": false,
+    "formal_audit_outcomes_are_authoritative": true,
+    "lowest_pair_index_selection_unchanged": true,
+    "outcome_divergence_is_recorded": true,
+    "replay_curves_are_descriptive_not_formal_outcomes": true,
+    "retry_until_outcome_matches": false
+  },
+  "created_utc": "2026-08-08T07:23:58Z",
+  "formal_audit_artifacts": {
+    "lateral": {
+      "final_audit_summary.json": "9dff606fad5f68b052c3e4b7372bfc4b179ff9616b942f3a4e54e1e9ed15a39d",
+      "paired_episode_metrics.csv": "170eb8ce10aeea0924880661ee3d0405472cb35f16225e0d06ab62381d4ef45e",
+      "verification.json": "040359b3d533149476704ecd6a9241b5abf7a4cd478c3a7542d4dcdaec250d55"
+    }
+  },
+  "formal_boundaries": {
+    "contact_stability": {
+      "adaptation_files_written": 0,
+      "formal_audit_files_written": 0,
+      "formal_outcome_observed": false,
+      "training_started": false
+    },
+    "lateral": {
+      "audit_commit": "1428f57ff58ad8bb76da8e6c2fd1f5a22d8bd21c",
+      "audit_verified": true,
+      "claim_passed": false,
+      "formal_outcome_observed_before_telemetry_fix": true,
+      "paired_rows": 3840,
+      "protocol_commit": "1ded5b84f1c4b8605fd285ef3138c0363db20ee4",
+      "repairs": 426,
+      "regressions": 419,
+      "target_success_delta_mean_lcb95_ucb95": [
+        0.002734375,
+        -0.026953125,
+        0.032421875
+      ]
+    }
+  },
+  "implementation_commit": "22654dd3eae5d40dadf3f0e7576e0f496b88065b",
+  "original_frozen_source_sha256": {
+    "experiments/scripts/collect_mechanism_telemetry_v20.py": "1f4c13f1edee78d4cd079ed570f9084d1a115bb4e61b394c07d3edab100f6e04",
+    "experiments/scripts/evaluate_online_stairs.py": "0d0960f3f2f88b66b8613b2481da45cd7a21ef584606bfe0b91317422dd92bcf",
+    "experiments/scripts/plot_specialist_v20.py": "cd719a46a561a7392086f8782c5518a2f3764a9d507a50207a3bb1ff05e0d241"
+  },
+  "schema_version": 1,
+  "scope": "post-audit mechanism telemetry replay and figure disclosure only",
+  "source_file_sha256": {
+    "experiments/scripts/collect_mechanism_telemetry_replay_v20.py": "888931bf4b4f2cb15672af1fda81db5d447d30ef4b81627f42059c2160ea8e95",
+    "experiments/scripts/plot_specialist_v20_replay_disclosed.py": "9f2e05d1a1139e4e1f8dcb355f882328582fb1d3bc347e49e7aaf1e46d9c6878",
+    "experiments/tests/test_specialist_v20_telemetry_amendment.py": "d534fb3d0d50134d73bec7da353ed42501c7cc4a143d3d39b09e3f10a7fa1bdd"
+  },
+  "status": "frozen_after_verified_lateral_outcome_before_contact_training",
+  "triggering_failure": {
+    "actor_hash_matched_formal": true,
+    "failed_before_mechanism_metrics_or_selection_summary_was_written": true,
+    "failing_formal_identity": {
+      "adaptation_seed": 173,
+      "environment_id": 9,
+      "evaluation_seed": 5501000,
+      "formal_baseline_success": 0,
+      "formal_pair_index": 9,
+      "formal_transition_class": "failure_to_success",
+      "replay_baseline_success": 1
+    },
+    "first_attempt_file_sha256": {
+      "raw/seed173/baseline/episodes.csv": "7ba9ab3021434f7510cae2c045502cd328ccf499952fae4637906508c43a0988",
+      "raw/seed173/baseline/evaluation.json": "a6914108efc9450250566d401129de7d758d1688aa0630cc82344ebcb231c203",
+      "raw/seed173/baseline/telemetry.csv": "7bc34dead402a4b748c74bab7f854f23e8b32d44bcee74dda5cb14cc8bb2dafd",
+      "raw/seed73/baseline/episodes.csv": "bfc499051e87c1f6e561a0f5e8f9e53d7ca82ebc002828b9c4fc048f3362ef13",
+      "raw/seed73/baseline/evaluation.json": "08616f821e652c7d50fe68c9f7ee188d924a7587b415c6e4125475bc40948515",
+      "raw/seed73/baseline/telemetry.csv": "416e98b113277dd08a068fa7cba740625c74f1c9dfac8d92834b1e3538f2925b",
+      "raw/seed73/final/episodes.csv": "9b4fb7c69ffac46e75c71b0edff3f1ee36f9df5bbb2ad7abc35b3fd43c9dbfd8",
+      "raw/seed73/final/evaluation.json": "b8ef148251cbc16b322c046452676cb4aa47eaf206742e1bd0d2cd93165ee735",
+      "raw/seed73/final/telemetry.csv": "7cbefc29c421167b2b6ea8e2c2125859a11ecb11f5d054428c59db43f85a34ef"
+    },
+    "formal_audit_log_sha256": "fe0720c268b10d97b2308d42a010f312264fd17be52cf7445884b8f5355ac7a5",
+    "initial_state_signature_matched_formal": true,
+    "mechanism_policy_role_attempts_completed": 3,
+    "original_collector_exit_status": 1,
+    "root_cause": "A later telemetry-enabled GPU process can diverge chaotically from the formal trajectory even when its actor hash and initial-state signature are identical. Checked 128-environment blocks changed roughly 20 to 25 binary outcomes; therefore an exact-outcome replay cannot be treated as guaranteed.",
+    "selection_was_not_changed": true
+  }
+}
