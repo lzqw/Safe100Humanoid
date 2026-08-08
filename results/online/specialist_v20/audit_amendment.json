@@ -1,0 +1,101 @@
+{
+  "amendment_id": "safe100-specialist-v20-audit-infrastructure-amendment-1",
+  "created_at_utc": "2026-08-08T06:30:16Z",
+  "fresh_audit_evidence_boundary": {
+    "formal_audit_environment_was_constructed": true,
+    "formal_audit_episode_outcomes_observed": false,
+    "formal_audit_rows_written": 0,
+    "formal_audit_seed_was_not_changed": true,
+    "training_artifacts_rerun_or_modified": false
+  },
+  "implementation_parent_commit": "665a71dc54045b7efc10fa3a2aff392fe2468b8c",
+  "independent_specialist_scope": {
+    "contact_stability_training_or_audit_had_started": false,
+    "lateral_training_completed_before_failure": true,
+    "specialists_remain_independent": true
+  },
+  "infrastructure_failure": {
+    "audit_output_file_count": 0,
+    "ended_at_utc": "2026-08-07T05:54:06Z",
+    "exception": "RuntimeError: retention_actor_reference_state_dict has 405 input columns while the audit runner actor has 410",
+    "failed_before_base_actor_capture": true,
+    "failed_before_evaluation_loop": true,
+    "failed_phase": "lateral audit runner.load_online_checkpoint(base checkpoint)",
+    "log_bytes": 13570,
+    "log_path_external": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v20/audit_lateral.log",
+    "log_sha256": "14402677150e3be574947c8682a40ae4a8fb6eac1da80ee0d0e475a1574a8a03",
+    "started_at_utc": "2026-08-07T05:53:56Z"
+  },
+  "infrastructure_fix": {
+    "actor_or_checkpoint_tensor_modified": false,
+    "brief_ppo_refinement_checkpoint_semantics_enabled": true,
+    "evaluation_logic_modified": false,
+    "legacy_auxiliary_constraint_payload_used_by_v20": false,
+    "root_cause": "The audit configured the 410-D observable actor interface but omitted the v19 Revision-4 Brief-PPO algorithm mode. The generic online loader therefore attempted to restore an irrelevant legacy 405-D retention-actor payload before any evaluation.",
+    "scope": "audit checkpoint loader configuration only",
+    "training_logic_modified": false
+  },
+  "schema_version": 1,
+  "source_file_sha256": {
+    "experiments/scripts/audit_specialist_diagonal_v20.py": "61e70cd433cd50c2a14f7daaa699e0bf15a6f0048a04765514ba1d25a6aef6d6",
+    "experiments/scripts/audit_specialists_diagonal_v19.py": "0b35d5f862dbca90f42cf9223c001ca77b837f3329dafb966fd9bb90e1852f65",
+    "experiments/scripts/collect_mechanism_telemetry_v20.py": "1f4c13f1edee78d4cd079ed570f9084d1a115bb4e61b394c07d3edab100f6e04",
+    "experiments/scripts/diagonal_audit_stats.py": "9cd2caec8e4ece1b969488b74eb8e71ad562bf5a1bde8350c019a54a67f695a5",
+    "experiments/scripts/evaluate_online_stairs.py": "0d0960f3f2f88b66b8613b2481da45cd7a21ef584606bfe0b91317422dd92bcf",
+    "experiments/scripts/online_refine_stairs.py": "e0176eec024c8a0fb2c6012bdf4660888ee5969fa2a5b364d9fb0acf907b7cde",
+    "experiments/scripts/run_specialist_diagonal_audit_v20.sh": "ffa1cde7ef6f76ce939015dfdc463dd4195fe7dba15e4a37a1aace7375b393e9",
+    "experiments/scripts/run_specialist_queue_v20.sh": "bd7420e941c17b87c718587c5aa531fa173a0f766ab9a8f3ae736d1decd487da",
+    "experiments/scripts/specialist_v20_protocol.py": "d93a27ec6ba7c2bf7fcca9211fb15f6f8c21d8ac01ca38d27b79ecb76d11cc3f",
+    "experiments/scripts/verify_specialist_audit_v20.py": "4a9d590e8f80342cc574545124ea567a1a02eb4199a304e215482e8f2d761b2c",
+    "src/tasks/stairs_cbf/actions.py": "e04354c1bb9bfe4f57055a98dde22a1e13a30ff3a7b02af93633bd90001a5514",
+    "src/tasks/stairs_cbf/command.py": "af568a025f275fa018aeb97e8a1c341ee7bfa07d4b04be73b48caed7f794ab43",
+    "src/tasks/stairs_cbf/config.py": "22a57df095616e1f19f7cf6f18d7ba173ecef7901bf2a85da2a5faaa11c32f8a",
+    "src/tasks/stairs_cbf/deployment_context.py": "8344ae02ae062cfb542df68f3327e208120f3af94e43228b4f47d5f8e25eaff6",
+    "src/tasks/stairs_cbf/mdp.py": "631a9fefcf2026521c1c43ecf2dc1851124ce47921a1ddf4191ae7db31475754",
+    "src/tasks/stairs_cbf/online.py": "7a20fea7e487a6b484e6fd23b225b7cdaab4e0764d377d5867805829d5a0b5e5",
+    "src/tasks/velocity/mdp/observations.py": "5e759917b7d3132b4bd7c640eae14d472f01b175f222d6358330ae9a159becd1"
+  },
+  "status": "prospectively_frozen_before_first_formal_audit_episode_outcome",
+  "training_artifact_snapshot": {
+    "accepted_update_counts_by_seed": {
+      "173": 3,
+      "273": 4,
+      "373": 2,
+      "473": 2,
+      "73": 4
+    },
+    "all_five_lateral_runs_completed_exactly_eight_rounds": true,
+    "checkpoint_sha256_by_seed": {
+      "173": "eb741638791da9841d563ca0baa8523f0aacec6d895cfade4bcef2b8890b13e1",
+      "273": "ed5467203f0e0cffc9bf1c3494c1fa6621e6069aa533194158efe14f69b18189",
+      "373": "bce0b416f16bff1f0f5a3a9a75cc906caa03ac1a43d03d60ab1f058f9f99de71",
+      "473": "8001b19029b033d39859ef47ecd7f224d9da5a40a1e8b8f86239234cce6a2844",
+      "73": "8a0e4ff3bfa279362c95887191de9ae1210648d197c4e5bcd86931304aa0c584"
+    },
+    "legacy_actor_column_drift_all_seeds": 0.0,
+    "training_protocol_sha256_all_seeds": "74242b1131499f7163ef1985d25a94ca06b0758f6a3d5f2dea9f56ac200c28da"
+  },
+  "training_protocol": {
+    "file": "results/online/specialist_v20/protocol.json",
+    "git_commit": "1ded5b84f1c4b8605fd285ef3138c0363db20ee4",
+    "sha256": "74242b1131499f7163ef1985d25a94ca06b0758f6a3d5f2dea9f56ac200c28da"
+  },
+  "unchanged_formal_evaluation": {
+    "adaptation_seeds": [
+      73,
+      173,
+      273,
+      373,
+      473
+    ],
+    "audit_seed": 5500000,
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 6500000,
+    "d0_paired_episodes_per_adaptation_seed": 256,
+    "filter_free_evaluation": false,
+    "macro_average": false,
+    "off_diagonal_evaluation": false,
+    "runtime_cbf": true,
+    "target_paired_episodes_per_adaptation_seed": 512
+  }
+}

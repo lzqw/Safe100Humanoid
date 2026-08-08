@@ -397,3 +397,29 @@ def test_v20_audit_uses_brief_checkpoint_loader_before_any_load() -> None:
   assert "--audit-commit" in source
   assert "--audit-amendment" in source
   assert "actor_or_checkpoint_tensor_modified" in source
+
+
+def test_v20_audit_amendment_preserves_training_and_evaluation_seals() -> None:
+  amendment = json.loads(
+    (
+      REPO / "results/online/specialist_v20/audit_amendment.json"
+    ).read_text()
+  )
+  assert amendment["status"] == (
+    "prospectively_frozen_before_first_formal_audit_episode_outcome"
+  )
+  boundary = amendment["fresh_audit_evidence_boundary"]
+  assert boundary["formal_audit_episode_outcomes_observed"] is False
+  assert boundary["formal_audit_rows_written"] == 0
+  assert boundary["training_artifacts_rerun_or_modified"] is False
+  assert amendment["training_protocol"]["git_commit"] == (
+    "1ded5b84f1c4b8605fd285ef3138c0363db20ee4"
+  )
+  assert amendment["unchanged_formal_evaluation"]["audit_seed"] == 5_500_000
+  assert amendment["unchanged_formal_evaluation"]["bootstrap_seed"] == (
+    6_500_000
+  )
+  for relative, expected_hash in amendment["source_file_sha256"].items():
+    assert hashlib.sha256((REPO / relative).read_bytes()).hexdigest() == (
+      expected_hash
+    )
