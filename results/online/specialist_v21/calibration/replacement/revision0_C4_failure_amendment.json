@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "protocol_id": "safe100-deployment-unit-local-matched-success-v21",
+  "event_id": "v21-replacement-revision0-C4-calibration-range-failure-001",
+  "stage": "replacement_base_policy_only_calibration",
+  "started_at_utc": "2026-08-08T19:33:36Z",
+  "stopped_at_utc": "2026-08-08T20:32:28Z",
+  "failed_context_id": "C4",
+  "prospective_protocol": {
+    "file": "results/online/specialist_v21/protocol_precalibration_replacement.json",
+    "git_commit": "5eee8c9f20660f91bdac32f485d84471de630d9c",
+    "sha256": "b4426ae823538eb56978fd673cb3d357f85fbe616b60a877efb133e1c278211b"
+  },
+  "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "failure_class": "prospectively_frozen_C4_range_produced_no_qualifying_candidate_at_512_episodes",
+  "error_type": "RuntimeError",
+  "error_message": "no declared v21 C4 candidate passed every gate",
+  "selection_rule_completed_without_manual_intervention": true,
+  "total_base_policy_episodes_before_stop": 16896,
+  "completed_contexts": {
+    "L_dev": {
+      "selected_candidate_seed": 35109,
+      "success_rate": 0.8046875,
+      "fall_count": 100,
+      "target_failure_fraction": 0.81,
+      "second_failure_fraction": 0.19,
+      "context_file": "results/online/specialist_v21/contexts_replacement/L_dev.json",
+      "context_file_sha256": "19821d73691035dbfe73d18abde1f195d8437c16298fea95c2dc7ac13e61d422"
+    },
+    "C_dev": {
+      "selected_candidate_seed": 35211,
+      "success_rate": 0.7734375,
+      "fall_count": 116,
+      "target_failure_fraction": 0.9741379310344828,
+      "second_failure_fraction": 0.02586206896551724,
+      "context_file": "results/online/specialist_v21/contexts_replacement/C_dev.json",
+      "context_file_sha256": "7a08e15f2f02f43fc47d558bd527f4ce31d0916704ee7468ec092549401c82ef"
+    },
+    "L1": {
+      "selected_candidate_seed": 35308,
+      "success_rate": 0.77734375,
+      "fall_count": 114,
+      "target_failure_fraction": 0.8596491228070176,
+      "second_failure_fraction": 0.14035087719298245,
+      "context_file": "results/online/specialist_v21/contexts_replacement/L1.json",
+      "context_file_sha256": "74e441e5bc7806604a247da43d3dd6dbbb1fe015ab3f0bde992b6076f25850dd"
+    },
+    "L2": {
+      "selected_candidate_seed": 35408,
+      "success_rate": 0.755859375,
+      "fall_count": 125,
+      "target_failure_fraction": 0.848,
+      "second_failure_fraction": 0.152,
+      "context_file": "results/online/specialist_v21/contexts_replacement/L2.json",
+      "context_file_sha256": "38d3a2ce72aa1096d7d76e4baca50a0c6eecb2b82680491abd0b755afcfa53d1"
+    },
+    "L3": {
+      "selected_candidate_seed": 35508,
+      "success_rate": 0.791015625,
+      "fall_count": 107,
+      "target_failure_fraction": 0.822429906542056,
+      "second_failure_fraction": 0.17757009345794392,
+      "context_file": "results/online/specialist_v21/contexts_replacement/L3.json",
+      "context_file_sha256": "f29f913bd027fa2d271cc433374c37afea66bed1cf98c355af6e15263131f8cd"
+    },
+    "L4": {
+      "selected_candidate_seed": 35608,
+      "success_rate": 0.7890625,
+      "fall_count": 108,
+      "target_failure_fraction": 0.8333333333333334,
+      "second_failure_fraction": 0.16666666666666666,
+      "context_file": "results/online/specialist_v21/contexts_replacement/L4.json",
+      "context_file_sha256": "7b66dacb6b2114581b495d35cb3e61760f395aeb26522a96bf041247e6bf66ec"
+    },
+    "L5": {
+      "selected_candidate_seed": 35710,
+      "success_rate": 0.76171875,
+      "fall_count": 122,
+      "target_failure_fraction": 0.8524590163934426,
+      "second_failure_fraction": 0.14754098360655737,
+      "context_file": "results/online/specialist_v21/contexts_replacement/L5.json",
+      "context_file_sha256": "8a82a57b67bf6d7e41c659d94ccb69f9c19e51b461ead92d2f92e167aaf5b652"
+    },
+    "C1": {
+      "selected_candidate_seed": 35813,
+      "success_rate": 0.771484375,
+      "fall_count": 117,
+      "target_failure_fraction": 0.9914529914529915,
+      "second_failure_fraction": 0.008547008547008548,
+      "context_file": "results/online/specialist_v21/contexts_replacement/C1.json",
+      "context_file_sha256": "f7b15669c144609a2de3163f8750bf5c2961f9d48b61e9ff295d5c60b8b01a03"
+    },
+    "C2": {
+      "selected_candidate_seed": 35908,
+      "success_rate": 0.765625,
+      "fall_count": 120,
+      "target_failure_fraction": 0.925,
+      "second_failure_fraction": 0.075,
+      "context_file": "results/online/specialist_v21/contexts_replacement/C2.json",
+      "context_file_sha256": "e3487290fb9533bdd878e22e0727c83b790ae32d56faf966ef330b201439dfd0"
+    },
+    "C3": {
+      "selected_candidate_seed": 36008,
+      "success_rate": 0.775390625,
+      "fall_count": 115,
+      "target_failure_fraction": 1.0,
+      "second_failure_fraction": 0.0,
+      "context_file": "results/online/specialist_v21/contexts_replacement/C3.json",
+      "context_file_sha256": "feb031473247a6f1b0277f20b30c9c652f788b451825d26a1187ebbd7df6226b"
+    }
+  },
+  "failed_context": {
+    "context_id": "C4",
+    "candidate_seeds_evaluated_in_frozen_order": [
+      36108,
+      36109,
+      36110,
+      36111,
+      36112,
+      36113,
+      36114,
+      36115,
+      36116,
+      36117,
+      36118,
+      36119
+    ],
+    "candidate_count": 12,
+    "episodes_per_candidate": 512,
+    "total_episodes": 6144,
+    "gate_counts": {
+      "success_rate_between_0p70_and_0p85": 2,
+      "fall_count_at_least_100": 7,
+      "contact_failure_fraction_at_least_0p75": 12,
+      "second_failure_fraction_at_most_0p20": 12,
+      "all_gates": 0
+    },
+    "observed_ranges": {
+      "success_rate": [
+        0.005859375,
+        0.8828125
+      ],
+      "fall_count": [
+        60,
+        509
+      ],
+      "contact_failure_fraction": [
+        0.9560439560439561,
+        1.0
+      ]
+    },
+    "fine_range_bracket": {
+      "too_easy_candidate": {
+        "candidate_seed": 36112,
+        "candidate_severity": 0.363636363636,
+        "success_rate": 0.822265625,
+        "fall_count": 91,
+        "target_failure_fraction": 0.9560439560439561,
+        "second_failure_fraction": 0.04395604395604396,
+        "failed_gate": "fall_count_below_100"
+      },
+      "just_too_hard_candidate": {
+        "candidate_seed": 36113,
+        "candidate_severity": 0.454545454545,
+        "success_rate": 0.69921875,
+        "success_count": 358,
+        "successes_short_of_lower_gate": 1,
+        "fall_count": 154,
+        "target_failure_fraction": 1.0,
+        "second_failure_fraction": 0.0,
+        "failed_gate": "success_rate_below_0.70"
+      }
+    },
+    "committed_progress_file": "results/online/specialist_v21/calibration/replacement/C4/calibration_progress.json",
+    "committed_progress_sha256": "0c638cc781d56caf1338613758d8b6e540c92cc43e8f74573c1eaab83fbd60b3"
+  },
+  "contexts_not_attempted_after_fail_fast_stop": [
+    "C5"
+  ],
+  "base_policy_calibration_outcomes_observed": true,
+  "adaptation_process_started": false,
+  "adapted_policy_outcomes_observed": false,
+  "development_beta_selection_started": false,
+  "formal_adaptation_or_audit_outcomes_observed": false,
+  "queue_completed_marker_observed": false,
+  "processes_running_after_stop": false,
+  "process_audit_at_utc": "2026-08-08T20:35:05Z",
+  "compact_evidence": {
+    "git_commit": "9317981f638914f3ee75722e4631d16437f416ea",
+    "file_count": 31,
+    "manifest_sha256": "56403ed87c855c3fcd57569036b9323e9f805e8074e9b7146914c8ccde66efcb",
+    "manifest_definition": "SHA-256 of sorted sha256sum lines for paths rooted at results/online/specialist_v21 and restricted to calibration/replacement and contexts_replacement"
+  },
+  "external_evidence": {
+    "artifact_root": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_replacement",
+    "artifact_file_count": 351,
+    "artifact_total_bytes": 145134335,
+    "artifact_manifest_sha256": "46c329461a6c9b7254c27cb99de29cd8904aa4aa96298c457251445989822114",
+    "log_root": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v21_replacement",
+    "log_file_count": 12,
+    "log_total_bytes": 364982,
+    "log_manifest_sha256": "9e887ca4770826dd1d2b555bae34a22d58dbc8d0513f646e499df48c8f0c8ace",
+    "queue_log_sha256": "fda658f93727a153d48d4b5690dc9bc246b70dce4b44097857d7fd3a5a6883c6",
+    "failed_context_log_sha256": "bfdd79d72ec19028d9ce3cb73da7deb102a5d8174c43b3d2408e3f4c5d27d51f",
+    "manifest_definition": "SHA-256 of sorted sha256sum lines rooted at the corresponding directory and using relative paths"
+  },
+  "interpretation": "The physical-clearance redesign solved L2 under fresh 512-episode randomness, and nine other contexts also froze normally. C4 failed because its coarse mixed contact range crossed a narrow difficulty cliff: severity 0.363636 remained nine falls short, while severity 0.454545 was exactly one success short of the lower success gate and every stronger point was over-difficult. Contact-mechanism purity was at least 95.60% throughout, so the mechanism is retained and only the bracket resolution must change.",
+  "disposition": "stopped_before_any_adaptation_and_requires_a_fine_C4_base_only_range_pilot",
+  "formal_calibration_ready": false,
+  "remediation_constraints": {
+    "preserve_this_failed_replacement_calibration": true,
+    "retain_the_C4_contact_mechanism": true,
+    "pilot_only_the_C4_interval_between_original_severity_0p38_and_0p45": true,
+    "use_only_base_policy_evidence_to_refine_C4": true,
+    "do_not_tune_against_any_adapted_policy_outcome": true,
+    "use_entirely_new_candidate_and_evaluation_randomness": true,
+    "freeze_and_commit_every_new_boundary_before_execution": true
+  }
+}
