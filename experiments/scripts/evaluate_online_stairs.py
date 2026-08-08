@@ -84,7 +84,10 @@ def evaluate_policy(
   if v19_context is not None and (
     deployment_context is None
     or deployment_context.get("kind")
-    != "observable_failure_conditioned_brief_ppo_v19"
+    not in (
+      "observable_failure_conditioned_brief_ppo_v19",
+      "local_matched_success_preservation_v21",
+    )
   ):
     from src.tasks.stairs_cbf.deployment_context import (
       configure_v19_actor_interface,
@@ -666,6 +669,22 @@ def evaluate_policy(
     env.close()
 
   completed = completed[:num_episodes]
+  if telemetry_rows:
+    outcome_by_environment = {
+      int(row["environment_id"]): row for row in completed
+    }
+    for row in telemetry_rows:
+      outcome = outcome_by_environment.get(int(row["environment_id"]))
+      if outcome is None:
+        raise RuntimeError(
+          "inline mechanism telemetry is missing its same-rollout outcome"
+        )
+      row.update(
+        telemetry_success=bool(outcome["success"]),
+        telemetry_fell=bool(outcome["fell"]),
+        telemetry_failure_type=str(outcome["failure_type"]),
+        telemetry_episode_steps=int(outcome["steps"]),
+      )
   survival = {}
   hazard = {}
   for k in range(1, n_risers + 1):
@@ -842,6 +861,7 @@ def evaluate_policy(
     ),
     "mechanism_telemetry_environment_id": telemetry_env_id,
     "mechanism_telemetry_row_count": len(telemetry_rows),
+    "mechanism_telemetry_same_rollout_outcome_bound": bool(telemetry_rows),
   }
   if telemetry_output_csv is not None:
     if not telemetry_rows:
@@ -918,10 +938,11 @@ def main() -> None:
     == "observable_failure_conditioned_brief_ppo_v19"
   ):
     v19_context = deployment_context
-  if v19_context is not None and v19_context.get("kind") != (
-    "observable_failure_conditioned_brief_ppo_v19"
+  if v19_context is not None and v19_context.get("kind") not in (
+    "observable_failure_conditioned_brief_ppo_v19",
+    "local_matched_success_preservation_v21",
   ):
-    raise ValueError("--v19-context is not a v19 observable-failure context")
+    raise ValueError("--v19-context is not a v19/v21 observable-failure context")
   inferred_role = deployment_context_role_for_task(args.task)
   context_role = args.deployment_context_role or inferred_role
   if inferred_role is not None and deployment_context is None:
@@ -937,7 +958,10 @@ def main() -> None:
   if v19_context is not None and (
     deployment_context is None
     or deployment_context.get("kind")
-    != "observable_failure_conditioned_brief_ppo_v19"
+    not in (
+      "observable_failure_conditioned_brief_ppo_v19",
+      "local_matched_success_preservation_v21",
+    )
   ):
     from src.tasks.stairs_cbf.deployment_context import (
       configure_v19_actor_interface,

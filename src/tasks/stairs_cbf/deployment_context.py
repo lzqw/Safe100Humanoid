@@ -40,6 +40,175 @@ V19_SPECIALIST_FAILURE_TYPES = {
   "lateral": "lateral_heading_drift",
   "contact_stability": "contact_stability",
 }
+V21_CONTEXT_SCHEMA_VERSION = 1
+V21_CONTEXT_KIND = "local_matched_success_preservation_v21"
+V21_CALIBRATION_KIND = (
+  "base_policy_context_family_first_qualifying_v21"
+)
+V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
+  "L_dev": {
+    "mode": "lateral",
+    "family": "excluded_development_mixed_lateral",
+    "formal": False,
+    "candidate_seed_prefix": 91,
+    "direction": -1,
+    "ranges": {
+      "command_delay_s": [0.10, 0.30],
+      "command_low_pass_s": [0.08, 0.28],
+      "lateral_bias_abs": [0.04, 0.12],
+      "yaw_bias_abs": [0.08, 0.24],
+      "lateral_pulse_max": [0.10, 0.20],
+      "yaw_pulse_max": [0.22, 0.44],
+      "centerline_lateral_gain": [0.60, 0.20],
+      "centerline_heading_gain": [1.00, 0.35],
+    },
+  },
+  "C_dev": {
+    "mode": "contact_stability",
+    "family": "excluded_development_mixed_contact",
+    "formal": False,
+    "candidate_seed_prefix": 92,
+    "direction": 1,
+    "ranges": {
+      "foot_friction": [0.55, 0.36],
+      "contact_delay_steps": [1, 2],
+      "phase_offset_abs": [0.02, 0.075],
+      "response_asymmetry_abs": [0.008, 0.038],
+      "action_bias_abs": [0.0, 0.022],
+    },
+  },
+  "L1": {
+    "mode": "lateral",
+    "family": "command_delay_and_low_pass",
+    "formal": True,
+    "candidate_seed_prefix": 93,
+    "direction": 1,
+    "ranges": {
+      "command_delay_s": [0.14, 0.40],
+      "command_low_pass_s": [0.12, 0.40],
+      "lateral_pulse_min": [0.035, 0.035],
+      "lateral_pulse_max": [0.085, 0.085],
+      "yaw_pulse_min": [0.08, 0.08],
+      "yaw_pulse_max": [0.19, 0.19],
+    },
+  },
+  "L2": {
+    "mode": "lateral",
+    "family": "yaw_bias_and_yaw_pulse",
+    "formal": True,
+    "candidate_seed_prefix": 94,
+    "direction": -1,
+    "ranges": {
+      "yaw_bias_abs": [0.10, 0.28],
+      "yaw_pulse_min": [0.08, 0.20],
+      "yaw_pulse_max": [0.20, 0.48],
+    },
+  },
+  "L3": {
+    "mode": "lateral",
+    "family": "lateral_bias_and_lateral_pulse",
+    "formal": True,
+    "candidate_seed_prefix": 95,
+    "direction": 1,
+    "ranges": {
+      "lateral_bias_abs": [0.05, 0.18],
+      "lateral_pulse_min": [0.035, 0.10],
+      "lateral_pulse_max": [0.09, 0.23],
+    },
+  },
+  "L4": {
+    "mode": "lateral",
+    "family": "weak_centerline_correction",
+    "formal": True,
+    "candidate_seed_prefix": 96,
+    "direction": -1,
+    "ranges": {
+      "centerline_lateral_gain": [0.62, 0.08],
+      "centerline_heading_gain": [1.05, 0.18],
+      "centerline_max_lateral_velocity": [0.13, 0.045],
+      "centerline_max_yaw_velocity": [0.34, 0.10],
+      "lateral_pulse_min": [0.040, 0.040],
+      "lateral_pulse_max": [0.095, 0.095],
+      "yaw_pulse_min": [0.09, 0.09],
+      "yaw_pulse_max": [0.22, 0.22],
+    },
+  },
+  "L5": {
+    "mode": "lateral",
+    "family": "moderate_mixed_lateral_shift",
+    "formal": True,
+    "candidate_seed_prefix": 97,
+    "direction": 1,
+    "ranges": {
+      "command_delay_s": [0.08, 0.24],
+      "command_low_pass_s": [0.06, 0.22],
+      "lateral_bias_abs": [0.035, 0.105],
+      "yaw_bias_abs": [0.07, 0.21],
+      "lateral_pulse_max": [0.085, 0.19],
+      "yaw_pulse_max": [0.19, 0.42],
+      "centerline_lateral_gain": [0.68, 0.24],
+      "centerline_heading_gain": [1.12, 0.40],
+    },
+  },
+  "C1": {
+    "mode": "contact_stability",
+    "family": "low_foot_friction",
+    "formal": True,
+    "candidate_seed_prefix": 98,
+    "direction": -1,
+    "ranges": {"foot_friction": [0.56, 0.25]},
+  },
+  "C2": {
+    "mode": "contact_stability",
+    "family": "left_right_action_asymmetry",
+    "formal": True,
+    "candidate_seed_prefix": 99,
+    "direction": 1,
+    "ranges": {"response_asymmetry_abs": [0.025, 0.150]},
+  },
+  "C3": {
+    "mode": "contact_stability",
+    "family": "action_gain_and_encoder_bias",
+    "formal": True,
+    "candidate_seed_prefix": 100,
+    "direction": -1,
+    "ranges": {
+      "action_gain": [0.97, 0.80],
+      "encoder_bias_abs": [0.006, 0.030],
+    },
+  },
+  "C4": {
+    "mode": "contact_stability",
+    "family": "friction_and_command_dynamics_mismatch",
+    "formal": True,
+    "candidate_seed_prefix": 101,
+    "direction": 1,
+    "ranges": {
+      "foot_friction": [0.58, 0.39],
+      "command_forward_scale": [1.02, 1.16],
+      "command_low_pass_s": [0.04, 0.18],
+      "action_gain": [0.99, 0.88],
+    },
+  },
+  "C5": {
+    "mode": "contact_stability",
+    "family": "moderate_mixed_contact_shift",
+    "formal": True,
+    "candidate_seed_prefix": 102,
+    "direction": -1,
+    "ranges": {
+      "foot_friction": [0.56, 0.40],
+      "contact_delay_steps": [1, 2],
+      "phase_offset_abs": [0.018, 0.068],
+      "response_asymmetry_abs": [0.008, 0.034],
+      "action_bias_abs": [0.0, 0.020],
+    },
+  },
+}
+V21_DEVELOPMENT_CONTEXTS = ("L_dev", "C_dev")
+V21_FORMAL_CONTEXTS = (
+  "L1", "L2", "L3", "L4", "L5", "C1", "C2", "C3", "C4", "C5"
+)
 MEDIUM_TARGET_DOMAIN = "DQHMED"
 MEDIUM_NEIGHBOR_DOMAIN = "DQNHMED"
 
@@ -143,7 +312,20 @@ def _canonical_json(value: Mapping[str, Any]) -> bytes:
 
 def deployment_context_sha256(payload: Mapping[str, Any]) -> str:
   """Hash only the frozen parameters and schema, excluding calibration metrics."""
-  if payload["kind"] in (SPECIALIST_CONTEXT_KIND, V19_CONTEXT_KIND):
+  if payload["kind"] == V21_CONTEXT_KIND:
+    identity = {
+      "kind": payload["kind"],
+      "schema_version": payload["schema_version"],
+      "calibration_candidate_seed": payload["calibration_candidate_seed"],
+      "specialist_mode": payload["specialist_mode"],
+      "context_id": payload["context_id"],
+      "context_family": payload["context_family"],
+      "formal_context": payload["formal_context"],
+      "family_spec_sha256": payload["family_spec_sha256"],
+      "target": payload["target"],
+      "scenario": payload["scenario"],
+    }
+  elif payload["kind"] in (SPECIALIST_CONTEXT_KIND, V19_CONTEXT_KIND):
     identity = {
       "kind": payload["kind"],
       "schema_version": payload["schema_version"],
@@ -272,7 +454,9 @@ def _validate_specialist_scenario(
     raise ValueError("specialist signal has weight outside its declared mode")
 
 
-def _validate_v19_scenario(mode: str, parameters: V19ScenarioParameters) -> None:
+def _validate_v19_scenario(
+  mode: str, parameters: V19ScenarioParameters, *, v21: bool = False
+) -> None:
   if mode not in V19_SPECIALIST_MODES:
     raise ValueError(f"unsupported v19 specialist mode: {mode!r}")
   finite = tuple(
@@ -307,19 +491,27 @@ def _validate_v19_scenario(mode: str, parameters: V19ScenarioParameters) -> None
     raise ValueError("v19 yaw command bound is invalid")
   if not 0.04 <= parameters.toe_margin <= 0.18:
     raise ValueError("v19 toe margin is outside [0.04, 0.18]")
-  if not 0.35 <= parameters.foot_friction <= 1.20:
-    raise ValueError("v19 friction must stay above the very-low-friction regime")
+  minimum_friction = 0.25 if v21 else 0.35
+  if not minimum_friction <= parameters.foot_friction <= 1.20:
+    raise ValueError(
+      f"observable-context friction must stay in [{minimum_friction}, 1.20]"
+    )
   if parameters.contact_observation_delay_steps not in (0, 1, 2):
     raise ValueError("v19 contact sensing delay must be 0--2 control steps")
   if abs(parameters.gait_phase_offset) > 0.08:
     raise ValueError("v19 gait/contact phase offset exceeds 0.08 cycles")
+  maximum_response_shift = 0.20 if v21 else 0.04
   if not all(
-    0.96 <= value <= 1.04
+    1.0 - maximum_response_shift <= value <= 1.0 + maximum_response_shift
     for value in (parameters.left_response_scale, parameters.right_response_scale)
   ):
-    raise ValueError("v19 left/right response scale must stay within four percent")
-  if abs(parameters.left_response_scale - parameters.right_response_scale) > 0.08:
-    raise ValueError("v19 response asymmetry is too large")
+    raise ValueError(
+      "observable-context response scale exceeds its versioned bound"
+    )
+  if abs(parameters.left_response_scale - parameters.right_response_scale) > (
+    2.0 * maximum_response_shift
+  ):
+    raise ValueError("observable-context response asymmetry is too large")
   if not 0.0 < parameters.recovery_reward_scale <= 1.0:
     raise ValueError("v19 recovery reward scale is invalid")
   if not 0.0 <= parameters.edge_penalty_scale <= 1.0:
@@ -734,6 +926,224 @@ def generate_v19_specialist_context(
   return payload
 
 
+def _v21_range_value(
+  ranges: Mapping[str, Any], key: str, severity: float, default: float
+) -> float:
+  values = ranges.get(key)
+  if values is None:
+    return float(default)
+  if not isinstance(values, list) or len(values) != 2:
+    raise ValueError(f"v21 family range {key!r} must contain two endpoints")
+  return float(values[0]) + severity * (float(values[1]) - float(values[0]))
+
+
+def generate_v21_specialist_context(
+  context_id: str, candidate_seed: int
+) -> dict[str, Any]:
+  """Generate one prospectively ranged v21 deployment-family candidate."""
+  if context_id not in V21_CONTEXT_SPECS:
+    raise ValueError(f"unsupported v21 context ID: {context_id!r}")
+  spec = V21_CONTEXT_SPECS[context_id]
+  candidate_index = candidate_seed % 100
+  expected_prefix = int(spec["candidate_seed_prefix"])
+  if candidate_seed // 100 != expected_prefix or not 8 <= candidate_index <= 19:
+    raise ValueError(
+      f"v21 {context_id} candidate seeds must be "
+      f"{expected_prefix * 100 + 8}--{expected_prefix * 100 + 19}"
+    )
+  severity = (candidate_index - 8) / 11.0
+  # Hold direction and the normalized action-bias pattern fixed within a
+  # family. Candidate order then sweeps one severity axis instead of changing
+  # the qualitative perturbation between calibration attempts.
+  rng = random.Random(expected_prefix)
+  ranges = spec["ranges"]
+  mode = str(spec["mode"])
+  direction = float(spec["direction"])
+  if direction not in (-1.0, 1.0):
+    raise ValueError(f"v21 {context_id} direction must be -1 or +1")
+
+  if mode == "lateral":
+    num_steps = 11
+    tread = 0.338
+    command_delay = _v21_range_value(
+      ranges, "command_delay_s", severity, 0.0
+    )
+    command_low_pass = _v21_range_value(
+      ranges, "command_low_pass_s", severity, 0.0
+    )
+    action_gain = _v21_range_value(ranges, "action_gain", severity, 1.0)
+    encoder_bias = direction * _v21_range_value(
+      ranges, "encoder_bias_abs", severity, 0.0
+    )
+    action_bias_width = _v21_range_value(
+      ranges, "action_bias_abs", severity, 0.0
+    )
+    action_bias = tuple(
+      round(rng.uniform(-action_bias_width, action_bias_width), 6)
+      for _ in range(12)
+    )
+    lateral_bias = direction * _v21_range_value(
+      ranges, "lateral_bias_abs", severity, 0.0
+    )
+    yaw_bias = -direction * _v21_range_value(
+      ranges, "yaw_bias_abs", severity, 0.0
+    )
+    lateral_pulse_max = _v21_range_value(
+      ranges, "lateral_pulse_max", severity, 0.0
+    )
+    lateral_pulse_min = _v21_range_value(
+      ranges,
+      "lateral_pulse_min",
+      severity,
+      0.45 * lateral_pulse_max,
+    )
+    yaw_pulse_max = _v21_range_value(
+      ranges, "yaw_pulse_max", severity, 0.0
+    )
+    yaw_pulse_min = _v21_range_value(
+      ranges, "yaw_pulse_min", severity, 0.42 * yaw_pulse_max
+    )
+    pulses = lateral_pulse_max > 0.0 or yaw_pulse_max > 0.0
+    scenario = V19ScenarioParameters(
+      disturbance_pulses_with_centering=pulses,
+      lateral_command_bias=round(lateral_bias, 6),
+      yaw_command_bias=round(yaw_bias, 6),
+      lateral_pulse_min=round(lateral_pulse_min, 6),
+      lateral_pulse_max=round(lateral_pulse_max, 6),
+      yaw_pulse_min=round(yaw_pulse_min, 6),
+      yaw_pulse_max=round(yaw_pulse_max, 6),
+      pulse_interval_min_s=round(1.8 - 0.5 * severity, 6),
+      pulse_interval_max_s=round(3.6 - 0.8 * severity, 6),
+      pulse_duration_min_s=round(0.25 + 0.10 * severity, 6),
+      pulse_duration_max_s=round(0.55 + 0.20 * severity, 6),
+      centerline_lateral_gain=round(
+        _v21_range_value(
+          ranges, "centerline_lateral_gain", severity, 0.80
+        ),
+        6,
+      ),
+      centerline_heading_gain=round(
+        _v21_range_value(
+          ranges, "centerline_heading_gain", severity, 1.40
+        ),
+        6,
+      ),
+      centerline_max_lateral_velocity=round(
+        _v21_range_value(
+          ranges, "centerline_max_lateral_velocity", severity, 0.16
+        ),
+        6,
+      ),
+      centerline_max_yaw_velocity=round(
+        _v21_range_value(
+          ranges, "centerline_max_yaw_velocity", severity, 0.45
+        ),
+        6,
+      ),
+      toe_margin=0.075,
+      foot_friction=0.65,
+      contact_observation_delay_steps=0,
+      gait_phase_offset=0.0,
+      left_response_scale=1.0,
+      right_response_scale=1.0,
+      recovery_reward_scale=0.50,
+      edge_penalty_scale=0.20,
+    )
+    command_forward_scale = 1.0
+  else:
+    num_steps = 24
+    tread = 0.355
+    command_delay = _v21_range_value(
+      ranges, "command_delay_s", severity, 0.0
+    )
+    command_low_pass = _v21_range_value(
+      ranges, "command_low_pass_s", severity, 0.0
+    )
+    command_forward_scale = _v21_range_value(
+      ranges, "command_forward_scale", severity, 1.0
+    )
+    action_gain = _v21_range_value(ranges, "action_gain", severity, 1.0)
+    encoder_bias = direction * _v21_range_value(
+      ranges, "encoder_bias_abs", severity, 0.0
+    )
+    action_bias_width = _v21_range_value(
+      ranges, "action_bias_abs", severity, 0.0
+    )
+    action_bias = tuple(
+      round(rng.uniform(-action_bias_width, action_bias_width), 6)
+      for _ in range(12)
+    )
+    asymmetry = _v21_range_value(
+      ranges, "response_asymmetry_abs", severity, 0.0
+    )
+    phase_offset = direction * _v21_range_value(
+      ranges, "phase_offset_abs", severity, 0.0
+    )
+    delay_value = _v21_range_value(
+      ranges, "contact_delay_steps", severity, 0.0
+    )
+    contact_delay = int(round(delay_value))
+    scenario = V19ScenarioParameters(
+      disturbance_pulses_with_centering=False,
+      lateral_command_bias=0.0,
+      yaw_command_bias=0.0,
+      lateral_pulse_min=0.0,
+      lateral_pulse_max=0.0,
+      yaw_pulse_min=0.0,
+      yaw_pulse_max=0.0,
+      pulse_interval_min_s=3.0,
+      pulse_interval_max_s=7.0,
+      pulse_duration_min_s=0.2,
+      pulse_duration_max_s=0.6,
+      centerline_lateral_gain=2.0,
+      centerline_heading_gain=3.0,
+      centerline_max_lateral_velocity=0.50,
+      centerline_max_yaw_velocity=1.0,
+      toe_margin=0.060,
+      foot_friction=round(
+        _v21_range_value(ranges, "foot_friction", severity, 0.65), 6
+      ),
+      contact_observation_delay_steps=contact_delay,
+      gait_phase_offset=round(phase_offset, 6),
+      left_response_scale=round(1.0 + direction * asymmetry, 6),
+      right_response_scale=round(1.0 - direction * asymmetry, 6),
+      recovery_reward_scale=0.40,
+      edge_penalty_scale=0.0,
+    )
+
+  target = DeploymentContextParameters(
+    num_steps=num_steps,
+    rise_profile=(0.138,) * num_steps,
+    tread_profile=(tread,) * num_steps,
+    command_forward_scale=round(command_forward_scale, 6),
+    command_delay_s=round(command_delay, 6),
+    command_low_pass_s=round(command_low_pass, 6),
+    action_gain=round(action_gain, 6),
+    action_bias=action_bias,
+    action_delay_steps=0,
+    encoder_bias=round(encoder_bias, 6),
+    episode_length_s=40.0,
+  )
+  _validate_parameters(target)
+  _validate_v19_scenario(mode, scenario, v21=True)
+  family_spec_sha256 = hashlib.sha256(_canonical_json(spec)).hexdigest()
+  payload: dict[str, Any] = {
+    "kind": V21_CONTEXT_KIND,
+    "schema_version": V21_CONTEXT_SCHEMA_VERSION,
+    "calibration_candidate_seed": int(candidate_seed),
+    "specialist_mode": mode,
+    "context_id": context_id,
+    "context_family": spec["family"],
+    "formal_context": bool(spec["formal"]),
+    "family_spec_sha256": family_spec_sha256,
+    "candidate_severity": round(severity, 12),
+    "target": asdict(target),
+    "scenario": asdict(scenario),
+  }
+  payload["parameters_sha256"] = deployment_context_sha256(payload)
+  return payload
+
+
 def _validated_deployment_parameters(raw: Mapping[str, Any]) -> dict[str, Any]:
   parameters = DeploymentContextParameters(
     num_steps=int(raw["num_steps"]),
@@ -822,7 +1232,41 @@ def _validate_frozen_v19_context(payload: Mapping[str, Any]) -> dict[str, Any]:
   return output
 
 
+def _validate_frozen_v21_context(payload: Mapping[str, Any]) -> dict[str, Any]:
+  if payload.get("schema_version") != V21_CONTEXT_SCHEMA_VERSION:
+    raise ValueError("unexpected v21 context schema version")
+  context_id = str(payload.get("context_id"))
+  if context_id not in V21_CONTEXT_SPECS:
+    raise ValueError("v21 context ID is missing or invalid")
+  seed = payload.get("calibration_candidate_seed")
+  if not isinstance(seed, int):
+    raise ValueError("v21 context candidate seed is missing")
+  expected = generate_v21_specialist_context(context_id, seed)
+  immutable_fields = (
+    "kind",
+    "schema_version",
+    "calibration_candidate_seed",
+    "specialist_mode",
+    "context_id",
+    "context_family",
+    "formal_context",
+    "family_spec_sha256",
+    "candidate_severity",
+    "target",
+    "scenario",
+    "parameters_sha256",
+  )
+  differing = [
+    field for field in immutable_fields if payload.get(field) != expected[field]
+  ]
+  if differing:
+    raise ValueError(f"v21 context differs from its frozen family: {differing}")
+  return {**dict(payload), **{field: expected[field] for field in immutable_fields}}
+
+
 def validate_frozen_deployment_context(payload: Mapping[str, Any]) -> dict[str, Any]:
+  if payload.get("kind") == V21_CONTEXT_KIND:
+    return _validate_frozen_v21_context(payload)
   if payload.get("kind") == V19_CONTEXT_KIND:
     return _validate_frozen_v19_context(payload)
   if payload.get("kind") == SPECIALIST_CONTEXT_KIND:
@@ -993,12 +1437,20 @@ def load_calibrated_specialist_context(path: str | Path) -> dict[str, Any]:
 def validate_calibrated_v19_context(
   payload: Mapping[str, Any],
 ) -> dict[str, Any]:
-  """Validate prospective base-only v19 first-qualifying calibration evidence."""
-  output = _validate_frozen_v19_context(payload)
+  """Validate base-only first-qualifying observable-context calibration."""
+  v21 = payload.get("kind") == V21_CONTEXT_KIND
+  output = (
+    _validate_frozen_v21_context(payload)
+    if v21
+    else _validate_frozen_v19_context(payload)
+  )
   calibration = payload.get("calibration")
   if not isinstance(calibration, Mapping):
     raise ValueError("formal v19 context is missing calibration evidence")
-  if calibration.get("kind") != V19_CALIBRATION_KIND:
+  expected_calibration_kind = (
+    V21_CALIBRATION_KIND if v21 else V19_CALIBRATION_KIND
+  )
+  if calibration.get("kind") != expected_calibration_kind:
     raise ValueError("unexpected v19 calibration kind")
   if calibration.get("adapted_policy_evaluations_used") is not False:
     raise ValueError("v19 context calibration used an adapted policy")
@@ -1066,6 +1518,19 @@ def load_calibrated_v19_context(path: str | Path) -> dict[str, Any]:
   return validate_calibrated_v19_context(payload)
 
 
+def validate_calibrated_v21_context(
+  payload: Mapping[str, Any],
+) -> dict[str, Any]:
+  if payload.get("kind") != V21_CONTEXT_KIND:
+    raise ValueError("expected a v21 deployment context")
+  return validate_calibrated_v19_context(payload)
+
+
+def load_calibrated_v21_context(path: str | Path) -> dict[str, Any]:
+  payload = json.loads(Path(path).resolve().read_text())
+  return validate_calibrated_v21_context(payload)
+
+
 def configure_v19_actor_interface(
   cfg,
   payload: Mapping[str, Any],
@@ -1073,7 +1538,9 @@ def configure_v19_actor_interface(
   target_contact_phase_shift: bool = False,
 ) -> dict[str, object]:
   """Install the v19 interface and, only on target, its gait-clock shift."""
-  validated = _validate_frozen_v19_context(payload)
+  validated = validate_frozen_deployment_context(payload)
+  if validated.get("kind") not in (V19_CONTEXT_KIND, V21_CONTEXT_KIND):
+    raise ValueError("observable actor interface requires a v19/v21 context")
   mode = validated["specialist_mode"]
   scenario = V19ScenarioParameters(**validated["scenario"])
   from .config import configure_v19_observable_refinement_env
@@ -1133,8 +1600,11 @@ def apply_frozen_deployment_context(
   """Apply a frozen context entirely on the environment side."""
   validated = validate_frozen_deployment_context(payload)
   legacy_specialist = validated.get("kind") == SPECIALIST_CONTEXT_KIND
-  v19_specialist = validated.get("kind") == V19_CONTEXT_KIND
-  specialist = legacy_specialist or v19_specialist
+  observable_specialist = validated.get("kind") in (
+    V19_CONTEXT_KIND,
+    V21_CONTEXT_KIND,
+  )
+  specialist = legacy_specialist or observable_specialist
   if role not in ({"target"} if specialist else {"target", "neighbor"}):
     raise ValueError("deployment context role must be 'target' or 'neighbor'")
   parameters = DeploymentContextParameters(**validated[role])
@@ -1191,7 +1661,7 @@ def apply_frozen_deployment_context(
   action.deployment_action_delay_steps = parameters.action_delay_steps
 
   scenario_metadata = None
-  if v19_specialist:
+  if observable_specialist:
     mode = validated["specialist_mode"]
     scenario = V19ScenarioParameters(**validated["scenario"])
     command.disturbance_pulses_with_centering = (
@@ -1360,5 +1830,5 @@ def apply_frozen_deployment_context(
     "parameters_sha256": validated["parameters_sha256"],
     "parameters": asdict(parameters),
     "scenario": scenario_metadata,
-    "actor_context_fields_added": 5 if v19_specialist else 0,
+    "actor_context_fields_added": 5 if observable_specialist else 0,
   }

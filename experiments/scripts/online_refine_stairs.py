@@ -57,6 +57,7 @@ def _evaluate_state(
   resume: bool = False,
   deployment_context: Path | None = None,
   v19_context: Path | None = None,
+  telemetry_env_id: int | None = None,
 ) -> dict[str, dict[str, Any]]:
   """Evaluate one actor in isolated CUDA processes.
 
@@ -83,19 +84,23 @@ def _evaluate_state(
     deployment_context = deployment_context.resolve()
     loaded_context = load_frozen_deployment_context(deployment_context)
     context_hash = loaded_context["parameters_sha256"]
-    if loaded_context.get("kind") == "observable_failure_conditioned_brief_ppo_v19":
+    if loaded_context.get("kind") in (
+      "observable_failure_conditioned_brief_ppo_v19",
+      "local_matched_success_preservation_v21",
+    ):
       v19_context = deployment_context
       v19_mode = loaded_context["specialist_mode"]
   if v19_context is not None:
     from src.tasks.stairs_cbf.deployment_context import (
       V19_CONTEXT_KIND,
+      V21_CONTEXT_KIND,
       load_frozen_deployment_context,
     )
 
     v19_context = v19_context.resolve()
     loaded_v19 = load_frozen_deployment_context(v19_context)
-    if loaded_v19.get("kind") != V19_CONTEXT_KIND:
-      raise ValueError("--v19-context must identify an observable v19 context")
+    if loaded_v19.get("kind") not in (V19_CONTEXT_KIND, V21_CONTEXT_KIND):
+      raise ValueError("--v19-context must identify an observable v19/v21 context")
     v19_mode = loaded_v19["specialist_mode"]
   checkpoint_payload = runner.alg.save()
   checkpoint_payload["actor_state_dict"] = {
@@ -124,10 +129,12 @@ def _evaluate_state(
       if context_role is not None and deployment_context is None:
         raise ValueError(f"medium domain {domain} requires a deployment context")
       replicate_summaries = []
+      telemetry_files: list[str] = []
       for repeat in range(repeats):
         stem = f"{domain}-seed{seed + repeat}"
         output_json = temp_root / f"{stem}.json"
         output_csv = temp_root / f"{stem}.csv"
+        telemetry_csv = temp_root / f"{stem}-inline-telemetry.csv"
         if resume and output_json.is_file() and output_csv.is_file():
           try:
             summary = json.loads(output_json.read_text())
@@ -141,6 +148,16 @@ def _evaluate_state(
             and summary.get("runtime_filter") is runtime_filter
             and summary.get("actor_state_sha256") == actor_state_sha256
             and (
+              telemetry_env_id is None
+              or (
+                telemetry_csv.is_file()
+                and summary.get(
+                  "mechanism_telemetry_same_rollout_outcome_bound"
+                )
+                is True
+              )
+            )
+            and (
               context_role is None
               or summary.get("deployment_context", {}).get(
                 "parameters_sha256"
@@ -149,6 +166,8 @@ def _evaluate_state(
             )
           ):
             replicate_summaries.append(summary)
+            if telemetry_env_id is not None:
+              telemetry_files.append(str(telemetry_csv))
             continue
         command = [
           sys.executable,
@@ -182,6 +201,15 @@ def _evaluate_state(
           command.extend(
             ("--deployment-context", str(deployment_context))
           )
+        if telemetry_env_id is not None:
+          command.extend(
+            (
+              "--telemetry-env-id",
+              str(telemetry_env_id),
+              "--telemetry-output-csv",
+              str(telemetry_csv),
+            )
+          )
         completed = subprocess.run(
           command,
           cwd=repo,
@@ -202,6 +230,8 @@ def _evaluate_state(
             f"isolated evaluation loaded a different actor for {stem}"
           )
         replicate_summaries.append(summary)
+        if telemetry_env_id is not None:
+          telemetry_files.append(str(telemetry_csv))
       aggregate: dict[str, Any] = {
         "task": f"Unitree-G1-Stairs-Online-{domain}",
         "num_episodes": num_episodes * repeats,
@@ -215,6 +245,12 @@ def _evaluate_state(
         ],
         "actor_state_sha256": actor_state_sha256,
         "v19_specialist_mode": v19_mode,
+        "inline_telemetry_environment_id_per_batch": telemetry_env_id,
+        "inline_telemetry_files": telemetry_files,
+        "inline_telemetry_same_rollout_outcome_bound": (
+          telemetry_env_id is not None
+          and len(telemetry_files) == len(replicate_summaries)
+        ),
       }
       for key in (
         "success_rate",

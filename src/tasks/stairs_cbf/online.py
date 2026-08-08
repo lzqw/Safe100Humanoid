@@ -172,6 +172,46 @@ def normalize_v19_grouped_advantages(
   return weighted, metrics
 
 
+def local_matched_success_actor_loss(
+  surrogate_terms: torch.Tensor,
+  distribution_kl: torch.Tensor,
+  success_mask: torch.Tensor,
+  *,
+  beta: float,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+  """Return PPO, local-preservation, and combined actor losses.
+
+  ``beta == 0`` is intentionally the exact v20-style control: every
+  transition, including matched successes, contributes its PPO advantage and
+  no preservation term is added.  For positive beta, matched successes are
+  removed from PPO and used only for ``KL(pi_ref || pi_theta)``.  The caller
+  evaluates the critic separately on every transition.
+  """
+  if surrogate_terms.shape != distribution_kl.shape:
+    raise ValueError("v21 surrogate and KL tensors must have equal shape")
+  if surrogate_terms.shape != success_mask.shape:
+    raise ValueError("v21 actor terms and matched-success mask must have equal shape")
+  if beta < 0.0 or not math.isfinite(beta):
+    raise ValueError("v21 matched-success preservation beta must be finite and non-negative")
+  if not bool(
+    torch.isfinite(surrogate_terms).all()
+    and torch.isfinite(distribution_kl).all()
+  ):
+    raise RuntimeError("v21 actor objective contains non-finite values")
+  if beta == 0.0:
+    ppo_loss = surrogate_terms.mean()
+    preservation_kl = torch.zeros(
+      (), device=ppo_loss.device, dtype=ppo_loss.dtype
+    )
+    return ppo_loss, preservation_kl, ppo_loss
+  ppo_mask = ~success_mask
+  if not bool(ppo_mask.any()) or not bool(success_mask.any()):
+    raise RuntimeError("v21 local-preservation actor objective has an empty group")
+  ppo_loss = surrogate_terms[ppo_mask].mean()
+  preservation_kl = distribution_kl[success_mask].mean()
+  return ppo_loss, preservation_kl, ppo_loss + beta * preservation_kl
+
+
 @dataclass(frozen=True)
 class CandidateGateThresholds:
   target_kl: float = 0.003
@@ -1520,6 +1560,7 @@ class OnlineSafePpoAlgorithmCfg(RslRlPpoAlgorithmCfg):
   intervention_cost_budget: float = 0.0
   hard_case_policy_weight: float = 0.0
   success_counterexample_policy_weight: float = 1.0
+  matched_success_preservation_beta: float = 0.0
   correction_distillation_weight: float = 0.0
   correction_success_horizon: int = 100
   risk_horizon: int = 50
@@ -1602,6 +1643,7 @@ class OnlineSafePPO(PPO):
     intervention_cost_budget: float = 0.0,
     hard_case_policy_weight: float = 0.0,
     success_counterexample_policy_weight: float = 1.0,
+    matched_success_preservation_beta: float = 0.0,
     correction_distillation_weight: float = 0.0,
     correction_success_horizon: int = 100,
     risk_horizon: int = 50,
@@ -1664,6 +1706,9 @@ class OnlineSafePPO(PPO):
     self.success_counterexample_policy_weight = (
       success_counterexample_policy_weight
     )
+    self.matched_success_preservation_beta = float(
+      matched_success_preservation_beta
+    )
     self.correction_distillation_weight = correction_distillation_weight
     self.correction_success_horizon = correction_success_horizon
     self.risk_horizon = risk_horizon
@@ -1680,6 +1725,7 @@ class OnlineSafePPO(PPO):
         self.intervention_cost_budget,
         self.hard_case_policy_weight,
         self.success_counterexample_policy_weight,
+        self.matched_success_preservation_beta,
         self.correction_distillation_weight,
         float(self.correction_success_horizon),
         float(self.risk_horizon),
@@ -1706,6 +1752,8 @@ class OnlineSafePPO(PPO):
       raise ValueError("hard-case policy weight must be in [0, 1]")
     if not 1.0 <= self.success_counterexample_policy_weight <= 2.0:
       raise ValueError("success-counterexample policy weight must be in [1, 2]")
+    if self.matched_success_preservation_beta < 0.0:
+      raise ValueError("matched-success preservation beta must be non-negative")
     if self.correction_success_horizon < 1 or self.risk_horizon < 1:
       raise ValueError("correction/risk horizons must be positive")
     if not 0.0 < self.strong_intervention_fraction <= 1.0:
@@ -3196,6 +3244,12 @@ class OnlineSafePPO(PPO):
       failure_weight=self.hard_case_policy_weight,
       success_weight=self.success_counterexample_policy_weight,
     )
+    local_preservation_enabled = self.matched_success_preservation_beta > 0.0
+    actor_transition_mask = (
+      ~flattened_success
+      if local_preservation_enabled
+      else torch.ones_like(flattened_success)
+    )
     batch_size = batches[0].actions.shape[0] * batches[0].actions.shape[1]
     if any(
       batch.actions.shape[0] * batch.actions.shape[1] != batch_size
@@ -3207,7 +3261,6 @@ class OnlineSafePPO(PPO):
     weighted_by_batch = (
       weighted_advantages[:batch_size], weighted_advantages[batch_size:]
     )
-
     old_log_prob_max_error = 0.0
     old_distribution_param_max_error = 0.0
     with torch.inference_mode():
@@ -3242,6 +3295,12 @@ class OnlineSafePPO(PPO):
         observations = batch.observations.flatten(0, 1)[start:stop]
         actions = batch.actions.flatten(0, 1)[start:stop]
         old_log_prob = batch.actions_log_prob.flatten(0, 1)[start:stop].squeeze(-1)
+        old_params = tuple(
+          value.flatten(0, 1)[start:stop] for value in batch.distribution_params
+        )
+        success_mask = batch.success_counterexample_transitions.flatten()[
+          start:stop
+        ]
         self.actor(observations, stochastic_output=True)
         ratio = torch.exp(self.actor.get_output_log_prob(actions) - old_log_prob)
         advantage = advantages[start:stop]
@@ -3249,7 +3308,17 @@ class OnlineSafePPO(PPO):
         surrogate_clipped = -advantage * torch.clamp(
           ratio, 1.0 - self.clip_param, 1.0 + self.clip_param
         )
-        loss = torch.max(surrogate, surrogate_clipped).mean()
+        surrogate_terms = torch.max(surrogate, surrogate_clipped)
+        current_params = tuple(self.actor.output_distribution_params)
+        distribution_kl = self.actor.get_kl_divergence(
+          old_params, current_params
+        )
+        _, _, loss = local_matched_success_actor_loss(
+          surrogate_terms,
+          distribution_kl,
+          success_mask,
+          beta=self.matched_success_preservation_beta,
+        )
         (loss / self.num_mini_batches).backward()
       diagnostic_gradients.append(
         torch.cat(
@@ -3278,6 +3347,7 @@ class OnlineSafePPO(PPO):
     mini_batch_size = batch_size // self.num_mini_batches
     mean_value_loss = 0.0
     mean_surrogate_loss = 0.0
+    mean_preservation_kl_loss = 0.0
     mean_entropy = 0.0
     maximum_actor_gradient_norm = 0.0
     maximum_critic_gradient_norm = 0.0
@@ -3303,23 +3373,38 @@ class OnlineSafePPO(PPO):
         )
         old_values = batch.values.flatten(0, 1)[indices]
         returns = batch.returns.flatten(0, 1)[indices]
+        success_mask = batch.success_counterexample_transitions.flatten()[indices]
 
         self.actor(observations, stochastic_output=True)
         actions_log_prob = self.actor.get_output_log_prob(actions)
         current_params = tuple(self.actor.output_distribution_params)
-        entropy = self.actor.output_entropy.mean()
+        entropy_values = self.actor.output_entropy.flatten()
+        entropy = (
+          entropy_values[~success_mask].mean()
+          if local_preservation_enabled
+          else entropy_values.mean()
+        )
         values = self.critic(observations)
+        distribution_kl = self.actor.get_kl_divergence(
+          old_params, current_params
+        )
         with torch.inference_mode():
-          rollout_preupdate_kls.append(
-            self.actor.get_kl_divergence(old_params, current_params).mean()
-          )
+          rollout_preupdate_kls.append(distribution_kl.detach().mean())
         ratio = torch.exp(actions_log_prob - old_log_prob)
         advantage = advantages[indices]
         surrogate = -advantage * ratio
         surrogate_clipped = -advantage * torch.clamp(
           ratio, 1.0 - self.clip_param, 1.0 + self.clip_param
         )
-        surrogate_loss = torch.max(surrogate, surrogate_clipped).mean()
+        surrogate_terms = torch.max(surrogate, surrogate_clipped)
+        surrogate_loss, preservation_kl_loss, _ = (
+          local_matched_success_actor_loss(
+            surrogate_terms,
+            distribution_kl,
+            success_mask,
+            beta=self.matched_success_preservation_beta,
+          )
+        )
         if self.use_clipped_value_loss:
           value_clipped = old_values + (values - old_values).clamp(
             -self.clip_param, self.clip_param
@@ -3330,7 +3415,9 @@ class OnlineSafePPO(PPO):
           ).mean()
         else:
           value_loss = (returns - values).square().mean()
-        rollout_losses.append((surrogate_loss, value_loss, entropy))
+        rollout_losses.append(
+          (surrogate_loss, preservation_kl_loss, value_loss, entropy)
+        )
 
       attempted_batches += 1
       preupdate_kl = torch.stack(rollout_preupdate_kls).mean()
@@ -3341,10 +3428,14 @@ class OnlineSafePPO(PPO):
         kl_early_stopped = True
         break
       surrogate_loss = torch.stack([item[0] for item in rollout_losses]).mean()
-      value_loss = torch.stack([item[1] for item in rollout_losses]).mean()
-      entropy = torch.stack([item[2] for item in rollout_losses]).mean()
+      preservation_kl_loss = torch.stack(
+        [item[1] for item in rollout_losses]
+      ).mean()
+      value_loss = torch.stack([item[2] for item in rollout_losses]).mean()
+      entropy = torch.stack([item[3] for item in rollout_losses]).mean()
       loss = (
         surrogate_loss
+        + self.matched_success_preservation_beta * preservation_kl_loss
         + self.value_loss_coef * value_loss
         - self.entropy_coef * entropy
       )
@@ -3359,6 +3450,7 @@ class OnlineSafePPO(PPO):
       self.optimizer.step()
       completed_updates += 1
       mean_surrogate_loss += float(surrogate_loss)
+      mean_preservation_kl_loss += float(preservation_kl_loss)
       mean_value_loss += float(value_loss)
       mean_entropy += float(entropy)
       maximum_actor_gradient_norm = max(
@@ -3373,6 +3465,7 @@ class OnlineSafePPO(PPO):
     self.clamp_online_std()
 
     post_kl = []
+    post_matched_success_kl = []
     post_clip_fraction = []
     post_saturation = []
     with torch.inference_mode():
@@ -3387,7 +3480,10 @@ class OnlineSafePPO(PPO):
         new_log_prob = self.actor.get_output_log_prob(actions)
         new_params = tuple(self.actor.output_distribution_params)
         ratio = torch.exp(new_log_prob - old_log_prob)
-        post_kl.append(self.actor.get_kl_divergence(old_params, new_params).mean())
+        distribution_kl = self.actor.get_kl_divergence(old_params, new_params)
+        post_kl.append(distribution_kl.mean())
+        success_mask = batch.success_counterexample_transitions.flatten()
+        post_matched_success_kl.append(distribution_kl[success_mask].mean())
         post_clip_fraction.append(
           (torch.abs(ratio - 1.0) > self.clip_param).float().mean()
         )
@@ -3429,6 +3525,33 @@ class OnlineSafePPO(PPO):
     losses: dict[str, Any] = {
       "value": mean_value_loss / completed_updates,
       "surrogate": mean_surrogate_loss / completed_updates,
+      "matched_success_preservation_kl_loss": (
+        mean_preservation_kl_loss / completed_updates
+      ),
+      "matched_success_preservation_weighted_loss": (
+        self.matched_success_preservation_beta
+        * mean_preservation_kl_loss
+        / completed_updates
+      ),
+      "matched_success_preservation_beta": (
+        self.matched_success_preservation_beta
+      ),
+      "local_matched_success_preservation_enabled": (
+        local_preservation_enabled
+      ),
+      "matched_success_actor_advantage_excluded": (
+        local_preservation_enabled
+      ),
+      "matched_success_actor_entropy_excluded": (
+        local_preservation_enabled
+      ),
+      "actor_ppo_transition_fraction": float(
+        actor_transition_mask.float().mean()
+      ),
+      "critic_uses_all_transitions": True,
+      "post_update_matched_success_kl": float(
+        torch.stack(post_matched_success_kl).mean()
+      ),
       "entropy": mean_entropy / completed_updates,
       "ppo_minibatches_attempted": attempted_batches,
       "ppo_minibatches_completed": completed_updates,

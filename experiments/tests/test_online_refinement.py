@@ -58,6 +58,7 @@ from src.tasks.stairs_cbf.online import (
   adaptive_cbf_std_factor,
   validate_behavior_log_prob,
   validate_behavior_distribution_params,
+  local_matched_success_actor_loss,
   normalize_v19_grouped_advantages,
   specialist_candidate_gate,
   specialist_candidate_precheck,
@@ -1954,6 +1955,41 @@ def test_v19_grouped_advantages_normalize_before_replay_weighting() -> None:
   assert float(weighted[success].std(unbiased=False)) == pytest.approx(1.25)
   assert metrics["v19_failure_policy_weight"] == 1.0
   assert metrics["v19_success_policy_weight"] == 1.25
+
+
+def test_v21_local_preservation_excludes_success_only_when_beta_is_positive() -> None:
+  surrogate = torch.tensor([1.0, 3.0, 50.0, 70.0], requires_grad=True)
+  kl = torch.tensor([0.1, 0.2, 0.5, 0.7], requires_grad=True)
+  success = torch.tensor([False, False, True, True])
+
+  control_ppo, control_kl, control_total = local_matched_success_actor_loss(
+    surrogate, kl, success, beta=0.0
+  )
+  assert float(control_ppo) == pytest.approx(31.0)
+  assert float(control_kl) == 0.0
+  assert control_total is control_ppo
+
+  ppo, preservation, total = local_matched_success_actor_loss(
+    surrogate, kl, success, beta=4.0
+  )
+  assert float(ppo) == pytest.approx(2.0)
+  assert float(preservation) == pytest.approx(0.6)
+  assert float(total) == pytest.approx(4.4)
+  total.backward()
+  assert torch.equal(surrogate.grad, torch.tensor([0.5, 0.5, 0.0, 0.0]))
+  assert torch.equal(kl.grad, torch.tensor([0.0, 0.0, 2.0, 2.0]))
+
+
+def test_v21_local_preservation_rejects_missing_actor_groups() -> None:
+  terms = torch.ones(4)
+  with pytest.raises(RuntimeError, match="empty group"):
+    local_matched_success_actor_loss(
+      terms, terms, torch.ones(4, dtype=torch.bool), beta=1.0
+    )
+  with pytest.raises(ValueError, match="non-negative"):
+    local_matched_success_actor_loss(
+      terms, terms, torch.zeros(4, dtype=torch.bool), beta=-1.0
+    )
 
 
 def test_v19_zero_column_actor_expansion_preserves_every_legacy_output() -> None:
