@@ -1,0 +1,448 @@
+{
+  "attempts": [
+    {
+      "base_policy_only": true,
+      "candidate_seed": 11908,
+      "candidate_severity": 0.0,
+      "context_family": "left_right_action_asymmetry",
+      "context_id": "C2",
+      "evaluation_seed_start": 11180000,
+      "evaluation_seeds": [
+        11180000
+      ],
+      "failure_type_counts": {
+        "contact_stability": 27,
+        "lateral_heading_drift": 1,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "failure_type_fractions": {
+        "contact_stability": 0.9642857142857143,
+        "lateral_heading_drift": 0.03571428571428571,
+        "non_lateral_balance_or_phase": 0.0,
+        "non_lateral_high_cbf_demand": 0.0,
+        "other_non_lateral": 0.0
+      },
+      "fall_count": 28,
+      "fall_rate": 0.21875,
+      "minimum_fall_count_gate": 25,
+      "num_episodes": 128,
+      "parameters_sha256": "3696d2835315f3e47170bf3d545345e8b363be840eda66589eecea7f196321e8",
+      "qualifies": true,
+      "second_failure_fraction": 0.03571428571428571,
+      "success_rate": 0.78125,
+      "target_failure_fraction": 0.9642857142857143,
+      "target_failure_type": "contact_stability"
+    },
+    {
+      "base_policy_only": true,
+      "candidate_seed": 11909,
+      "candidate_severity": 0.090909090909,
+      "context_family": "left_right_action_asymmetry",
+      "context_id": "C2",
+      "evaluation_seed_start": 11180100,
+      "evaluation_seeds": [
+        11180100
+      ],
+      "failure_type_counts": {
+        "contact_stability": 38,
+        "lateral_heading_drift": 2,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "failure_type_fractions": {
+        "contact_stability": 0.95,
+        "lateral_heading_drift": 0.05,
+        "non_lateral_balance_or_phase": 0.0,
+        "non_lateral_high_cbf_demand": 0.0,
+        "other_non_lateral": 0.0
+      },
+      "fall_count": 40,
+      "fall_rate": 0.3125,
+      "minimum_fall_count_gate": 25,
+      "num_episodes": 128,
+      "parameters_sha256": "eaf0665cb2cf5a4b2a13606ca0a542243e93df1116a0cdffdcb399736860db47",
+      "qualifies": false,
+      "second_failure_fraction": 0.05,
+      "success_rate": 0.6875,
+      "target_failure_fraction": 0.95,
+      "target_failure_type": "contact_stability"
+    },
+    {
+      "base_policy_only": true,
+      "candidate_seed": 11910,
+      "candidate_severity": 0.181818181818,
+      "context_family": "left_right_action_asymmetry",
+      "context_id": "C2",
+      "evaluation_seed_start": 11180200,
+      "evaluation_seeds": [
+        11180200
+      ],
+      "failure_type_counts": {
+        "contact_stability": 57,
+        "lateral_heading_drift": 1,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "failure_type_fractions": {
+        "contact_stability": 0.9827586206896551,
+        "lateral_heading_drift": 0.017241379310344827,
+        "non_lateral_balance_or_phase": 0.0,
+        "non_lateral_high_cbf_demand": 0.0,
+        "other_non_lateral": 0.0
+      },
+      "fall_count": 58,
+      "fall_rate": 0.453125,
+      "minimum_fall_count_gate": 25,
+      "num_episodes": 128,
+      "parameters_sha256": "f785928bd32e46ed9edb0e8fe318cb4858467e3c4ec0959c1aaaf68746a478d0",
+      "qualifies": false,
+      "second_failure_fraction": 0.017241379310344827,
+      "success_rate": 0.546875,
+      "target_failure_fraction": 0.9827586206896551,
+      "target_failure_type": "contact_stability"
+    },
+    {
+      "base_policy_only": true,
+      "candidate_seed": 11911,
+      "candidate_severity": 0.272727272727,
+      "context_family": "left_right_action_asymmetry",
+      "context_id": "C2",
+      "evaluation_seed_start": 11180300,
+      "evaluation_seeds": [
+        11180300
+      ],
+      "failure_type_counts": {
+        "contact_stability": 72,
+        "lateral_heading_drift": 2,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "failure_type_fractions": {
+        "contact_stability": 0.972972972972973,
+        "lateral_heading_drift": 0.02702702702702703,
+        "non_lateral_balance_or_phase": 0.0,
+        "non_lateral_high_cbf_demand": 0.0,
+        "other_non_lateral": 0.0
+      },
+      "fall_count": 74,
+      "fall_rate": 0.578125,
+      "minimum_fall_count_gate": 25,
+      "num_episodes": 128,
+      "parameters_sha256": "c90044f4db527678e740054c8cb3b7dc8e0ddaf9ca769b11e77cd60f4b1ba62a",
+      "qualifies": false,
+      "second_failure_fraction": 0.02702702702702703,
+      "success_rate": 0.421875,
+      "target_failure_fraction": 0.972972972972973,
+      "target_failure_type": "contact_stability"
+    },
+    {
+      "base_policy_only": true,
+      "candidate_seed": 11912,
+      "candidate_severity": 0.363636363636,
+      "context_family": "left_right_action_asymmetry",
+      "context_id": "C2",
+      "evaluation_seed_start": 11180400,
+      "evaluation_seeds": [
+        11180400
+      ],
+      "failure_type_counts": {
+        "contact_stability": 78,
+        "lateral_heading_drift": 3,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "failure_type_fractions": {
+        "contact_stability": 0.9629629629629629,
+        "lateral_heading_drift": 0.037037037037037035,
+        "non_lateral_balance_or_phase": 0.0,
+        "non_lateral_high_cbf_demand": 0.0,
+        "other_non_lateral": 0.0
+      },
+      "fall_count": 81,
+      "fall_rate": 0.6328125,
+      "minimum_fall_count_gate": 25,
+      "num_episodes": 128,
+      "parameters_sha256": "7d16a82ad577e17f87b4ca4b79b39f5ea2fc685d38c8f98e467e8e0512ab9799",
+      "qualifies": false,
+      "second_failure_fraction": 0.037037037037037035,
+      "success_rate": 0.3671875,
+      "target_failure_fraction": 0.9629629629629629,
+      "target_failure_type": "contact_stability"
+    },
+    {
+      "base_policy_only": true,
+      "candidate_seed": 11913,
+      "candidate_severity": 0.454545454545,
+      "context_family": "left_right_action_asymmetry",
+      "context_id": "C2",
+      "evaluation_seed_start": 11180500,
+      "evaluation_seeds": [
+        11180500
+      ],
+      "failure_type_counts": {
+        "contact_stability": 60,
+        "lateral_heading_drift": 3,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "failure_type_fractions": {
+        "contact_stability": 0.9523809523809523,
+        "lateral_heading_drift": 0.047619047619047616,
+        "non_lateral_balance_or_phase": 0.0,
+        "non_lateral_high_cbf_demand": 0.0,
+        "other_non_lateral": 0.0
+      },
+      "fall_count": 63,
+      "fall_rate": 0.4921875,
+      "minimum_fall_count_gate": 25,
+      "num_episodes": 128,
+      "parameters_sha256": "094bcf70f6ea0ef656b6d35a2e89baf2e64d5795f4f8e8b901061927e634ff0e",
+      "qualifies": false,
+      "second_failure_fraction": 0.047619047619047616,
+      "success_rate": 0.5078125,
+      "target_failure_fraction": 0.9523809523809523,
+      "target_failure_type": "contact_stability"
+    },
+    {
+      "base_policy_only": true,
+      "candidate_seed": 11914,
+      "candidate_severity": 0.545454545455,
+      "context_family": "left_right_action_asymmetry",
+      "context_id": "C2",
+      "evaluation_seed_start": 11180600,
+      "evaluation_seeds": [
+        11180600
+      ],
+      "failure_type_counts": {
+        "contact_stability": 54,
+        "lateral_heading_drift": 1,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "failure_type_fractions": {
+        "contact_stability": 0.9818181818181818,
+        "lateral_heading_drift": 0.01818181818181818,
+        "non_lateral_balance_or_phase": 0.0,
+        "non_lateral_high_cbf_demand": 0.0,
+        "other_non_lateral": 0.0
+      },
+      "fall_count": 55,
+      "fall_rate": 0.4296875,
+      "minimum_fall_count_gate": 25,
+      "num_episodes": 128,
+      "parameters_sha256": "aade06aa38c8f44f4971b657e0261da832b39a40853141da07d9b87cf962954e",
+      "qualifies": false,
+      "second_failure_fraction": 0.01818181818181818,
+      "success_rate": 0.5703125,
+      "target_failure_fraction": 0.9818181818181818,
+      "target_failure_type": "contact_stability"
+    },
+    {
+      "base_policy_only": true,
+      "candidate_seed": 11915,
+      "candidate_severity": 0.636363636364,
+      "context_family": "left_right_action_asymmetry",
+      "context_id": "C2",
+      "evaluation_seed_start": 11180700,
+      "evaluation_seeds": [
+        11180700
+      ],
+      "failure_type_counts": {
+        "contact_stability": 64,
+        "lateral_heading_drift": 2,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "failure_type_fractions": {
+        "contact_stability": 0.9696969696969697,
+        "lateral_heading_drift": 0.030303030303030304,
+        "non_lateral_balance_or_phase": 0.0,
+        "non_lateral_high_cbf_demand": 0.0,
+        "other_non_lateral": 0.0
+      },
+      "fall_count": 66,
+      "fall_rate": 0.515625,
+      "minimum_fall_count_gate": 25,
+      "num_episodes": 128,
+      "parameters_sha256": "cf7afefe23886c3d4dbfd351e3fdf915de3dd595ff68f5a410932cc08dcdaf3e",
+      "qualifies": false,
+      "second_failure_fraction": 0.030303030303030304,
+      "success_rate": 0.484375,
+      "target_failure_fraction": 0.9696969696969697,
+      "target_failure_type": "contact_stability"
+    },
+    {
+      "base_policy_only": true,
+      "candidate_seed": 11916,
+      "candidate_severity": 0.727272727273,
+      "context_family": "left_right_action_asymmetry",
+      "context_id": "C2",
+      "evaluation_seed_start": 11180800,
+      "evaluation_seeds": [
+        11180800
+      ],
+      "failure_type_counts": {
+        "contact_stability": 79,
+        "lateral_heading_drift": 2,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "failure_type_fractions": {
+        "contact_stability": 0.9753086419753086,
+        "lateral_heading_drift": 0.024691358024691357,
+        "non_lateral_balance_or_phase": 0.0,
+        "non_lateral_high_cbf_demand": 0.0,
+        "other_non_lateral": 0.0
+      },
+      "fall_count": 81,
+      "fall_rate": 0.6328125,
+      "minimum_fall_count_gate": 25,
+      "num_episodes": 128,
+      "parameters_sha256": "6955c6041430d38c0059290c6f975e469cbb60615fffe053ba582e000a71d4d6",
+      "qualifies": false,
+      "second_failure_fraction": 0.024691358024691357,
+      "success_rate": 0.3671875,
+      "target_failure_fraction": 0.9753086419753086,
+      "target_failure_type": "contact_stability"
+    },
+    {
+      "base_policy_only": true,
+      "candidate_seed": 11917,
+      "candidate_severity": 0.818181818182,
+      "context_family": "left_right_action_asymmetry",
+      "context_id": "C2",
+      "evaluation_seed_start": 11180900,
+      "evaluation_seeds": [
+        11180900
+      ],
+      "failure_type_counts": {
+        "contact_stability": 80,
+        "lateral_heading_drift": 7,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "failure_type_fractions": {
+        "contact_stability": 0.9195402298850575,
+        "lateral_heading_drift": 0.08045977011494253,
+        "non_lateral_balance_or_phase": 0.0,
+        "non_lateral_high_cbf_demand": 0.0,
+        "other_non_lateral": 0.0
+      },
+      "fall_count": 87,
+      "fall_rate": 0.6796875,
+      "minimum_fall_count_gate": 25,
+      "num_episodes": 128,
+      "parameters_sha256": "ac3ee38fbc8feeff1f5e64fe4f1c26778d4ccdacd3503fb16d408cce61f1b557",
+      "qualifies": false,
+      "second_failure_fraction": 0.08045977011494253,
+      "success_rate": 0.3125,
+      "target_failure_fraction": 0.9195402298850575,
+      "target_failure_type": "contact_stability"
+    },
+    {
+      "base_policy_only": true,
+      "candidate_seed": 11918,
+      "candidate_severity": 0.909090909091,
+      "context_family": "left_right_action_asymmetry",
+      "context_id": "C2",
+      "evaluation_seed_start": 11181000,
+      "evaluation_seeds": [
+        11181000
+      ],
+      "failure_type_counts": {
+        "contact_stability": 91,
+        "lateral_heading_drift": 2,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "failure_type_fractions": {
+        "contact_stability": 0.978494623655914,
+        "lateral_heading_drift": 0.021505376344086023,
+        "non_lateral_balance_or_phase": 0.0,
+        "non_lateral_high_cbf_demand": 0.0,
+        "other_non_lateral": 0.0
+      },
+      "fall_count": 93,
+      "fall_rate": 0.7265625,
+      "minimum_fall_count_gate": 25,
+      "num_episodes": 128,
+      "parameters_sha256": "e3c73488e3bdc9e7bee21919089d33c82154adaf5d6d088db5c9ae2a118df8aa",
+      "qualifies": false,
+      "second_failure_fraction": 0.021505376344086023,
+      "success_rate": 0.2734375,
+      "target_failure_fraction": 0.978494623655914,
+      "target_failure_type": "contact_stability"
+    },
+    {
+      "base_policy_only": true,
+      "candidate_seed": 11919,
+      "candidate_severity": 1.0,
+      "context_family": "left_right_action_asymmetry",
+      "context_id": "C2",
+      "evaluation_seed_start": 11181100,
+      "evaluation_seeds": [
+        11181100
+      ],
+      "failure_type_counts": {
+        "contact_stability": 108,
+        "lateral_heading_drift": 1,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "failure_type_fractions": {
+        "contact_stability": 0.9908256880733946,
+        "lateral_heading_drift": 0.009174311926605505,
+        "non_lateral_balance_or_phase": 0.0,
+        "non_lateral_high_cbf_demand": 0.0,
+        "other_non_lateral": 0.0
+      },
+      "fall_count": 109,
+      "fall_rate": 0.8515625,
+      "minimum_fall_count_gate": 25,
+      "num_episodes": 128,
+      "parameters_sha256": "922c14e319b3b59aef9bb47e80def47e9593113de7cb30c18f0f8adb95bdcf40",
+      "qualifies": false,
+      "second_failure_fraction": 0.009174311926605505,
+      "success_rate": 0.140625,
+      "target_failure_fraction": 0.9908256880733946,
+      "target_failure_type": "contact_stability"
+    }
+  ],
+  "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "base_policy_only": true,
+  "candidate_seeds": [
+    11908,
+    11909,
+    11910,
+    11911,
+    11912,
+    11913,
+    11914,
+    11915,
+    11916,
+    11917,
+    11918,
+    11919
+  ],
+  "context_id": "C2",
+  "exploratory": true,
+  "minimum_fall_count_gate": 25,
+  "mode": "contact_stability",
+  "policy_method": "Local Matched-Success Preservation v21",
+  "prospective_protocol_file_sha256": "ddde1a7128fe416e6c2829cfe0d7f99a2e3050ff47deed69ec6305ef29df7366",
+  "prospective_protocol_git_commit": "4f469cd4d33fd12f275d203bd2ba5909fd9afa11",
+  "protocol_id": "safe100-deployment-unit-local-matched-success-v21"
+}
