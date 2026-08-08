@@ -140,6 +140,35 @@ def _precalibration(args: argparse.Namespace) -> dict[str, Any]:
   context_specs = {
     context_id: V21_CONTEXT_SPECS[context_id] for context_id in CONTEXTS
   }
+  boundary_history = None
+  if (args.superseded_protocol is None) != (args.execution_amendment is None):
+    raise ValueError(
+      "v21 superseded protocol and execution amendment must be supplied together"
+    )
+  if args.superseded_protocol is not None:
+    superseded_path = args.superseded_protocol.resolve()
+    amendment_path = args.execution_amendment.resolve()
+    superseded = json.loads(superseded_path.read_text())
+    amendment = json.loads(amendment_path.read_text())
+    if (
+      superseded.get("protocol_id") != PROTOCOL_ID
+      or superseded.get("protocol_revision") != 0
+      or amendment.get("protocol_id") != PROTOCOL_ID
+      or amendment.get("calibration_outcomes_observed") is not False
+      or amendment.get("disposition")
+      != "superseded_before_first_base_policy_evaluation"
+    ):
+      raise RuntimeError("invalid v21 superseded precalibration boundary")
+    boundary_history = {
+      "superseded_protocol": _verify_protocol_blob(
+        repo, superseded_path, current_commit
+      ),
+      "execution_amendment": _verify_protocol_blob(
+        repo, amendment_path, current_commit
+      ),
+      "calibration_outcomes_observed": False,
+      "reason": amendment["failure_class"],
+    }
   payload = {
     "schema_version": 1,
     "protocol_id": PROTOCOL_ID,
@@ -304,6 +333,8 @@ def _precalibration(args: argparse.Namespace) -> dict[str, Any]:
       "this_protocol_must_be_committed_before_calibration": True,
     },
   }
+  if boundary_history is not None:
+    payload["superseded_precalibration_boundary"] = boundary_history
   return payload
 
 
@@ -416,6 +447,8 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--input-commit")
   parser.add_argument("--context-dir", type=Path)
   parser.add_argument("--development-selection", type=Path)
+  parser.add_argument("--superseded-protocol", type=Path)
+  parser.add_argument("--execution-amendment", type=Path)
   return parser.parse_args()
 
 

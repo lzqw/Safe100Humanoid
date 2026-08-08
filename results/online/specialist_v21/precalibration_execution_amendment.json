@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "protocol_id": "safe100-deployment-unit-local-matched-success-v21",
+  "event_id": "v21-precalibration-boundary-invalidated-001",
+  "stage": "base_policy_only_calibration",
+  "started_at_utc": "2026-08-08T13:43:17Z",
+  "stopped_at_utc": "2026-08-08T13:43:29Z",
+  "context_id": "L_dev",
+  "candidate_seed": 9108,
+  "candidate_context_sha256": "63fff2b7c821ba011710d3e565bdfcd53eeda563d8207c26837fdb0c736ed855",
+  "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "superseded_protocol": {
+    "file": "results/online/specialist_v21/protocol_precalibration.json",
+    "git_commit": "dfa8c7f976e83639950241d8e19324df4e4f4be7",
+    "sha256": "f2aeb83ded252c2dba245d1ab5331db54296386620c122480805bd874df1bd50"
+  },
+  "failure_class": "pre_evaluation_json_round_trip_validation_defect",
+  "error_type": "ValueError",
+  "error_message": "v21 context differs from its frozen family: ['target']",
+  "root_cause": "JSON serialization changed tuple-valued target fields to lists before strict family equality validation",
+  "evaluation_subprocess_started": false,
+  "raw_evaluation_file_count": 0,
+  "calibration_outcomes_observed": false,
+  "adapted_policy_outcomes_observed": false,
+  "algorithm_outcome_rerun": false,
+  "external_logs": [
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v21/queue_calibration.log",
+      "sha256": "50e935ff2c8bb97abcdec346c38e16cb01d109ca6637b5123b28e0b013845327"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v21/calibration_L_dev.log",
+      "sha256": "e2d5ecc688c929dff03b33e91a7430c3bdbad741d3e292fb8e664df81f13cce5"
+    }
+  ],
+  "disposition": "superseded_before_first_base_policy_evaluation",
+  "remediation": {
+    "normalize and validate JSON target/scenario fields before frozen-family equality": true,
+    "add JSON round-trip regression coverage": true,
+    "commit the source correction before generating a replacement revision-0 protocol": true,
+    "commit the replacement protocol before any calibration evaluation": true
+  }
+}

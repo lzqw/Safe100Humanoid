@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import json
 import sys
 from pathlib import Path
 
@@ -70,6 +71,9 @@ def test_v21_family_candidates_are_deterministic_hashed_and_valid() -> None:
     assert last["candidate_severity"] == 1.0
     assert validate_frozen_deployment_context(first) == first
     assert validate_frozen_deployment_context(last) == last
+    assert validate_frozen_deployment_context(
+      json.loads(json.dumps(first))
+    ) == first
     assert first["parameters_sha256"] != last["parameters_sha256"]
     hashes.update((first["parameters_sha256"], last["parameters_sha256"]))
   assert len(hashes) == 2 * len(V21_CONTEXT_SPECS)

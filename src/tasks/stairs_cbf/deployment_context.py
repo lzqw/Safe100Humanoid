@@ -1241,6 +1241,27 @@ def _validate_frozen_v21_context(payload: Mapping[str, Any]) -> dict[str, Any]:
   seed = payload.get("calibration_candidate_seed")
   if not isinstance(seed, int):
     raise ValueError("v21 context candidate seed is missing")
+  target = payload.get("target")
+  scenario_raw = payload.get("scenario")
+  if not isinstance(target, Mapping) or not isinstance(scenario_raw, Mapping):
+    raise ValueError("v21 context target or scenario is missing")
+  scenario = V19ScenarioParameters(
+    **{
+      field: (
+        bool(scenario_raw[field])
+        if field == "disturbance_pulses_with_centering"
+        else int(scenario_raw[field])
+        if field == "contact_observation_delay_steps"
+        else float(scenario_raw[field])
+      )
+      for field in V19ScenarioParameters.__dataclass_fields__
+    }
+  )
+  mode = str(payload.get("specialist_mode"))
+  _validate_v19_scenario(mode, scenario, v21=True)
+  normalized = dict(payload)
+  normalized["target"] = _validated_deployment_parameters(target)
+  normalized["scenario"] = asdict(scenario)
   expected = generate_v21_specialist_context(context_id, seed)
   immutable_fields = (
     "kind",
@@ -1257,11 +1278,14 @@ def _validate_frozen_v21_context(payload: Mapping[str, Any]) -> dict[str, Any]:
     "parameters_sha256",
   )
   differing = [
-    field for field in immutable_fields if payload.get(field) != expected[field]
+    field for field in immutable_fields if normalized.get(field) != expected[field]
   ]
   if differing:
     raise ValueError(f"v21 context differs from its frozen family: {differing}")
-  return {**dict(payload), **{field: expected[field] for field in immutable_fields}}
+  return {
+    **normalized,
+    **{field: expected[field] for field in immutable_fields},
+  }
 
 
 def validate_frozen_deployment_context(payload: Mapping[str, Any]) -> dict[str, Any]:
