@@ -421,6 +421,9 @@ def test_v20_audit_amendment_preserves_training_and_evaluation_seals() -> None:
       REPO / "results/online/specialist_v20/audit_amendment.json"
     ).read_text()
   )
+  assert amendment["amendment_id"] == (
+    "safe100-specialist-v20-audit-infrastructure-amendment-2"
+  )
   assert amendment["status"] == (
     "prospectively_frozen_before_first_formal_audit_episode_outcome"
   )

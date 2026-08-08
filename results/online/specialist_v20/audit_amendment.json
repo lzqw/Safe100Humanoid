@@ -1,6 +1,6 @@
 {
-  "amendment_id": "safe100-specialist-v20-audit-infrastructure-amendment-1",
-  "created_at_utc": "2026-08-08T06:30:16Z",
+  "amendment_id": "safe100-specialist-v20-audit-infrastructure-amendment-2",
+  "created_at_utc": "2026-08-08T06:35:49Z",
   "fresh_audit_evidence_boundary": {
     "formal_audit_environment_was_constructed": true,
     "formal_audit_episode_outcomes_observed": false,
@@ -8,7 +8,7 @@
     "formal_audit_seed_was_not_changed": true,
     "training_artifacts_rerun_or_modified": false
   },
-  "implementation_parent_commit": "665a71dc54045b7efc10fa3a2aff392fe2468b8c",
+  "implementation_parent_commit": "5f6674ad8c1ffcf84256deb0ef1fa1a93d39c2a5",
   "independent_specialist_scope": {
     "contact_stability_training_or_audit_had_started": false,
     "lateral_training_completed_before_failure": true,
@@ -27,17 +27,40 @@
     "started_at_utc": "2026-08-07T05:53:56Z"
   },
   "infrastructure_fix": {
+    "all_auxiliary_policy_losses_and_anchors_disabled": true,
     "actor_or_checkpoint_tensor_modified": false,
     "brief_ppo_refinement_checkpoint_semantics_enabled": true,
+    "complete_revision4_runner_configuration_restored": true,
     "evaluation_logic_modified": false,
     "legacy_auxiliary_constraint_payload_used_by_v20": false,
-    "root_cause": "The audit configured the 410-D observable actor interface but omitted the v19 Revision-4 Brief-PPO algorithm mode. The generic online loader therefore attempted to restore an irrelevant legacy 405-D retention-actor payload before any evaluation.",
+    "root_cause": "The audit configured the 410-D observable actor interface but omitted the complete v19 Revision-4 Brief-PPO algorithm configuration. The generic online loader first attempted to restore an irrelevant legacy 405-D retention-actor payload; amendment 1 enabled Brief-PPO loading but a nonformal smoke then showed that inherited auxiliary-loss defaults violated the Brief-PPO constructor guard. Amendment 2 restores every frozen Revision-4 runner flag before construction.",
     "scope": "audit checkpoint loader configuration only",
     "training_logic_modified": false
   },
+  "nonformal_smoke_history": {
+    "amendment_1_smoke": {
+      "audit_output_file_count": 0,
+      "audit_seed": 7500000,
+      "bootstrap_seed": 7600000,
+      "ended_at_utc": "2026-08-08T06:33:58Z",
+      "failed_before_runner_construction_completed": true,
+      "formal_evidence": false,
+      "log_bytes": 13319,
+      "log_path_external": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v20/smoke_audit_amendment_lateral_731836c.log",
+      "log_sha256": "789f1a2db6da413b73c5f121a6a17f27274bcec1050720df02545af793932cff",
+      "outcome_rows_written": 0,
+      "result": "constructor rejected inherited nonzero auxiliary-loss defaults"
+    }
+  },
+  "prior_amendment": {
+    "git_commit": "731836ce011f4c6d2d815de621835a737c060099",
+    "id": "safe100-specialist-v20-audit-infrastructure-amendment-1",
+    "sha256": "d89c011016547402d15e4c7990730e29e1c27e471be79662d40c4e87d6534a0d",
+    "superseded_before_any_formal_audit_episode_outcome": true
+  },
   "schema_version": 1,
   "source_file_sha256": {
-    "experiments/scripts/audit_specialist_diagonal_v20.py": "61e70cd433cd50c2a14f7daaa699e0bf15a6f0048a04765514ba1d25a6aef6d6",
+    "experiments/scripts/audit_specialist_diagonal_v20.py": "0fe75bcb5a087ff02a5479f85ff87a6adaaefdd8f0afce43e5e43c99093b8fe6",
     "experiments/scripts/audit_specialists_diagonal_v19.py": "0b35d5f862dbca90f42cf9223c001ca77b837f3329dafb966fd9bb90e1852f65",
     "experiments/scripts/collect_mechanism_telemetry_v20.py": "1f4c13f1edee78d4cd079ed570f9084d1a115bb4e61b394c07d3edab100f6e04",
     "experiments/scripts/diagonal_audit_stats.py": "9cd2caec8e4ece1b969488b74eb8e71ad562bf5a1bde8350c019a54a67f695a5",
