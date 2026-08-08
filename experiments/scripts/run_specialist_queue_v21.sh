@@ -11,11 +11,13 @@ PYTHON="${SAFE100_PYTHON:-$ROOT/workspace/conda_env/bin/python}"
 BASELINE="${SAFE100_BASELINE_CHECKPOINT:-$ROOT/artifacts/retention_v13/arm_b_state_retention/accepted_final.pt}"
 PROTOCOL_COMMIT="${SAFE100_V21_PROTOCOL_COMMIT:?set SAFE100_V21_PROTOCOL_COMMIT}"
 DEFAULT_PROTOCOL="$REPO/results/online/specialist_v21/protocol_formal.json"
-test "$PHASE" = calibration && DEFAULT_PROTOCOL="$REPO/results/online/specialist_v21/protocol_precalibration_final.json"
+test "$PHASE" = calibration && DEFAULT_PROTOCOL="$REPO/results/online/specialist_v21/protocol_precalibration_replacement.json"
 test "$PHASE" = development && DEFAULT_PROTOCOL="$REPO/results/online/specialist_v21/protocol_development.json"
 PROTOCOL="${SAFE100_V21_PROTOCOL_FILE:-$DEFAULT_PROTOCOL}"
-ARTIFACT_ROOT="${SAFE100_V21_ARTIFACT_ROOT:-$ROOT/artifacts/specialist_v21_final}"
-LOG_ROOT="${SAFE100_V21_LOG_ROOT:-$ROOT/logs/specialist_v21_final}"
+ARTIFACT_ROOT="${SAFE100_V21_ARTIFACT_ROOT:-$ROOT/artifacts/specialist_v21_replacement}"
+LOG_ROOT="${SAFE100_V21_LOG_ROOT:-$ROOT/logs/specialist_v21_replacement}"
+CONTEXT_ROOT="${SAFE100_V21_CONTEXT_ROOT:-$REPO/results/online/specialist_v21/contexts_replacement}"
+CALIBRATION_SUMMARY_ROOT="${SAFE100_V21_CALIBRATION_SUMMARY_ROOT:-$REPO/results/online/specialist_v21/calibration/replacement}"
 cd "$REPO"
 test "$(git rev-parse HEAD)" = "$PROTOCOL_COMMIT"
 git diff --quiet
@@ -27,6 +29,8 @@ export SAFE100_V21_PROTOCOL_COMMIT="$PROTOCOL_COMMIT"
 export SAFE100_V21_PROTOCOL_FILE="$PROTOCOL"
 export SAFE100_V21_ARTIFACT_ROOT="$ARTIFACT_ROOT"
 export SAFE100_V21_LOG_ROOT="$LOG_ROOT"
+export SAFE100_V21_CONTEXT_ROOT="$CONTEXT_ROOT"
+export SAFE100_V21_CALIBRATION_SUMMARY_ROOT="$CALIBRATION_SUMMARY_ROOT"
 export PYTHONPATH="$REPO${PYTHONPATH:+:$PYTHONPATH}"
 
 if test "$PHASE" = calibration; then
@@ -50,7 +54,7 @@ elif test "$PHASE" = development; then
   "$PYTHON" experiments/scripts/select_development_beta_v21.py \
     --repo "$REPO" \
     --base-policy-checkpoint "$BASELINE" \
-    --context-dir "$REPO/results/online/specialist_v21/contexts" \
+    --context-dir "$CONTEXT_ROOT" \
     --training-root "$ARTIFACT_ROOT/training" \
     --protocol-file "$PROTOCOL" \
     --protocol-commit "$PROTOCOL_COMMIT" \
@@ -71,7 +75,7 @@ else
       "$PYTHON" experiments/scripts/evaluate_learning_curve_v21.py \
         --repo "$REPO" \
         --context-id "$context_id" \
-        --context "$REPO/results/online/specialist_v21/contexts/$context_id.json" \
+        --context "$CONTEXT_ROOT/$context_id.json" \
         --training-dir "$ARTIFACT_ROOT/training/$context_id/${role}_${label}" \
         --protocol-file "$PROTOCOL" \
         --protocol-commit "$PROTOCOL_COMMIT" \
@@ -83,7 +87,7 @@ else
       --repo "$REPO" \
       --base-policy-checkpoint "$BASELINE" \
       --context-id "$context_id" \
-      --context "$REPO/results/online/specialist_v21/contexts/$context_id.json" \
+      --context "$CONTEXT_ROOT/$context_id.json" \
       --control-training-dir "$ARTIFACT_ROOT/training/$context_id/control_beta_0" \
       --v21-training-dir "$ARTIFACT_ROOT/training/$context_id/v21_beta_${SELECTED_BETA//./p}" \
       --protocol-file "$PROTOCOL" \

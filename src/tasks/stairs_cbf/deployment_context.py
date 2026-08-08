@@ -50,7 +50,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "lateral",
     "family": "excluded_development_mixed_lateral",
     "formal": False,
-    "candidate_seed_prefix": 331,
+    "candidate_seed_prefix": 351,
     "direction": -1,
     "ranges": {
       "rise_profile_half_width": [0.0015, 0.0015],
@@ -78,7 +78,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "excluded_development_mixed_contact",
     "formal": False,
-    "candidate_seed_prefix": 332,
+    "candidate_seed_prefix": 352,
     "direction": 1,
     "ranges": {
       "foot_friction": [0.52, 0.30],
@@ -93,7 +93,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "lateral",
     "family": "command_delay_and_low_pass",
     "formal": True,
-    "candidate_seed_prefix": 333,
+    "candidate_seed_prefix": 353,
     "direction": 1,
     "ranges": {
       "rise_profile_half_width": [0.0035, 0.0035],
@@ -119,7 +119,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "lateral",
     "family": "narrow_stair_lateral_clearance",
     "formal": True,
-    "candidate_seed_prefix": 334,
+    "candidate_seed_prefix": 354,
     "direction": -1,
     "ranges": {
       "rise_profile_half_width": [0.0, 0.0],
@@ -133,7 +133,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
       "encoder_bias_abs": [0.0, 0.0],
       "yaw_bias_abs": [0.0, 0.0],
       "centerline_heading_reference_bias_abs": [0.0, 0.0],
-      "stair_half_width": [1.00, 0.45],
+      "stair_half_width": [1.00, 0.89],
       "lateral_pulse_min": [0.0, 0.0],
       "lateral_pulse_max": [0.0, 0.0],
       "yaw_pulse_min": [0.0, 0.0],
@@ -152,7 +152,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "lateral",
     "family": "lateral_bias_and_lateral_pulse",
     "formal": True,
-    "candidate_seed_prefix": 335,
+    "candidate_seed_prefix": 355,
     "direction": 1,
     "ranges": {
       "rise_profile_half_width": [0.0035, 0.0035],
@@ -177,7 +177,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "lateral",
     "family": "weak_centerline_correction",
     "formal": True,
-    "candidate_seed_prefix": 336,
+    "candidate_seed_prefix": 356,
     "direction": -1,
     "ranges": {
       "rise_profile_half_width": [0.0015, 0.0015],
@@ -205,7 +205,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "lateral",
     "family": "moderate_mixed_lateral_shift",
     "formal": True,
-    "candidate_seed_prefix": 337,
+    "candidate_seed_prefix": 357,
     "direction": 1,
     "ranges": {
       "rise_profile_half_width": [0.0015, 0.0015],
@@ -233,7 +233,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "low_foot_friction",
     "formal": True,
-    "candidate_seed_prefix": 338,
+    "candidate_seed_prefix": 358,
     "direction": -1,
     "ranges": {"foot_friction": [0.52, 0.25]},
   },
@@ -241,7 +241,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "left_right_action_asymmetry",
     "formal": True,
-    "candidate_seed_prefix": 339,
+    "candidate_seed_prefix": 359,
     "direction": 1,
     "ranges": {"response_asymmetry_abs": [0.040, 0.200]},
   },
@@ -249,7 +249,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "action_gain_and_encoder_bias",
     "formal": True,
-    "candidate_seed_prefix": 340,
+    "candidate_seed_prefix": 360,
     "direction": -1,
     "ranges": {
       "action_gain": [0.916, 0.900],
@@ -260,7 +260,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "friction_and_command_dynamics_mismatch",
     "formal": True,
-    "candidate_seed_prefix": 341,
+    "candidate_seed_prefix": 361,
     "direction": 1,
     "ranges": {
       "foot_friction": [0.55, 0.32],
@@ -273,7 +273,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "moderate_mixed_contact_shift",
     "formal": True,
-    "candidate_seed_prefix": 342,
+    "candidate_seed_prefix": 362,
     "direction": -1,
     "ranges": {
       "foot_friction": [0.54, 0.32],

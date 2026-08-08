@@ -9,6 +9,7 @@ PROTOCOL_COMMIT="${SAFE100_V21_PROTOCOL_COMMIT:?set SAFE100_V21_PROTOCOL_COMMIT}
 PROTOCOL="${SAFE100_V21_PROTOCOL_FILE:?set SAFE100_V21_PROTOCOL_FILE}"
 ARTIFACT_ROOT="${SAFE100_V21_ARTIFACT_ROOT:-$ROOT/artifacts/specialist_v21}"
 LOG_ROOT="${SAFE100_V21_LOG_ROOT:-$ROOT/logs/specialist_v21}"
+CONTEXT_ROOT="${SAFE100_V21_CONTEXT_ROOT:-$REPO/results/online/specialist_v21/contexts_replacement}"
 CONTEXT_ID="${1:-}"
 METHOD_ROLE="${2:-}"
 BETA="${3:-}"
@@ -27,7 +28,7 @@ git diff --quiet
 git diff --cached --quiet
 SEED="$($PYTHON -c 'import json,sys; print(json.load(open(sys.argv[1]))["adaptation_seeds"][sys.argv[2]])' "$PROTOCOL" "$CONTEXT_ID")"
 LABEL="beta_${BETA//./p}"
-CONTEXT="$REPO/results/online/specialist_v21/contexts/$CONTEXT_ID.json"
+CONTEXT="$CONTEXT_ROOT/$CONTEXT_ID.json"
 OUTPUT="${SAFE100_OUTPUT_DIR:-$ARTIFACT_ROOT/training/$CONTEXT_ID/${METHOD_ROLE}_${LABEL}}"
 LOG="${SAFE100_LOG_PATH:-$LOG_ROOT/train_${CONTEXT_ID}_${METHOD_ROLE}_${LABEL}.log}"
 mkdir -p "$OUTPUT" "$(dirname "$LOG")"

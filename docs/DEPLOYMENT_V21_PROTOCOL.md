@@ -33,10 +33,13 @@ purity was 72.91%, so the authority-loss axis is also closed. No adaptation,
 monitor, or audit was started. Pilot 10 restored nominal feedback, removed raw
 yaw bias, and varied only a bounded visual heading-reference bias from 0.35 to
 0.75 radians. It reached at most 45 falls and 76.92% purity, with pooled purity
-of 71.33%, so that mechanism is rejected. The current boundary is an eleventh
-non-formal base-only pilot with 256 episodes per candidate. It holds command,
-feedback, action, encoder, rise, and tread terms nominal while narrowing the
-physical stair half-width from 1.00 to 0.45 m with entirely fresh randomness.
+of 71.33%, so that mechanism is rejected. Pilot 11 then held command, feedback,
+action, encoder, rise, and tread terms nominal while narrowing only the physical
+stair half-width from 1.00 to 0.45 m. Three contiguous candidates at 1.00,
+0.95, and 0.90 m passed every scaled gate; the full sweep had 95.17% pooled
+target purity. The current boundary is a prospectively frozen replacement
+512-episode base-only calibration. Its `L2` family finely sweeps 1.00--0.89 m
+with entirely fresh candidate and evaluation randomness.
 
 本文记录 v21 的前瞻性实验设计。第一轮修正并预先冻结的 `L_dev` base-only sweep
 完成了全部 12 个候选，但因没有候选满足校准门槛而停止。随后一轮非正式 base-only
@@ -61,9 +64,11 @@ purity 仅 72.28%，因此 command-magnitude 轴到此停止。没有启动 adap
 的候选最高 purity 仅 75.47%，池化 purity 为 72.91%，因此 authority-loss 轴也停止。
 pilot 10 恢复正常反馈、移除 raw yaw bias，只把有界的视觉 heading-reference bias
 从 0.35 扫到 0.75 radians，但最多只有 45 次跌倒与 76.92% purity，池化 purity 为
-71.33%，因此该机制也被否决。当前边界是第十一轮非正式 base-only pilot：每候选
-256 episodes，保持 command、feedback、action、encoder、rise 和 tread 为 nominal，
-只把物理 stair half-width 从 1.00 缩小到 0.45 m，并使用全新随机数。
+71.33%，因此该机制也被否决。pilot 11 随后保持 command、feedback、action、encoder、
+rise 和 tread 为 nominal，只把物理 stair half-width 从 1.00 缩小到 0.45 m。
+1.00、0.95、0.90 m 三个连续候选通过全部 scaled gate，整条 sweep 的目标池化 purity
+为 95.17%。当前边界是前瞻冻结的 replacement 512-episode base-only calibration；
+其中 `L2` 使用全新的候选与评估随机数，在 1.00--0.89 m 内进行细扫。
 
 ## 实验单位 / Experimental unit
 
@@ -132,17 +137,20 @@ increased failure volume without a robust purity intersection. Pilot 9 changed
 mechanism instead of extending magnitude: it fixed yaw bias at 0.34, preserved
 nominal lateral feedback, and swept only the heading correction saturation
 limit from 0.32 down to 0.04. Mechanism-pure candidates remained too easy,
-while difficult candidates lost purity. Pilot 10 therefore restores all
-feedback gains and limits, sets raw yaw bias to zero, and sweeps only a bounded
+while difficult candidates lost purity. Pilot 10 therefore restored all
+feedback gains and limits, set raw yaw bias to zero, and swept only a bounded
 visual heading-reference bias from 0.35 to 0.75 radians. The true heading error
 used by diagnostics and failure classification remained unchanged, but the
-sweep reached neither the fall-count nor purity gate. Pilot 11 therefore holds
-all command, feedback, action, encoder, rise, and tread terms nominal and
-narrows only the physical stair half-width from 1.00 to 0.45 m. The same frozen
-width drives tread geometry, root/foot edge-clearance telemetry, and the
-geometry-derived classifier threshold. Unlike `L4`, this does not weaken
-feedback; unlike `L3`, it does not inject a lateral stick command. It is
-base-policy range evidence, not formal selection.
+sweep reached neither the fall-count nor purity gate. Pilot 11 then held all
+command, feedback, action, encoder, rise, and tread terms nominal and narrowed
+only the physical stair half-width from 1.00 to 0.45 m. The same frozen width
+drove tread geometry, root/foot edge-clearance telemetry, and the
+geometry-derived classifier threshold. Candidates at 1.00, 0.95, and 0.90 m
+all qualified, followed by a mechanism-pure over-difficult transition at
+0.85 m. This was base-policy range evidence, not formal selection. The
+replacement calibration preserves this mechanism, narrows the prospective
+`L2` sweep to 1.00--0.89 m, uses 512 episodes per candidate, and replaces every
+candidate and evaluation seed before any new outcome is observed.
 
 ## Algorithm
 

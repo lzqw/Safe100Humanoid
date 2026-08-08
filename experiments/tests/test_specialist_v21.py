@@ -91,7 +91,7 @@ def test_v21_formal_family_primary_perturbations_are_distinct() -> None:
   assert contexts["L1"]["target"]["command_delay_s"] == 0.38
   assert contexts["L2"]["scenario"]["yaw_command_bias"] == 0.0
   assert contexts["L2"]["scenario"]["centerline_heading_reference_bias"] == 0.0
-  assert contexts["L2"]["scenario"]["stair_half_width"] == 0.45
+  assert contexts["L2"]["scenario"]["stair_half_width"] == 0.89
   assert contexts["L2"]["scenario"]["lateral_command_bias"] == 0.0
   assert not any(contexts["L2"]["target"]["action_bias"])
   assert contexts["L3"]["scenario"]["lateral_command_bias"] != 0.0
@@ -156,16 +156,16 @@ def test_v21_lateral_range_pilot_uses_frozen_difficulty_carriers() -> None:
     ]
 
 
-def test_v21_recovery_pilot_has_a_fresh_seed_namespace() -> None:
+def test_v21_replacement_calibration_has_a_fresh_seed_namespace() -> None:
   assert RANGE_PILOT_ID == 11
   assert RANGE_PILOT_CONTEXTS == ("L2",)
   assert [
     V21_CONTEXT_SPECS[context_id]["candidate_seed_prefix"]
     for context_id in CONTEXTS
-  ] == list(range(331, 343))
+  ] == list(range(351, 363))
 
 
-def test_v21_range_pilot_11_varies_only_physical_lateral_clearance() -> None:
+def test_v21_replacement_l2_varies_only_physical_lateral_clearance() -> None:
   prefix = int(V21_CONTEXT_SPECS["L2"]["candidate_seed_prefix"])
   l2_first = generate_v21_specialist_context("L2", prefix * 100 + 8)
   l2_last = generate_v21_specialist_context("L2", prefix * 100 + 19)
@@ -187,7 +187,7 @@ def test_v21_range_pilot_11_varies_only_physical_lateral_clearance() -> None:
   assert l2_first["scenario"]["centerline_heading_reference_bias"] == 0.0
   assert l2_last["scenario"]["centerline_heading_reference_bias"] == 0.0
   assert l2_first["scenario"]["stair_half_width"] == 1.0
-  assert l2_last["scenario"]["stair_half_width"] == 0.45
+  assert l2_last["scenario"]["stair_half_width"] == 0.89
   for field in (
     "lateral_pulse_min",
     "lateral_pulse_max",

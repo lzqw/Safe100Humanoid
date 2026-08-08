@@ -375,9 +375,11 @@ def _replacement_precalibration(args: argparse.Namespace) -> dict[str, Any]:
     len(pilot_protocol_paths)
     == len(pilot_summary_paths)
     == len(pilot_commits)
-    == 3
+    == RANGE_PILOT_ID
   ):
-    raise ValueError("v21 replacement freeze requires exactly three range pilots")
+    raise ValueError(
+      "v21 replacement freeze requires every completed range pilot"
+    )
 
   pilot_history = []
   feasibility_contexts: set[str] = set()
