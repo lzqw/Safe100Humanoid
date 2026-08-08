@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "protocol_id": "safe100-deployment-unit-local-matched-success-v21",
+  "event_id": "v21-base-policy-C4-fine-range-pilot-12",
+  "stage": "base_policy_only_context_range_feasibility_pilot",
+  "formal_context_selection": false,
+  "started_at_utc": "2026-08-08T20:41:18Z",
+  "completed_at_utc": "2026-08-08T20:51:32Z",
+  "prospective_protocol": {
+    "file": "results/online/specialist_v21/protocol_range_pilot_12.json",
+    "git_commit": "59fe0d4555c01be6bb44b5663b5d228c463ed2be",
+    "sha256": "e4140c590f47b5a638e87659835e6f458c0c333265eaa84c947ac6b19cb7c4ce"
+  },
+  "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "episodes_per_candidate": 256,
+  "candidates_per_context": 12,
+  "context_count": 1,
+  "total_base_policy_episodes": 3072,
+  "gates": {
+    "success_rate_min": 0.7,
+    "success_rate_max": 0.85,
+    "minimum_fall_count": 50,
+    "contact_stability_target_failure_fraction_min": 0.75,
+    "contact_stability_second_failure_fraction_max": 0.2
+  },
+  "qualifying_contexts": {
+    "C4": [
+      38108,
+      38110,
+      38111,
+      38112,
+      38113,
+      38114,
+      38115,
+      38116,
+      38117,
+      38118
+    ]
+  },
+  "contexts_without_qualifier": [],
+  "contexts_requiring_robustness_confirmation": [],
+  "contexts_requiring_mechanism_redesign": [],
+  "representative_qualifier": {
+    "context_id": "C4",
+    "candidate_seed": 38108,
+    "candidate_severity": 0.0,
+    "foot_friction": 0.4626,
+    "command_forward_scale": 1.0884,
+    "command_low_pass_s": 0.0732,
+    "action_gain": 0.9192,
+    "success_rate": 0.78515625,
+    "fall_count": 55,
+    "target_failure_fraction": 0.9454545454545454,
+    "second_failure_fraction": 0.05454545454545454,
+    "all_gates_have_strict_margin": true
+  },
+  "boundary_failures": [
+    {
+      "candidate_seed": 38109,
+      "candidate_severity": 0.090909090909,
+      "success_rate": 0.80859375,
+      "fall_count": 49,
+      "target_failure_fraction": 0.9387755102040817,
+      "second_failure_fraction": 0.061224489795918366,
+      "failed_gate": "fall_count_below_50",
+      "falls_short_of_gate": 1
+    },
+    {
+      "candidate_seed": 38119,
+      "candidate_severity": 1.0,
+      "success_rate": 0.6640625,
+      "fall_count": 86,
+      "target_failure_fraction": 0.9883720930232558,
+      "second_failure_fraction": 0.011627906976744186,
+      "failed_gate": "success_rate_below_0.70",
+      "successes_short_of_lower_gate": 10
+    }
+  ],
+  "range_shape": {
+    "qualifier_count": 10,
+    "nonqualifier_count": 2,
+    "longest_contiguous_qualifying_seed_interval": [
+      38110,
+      38118
+    ],
+    "longest_contiguous_qualifier_count": 9,
+    "strict_margin_recommended_seed_interval": [
+      38112,
+      38118
+    ],
+    "mechanism_purity_passed_for_all_candidates": true,
+    "hard_endpoint_established": true
+  },
+  "pooled_outcomes": {
+    "total_successes": 2337,
+    "total_falls": 735,
+    "contact_stability_failures": 721,
+    "lateral_heading_failures": 14,
+    "other_failures": 0,
+    "pooled_success_rate": 0.7607421875,
+    "contact_stability_failure_fraction": 0.9809523809523809
+  },
+  "interpretation": "The prospectively frozen fine C4 sweep produced ten qualifiers, including nine consecutive qualifiers from 38110 through 38118, while every candidate retained contact-stability mechanism purity above its gates. Candidate 38109 missed only the scaled fall-count gate by one fall, and candidate 38119 established the hard boundary by falling below the 0.70 success-rate gate. The stricter 38112-through-38118 interior therefore supplies a robust bracket for a fresh 512-episode replacement calibration. This is exploratory base-policy range evidence, not formal context selection or an adaptation result.",
+  "base_policy_outcomes_observed": true,
+  "adaptation_process_started": false,
+  "adapted_policy_outcomes_observed": false,
+  "formal_adaptation_or_audit_outcomes_observed": false,
+  "execution": {
+    "queue_completed_marker_observed": true,
+    "tmux_session_running_after_completion": false,
+    "v21_calibration_or_adaptation_process_running_after_completion": false,
+    "process_audit_at_utc": "2026-08-08T20:54:03Z"
+  },
+  "committed_evidence": {
+    "progress_commit": "08353ae34d136e26be3a811e76b336a1d3dbc016",
+    "progress_file_count": 1,
+    "progress_file_sha256": "b30035ec589f241d8ae0cdf220b98e01176b49e15ac961bc389e2455eea95777",
+    "progress_manifest_sha256": "85c3a3a5cfa21e271990d2a1003bed52f11657417c280a59607485f845f6090e",
+    "manifest_definition": "SHA-256 of the relative ./C4/calibration_progress.json sha256sum line"
+  },
+  "external_evidence": {
+    "artifact_root": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_range_pilot_12",
+    "artifact_file_count": 73,
+    "artifact_total_bytes": 50042599,
+    "artifact_manifest_sha256": "f8d55ae867785d7d9f6d39acecf32b3f1ab3836db2f5b95809199011456c6ce9",
+    "log_root": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v21_range_pilot_12",
+    "log_file_count": 2,
+    "log_total_bytes": 79025,
+    "log_manifest_sha256": "4eef787c09e31eece0b5dc3f0781d2db0b782e95850a34c1c26ca306514a5798",
+    "queue_log_sha256": "b05d909272830cde2f36f2aa1acc4c5a178e96cdca60fac9de264fa0fd60814f",
+    "context_log_sha256": "7d2afc48dd542a0fd1603497f19e7fd8200b3e42ce2bcc72f2b04f0b84de9892",
+    "actor_file_sha256": "8613b51907b06f4a8845d60bb40c31ef1b6cdc977af7207394b9b44a2c1bc7b4",
+    "actor_state_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+    "evaluation_json_file_count": 24,
+    "evaluation_csv_file_count": 24,
+    "manifest_definition": "SHA-256 of sorted sha256sum lines rooted at the corresponding directory and using ./ relative paths"
+  },
+  "disposition": "range_feasibility_complete_freeze_fresh_replacement_v2_formal_calibration",
+  "formal_calibration_ready": true,
+  "next_boundary": {
+    "all_twelve_families_have_base_policy_range_feasibility_evidence": true,
+    "replacement_calibration_uses_512_episodes_per_candidate": true,
+    "replacement_calibration_freezes_first_qualifying_candidate": true,
+    "recommended_C4_ranges": {
+      "foot_friction": [
+        0.456745,
+        0.447964
+      ],
+      "command_forward_scale": [
+        1.092982,
+        1.099855
+      ],
+      "command_low_pass_s": [
+        0.076764,
+        0.082109
+      ],
+      "action_gain": [
+        0.915127,
+        0.909018
+      ]
+    },
+    "recommended_range_derived_from_pilot_severities": [
+      0.363636363636,
+      0.909090909091
+    ],
+    "entirely_new_candidate_and_evaluation_randomness_required": true,
+    "replacement_protocol_must_bind_all_twelve_range_pilot_evidence": true,
+    "replacement_protocol_must_bind_the_prior_failed_calibration": true,
+    "replacement_protocol_must_be_committed_before_calibration": true,
+    "adaptation_outcomes_must_remain_absent": true
+  }
+}
