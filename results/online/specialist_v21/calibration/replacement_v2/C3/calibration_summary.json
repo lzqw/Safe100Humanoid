@@ -1,0 +1,48 @@
+{
+  "adapted_policy_evaluations_used": false,
+  "context_id": "C3",
+  "frozen_context": "/home/carla/LZQW/SAFE100/humanoid/worktrees/v21_final_calibration_v2/results/online/specialist_v21/contexts_replacement_v2/C3.json",
+  "frozen_context_file_sha256": "b72d7d1f154432eb57e8179a25d5c32ae1e2e2ed31b5eeeb43ba758f15e149e4",
+  "mode": "contact_stability",
+  "parameters_sha256": "532cc45c6054a292cd7f35e303e4f557712694fa20ba839ea49a80c481185fb6",
+  "protocol_id": "safe100-deployment-unit-local-matched-success-v21",
+  "selected_attempt": {
+    "base_policy_only": true,
+    "candidate_seed": 40008,
+    "candidate_severity": 0.0,
+    "context_family": "action_gain_and_encoder_bias",
+    "context_id": "C3",
+    "evaluation_seed_start": 78190000,
+    "evaluation_seeds": [
+      78190000,
+      78190001,
+      78190002,
+      78190003
+    ],
+    "failure_type_counts": {
+      "contact_stability": 109,
+      "lateral_heading_drift": 1,
+      "non_lateral_balance_or_phase": 0,
+      "non_lateral_high_cbf_demand": 0,
+      "other_non_lateral": 0
+    },
+    "failure_type_fractions": {
+      "contact_stability": 0.990909090909091,
+      "lateral_heading_drift": 0.00909090909090909,
+      "non_lateral_balance_or_phase": 0.0,
+      "non_lateral_high_cbf_demand": 0.0,
+      "other_non_lateral": 0.0
+    },
+    "fall_count": 110,
+    "fall_rate": 0.21484375,
+    "minimum_fall_count_gate": 100,
+    "num_episodes": 512,
+    "parameters_sha256": "532cc45c6054a292cd7f35e303e4f557712694fa20ba839ea49a80c481185fb6",
+    "qualifies": true,
+    "second_failure_fraction": 0.00909090909090909,
+    "success_rate": 0.78515625,
+    "target_failure_fraction": 0.990909090909091,
+    "target_failure_type": "contact_stability"
+  },
+  "selected_candidate_seed": 40008
+}
