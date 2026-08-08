@@ -89,7 +89,7 @@ def test_v21_formal_family_primary_perturbations_are_distinct() -> None:
       context_id, prefix * 100 + 19
     )
   assert contexts["L1"]["target"]["command_delay_s"] == 0.38
-  assert contexts["L2"]["scenario"]["yaw_command_bias"] == 0.5
+  assert contexts["L2"]["scenario"]["yaw_command_bias"] == 0.65
   assert contexts["L2"]["scenario"]["lateral_command_bias"] == 0.0
   assert not any(contexts["L2"]["target"]["action_bias"])
   assert contexts["L3"]["scenario"]["lateral_command_bias"] != 0.0
@@ -150,15 +150,15 @@ def test_v21_lateral_range_pilot_uses_frozen_difficulty_carriers() -> None:
 
 
 def test_v21_recovery_pilot_has_a_fresh_seed_namespace() -> None:
-  assert RANGE_PILOT_ID == 5
+  assert RANGE_PILOT_ID == 6
   assert RANGE_PILOT_CONTEXTS == ("L2",)
   assert [
     V21_CONTEXT_SPECS[context_id]["candidate_seed_prefix"]
     for context_id in CONTEXTS
-  ] == list(range(211, 223))
+  ] == list(range(231, 243))
 
 
-def test_v21_range_pilot_5_extends_only_the_L2_yaw_command_axis() -> None:
+def test_v21_range_pilot_6_isolates_persistent_L2_yaw_bias() -> None:
   prefix = int(V21_CONTEXT_SPECS["L2"]["candidate_seed_prefix"])
   l2_first = generate_v21_specialist_context("L2", prefix * 100 + 8)
   l2_last = generate_v21_specialist_context("L2", prefix * 100 + 19)
@@ -175,12 +175,29 @@ def test_v21_range_pilot_5_extends_only_the_L2_yaw_command_axis() -> None:
   assert l2_first["target"]["encoder_bias"] == 0.0
   assert not any(l2_first["target"]["action_bias"])
   assert not any(l2_last["target"]["action_bias"])
-  assert l2_first["scenario"]["yaw_command_bias"] == 0.3
-  assert l2_last["scenario"]["yaw_command_bias"] == 0.5
-  assert l2_first["scenario"]["yaw_pulse_max"] == 0.72
-  assert l2_last["scenario"]["yaw_pulse_max"] == 1.08
-  assert l2_first["scenario"]["lateral_pulse_max"] == 0.085
-  assert l2_last["scenario"]["lateral_pulse_max"] == 0.085
+  assert l2_first["scenario"]["yaw_command_bias"] == 0.46
+  assert l2_last["scenario"]["yaw_command_bias"] == 0.65
+  for field in (
+    "lateral_pulse_min",
+    "lateral_pulse_max",
+    "yaw_pulse_min",
+    "yaw_pulse_max",
+  ):
+    assert l2_first["scenario"][field] == 0.0
+    assert l2_last["scenario"][field] == 0.0
+  assert l2_first["scenario"]["disturbance_pulses_with_centering"] is False
+  assert l2_last["scenario"]["disturbance_pulses_with_centering"] is False
+  for field in (
+    "pulse_interval_min_s",
+    "pulse_interval_max_s",
+    "pulse_duration_min_s",
+    "pulse_duration_max_s",
+    "centerline_lateral_gain",
+    "centerline_heading_gain",
+    "centerline_max_yaw_velocity",
+  ):
+    assert l2_first["scenario"][field] == l2_last["scenario"][field]
+  assert l2_first["scenario"]["centerline_max_yaw_velocity"] == 0.45
 
 
 def test_v21_confirmation_uses_three_independent_positive_block_rule() -> None:

@@ -50,7 +50,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "lateral",
     "family": "excluded_development_mixed_lateral",
     "formal": False,
-    "candidate_seed_prefix": 211,
+    "candidate_seed_prefix": 231,
     "direction": -1,
     "ranges": {
       "rise_profile_half_width": [0.0015, 0.0015],
@@ -78,7 +78,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "excluded_development_mixed_contact",
     "formal": False,
-    "candidate_seed_prefix": 212,
+    "candidate_seed_prefix": 232,
     "direction": 1,
     "ranges": {
       "foot_friction": [0.52, 0.30],
@@ -93,7 +93,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "lateral",
     "family": "command_delay_and_low_pass",
     "formal": True,
-    "candidate_seed_prefix": 213,
+    "candidate_seed_prefix": 233,
     "direction": 1,
     "ranges": {
       "rise_profile_half_width": [0.0035, 0.0035],
@@ -117,9 +117,9 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
   },
   "L2": {
     "mode": "lateral",
-    "family": "extended_yaw_bias_and_yaw_pulse",
+    "family": "persistent_yaw_bias_above_centering_authority",
     "formal": True,
-    "candidate_seed_prefix": 214,
+    "candidate_seed_prefix": 234,
     "direction": -1,
     "ranges": {
       "rise_profile_half_width": [0.0, 0.0],
@@ -131,20 +131,25 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
       "action_bias_abs": [0.0, 0.0],
       "action_delay_steps": [0, 0],
       "encoder_bias_abs": [0.0, 0.0],
-      "yaw_bias_abs": [0.30, 0.50],
-      "lateral_pulse_min": [0.035, 0.035],
-      "lateral_pulse_max": [0.085, 0.085],
-      "yaw_pulse_min": [0.34, 0.52],
-      "yaw_pulse_max": [0.72, 1.08],
+      "yaw_bias_abs": [0.46, 0.65],
+      "lateral_pulse_min": [0.0, 0.0],
+      "lateral_pulse_max": [0.0, 0.0],
+      "yaw_pulse_min": [0.0, 0.0],
+      "yaw_pulse_max": [0.0, 0.0],
+      "pulse_interval_min_s": [1.8, 1.8],
+      "pulse_interval_max_s": [3.6, 3.6],
+      "pulse_duration_min_s": [0.25, 0.25],
+      "pulse_duration_max_s": [0.55, 0.55],
       "centerline_lateral_gain": [0.50, 0.50],
       "centerline_heading_gain": [0.86, 0.86],
+      "centerline_max_yaw_velocity": [0.45, 0.45],
     },
   },
   "L3": {
     "mode": "lateral",
     "family": "lateral_bias_and_lateral_pulse",
     "formal": True,
-    "candidate_seed_prefix": 215,
+    "candidate_seed_prefix": 235,
     "direction": 1,
     "ranges": {
       "rise_profile_half_width": [0.0035, 0.0035],
@@ -169,7 +174,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "lateral",
     "family": "weak_centerline_correction",
     "formal": True,
-    "candidate_seed_prefix": 216,
+    "candidate_seed_prefix": 236,
     "direction": -1,
     "ranges": {
       "rise_profile_half_width": [0.0015, 0.0015],
@@ -197,7 +202,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "lateral",
     "family": "moderate_mixed_lateral_shift",
     "formal": True,
-    "candidate_seed_prefix": 217,
+    "candidate_seed_prefix": 237,
     "direction": 1,
     "ranges": {
       "rise_profile_half_width": [0.0015, 0.0015],
@@ -225,7 +230,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "low_foot_friction",
     "formal": True,
-    "candidate_seed_prefix": 218,
+    "candidate_seed_prefix": 238,
     "direction": -1,
     "ranges": {"foot_friction": [0.52, 0.25]},
   },
@@ -233,7 +238,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "left_right_action_asymmetry",
     "formal": True,
-    "candidate_seed_prefix": 219,
+    "candidate_seed_prefix": 239,
     "direction": 1,
     "ranges": {"response_asymmetry_abs": [0.040, 0.200]},
   },
@@ -241,7 +246,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "action_gain_and_encoder_bias",
     "formal": True,
-    "candidate_seed_prefix": 220,
+    "candidate_seed_prefix": 240,
     "direction": -1,
     "ranges": {
       "action_gain": [0.916, 0.900],
@@ -252,7 +257,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "friction_and_command_dynamics_mismatch",
     "formal": True,
-    "candidate_seed_prefix": 221,
+    "candidate_seed_prefix": 241,
     "direction": 1,
     "ranges": {
       "foot_friction": [0.55, 0.32],
@@ -265,7 +270,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "moderate_mixed_contact_shift",
     "formal": True,
-    "candidate_seed_prefix": 222,
+    "candidate_seed_prefix": 242,
     "direction": -1,
     "ranges": {
       "foot_friction": [0.54, 0.32],
@@ -543,8 +548,11 @@ def _validate_v19_scenario(
     raise ValueError("v19 scenario contains a non-finite parameter")
   if not -0.20 <= parameters.lateral_command_bias <= 0.20:
     raise ValueError("v19 lateral command bias is outside [-0.2, 0.2]")
-  if not -0.50 <= parameters.yaw_command_bias <= 0.50:
-    raise ValueError("v19 yaw command bias is outside [-0.5, 0.5]")
+  maximum_yaw_bias = 0.75 if v21 else 0.50
+  if not -maximum_yaw_bias <= parameters.yaw_command_bias <= maximum_yaw_bias:
+    raise ValueError(
+      f"observable-context yaw command bias exceeds {maximum_yaw_bias}"
+    )
   for low, high in (
     (parameters.lateral_pulse_min, parameters.lateral_pulse_max),
     (parameters.yaw_pulse_min, parameters.yaw_pulse_max),
@@ -1112,10 +1120,30 @@ def generate_v21_specialist_context(
       lateral_pulse_max=round(lateral_pulse_max, 6),
       yaw_pulse_min=round(yaw_pulse_min, 6),
       yaw_pulse_max=round(yaw_pulse_max, 6),
-      pulse_interval_min_s=round(1.8 - 0.5 * severity, 6),
-      pulse_interval_max_s=round(3.6 - 0.8 * severity, 6),
-      pulse_duration_min_s=round(0.25 + 0.10 * severity, 6),
-      pulse_duration_max_s=round(0.55 + 0.20 * severity, 6),
+      pulse_interval_min_s=round(
+        _v21_range_value(
+          ranges, "pulse_interval_min_s", severity, 1.8 - 0.5 * severity
+        ),
+        6,
+      ),
+      pulse_interval_max_s=round(
+        _v21_range_value(
+          ranges, "pulse_interval_max_s", severity, 3.6 - 0.8 * severity
+        ),
+        6,
+      ),
+      pulse_duration_min_s=round(
+        _v21_range_value(
+          ranges, "pulse_duration_min_s", severity, 0.25 + 0.10 * severity
+        ),
+        6,
+      ),
+      pulse_duration_max_s=round(
+        _v21_range_value(
+          ranges, "pulse_duration_max_s", severity, 0.55 + 0.20 * severity
+        ),
+        6,
+      ),
       centerline_lateral_gain=round(
         _v21_range_value(
           ranges, "centerline_lateral_gain", severity, 0.80
