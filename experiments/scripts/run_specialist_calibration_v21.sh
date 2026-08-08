@@ -2,13 +2,13 @@
 set -euo pipefail
 
 ROOT="${SAFE100_HUMANOID_ROOT:-/home/carla/LZQW/SAFE100/humanoid}"
-REPO="${SAFE100_V21_REPO:-$ROOT/worktrees/v21_precalibration}"
+REPO="${SAFE100_V21_REPO:-$ROOT/worktrees/v21_final_calibration}"
 PYTHON="${SAFE100_PYTHON:-$ROOT/workspace/conda_env/bin/python}"
 BASELINE="${SAFE100_BASELINE_CHECKPOINT:-$ROOT/artifacts/retention_v13/arm_b_state_retention/accepted_final.pt}"
 PROTOCOL_COMMIT="${SAFE100_V21_PROTOCOL_COMMIT:?set SAFE100_V21_PROTOCOL_COMMIT}"
-PROTOCOL="${SAFE100_V21_PROTOCOL_FILE:-$REPO/results/online/specialist_v21/protocol_precalibration.json}"
-ARTIFACT_ROOT="${SAFE100_V21_ARTIFACT_ROOT:-$ROOT/artifacts/specialist_v21}"
-LOG_ROOT="${SAFE100_V21_LOG_ROOT:-$ROOT/logs/specialist_v21}"
+PROTOCOL="${SAFE100_V21_PROTOCOL_FILE:-$REPO/results/online/specialist_v21/protocol_precalibration_final.json}"
+ARTIFACT_ROOT="${SAFE100_V21_ARTIFACT_ROOT:-$ROOT/artifacts/specialist_v21_final}"
+LOG_ROOT="${SAFE100_V21_LOG_ROOT:-$ROOT/logs/specialist_v21_final}"
 CONTEXT_ID="${1:-}"
 
 case "$CONTEXT_ID" in

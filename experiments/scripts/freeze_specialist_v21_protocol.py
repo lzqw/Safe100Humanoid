@@ -341,6 +341,129 @@ def _precalibration(args: argparse.Namespace) -> dict[str, Any]:
   return payload
 
 
+def _replacement_precalibration(args: argparse.Namespace) -> dict[str, Any]:
+  """Seal formal calibration after base-only range feasibility is complete."""
+  payload = _precalibration(args)
+  repo = args.repo.resolve()
+  current_commit = _git_output(repo, "rev-parse", "HEAD")
+
+  failed_protocol_path = args.failed_protocol.resolve()
+  failure_amendment_path = args.calibration_failure_amendment.resolve()
+  failure_progress_path = args.calibration_failure_progress.resolve()
+  failed_protocol = json.loads(failed_protocol_path.read_text())
+  failure_amendment = json.loads(failure_amendment_path.read_text())
+  failure_progress = json.loads(failure_progress_path.read_text())
+  if (
+    failed_protocol.get("protocol_id") != PROTOCOL_ID
+    or failed_protocol.get("protocol_revision") != 0
+    or failure_amendment.get("protocol_id") != PROTOCOL_ID
+    or failure_amendment.get("base_policy_calibration_outcomes_observed")
+    is not True
+    or failure_amendment.get("adaptation_process_started") is not False
+    or failure_amendment.get("adapted_policy_outcomes_observed") is not False
+    or failure_progress.get("protocol_id") != PROTOCOL_ID
+    or any(attempt.get("qualifies") for attempt in failure_progress["attempts"])
+  ):
+    raise RuntimeError("invalid v21 failed-calibration evidence boundary")
+
+  pilot_protocol_paths = [path.resolve() for path in args.range_pilot_protocols]
+  pilot_summary_paths = [path.resolve() for path in args.range_pilot_summaries]
+  pilot_commits = list(args.range_pilot_commits)
+  if not (
+    len(pilot_protocol_paths)
+    == len(pilot_summary_paths)
+    == len(pilot_commits)
+    == 3
+  ):
+    raise ValueError("v21 replacement freeze requires exactly three range pilots")
+
+  pilot_history = []
+  feasibility_contexts: set[str] = set()
+  for pilot_id, (protocol_path, summary_path, commit) in enumerate(
+    zip(
+      pilot_protocol_paths,
+      pilot_summary_paths,
+      pilot_commits,
+      strict=True,
+    ),
+    start=1,
+  ):
+    protocol = json.loads(protocol_path.read_text())
+    summary = json.loads(summary_path.read_text())
+    qualifying = summary.get("qualifying_contexts")
+    if (
+      protocol.get("protocol_id") != PROTOCOL_ID
+      or protocol.get("protocol_revision") != f"range-pilot-{pilot_id}"
+      or protocol.get("range_pilot", {}).get("pilot_id") != pilot_id
+      or protocol.get("range_pilot", {}).get("base_policy_only") is not True
+      or protocol.get("range_pilot", {}).get("adapted_policy_evaluations_used")
+      is not False
+      or summary.get("protocol_id") != PROTOCOL_ID
+      or summary.get("stage")
+      != "base_policy_only_context_range_feasibility_pilot"
+      or summary.get("formal_context_selection") is not False
+      or summary.get("adaptation_process_started") is not False
+      or summary.get("adapted_policy_outcomes_observed") is not False
+      or summary.get("base_policy_checkpoint_sha256")
+      != args.base_checkpoint_sha256
+      or not isinstance(qualifying, dict)
+      or summary.get("prospective_protocol", {}).get("sha256")
+      != _sha256(protocol_path)
+    ):
+      raise RuntimeError(f"invalid v21 range-pilot-{pilot_id} boundary")
+    feasibility_contexts.update(str(context_id) for context_id in qualifying)
+    pilot_history.append(
+      {
+        "pilot_id": pilot_id,
+        "protocol": _verify_protocol_blob(repo, protocol_path, commit),
+        "summary": _verify_protocol_blob(repo, summary_path, commit),
+        "contexts": protocol["range_pilot"]["contexts"],
+        "qualifying_contexts": qualifying,
+        "formal_context_selection": False,
+        "adapted_policy_outcomes_observed": False,
+      }
+    )
+
+  final_summary = json.loads(pilot_summary_paths[-1].read_text())
+  if (
+    feasibility_contexts != set(CONTEXTS)
+    or final_summary.get("formal_calibration_ready") is not True
+    or final_summary.get("contexts_without_qualifier") != []
+    or final_summary.get("contexts_requiring_robustness_confirmation") != []
+  ):
+    raise RuntimeError("v21 range feasibility is incomplete")
+
+  payload["range_feasibility_history"] = {
+    "failed_formal_calibration": {
+      "protocol": _verify_protocol_blob(
+        repo, failed_protocol_path, current_commit
+      ),
+      "failure_amendment": _verify_protocol_blob(
+        repo, failure_amendment_path, current_commit
+      ),
+      "failure_progress": _verify_protocol_blob(
+        repo, failure_progress_path, current_commit
+      ),
+      "adaptation_process_started": False,
+    },
+    "base_policy_only_range_pilots": pilot_history,
+    "all_twelve_context_families_feasible": True,
+    "pilot_outcomes_are_not_formal_context_selection": True,
+    "adapted_policy_outcomes_used_for_range_design": False,
+  }
+  payload["calibration"]["range_feasibility_pilots_are_not_formal_selection"] = (
+    True
+  )
+  payload["fresh_evidence_boundary"] = {
+    "prior_base_only_range_outcomes_seen": True,
+    "replacement_base_only_calibration_outcomes_seen": False,
+    "development_adaptation_outcomes_seen": False,
+    "formal_adaptation_or_audit_outcomes_seen": False,
+    "this_protocol_must_be_committed_before_replacement_calibration": True,
+  }
+  return payload
+
+
 def _development(args: argparse.Namespace) -> dict[str, Any]:
   repo = args.repo.resolve()
   pre_path = args.input_protocol.resolve()
@@ -565,7 +688,13 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--repo", type=Path, required=True)
   parser.add_argument(
     "--stage",
-    choices=("precalibration", "range-pilot", "development", "formal"),
+    choices=(
+      "precalibration",
+      "range-pilot",
+      "replacement-precalibration",
+      "development",
+      "formal",
+    ),
     required=True,
   )
   parser.add_argument("--output", type=Path, required=True)
@@ -583,6 +712,9 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--prior-pilot-protocol", type=Path)
   parser.add_argument("--prior-pilot-summary", type=Path)
   parser.add_argument("--prior-pilot-commit")
+  parser.add_argument("--range-pilot-protocols", nargs="+", type=Path)
+  parser.add_argument("--range-pilot-summaries", nargs="+", type=Path)
+  parser.add_argument("--range-pilot-commits", nargs="+")
   parser.add_argument("--pilot-id", type=int, default=RANGE_PILOT_ID)
   parser.add_argument(
     "--pilot-contexts", nargs="+", default=list(RANGE_PILOT_CONTEXTS)
@@ -609,6 +741,16 @@ def main() -> None:
       "prior_pilot_summary",
       "prior_pilot_commit",
     ),
+    "replacement-precalibration": (
+      "base_checkpoint_reference",
+      "base_checkpoint_sha256",
+      "failed_protocol",
+      "calibration_failure_amendment",
+      "calibration_failure_progress",
+      "range_pilot_protocols",
+      "range_pilot_summaries",
+      "range_pilot_commits",
+    ),
     "development": ("input_protocol", "input_commit", "context_dir"),
     "formal": (
       "input_protocol",
@@ -622,6 +764,7 @@ def main() -> None:
   payload = {
     "precalibration": _precalibration,
     "range-pilot": _range_pilot,
+    "replacement-precalibration": _replacement_precalibration,
     "development": _development,
     "formal": _formal,
   }[args.stage](args)

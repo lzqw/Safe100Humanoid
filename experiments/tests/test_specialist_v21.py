@@ -148,13 +148,13 @@ def test_v21_lateral_range_pilot_uses_frozen_difficulty_carriers() -> None:
     ]
 
 
-def test_v21_range_pilot_3_is_fresh_and_restricted_to_fragile_L2() -> None:
+def test_v21_replacement_calibration_has_a_fresh_seed_namespace() -> None:
   assert RANGE_PILOT_ID == 3
   assert RANGE_PILOT_CONTEXTS == ("L2",)
   assert [
     V21_CONTEXT_SPECS[context_id]["candidate_seed_prefix"]
     for context_id in CONTEXTS
-  ] == list(range(151, 163))
+  ] == list(range(171, 183))
 
 
 def test_v21_range_pilot_3_isolates_the_L2_yaw_severity_axis() -> None:
@@ -312,3 +312,14 @@ def test_v21_cross_context_analysis_and_figures_are_prospectively_source_bound()
   assert "deployment_mode_gate(" in aggregate
   assert '"statistical_unit": "deployment_context"' in aggregate
   assert "candidate_screen" not in aggregate
+
+
+def test_v21_replacement_freeze_binds_all_base_only_range_evidence() -> None:
+  freezer = (
+    REPO / "experiments/scripts/freeze_specialist_v21_protocol.py"
+  ).read_text()
+  assert '"replacement-precalibration"' in freezer
+  assert 'payload["range_feasibility_history"]' in freezer
+  assert '"all_twelve_context_families_feasible": True' in freezer
+  assert '"adapted_policy_outcomes_used_for_range_design": False' in freezer
+  assert '"replacement_base_only_calibration_outcomes_seen": False' in freezer
