@@ -90,15 +90,18 @@ def test_v21_formal_family_primary_perturbations_are_distinct() -> None:
     )
   assert contexts["L1"]["target"]["command_delay_s"] == 0.38
   assert contexts["L2"]["scenario"]["yaw_command_bias"] == 0.0
-  assert (
-    contexts["L2"]["scenario"]["centerline_heading_reference_bias"]
-    == 0.75
-  )
+  assert contexts["L2"]["scenario"]["centerline_heading_reference_bias"] == 0.0
+  assert contexts["L2"]["scenario"]["stair_half_width"] == 0.45
   assert contexts["L2"]["scenario"]["lateral_command_bias"] == 0.0
   assert not any(contexts["L2"]["target"]["action_bias"])
   assert contexts["L3"]["scenario"]["lateral_command_bias"] != 0.0
   assert contexts["L3"]["scenario"]["yaw_command_bias"] == 0.0
   assert contexts["L4"]["scenario"]["centerline_lateral_gain"] == 0.2
+  assert all(
+    contexts[context_id]["scenario"]["stair_half_width"] == 1.2
+    for context_id in V21_FORMAL_CONTEXTS
+    if context_id != "L2"
+  )
   assert contexts["L5"]["target"]["command_delay_s"] > 0.0
   assert contexts["C1"]["scenario"]["foot_friction"] == 0.25
   assert contexts["C2"]["scenario"]["left_response_scale"] != 1.0
@@ -154,15 +157,15 @@ def test_v21_lateral_range_pilot_uses_frozen_difficulty_carriers() -> None:
 
 
 def test_v21_recovery_pilot_has_a_fresh_seed_namespace() -> None:
-  assert RANGE_PILOT_ID == 10
+  assert RANGE_PILOT_ID == 11
   assert RANGE_PILOT_CONTEXTS == ("L2",)
   assert [
     V21_CONTEXT_SPECS[context_id]["candidate_seed_prefix"]
     for context_id in CONTEXTS
-  ] == list(range(311, 323))
+  ] == list(range(331, 343))
 
 
-def test_v21_range_pilot_10_varies_only_visual_heading_reference_bias() -> None:
+def test_v21_range_pilot_11_varies_only_physical_lateral_clearance() -> None:
   prefix = int(V21_CONTEXT_SPECS["L2"]["candidate_seed_prefix"])
   l2_first = generate_v21_specialist_context("L2", prefix * 100 + 8)
   l2_last = generate_v21_specialist_context("L2", prefix * 100 + 19)
@@ -181,8 +184,10 @@ def test_v21_range_pilot_10_varies_only_visual_heading_reference_bias() -> None:
   assert not any(l2_last["target"]["action_bias"])
   assert l2_first["scenario"]["yaw_command_bias"] == 0.0
   assert l2_last["scenario"]["yaw_command_bias"] == 0.0
-  assert l2_first["scenario"]["centerline_heading_reference_bias"] == 0.35
-  assert l2_last["scenario"]["centerline_heading_reference_bias"] == 0.75
+  assert l2_first["scenario"]["centerline_heading_reference_bias"] == 0.0
+  assert l2_last["scenario"]["centerline_heading_reference_bias"] == 0.0
+  assert l2_first["scenario"]["stair_half_width"] == 1.0
+  assert l2_last["scenario"]["stair_half_width"] == 0.45
   for field in (
     "lateral_pulse_min",
     "lateral_pulse_max",

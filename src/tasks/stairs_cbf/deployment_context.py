@@ -50,7 +50,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "lateral",
     "family": "excluded_development_mixed_lateral",
     "formal": False,
-    "candidate_seed_prefix": 311,
+    "candidate_seed_prefix": 331,
     "direction": -1,
     "ranges": {
       "rise_profile_half_width": [0.0015, 0.0015],
@@ -78,7 +78,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "excluded_development_mixed_contact",
     "formal": False,
-    "candidate_seed_prefix": 312,
+    "candidate_seed_prefix": 332,
     "direction": 1,
     "ranges": {
       "foot_friction": [0.52, 0.30],
@@ -93,7 +93,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "lateral",
     "family": "command_delay_and_low_pass",
     "formal": True,
-    "candidate_seed_prefix": 313,
+    "candidate_seed_prefix": 333,
     "direction": 1,
     "ranges": {
       "rise_profile_half_width": [0.0035, 0.0035],
@@ -117,9 +117,9 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
   },
   "L2": {
     "mode": "lateral",
-    "family": "biased_visual_heading_reference_with_nominal_feedback",
+    "family": "narrow_stair_lateral_clearance",
     "formal": True,
-    "candidate_seed_prefix": 314,
+    "candidate_seed_prefix": 334,
     "direction": -1,
     "ranges": {
       "rise_profile_half_width": [0.0, 0.0],
@@ -132,7 +132,8 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
       "action_delay_steps": [0, 0],
       "encoder_bias_abs": [0.0, 0.0],
       "yaw_bias_abs": [0.0, 0.0],
-      "centerline_heading_reference_bias_abs": [0.35, 0.75],
+      "centerline_heading_reference_bias_abs": [0.0, 0.0],
+      "stair_half_width": [1.00, 0.45],
       "lateral_pulse_min": [0.0, 0.0],
       "lateral_pulse_max": [0.0, 0.0],
       "yaw_pulse_min": [0.0, 0.0],
@@ -151,7 +152,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "lateral",
     "family": "lateral_bias_and_lateral_pulse",
     "formal": True,
-    "candidate_seed_prefix": 315,
+    "candidate_seed_prefix": 335,
     "direction": 1,
     "ranges": {
       "rise_profile_half_width": [0.0035, 0.0035],
@@ -176,7 +177,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "lateral",
     "family": "weak_centerline_correction",
     "formal": True,
-    "candidate_seed_prefix": 316,
+    "candidate_seed_prefix": 336,
     "direction": -1,
     "ranges": {
       "rise_profile_half_width": [0.0015, 0.0015],
@@ -204,7 +205,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "lateral",
     "family": "moderate_mixed_lateral_shift",
     "formal": True,
-    "candidate_seed_prefix": 317,
+    "candidate_seed_prefix": 337,
     "direction": 1,
     "ranges": {
       "rise_profile_half_width": [0.0015, 0.0015],
@@ -232,7 +233,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "low_foot_friction",
     "formal": True,
-    "candidate_seed_prefix": 318,
+    "candidate_seed_prefix": 338,
     "direction": -1,
     "ranges": {"foot_friction": [0.52, 0.25]},
   },
@@ -240,7 +241,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "left_right_action_asymmetry",
     "formal": True,
-    "candidate_seed_prefix": 319,
+    "candidate_seed_prefix": 339,
     "direction": 1,
     "ranges": {"response_asymmetry_abs": [0.040, 0.200]},
   },
@@ -248,7 +249,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "action_gain_and_encoder_bias",
     "formal": True,
-    "candidate_seed_prefix": 320,
+    "candidate_seed_prefix": 340,
     "direction": -1,
     "ranges": {
       "action_gain": [0.916, 0.900],
@@ -259,7 +260,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "friction_and_command_dynamics_mismatch",
     "formal": True,
-    "candidate_seed_prefix": 321,
+    "candidate_seed_prefix": 341,
     "direction": 1,
     "ranges": {
       "foot_friction": [0.55, 0.32],
@@ -272,7 +273,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "moderate_mixed_contact_shift",
     "formal": True,
-    "candidate_seed_prefix": 322,
+    "candidate_seed_prefix": 342,
     "direction": -1,
     "ranges": {
       "foot_friction": [0.54, 0.32],
@@ -379,6 +380,7 @@ class V19ScenarioParameters:
   recovery_reward_scale: float
   edge_penalty_scale: float
   centerline_heading_reference_bias: float = 0.0
+  stair_half_width: float = 1.20
 
 
 def _canonical_json(value: Mapping[str, Any]) -> bytes:
@@ -564,6 +566,11 @@ def _validate_v19_scenario(
     raise ValueError(
       "observable-context heading reference bias exceeds its versioned bound"
     )
+  if v21:
+    if not 0.40 <= parameters.stair_half_width <= 1.20:
+      raise ValueError("v21 stair half-width is outside [0.40, 1.20]")
+  elif not math.isclose(parameters.stair_half_width, 1.20):
+    raise ValueError("v19 stair half-width must remain nominal")
   for low, high in (
     (parameters.lateral_pulse_min, parameters.lateral_pulse_max),
     (parameters.yaw_pulse_min, parameters.yaw_pulse_max),
@@ -621,6 +628,7 @@ def _validate_v19_scenario(
       or parameters.lateral_command_bias != 0.0
       or parameters.yaw_command_bias != 0.0
       or parameters.centerline_heading_reference_bias != 0.0
+      or parameters.stair_half_width != 1.20
       or parameters.lateral_pulse_max != 0.0
       or parameters.yaw_pulse_max != 0.0
     )
@@ -1015,7 +1023,10 @@ def generate_v19_specialist_context(
     "scenario": {
       key: value
       for key, value in asdict(scenario).items()
-      if key != "centerline_heading_reference_bias"
+      if key not in (
+        "centerline_heading_reference_bias",
+        "stair_half_width",
+      )
     },
   }
   payload["parameters_sha256"] = deployment_context_sha256(payload)
@@ -1115,6 +1126,9 @@ def generate_v21_specialist_context(
     heading_reference_bias = -direction * _v21_range_value(
       ranges, "centerline_heading_reference_bias_abs", severity, 0.0
     )
+    stair_half_width = _v21_range_value(
+      ranges, "stair_half_width", severity, 1.20
+    )
     lateral_pulse_max = _v21_range_value(
       ranges, "lateral_pulse_max", severity, 0.0
     )
@@ -1198,6 +1212,7 @@ def generate_v21_specialist_context(
       centerline_heading_reference_bias=round(
         heading_reference_bias, 6
       ),
+      stair_half_width=round(stair_half_width, 6),
     )
   else:
     num_steps = 24
@@ -1343,6 +1358,8 @@ def _v19_scenario_from_mapping(
   for field in V19ScenarioParameters.__dataclass_fields__:
     if field == "centerline_heading_reference_bias":
       value = raw.get(field, 0.0)
+    elif field == "stair_half_width":
+      value = raw.get(field, 1.20)
     else:
       value = raw[field]
     values[field] = (
@@ -1407,8 +1424,12 @@ def _validate_frozen_v19_context(payload: Mapping[str, Any]) -> dict[str, Any]:
   output = dict(payload)
   output["target"] = _validated_deployment_parameters(target)
   normalized_scenario = asdict(scenario)
-  if "centerline_heading_reference_bias" not in scenario_raw:
-    normalized_scenario.pop("centerline_heading_reference_bias")
+  for optional in (
+    "centerline_heading_reference_bias",
+    "stair_half_width",
+  ):
+    if optional not in scenario_raw:
+      normalized_scenario.pop(optional)
   output["scenario"] = normalized_scenario
   expected = deployment_context_sha256(output)
   if payload.get("parameters_sha256") != expected:
@@ -1888,6 +1909,8 @@ def apply_frozen_deployment_context(
     command.centerline_heading_reference_bias = (
       scenario.centerline_heading_reference_bias
     )
+    command.stair_half_width = scenario.stair_half_width
+    stairs.stair_width = 2.0 * scenario.stair_half_width
     command.centerline_max_lateral_velocity = (
       scenario.centerline_max_lateral_velocity
     )

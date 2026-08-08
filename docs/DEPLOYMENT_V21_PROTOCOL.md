@@ -30,10 +30,13 @@ Pilot 9 fixed a modest 0.34 yaw bias and varied only heading yaw authority from
 0.32 down to 0.04. Three candidates exceeded 80% purity but had only 36--41
 falls; candidates with at least 50 falls had at most 75.47% purity. Its pooled
 purity was 72.91%, so the authority-loss axis is also closed. No adaptation,
-monitor, or audit was started. The current boundary is a tenth non-formal
-base-only pilot with 256 episodes per candidate. It restores nominal feedback,
-removes raw yaw bias, and varies only a bounded visual heading-reference bias
-from 0.35 to 0.75 radians with entirely fresh randomness.
+monitor, or audit was started. Pilot 10 restored nominal feedback, removed raw
+yaw bias, and varied only a bounded visual heading-reference bias from 0.35 to
+0.75 radians. It reached at most 45 falls and 76.92% purity, with pooled purity
+of 71.33%, so that mechanism is rejected. The current boundary is an eleventh
+non-formal base-only pilot with 256 episodes per candidate. It holds command,
+feedback, action, encoder, rise, and tread terms nominal while narrowing the
+physical stair half-width from 1.00 to 0.45 m with entirely fresh randomness.
 
 本文记录 v21 的前瞻性实验设计。第一轮修正并预先冻结的 `L_dev` base-only sweep
 完成了全部 12 个候选，但因没有候选满足校准门槛而停止。随后一轮非正式 base-only
@@ -56,9 +59,11 @@ purity 仅 72.28%，因此 command-magnitude 轴到此停止。没有启动 adap
 或 audit。pilot 9 固定温和的 0.34 yaw bias，只把 heading yaw authority 从 0.32
 降到 0.04。三个候选的 purity 超过 80%，但只有 36--41 次跌倒；达到至少 50 次跌倒
 的候选最高 purity 仅 75.47%，池化 purity 为 72.91%，因此 authority-loss 轴也停止。
-当前边界是第十轮非正式 base-only pilot：每候选 256 episodes，恢复正常反馈、移除 raw
-yaw bias，只把有界的视觉 heading-reference bias 从 0.35 扫到 0.75 radians，并使用
-全新随机数。
+pilot 10 恢复正常反馈、移除 raw yaw bias，只把有界的视觉 heading-reference bias
+从 0.35 扫到 0.75 radians，但最多只有 45 次跌倒与 76.92% purity，池化 purity 为
+71.33%，因此该机制也被否决。当前边界是第十一轮非正式 base-only pilot：每候选
+256 episodes，保持 command、feedback、action、encoder、rise 和 tread 为 nominal，
+只把物理 stair half-width 从 1.00 缩小到 0.45 m，并使用全新随机数。
 
 ## 实验单位 / Experimental unit
 
@@ -85,7 +90,7 @@ claim. The ten formal contexts are:
 | Mode | Context | Primary frozen deployment shift |
 | --- | --- | --- |
 | Lateral | L1 | command delay + low-pass |
-| Lateral | L2 | biased visual heading reference with nominal feedback |
+| Lateral | L2 | narrow physical stair lateral clearance |
 | Lateral | L3 | lateral bias + lateral pulse |
 | Lateral | L4 | weak centerline correction |
 | Lateral | L5 | moderate mixed lateral shift |
@@ -130,9 +135,14 @@ limit from 0.32 down to 0.04. Mechanism-pure candidates remained too easy,
 while difficult candidates lost purity. Pilot 10 therefore restores all
 feedback gains and limits, sets raw yaw bias to zero, and sweeps only a bounded
 visual heading-reference bias from 0.35 to 0.75 radians. The true heading error
-used by diagnostics and failure classification remains unchanged. Unlike `L4`,
-this does not weaken feedback; unlike `L3`, it does not inject a lateral stick
-command. It is base-policy range evidence, not formal selection.
+used by diagnostics and failure classification remained unchanged, but the
+sweep reached neither the fall-count nor purity gate. Pilot 11 therefore holds
+all command, feedback, action, encoder, rise, and tread terms nominal and
+narrows only the physical stair half-width from 1.00 to 0.45 m. The same frozen
+width drives tread geometry, root/foot edge-clearance telemetry, and the
+geometry-derived classifier threshold. Unlike `L4`, this does not weaken
+feedback; unlike `L3`, it does not inject a lateral stick command. It is
+base-policy range evidence, not formal selection.
 
 ## Algorithm
 

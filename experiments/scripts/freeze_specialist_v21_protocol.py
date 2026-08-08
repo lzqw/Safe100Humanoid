@@ -58,6 +58,7 @@ SOURCE_FILES = (
   "src/tasks/stairs_cbf/mdp.py",
   "src/tasks/stairs_cbf/online.py",
   "src/tasks/stairs_cbf/teleop_math.py",
+  "src/tasks/stairs_cbf/terrain.py",
   "experiments/scripts/evaluate_online_stairs.py",
   "experiments/scripts/online_refine_stairs.py",
   "experiments/scripts/calibrate_deployment_contexts_v21.py",
