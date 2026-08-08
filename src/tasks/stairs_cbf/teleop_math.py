@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+
 import torch
 
 
@@ -23,6 +25,7 @@ def centerline_feedback_command(
   heading_deadband: float,
   max_lateral_velocity: float,
   max_yaw_velocity: float,
+  heading_reference_bias: float = 0.0,
 ) -> torch.Tensor:
   """Return ``[vx, vy, wz]`` for a bounded centerline feedback operator.
 
@@ -40,11 +43,19 @@ def centerline_feedback_command(
     raise ValueError("feedback gains must be non-negative")
   if max_lateral_velocity < 0.0 or max_yaw_velocity < 0.0:
     raise ValueError("feedback limits must be non-negative")
+  if not math.isfinite(heading_reference_bias):
+    raise ValueError("heading reference bias must be finite")
 
   lateral = lateral_gain * signed_deadband(
     lateral_error_body, lateral_deadband
   )
-  yaw = heading_gain * signed_deadband(heading_error, heading_deadband)
+  biased_heading_error = torch.atan2(
+    torch.sin(heading_error + heading_reference_bias),
+    torch.cos(heading_error + heading_reference_bias),
+  )
+  yaw = heading_gain * signed_deadband(
+    biased_heading_error, heading_deadband
+  )
   return torch.stack(
     (
       forward_velocity,

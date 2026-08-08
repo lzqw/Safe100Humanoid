@@ -301,6 +301,7 @@ class JoystickVelocityCommand(CommandTerm):
       heading_deadband=self.cfg.centerline_heading_deadband,
       max_lateral_velocity=self.cfg.centerline_max_lateral_velocity,
       max_yaw_velocity=self.cfg.centerline_max_yaw_velocity,
+      heading_reference_bias=self.cfg.centerline_heading_reference_bias,
     )
     self.operator_correction[:] = correction
     self.operator_correction[:, 0] = 0.0
@@ -436,6 +437,7 @@ class JoystickVelocityCommandCfg(CommandTermCfg):
   centerline_heading_deadband: float = 0.03
   centerline_max_lateral_velocity: float = 0.16
   centerline_max_yaw_velocity: float = 0.45
+  centerline_heading_reference_bias: float = 0.0
   correction_epsilon: float = 1.0e-5
 
   def build(self, env: "ManagerBasedRlEnv") -> JoystickVelocityCommand:

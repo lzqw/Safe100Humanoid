@@ -50,7 +50,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "lateral",
     "family": "excluded_development_mixed_lateral",
     "formal": False,
-    "candidate_seed_prefix": 291,
+    "candidate_seed_prefix": 311,
     "direction": -1,
     "ranges": {
       "rise_profile_half_width": [0.0015, 0.0015],
@@ -78,7 +78,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "excluded_development_mixed_contact",
     "formal": False,
-    "candidate_seed_prefix": 292,
+    "candidate_seed_prefix": 312,
     "direction": 1,
     "ranges": {
       "foot_friction": [0.52, 0.30],
@@ -93,7 +93,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "lateral",
     "family": "command_delay_and_low_pass",
     "formal": True,
-    "candidate_seed_prefix": 293,
+    "candidate_seed_prefix": 313,
     "direction": 1,
     "ranges": {
       "rise_profile_half_width": [0.0035, 0.0035],
@@ -117,9 +117,9 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
   },
   "L2": {
     "mode": "lateral",
-    "family": "heading_feedback_yaw_authority_loss_under_persistent_bias",
+    "family": "biased_visual_heading_reference_with_nominal_feedback",
     "formal": True,
-    "candidate_seed_prefix": 294,
+    "candidate_seed_prefix": 314,
     "direction": -1,
     "ranges": {
       "rise_profile_half_width": [0.0, 0.0],
@@ -131,7 +131,8 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
       "action_bias_abs": [0.0, 0.0],
       "action_delay_steps": [0, 0],
       "encoder_bias_abs": [0.0, 0.0],
-      "yaw_bias_abs": [0.34, 0.34],
+      "yaw_bias_abs": [0.0, 0.0],
+      "centerline_heading_reference_bias_abs": [0.35, 0.75],
       "lateral_pulse_min": [0.0, 0.0],
       "lateral_pulse_max": [0.0, 0.0],
       "yaw_pulse_min": [0.0, 0.0],
@@ -143,14 +144,14 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
       "centerline_lateral_gain": [0.80, 0.80],
       "centerline_heading_gain": [1.40, 1.40],
       "centerline_max_lateral_velocity": [0.16, 0.16],
-      "centerline_max_yaw_velocity": [0.32, 0.04],
+      "centerline_max_yaw_velocity": [0.45, 0.45],
     },
   },
   "L3": {
     "mode": "lateral",
     "family": "lateral_bias_and_lateral_pulse",
     "formal": True,
-    "candidate_seed_prefix": 295,
+    "candidate_seed_prefix": 315,
     "direction": 1,
     "ranges": {
       "rise_profile_half_width": [0.0035, 0.0035],
@@ -175,7 +176,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "lateral",
     "family": "weak_centerline_correction",
     "formal": True,
-    "candidate_seed_prefix": 296,
+    "candidate_seed_prefix": 316,
     "direction": -1,
     "ranges": {
       "rise_profile_half_width": [0.0015, 0.0015],
@@ -203,7 +204,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "lateral",
     "family": "moderate_mixed_lateral_shift",
     "formal": True,
-    "candidate_seed_prefix": 297,
+    "candidate_seed_prefix": 317,
     "direction": 1,
     "ranges": {
       "rise_profile_half_width": [0.0015, 0.0015],
@@ -231,7 +232,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "low_foot_friction",
     "formal": True,
-    "candidate_seed_prefix": 298,
+    "candidate_seed_prefix": 318,
     "direction": -1,
     "ranges": {"foot_friction": [0.52, 0.25]},
   },
@@ -239,7 +240,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "left_right_action_asymmetry",
     "formal": True,
-    "candidate_seed_prefix": 299,
+    "candidate_seed_prefix": 319,
     "direction": 1,
     "ranges": {"response_asymmetry_abs": [0.040, 0.200]},
   },
@@ -247,7 +248,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "action_gain_and_encoder_bias",
     "formal": True,
-    "candidate_seed_prefix": 300,
+    "candidate_seed_prefix": 320,
     "direction": -1,
     "ranges": {
       "action_gain": [0.916, 0.900],
@@ -258,7 +259,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "friction_and_command_dynamics_mismatch",
     "formal": True,
-    "candidate_seed_prefix": 301,
+    "candidate_seed_prefix": 321,
     "direction": 1,
     "ranges": {
       "foot_friction": [0.55, 0.32],
@@ -271,7 +272,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "moderate_mixed_contact_shift",
     "formal": True,
-    "candidate_seed_prefix": 302,
+    "candidate_seed_prefix": 322,
     "direction": -1,
     "ranges": {
       "foot_friction": [0.54, 0.32],
@@ -377,6 +378,7 @@ class V19ScenarioParameters:
   right_response_scale: float
   recovery_reward_scale: float
   edge_penalty_scale: float
+  centerline_heading_reference_bias: float = 0.0
 
 
 def _canonical_json(value: Mapping[str, Any]) -> bytes:
@@ -554,6 +556,14 @@ def _validate_v19_scenario(
     raise ValueError(
       f"observable-context yaw command bias exceeds {maximum_yaw_bias}"
     )
+  maximum_heading_reference_bias = 1.00 if v21 else 0.0
+  if (
+    abs(parameters.centerline_heading_reference_bias)
+    > maximum_heading_reference_bias
+  ):
+    raise ValueError(
+      "observable-context heading reference bias exceeds its versioned bound"
+    )
   for low, high in (
     (parameters.lateral_pulse_min, parameters.lateral_pulse_max),
     (parameters.yaw_pulse_min, parameters.yaw_pulse_max),
@@ -610,6 +620,7 @@ def _validate_v19_scenario(
       parameters.disturbance_pulses_with_centering
       or parameters.lateral_command_bias != 0.0
       or parameters.yaw_command_bias != 0.0
+      or parameters.centerline_heading_reference_bias != 0.0
       or parameters.lateral_pulse_max != 0.0
       or parameters.yaw_pulse_max != 0.0
     )
@@ -1001,7 +1012,11 @@ def generate_v19_specialist_context(
     "calibration_candidate_seed": int(candidate_seed),
     "specialist_mode": mode,
     "target": asdict(target),
-    "scenario": asdict(scenario),
+    "scenario": {
+      key: value
+      for key, value in asdict(scenario).items()
+      if key != "centerline_heading_reference_bias"
+    },
   }
   payload["parameters_sha256"] = deployment_context_sha256(payload)
   return payload
@@ -1097,6 +1112,9 @@ def generate_v21_specialist_context(
     yaw_bias = -direction * _v21_range_value(
       ranges, "yaw_bias_abs", severity, 0.0
     )
+    heading_reference_bias = -direction * _v21_range_value(
+      ranges, "centerline_heading_reference_bias_abs", severity, 0.0
+    )
     lateral_pulse_max = _v21_range_value(
       ranges, "lateral_pulse_max", severity, 0.0
     )
@@ -1177,6 +1195,9 @@ def generate_v21_specialist_context(
       right_response_scale=1.0,
       recovery_reward_scale=0.50,
       edge_penalty_scale=0.20,
+      centerline_heading_reference_bias=round(
+        heading_reference_bias, 6
+      ),
     )
   else:
     num_steps = 24
@@ -1315,6 +1336,25 @@ def _validated_deployment_parameters(raw: Mapping[str, Any]) -> dict[str, Any]:
   return asdict(parameters)
 
 
+def _v19_scenario_from_mapping(
+  raw: Mapping[str, Any],
+) -> V19ScenarioParameters:
+  values: dict[str, bool | int | float] = {}
+  for field in V19ScenarioParameters.__dataclass_fields__:
+    if field == "centerline_heading_reference_bias":
+      value = raw.get(field, 0.0)
+    else:
+      value = raw[field]
+    values[field] = (
+      bool(value)
+      if field == "disturbance_pulses_with_centering"
+      else int(value)
+      if field == "contact_observation_delay_steps"
+      else float(value)
+    )
+  return V19ScenarioParameters(**values)
+
+
 def _validate_frozen_specialist_context(
   payload: Mapping[str, Any],
 ) -> dict[str, Any]:
@@ -1362,22 +1402,14 @@ def _validate_frozen_v19_context(payload: Mapping[str, Any]) -> dict[str, Any]:
   scenario_raw = payload.get("scenario")
   if not isinstance(target, Mapping) or not isinstance(scenario_raw, Mapping):
     raise ValueError("v19 context target or scenario is missing")
-  scenario = V19ScenarioParameters(
-    **{
-      field: (
-        bool(scenario_raw[field])
-        if field == "disturbance_pulses_with_centering"
-        else int(scenario_raw[field])
-        if field == "contact_observation_delay_steps"
-        else float(scenario_raw[field])
-      )
-      for field in V19ScenarioParameters.__dataclass_fields__
-    }
-  )
+  scenario = _v19_scenario_from_mapping(scenario_raw)
   _validate_v19_scenario(mode, scenario)
   output = dict(payload)
   output["target"] = _validated_deployment_parameters(target)
-  output["scenario"] = asdict(scenario)
+  normalized_scenario = asdict(scenario)
+  if "centerline_heading_reference_bias" not in scenario_raw:
+    normalized_scenario.pop("centerline_heading_reference_bias")
+  output["scenario"] = normalized_scenario
   expected = deployment_context_sha256(output)
   if payload.get("parameters_sha256") != expected:
     raise ValueError("v19 context parameter hash mismatch")
@@ -1398,18 +1430,7 @@ def _validate_frozen_v21_context(payload: Mapping[str, Any]) -> dict[str, Any]:
   scenario_raw = payload.get("scenario")
   if not isinstance(target, Mapping) or not isinstance(scenario_raw, Mapping):
     raise ValueError("v21 context target or scenario is missing")
-  scenario = V19ScenarioParameters(
-    **{
-      field: (
-        bool(scenario_raw[field])
-        if field == "disturbance_pulses_with_centering"
-        else int(scenario_raw[field])
-        if field == "contact_observation_delay_steps"
-        else float(scenario_raw[field])
-      )
-      for field in V19ScenarioParameters.__dataclass_fields__
-    }
-  )
+  scenario = _v19_scenario_from_mapping(scenario_raw)
   mode = str(payload.get("specialist_mode"))
   _validate_v19_scenario(mode, scenario, v21=True)
   normalized = dict(payload)
@@ -1864,6 +1885,9 @@ def apply_frozen_deployment_context(
     )
     command.centerline_lateral_gain = scenario.centerline_lateral_gain
     command.centerline_heading_gain = scenario.centerline_heading_gain
+    command.centerline_heading_reference_bias = (
+      scenario.centerline_heading_reference_bias
+    )
     command.centerline_max_lateral_velocity = (
       scenario.centerline_max_lateral_velocity
     )

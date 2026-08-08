@@ -1405,6 +1405,23 @@ def test_human_centerline_feedback_corrects_drift_with_bounded_sticks() -> None:
   assert torch.all(torch.abs(command[:, 2]) <= 0.45)
 
 
+def test_human_centerline_feedback_applies_a_wrapped_heading_reference_bias() -> None:
+  command = centerline_feedback_command(
+    torch.tensor([0.4, 0.4]),
+    torch.zeros(2),
+    torch.tensor([0.0, 3.0]),
+    lateral_gain=0.8,
+    heading_gain=1.4,
+    lateral_deadband=0.04,
+    heading_deadband=0.03,
+    max_lateral_velocity=0.16,
+    max_yaw_velocity=0.45,
+    heading_reference_bias=0.4,
+  )
+  assert torch.allclose(command[:, 2], torch.tensor([0.45, -0.45]))
+  assert torch.equal(command[:, 1], torch.zeros(2))
+
+
 def test_fall_reward_does_not_penalize_successful_top_termination() -> None:
   class _TerminationManager:
     def __init__(self, fell: torch.Tensor):
