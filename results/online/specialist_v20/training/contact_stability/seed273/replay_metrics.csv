@@ -1,0 +1,17 @@
+specialist,adaptation_seed,round,batch,rollout_seed,normal_start_count,failure_start_count,success_start_count,failure_bank_size,success_pool_size,matched_success_bank_size,exact_pair_count,exact_match_passed,maximum_marginal_imbalance,bank_transaction_attempted,bank_transaction_committed,bank_transaction_restored,usable_preflight_passed,cbf_intervention_fraction,cbf_correction_mean
+contact_stability,273,1,1,1000283,40,12,12,256,552,37,12,True,0,True,True,False,True,0.0545654296875,0.011831354349851608
+contact_stability,273,1,2,1000284,40,12,12,256,792,79,12,True,0,True,True,False,True,0.0564117431640625,0.011955678462982178
+contact_stability,273,2,1,1000293,40,12,12,256,1024,87,12,True,0,True,True,False,True,0.0554046630859375,0.011939406394958496
+contact_stability,273,2,2,1000294,40,12,12,256,1024,84,12,True,0,True,True,False,True,0.0547637939453125,0.011423300951719284
+contact_stability,273,3,1,1000303,40,12,12,256,1024,114,12,True,0,True,True,False,True,0.0545501708984375,0.011399172246456146
+contact_stability,273,3,2,1000304,40,12,12,256,1024,153,12,True,0,True,True,False,True,0.0535736083984375,0.011201251298189163
+contact_stability,273,4,1,1000313,40,12,12,256,1024,149,12,True,0,True,True,False,True,0.0526275634765625,0.01119978353381157
+contact_stability,273,4,2,1000314,40,12,12,256,1024,146,12,True,0,True,True,False,True,0.05291748046875,0.01141316071152687
+contact_stability,273,5,1,1000323,40,12,12,256,1024,135,12,True,0,True,True,False,True,0.0526123046875,0.01080453209578991
+contact_stability,273,5,2,1000324,40,12,12,256,1024,135,12,True,0,True,True,False,True,0.050506591796875,0.010361379012465477
+contact_stability,273,6,1,1000333,40,12,12,256,1024,134,12,True,0,True,True,False,True,0.0523529052734375,0.011349287815392017
+contact_stability,273,6,2,1000334,40,12,12,256,1024,136,12,True,0,True,True,False,True,0.0524749755859375,0.011280665174126625
+contact_stability,273,7,1,1000343,40,12,12,256,1024,128,12,True,0,True,True,False,True,0.051116943359375,0.010997041128575802
+contact_stability,273,7,2,1000344,40,12,12,256,1024,142,12,True,0,True,True,False,True,0.0524139404296875,0.010950577445328236
+contact_stability,273,8,1,1000353,40,12,12,256,1024,145,12,True,0,True,True,False,True,0.051361083984375,0.011041165329515934
+contact_stability,273,8,2,1000354,40,12,12,256,1024,158,12,True,0,True,True,False,True,0.0546112060546875,0.01147442776709795

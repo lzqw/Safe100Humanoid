@@ -1,0 +1,479 @@
+v20 telemetry reusing preserved first attempt: seed=73 role=baseline pair=0
+v20 telemetry first attempt: seed=73 role=final pair=0
+v20 telemetry first attempt: seed=173 role=baseline pair=7
+v20 telemetry first attempt: seed=173 role=final pair=7
+v20 telemetry first attempt: seed=273 role=baseline pair=5
+v20 telemetry first attempt: seed=273 role=final pair=5
+v20 telemetry first attempt: seed=373 role=baseline pair=5
+v20 telemetry first attempt: seed=373 role=final pair=5
+v20 telemetry first attempt: seed=473 role=baseline pair=0
+v20 telemetry first attempt: seed=473 role=final pair=0
+{
+  "evidence_role": "descriptive first-attempt same-initial-state telemetry replays; formal paired CSV remains authoritative for episode outcomes",
+  "mechanism_metrics": {
+    "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/mechanism_metrics.csv",
+    "row_count": 8210,
+    "sha256": "4af085316cdb8e566a1843a94e55f0c21368a8c41688587bee66979e1c7212ad"
+  },
+  "paired_audit_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/paired_episode_metrics.csv",
+  "paired_audit_csv_sha256": "e258f16a9049dac85439f2c0e494e318a6ef0979d2580f9d7ded8df67c1b7ae4",
+  "schema_version": 2,
+  "selection_rule": "for each seed select the lowest pair_index failure_to_success pair; never replace an identity or retry until its outcome matches",
+  "selection_scope": "formal target paired audit only",
+  "selections": {
+    "173": {
+      "environment_id": 7,
+      "evaluation_seed": 5511000,
+      "formal_transition_class": "failure_to_success",
+      "pair_index": 7,
+      "selected": true,
+      "selection_changed_after_formal_audit": false,
+      "selection_rule": "lowest pair_index among formal failure_to_success pairs",
+      "traces": [
+        {
+          "actor_state_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+          "actor_state_sha256_matches_formal": true,
+          "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/baseline/seed173/target/actor.pt",
+          "checkpoint_sha256": "6a91f0b8f2c4bfd62f3a0e5272fd5e66702ad838fe406aefc9db961f573a4564",
+          "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed173/baseline/episodes.csv",
+          "episode_csv_sha256": "8c357c54fb8b03a3e92f2f7fef99d40c976926e6aa016d7441a661604fae5663",
+          "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed173/baseline/evaluation.json",
+          "evaluation_json_sha256": "9dfec59cf79c2393c6fc01b86cc9f72fed5b1050d33772f08decb6174b869dbd",
+          "first_attempt_reused": false,
+          "formal_episode": {
+            "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/baseline/seed173/target/DQHMED-seed5511000.csv",
+            "episode_csv_sha256": "e58d7ed75008d3d9ca6d0e2544844f693f96fbdef6c3f19081037bc018349698",
+            "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/baseline/seed173/target/DQHMED-seed5511000.json",
+            "evaluation_json_sha256": "08b9fc3269607dcba4f7c8a0c23fbc6ba30dcda3283f3f702cd724b0c0d15f82",
+            "failure_type": "contact_stability",
+            "fell": 1,
+            "success": 0
+          },
+          "initial_state_signature": "e8870dc798db310bbeca3a6ec05c27a232dc37b48c36845db7cd7b7dfaa8fadc",
+          "initial_state_signature_matches_formal": true,
+          "outcome_field_matches_formal": {
+            "failure_type": false,
+            "fell": false,
+            "success": false
+          },
+          "outcome_matches_formal": false,
+          "policy_role": "baseline",
+          "replay_episode": {
+            "failure_type": "success",
+            "fell": 0,
+            "success": 1
+          },
+          "retry_until_outcome_matches": false,
+          "telemetry_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed173/baseline/telemetry.csv",
+          "telemetry_csv_sha256": "6497e5ee21640e15e542dd619e314e3b1f80af9d3bf33f1b4f720b9086148ca4",
+          "telemetry_rows": 969
+        },
+        {
+          "actor_state_sha256": "435b57b57b47f6affdb2c957135722ab7db1d54a2bc1595da3ded443e40c6c9d",
+          "actor_state_sha256_matches_formal": true,
+          "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/final/seed173/target/actor.pt",
+          "checkpoint_sha256": "472189b631e048c62e478beb6bb83a15c1ebbfbfc1c41deb50d2f4e0b6bce0aa",
+          "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed173/final/episodes.csv",
+          "episode_csv_sha256": "c3d30da19390cfad9436b97fe3c40db6c761c76dae5ddf3dd1065e69da16fd6e",
+          "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed173/final/evaluation.json",
+          "evaluation_json_sha256": "831159a7cdb75f35d39a9e7c0a832ba21ba534694938bc17d10369a2c0594e4f",
+          "first_attempt_reused": false,
+          "formal_episode": {
+            "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/final/seed173/target/DQHMED-seed5511000.csv",
+            "episode_csv_sha256": "b53d4a56fc69d78fe0b5266dac4a6e9082377b3ce49a624b20c4ef32bdd84b97",
+            "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/final/seed173/target/DQHMED-seed5511000.json",
+            "evaluation_json_sha256": "6bfa857af883144f5b5b582ab1266809125d1faacd12675a212af41b7fb76176",
+            "failure_type": "success",
+            "fell": 0,
+            "success": 1
+          },
+          "initial_state_signature": "e8870dc798db310bbeca3a6ec05c27a232dc37b48c36845db7cd7b7dfaa8fadc",
+          "initial_state_signature_matches_formal": true,
+          "outcome_field_matches_formal": {
+            "failure_type": false,
+            "fell": false,
+            "success": false
+          },
+          "outcome_matches_formal": false,
+          "policy_role": "final",
+          "replay_episode": {
+            "failure_type": "contact_stability",
+            "fell": 1,
+            "success": 0
+          },
+          "retry_until_outcome_matches": false,
+          "telemetry_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed173/final/telemetry.csv",
+          "telemetry_csv_sha256": "78097395483ed6c8a6b5b902fe4732800dbf0f39da419e831d774d474f9c3d39",
+          "telemetry_rows": 440
+        }
+      ]
+    },
+    "273": {
+      "environment_id": 5,
+      "evaluation_seed": 5512000,
+      "formal_transition_class": "failure_to_success",
+      "pair_index": 5,
+      "selected": true,
+      "selection_changed_after_formal_audit": false,
+      "selection_rule": "lowest pair_index among formal failure_to_success pairs",
+      "traces": [
+        {
+          "actor_state_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+          "actor_state_sha256_matches_formal": true,
+          "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/baseline/seed273/target/actor.pt",
+          "checkpoint_sha256": "a53b0caeb2ff2af105eacabd5ad349485c9f87cb7dc32a26c26d7f4bb7012121",
+          "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed273/baseline/episodes.csv",
+          "episode_csv_sha256": "fc42418ca28ff4ed22b40c37911f4cffd9e94680c92518c24f1b02d0d97003c0",
+          "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed273/baseline/evaluation.json",
+          "evaluation_json_sha256": "a8c476ad37196a7054dffb99e2f101129584dbe4bb48e37cd18d88dc58583821",
+          "first_attempt_reused": false,
+          "formal_episode": {
+            "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/baseline/seed273/target/DQHMED-seed5512000.csv",
+            "episode_csv_sha256": "93cf623f14de26c97df3182b8a20e64c68bb819fd630b12ed0da1319735d3d92",
+            "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/baseline/seed273/target/DQHMED-seed5512000.json",
+            "evaluation_json_sha256": "b1708588b809cfef69993d824562842c138c635df2bfcffa8071613869d56a40",
+            "failure_type": "contact_stability",
+            "fell": 1,
+            "success": 0
+          },
+          "initial_state_signature": "42118d7ca01494f18b178c2df5388dbf1fbb16f287bcbe292fe13ad8fa37b611",
+          "initial_state_signature_matches_formal": true,
+          "outcome_field_matches_formal": {
+            "failure_type": false,
+            "fell": false,
+            "success": false
+          },
+          "outcome_matches_formal": false,
+          "policy_role": "baseline",
+          "replay_episode": {
+            "failure_type": "success",
+            "fell": 0,
+            "success": 1
+          },
+          "retry_until_outcome_matches": false,
+          "telemetry_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed273/baseline/telemetry.csv",
+          "telemetry_csv_sha256": "637476ad9c819e17d0e99e198efd67c409e9ad77ab9a504dcaaaee8d717deefa",
+          "telemetry_rows": 1153
+        },
+        {
+          "actor_state_sha256": "c976d758a3c2b0696b99d2c27ed1343432ebe1f1a55484e04ecee7b3528c5e34",
+          "actor_state_sha256_matches_formal": true,
+          "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/final/seed273/target/actor.pt",
+          "checkpoint_sha256": "65ffb6cdcb22e4357abf7525d41743e38a02e27df3eef00eb9fafbc2ac0c5201",
+          "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed273/final/episodes.csv",
+          "episode_csv_sha256": "0fd6826048e0bbdfeb576129f55d621d533b9ddf4d0e8b9aa48ee630f23a4c27",
+          "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed273/final/evaluation.json",
+          "evaluation_json_sha256": "7de00eb3358fe862e32ec9dd5140673b0617972e813adc4e9cbe34dbf9d1c58c",
+          "first_attempt_reused": false,
+          "formal_episode": {
+            "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/final/seed273/target/DQHMED-seed5512000.csv",
+            "episode_csv_sha256": "ad710f9c005de492c485d48f8f65d8e1a55661149d77b966c54a81bb761a4fd1",
+            "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/final/seed273/target/DQHMED-seed5512000.json",
+            "evaluation_json_sha256": "eebe20fa6a32e9caf8d13db95b8d11ced142a152a9fbc8c9a3cc1f7c82212f21",
+            "failure_type": "success",
+            "fell": 0,
+            "success": 1
+          },
+          "initial_state_signature": "42118d7ca01494f18b178c2df5388dbf1fbb16f287bcbe292fe13ad8fa37b611",
+          "initial_state_signature_matches_formal": true,
+          "outcome_field_matches_formal": {
+            "failure_type": true,
+            "fell": true,
+            "success": true
+          },
+          "outcome_matches_formal": true,
+          "policy_role": "final",
+          "replay_episode": {
+            "failure_type": "success",
+            "fell": 0,
+            "success": 1
+          },
+          "retry_until_outcome_matches": false,
+          "telemetry_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed273/final/telemetry.csv",
+          "telemetry_csv_sha256": "aeb2e3dc0587af456821597dab03625c9c9ddde1ad3d0a9d56915cf32dafde7b",
+          "telemetry_rows": 1125
+        }
+      ]
+    },
+    "373": {
+      "environment_id": 5,
+      "evaluation_seed": 5513000,
+      "formal_transition_class": "failure_to_success",
+      "pair_index": 5,
+      "selected": true,
+      "selection_changed_after_formal_audit": false,
+      "selection_rule": "lowest pair_index among formal failure_to_success pairs",
+      "traces": [
+        {
+          "actor_state_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+          "actor_state_sha256_matches_formal": true,
+          "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/baseline/seed373/target/actor.pt",
+          "checkpoint_sha256": "d245b5ef0185d6ee4bb1703c49efe18f12a262fa2da0d24783821cccbe153e4e",
+          "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed373/baseline/episodes.csv",
+          "episode_csv_sha256": "bf45cf0596dadea15cacb4dea2cf90549189818ee75e59ce9c77dfba012a7144",
+          "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed373/baseline/evaluation.json",
+          "evaluation_json_sha256": "7d496a913d73bf99852b19e4f8c6304c540aaa771d312c5db7fbca49e0953e5d",
+          "first_attempt_reused": false,
+          "formal_episode": {
+            "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/baseline/seed373/target/DQHMED-seed5513000.csv",
+            "episode_csv_sha256": "894e80d55cabeea6022e815fbe4b8e4def7b25e726b7460fe76842fe84659cfb",
+            "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/baseline/seed373/target/DQHMED-seed5513000.json",
+            "evaluation_json_sha256": "cb8eb402717d5849d1e70a5cf03c90c290867dc72fd0e0d65f4b32698905e3c4",
+            "failure_type": "contact_stability",
+            "fell": 1,
+            "success": 0
+          },
+          "initial_state_signature": "794615cb5c5834ee1c2399780817001798865fddbcf9b94da7fd61ae85fe30fc",
+          "initial_state_signature_matches_formal": true,
+          "outcome_field_matches_formal": {
+            "failure_type": true,
+            "fell": true,
+            "success": true
+          },
+          "outcome_matches_formal": true,
+          "policy_role": "baseline",
+          "replay_episode": {
+            "failure_type": "contact_stability",
+            "fell": 1,
+            "success": 0
+          },
+          "retry_until_outcome_matches": false,
+          "telemetry_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed373/baseline/telemetry.csv",
+          "telemetry_csv_sha256": "5a2ad5d7a3e1a9684c5eeb4489c0bec613d69949e855c117592a2f201d668712",
+          "telemetry_rows": 648
+        },
+        {
+          "actor_state_sha256": "d7da1a444bd7fc6382354ca85d508a553305300648e9dbe901fd039eee7a0d4f",
+          "actor_state_sha256_matches_formal": true,
+          "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/final/seed373/target/actor.pt",
+          "checkpoint_sha256": "4b910924521ad2e5f52d7b6eb821eb3846443a6358454793cb1f38f998034dab",
+          "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed373/final/episodes.csv",
+          "episode_csv_sha256": "01697c05f8db68aa2207243dfde0c0550b1aef3f54a4c4601ef077aac687ae40",
+          "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed373/final/evaluation.json",
+          "evaluation_json_sha256": "a3ef3efa4026a0e92851097a56ac187dd6058bc8e1ffdc81840ecaa4a27d81ce",
+          "first_attempt_reused": false,
+          "formal_episode": {
+            "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/final/seed373/target/DQHMED-seed5513000.csv",
+            "episode_csv_sha256": "6aebc76d854692076695c197bc0e8660b6885652d8e11c95f2f1b643bdf32481",
+            "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/final/seed373/target/DQHMED-seed5513000.json",
+            "evaluation_json_sha256": "fe9cd0261e66ad0a629c84291ec5721cbabaa94f4273482da8bdada08bd841de",
+            "failure_type": "success",
+            "fell": 0,
+            "success": 1
+          },
+          "initial_state_signature": "794615cb5c5834ee1c2399780817001798865fddbcf9b94da7fd61ae85fe30fc",
+          "initial_state_signature_matches_formal": true,
+          "outcome_field_matches_formal": {
+            "failure_type": true,
+            "fell": true,
+            "success": true
+          },
+          "outcome_matches_formal": true,
+          "policy_role": "final",
+          "replay_episode": {
+            "failure_type": "success",
+            "fell": 0,
+            "success": 1
+          },
+          "retry_until_outcome_matches": false,
+          "telemetry_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed373/final/telemetry.csv",
+          "telemetry_csv_sha256": "395afa6cd76f46ea2fd557a47d3ef05c10f7b7eedde398a9e1bfeb40cdbd4244",
+          "telemetry_rows": 974
+        }
+      ]
+    },
+    "473": {
+      "environment_id": 0,
+      "evaluation_seed": 5514000,
+      "formal_transition_class": "failure_to_success",
+      "pair_index": 0,
+      "selected": true,
+      "selection_changed_after_formal_audit": false,
+      "selection_rule": "lowest pair_index among formal failure_to_success pairs",
+      "traces": [
+        {
+          "actor_state_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+          "actor_state_sha256_matches_formal": true,
+          "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/baseline/seed473/target/actor.pt",
+          "checkpoint_sha256": "7b3edf06434b8017ce844ecc33a9d3c41eb0e43e26ef882ec1fd45ba02f10d77",
+          "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed473/baseline/episodes.csv",
+          "episode_csv_sha256": "21dd56dc96018cce4485042d5d72b7129dc8714be46980ae2f13e1c0c7932d0f",
+          "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed473/baseline/evaluation.json",
+          "evaluation_json_sha256": "8c63af9775da402f7464e8bf75704d0264d0c65ecfd83a7bbb02359f8d031dce",
+          "first_attempt_reused": false,
+          "formal_episode": {
+            "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/baseline/seed473/target/DQHMED-seed5514000.csv",
+            "episode_csv_sha256": "ba05fa3d64380a40e56f305326f21fe93a9f3fd48f33f0f1784403b53e3de621",
+            "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/baseline/seed473/target/DQHMED-seed5514000.json",
+            "evaluation_json_sha256": "642387d81d0f024155036ea2d0e3f1a342e9c55245805385b6f7311cd85aec59",
+            "failure_type": "contact_stability",
+            "fell": 1,
+            "success": 0
+          },
+          "initial_state_signature": "0495859dd3291e2c1897c9e327e1d092e53b16cba87800a870bde7f817be162c",
+          "initial_state_signature_matches_formal": true,
+          "outcome_field_matches_formal": {
+            "failure_type": true,
+            "fell": true,
+            "success": true
+          },
+          "outcome_matches_formal": true,
+          "policy_role": "baseline",
+          "replay_episode": {
+            "failure_type": "contact_stability",
+            "fell": 1,
+            "success": 0
+          },
+          "retry_until_outcome_matches": false,
+          "telemetry_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed473/baseline/telemetry.csv",
+          "telemetry_csv_sha256": "65510bc1414d4e2e739175247405ff11ea2992ea2883d25f739cc273efb51a56",
+          "telemetry_rows": 314
+        },
+        {
+          "actor_state_sha256": "91729d034f49e3c7a863f3ac4c0ac9cdd9cf7243c82c7586b650f320a2af9c8d",
+          "actor_state_sha256_matches_formal": true,
+          "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/final/seed473/target/actor.pt",
+          "checkpoint_sha256": "1fcf3cb766d94bc0d93cefad0941f72eeeb180a40c8160f51ea0ecfad2a37396",
+          "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed473/final/episodes.csv",
+          "episode_csv_sha256": "c517cc53eb2b446ae83d8403471e86da9dbeebb0014480f585a777dc26480ea4",
+          "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed473/final/evaluation.json",
+          "evaluation_json_sha256": "83f6d2603af4140bc626b0f2ee7a186dfe5e856fa6bee226a71bdec066cc3bd9",
+          "first_attempt_reused": false,
+          "formal_episode": {
+            "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/final/seed473/target/DQHMED-seed5514000.csv",
+            "episode_csv_sha256": "a14c8b19de00224c8f4e81dae810cc3ebac0d86ea084cce9d2653ed251bed99c",
+            "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/final/seed473/target/DQHMED-seed5514000.json",
+            "evaluation_json_sha256": "c190d846be55d9628ce3b02607cd322986d04c9ba09eb3b1b36002b49fb3ded3",
+            "failure_type": "success",
+            "fell": 0,
+            "success": 1
+          },
+          "initial_state_signature": "0495859dd3291e2c1897c9e327e1d092e53b16cba87800a870bde7f817be162c",
+          "initial_state_signature_matches_formal": true,
+          "outcome_field_matches_formal": {
+            "failure_type": true,
+            "fell": true,
+            "success": true
+          },
+          "outcome_matches_formal": true,
+          "policy_role": "final",
+          "replay_episode": {
+            "failure_type": "success",
+            "fell": 0,
+            "success": 1
+          },
+          "retry_until_outcome_matches": false,
+          "telemetry_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed473/final/telemetry.csv",
+          "telemetry_csv_sha256": "30ed6e931e5044b0f2169f489a24c3398111b60b8ddf4c18ff15bf1bc0e107e1",
+          "telemetry_rows": 1002
+        }
+      ]
+    },
+    "73": {
+      "environment_id": 0,
+      "evaluation_seed": 5510000,
+      "formal_transition_class": "failure_to_success",
+      "pair_index": 0,
+      "selected": true,
+      "selection_changed_after_formal_audit": false,
+      "selection_rule": "lowest pair_index among formal failure_to_success pairs",
+      "traces": [
+        {
+          "actor_state_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+          "actor_state_sha256_matches_formal": true,
+          "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/baseline/seed73/target/actor.pt",
+          "checkpoint_sha256": "51ede1e59f330939487fcd473c1a6247f8053c6866f13ab2bb24606a3c02882c",
+          "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed73/baseline/episodes.csv",
+          "episode_csv_sha256": "2f53ae6bc7d9ee45b5c6d3cced36a484b9f10857064ccc4e3639f59e2630293d",
+          "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed73/baseline/evaluation.json",
+          "evaluation_json_sha256": "d9dd399706ed42fb3319dbea3ed56c2635abeb935b77a7c03316e0c4f139d272",
+          "first_attempt_reused": true,
+          "formal_episode": {
+            "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/baseline/seed73/target/DQHMED-seed5510000.csv",
+            "episode_csv_sha256": "d844462fc710633eeddcc6102576a13e9b3b0739532bc009269c04095e8b3be8",
+            "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/baseline/seed73/target/DQHMED-seed5510000.json",
+            "evaluation_json_sha256": "c0c3797ebb44459cccd66c80d054f8ebd7151792337f9872a0942db67eabc509",
+            "failure_type": "contact_stability",
+            "fell": 1,
+            "success": 0
+          },
+          "initial_state_signature": "6e1aff900762ef85ad39c9117bedc5d53c6d06278ec6b23a43ea7553a450f9ef",
+          "initial_state_signature_matches_formal": true,
+          "outcome_field_matches_formal": {
+            "failure_type": false,
+            "fell": false,
+            "success": false
+          },
+          "outcome_matches_formal": false,
+          "policy_role": "baseline",
+          "replay_episode": {
+            "failure_type": "success",
+            "fell": 0,
+            "success": 1
+          },
+          "retry_until_outcome_matches": false,
+          "telemetry_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed73/baseline/telemetry.csv",
+          "telemetry_csv_sha256": "fd62b35760568cb704f5a126ace38431db6b0dd4b61977f6b9396824221b2b94",
+          "telemetry_rows": 876
+        },
+        {
+          "actor_state_sha256": "21ea76adce4a7d89105c275cf2458446afe5df43ecf841f497a662789725231e",
+          "actor_state_sha256_matches_formal": true,
+          "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/final/seed73/target/actor.pt",
+          "checkpoint_sha256": "bb4c8a9a572b708f5b3f0c00b8b034d2a30458fdfacd9afc4bdac273a7832c82",
+          "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed73/final/episodes.csv",
+          "episode_csv_sha256": "975b72db685d916308ff805f89868bf018fe1fea9cf0b22c70303f285a4b9e6e",
+          "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed73/final/evaluation.json",
+          "evaluation_json_sha256": "c58b7d0cbffbc198c3bf1e5fdce956dc000b751475a8011c53a49835a37529af",
+          "first_attempt_reused": false,
+          "formal_episode": {
+            "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/final/seed73/target/DQHMED-seed5510000.csv",
+            "episode_csv_sha256": "6761f360f05da6c53bbcae900d27764658e32eed195a9efc3dc26ba8246ef5d5",
+            "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/final/seed73/target/DQHMED-seed5510000.json",
+            "evaluation_json_sha256": "171a7efa61636e04c44c63782df3ab99884ff48e8dc9e12d284a7df130369016",
+            "failure_type": "success",
+            "fell": 0,
+            "success": 1
+          },
+          "initial_state_signature": "6e1aff900762ef85ad39c9117bedc5d53c6d06278ec6b23a43ea7553a450f9ef",
+          "initial_state_signature_matches_formal": true,
+          "outcome_field_matches_formal": {
+            "failure_type": false,
+            "fell": false,
+            "success": false
+          },
+          "outcome_matches_formal": false,
+          "policy_role": "final",
+          "replay_episode": {
+            "failure_type": "contact_stability",
+            "fell": 1,
+            "success": 0
+          },
+          "retry_until_outcome_matches": false,
+          "telemetry_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/raw/seed73/final/telemetry.csv",
+          "telemetry_csv_sha256": "c84e79b0d38fb3b97374ec240310fab9e206ed4151359961d7a3277cdffa93d4",
+          "telemetry_rows": 709
+        }
+      ]
+    }
+  },
+  "specialist_mode": "contact_stability",
+  "telemetry_amendment": {
+    "freeze_commit": "b575cf34aa76649b6c9f793514fbe3e221a32dcf",
+    "implementation_commit": "22654dd3eae5d40dadf3f0e7576e0f496b88065b",
+    "path": "/home/carla/LZQW/SAFE100/humanoid/worktrees/v20_telemetry_amendment/results/online/specialist_v20/telemetry_amendment.json",
+    "sha256": "c10b5d828ee6ddd33f245faa6add84e602d824210075fbf9f5c9144e5f0be150",
+    "status": "frozen_after_verified_lateral_outcome_before_contact_training"
+  },
+  "trace_reproduction": {
+    "all_actor_hashes_match_formal": true,
+    "all_initial_state_signatures_match_formal": true,
+    "first_attempt_reused_count": 1,
+    "formal_outcomes_replaced_by_replay": false,
+    "outcome_match_count": 5,
+    "outcome_mismatch_count": 5,
+    "retry_until_outcome_matches": false,
+    "selection_changed_after_formal_audit": false,
+    "trace_count": 10
+  }
+}

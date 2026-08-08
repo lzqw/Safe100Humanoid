@@ -1,0 +1,247 @@
+{
+  "deterministic": true,
+  "figures": [
+    {
+      "bytes": 264901,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/main/lateral_target_success_vs_round.png",
+      "sha256": "6d2f03b70ab875cd082e3e23511b127c98864d468a76355787685553c3e26f89"
+    },
+    {
+      "bytes": 17107,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/main/lateral_target_success_vs_round.pdf",
+      "sha256": "a8dfad6aec417aea6e03b628b4ba15ae98cbdbf68e0ae3fac55c22c82967e0b9"
+    },
+    {
+      "bytes": 263000,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/main/lateral_target_fall_vs_round.png",
+      "sha256": "9fb9fcedc8f420e182fe6791e9d85cd9d04e55aff1d2bc8ce14bae1da65683d3"
+    },
+    {
+      "bytes": 17091,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/main/lateral_target_fall_vs_round.pdf",
+      "sha256": "fd8e4297ffcdde8edc9ae660ea3b32a44faa3b3492b17f69e035bc959a01c0a3"
+    },
+    {
+      "bytes": 178755,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/appendix/lateral_d0_retention_vs_round.png",
+      "sha256": "c45ea3ecff3cf98ff009a9bbfbc948e43ea8121d5b9b670a2af9c9b0fd1a2032"
+    },
+    {
+      "bytes": 15801,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/appendix/lateral_d0_retention_vs_round.pdf",
+      "sha256": "66486c7cc9056c88caca964e3931752bf2249a861fc5cdc35486ab7126729730"
+    },
+    {
+      "bytes": 177823,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/appendix/lateral_candidate_trajectory.png",
+      "sha256": "0388506a43d8c3781d8475c7b60a449217a08c1e4cf1427c10cacca77e7d71ae"
+    },
+    {
+      "bytes": 23781,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/appendix/lateral_candidate_trajectory.pdf",
+      "sha256": "dbff397cdcab4db0d1ea61cb92350a9c0e8ab5412c09454ec1eba53d97bbde97"
+    },
+    {
+      "bytes": 70430,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/appendix/lateral_ppo_kl_vs_round.png",
+      "sha256": "271db99b9390b79776a7bdf8b84193f8c2a35c24f7a08a80a7bf98bbbee24d59"
+    },
+    {
+      "bytes": 14462,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/appendix/lateral_ppo_kl_vs_round.pdf",
+      "sha256": "e650e2fb07b2d172ce0ef0b774c28a7924ca070a4a25ff40b70622fe8f3ac93c"
+    },
+    {
+      "bytes": 133025,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/appendix/lateral_accepted_updates.png",
+      "sha256": "c1d0887d91f2661a2dae89c464e2f98b7569a9ca95655b5fa4e2d6cb8bc5f7fa"
+    },
+    {
+      "bytes": 16994,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/appendix/lateral_accepted_updates.pdf",
+      "sha256": "967a0468b3de2b20f49b072df7d3df67f700ca1c91b09554521373f52093d217"
+    },
+    {
+      "bytes": 136642,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/appendix/lateral_replay_integrity.png",
+      "sha256": "dd13c6857a48a1c33e87062ee66e9080284879778d5439e2f7e3a6194ca31c7d"
+    },
+    {
+      "bytes": 19566,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/appendix/lateral_replay_integrity.pdf",
+      "sha256": "9392d812ebd804682d63f615f006a4c53d4f83f59d0895f63c96cad51e468ad0"
+    },
+    {
+      "bytes": 113557,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/appendix/lateral_adapter_learning.png",
+      "sha256": "be89d879e9b197ebbeab78910ebd7abe571b8e56ef7a6b807e1098363f054db0"
+    },
+    {
+      "bytes": 18165,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/appendix/lateral_adapter_learning.pdf",
+      "sha256": "d15d24e3a0620425280a403a147a8da166213358135f8090f85b703b70015681"
+    },
+    {
+      "bytes": 58249,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/main/lateral_paired_delta_forest.png",
+      "sha256": "a6e260f40a3eba24db9094b735e6d8b2f59685f793e8d4dfd3ac06144aa2e25d"
+    },
+    {
+      "bytes": 15403,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/main/lateral_paired_delta_forest.pdf",
+      "sha256": "0f45ca0868b22b1386fbe118b71641d0c1c3fd5147ffa93bf02120084e41c5c5"
+    },
+    {
+      "bytes": 51691,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/main/lateral_repairs_vs_regressions.png",
+      "sha256": "a9dd3e1b4b68e59d57c1fe5081e2d3d06ef848a52c6135b1ff682e253ec443a9"
+    },
+    {
+      "bytes": 12643,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/main/lateral_repairs_vs_regressions.pdf",
+      "sha256": "5af6e72b2a68778a349b6038e5e31aaa2b2d7d990c37cb82f633a0df95aca21c"
+    },
+    {
+      "bytes": 318297,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/main/lateral_repaired_mechanism.png",
+      "sha256": "e9d1ede8a25123c58ac946b5dacf24c275df215a80a09ca9525cdda53a9df89f"
+    },
+    {
+      "bytes": 39123,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/main/lateral_repaired_mechanism.pdf",
+      "sha256": "38b59f1d9cbf2d460e57ff0c56d658f600f6cb9a843249bbc1011fa3926ab6b2"
+    },
+    {
+      "bytes": 240263,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/main/contact_stability_target_success_vs_round.png",
+      "sha256": "42e9b28fb0a939203ddeed7571c0cfcd179598c15bd9fda55d0b7e70426929b0"
+    },
+    {
+      "bytes": 17961,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/main/contact_stability_target_success_vs_round.pdf",
+      "sha256": "90bb464cda5b1affdc32c85f623627c0b36f4264f1e087e5f87071772928e319"
+    },
+    {
+      "bytes": 240428,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/main/contact_stability_target_fall_vs_round.png",
+      "sha256": "07e936929f53e8d098e692fbd903c0f3f835b02c0d956777acb49a1e3295e6f9"
+    },
+    {
+      "bytes": 17960,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/main/contact_stability_target_fall_vs_round.pdf",
+      "sha256": "13d441e918339b9431b3f432a26620b5c99819edcb3c33a97c21bfb3d55c3a21"
+    },
+    {
+      "bytes": 169530,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/appendix/contact_stability_d0_retention_vs_round.png",
+      "sha256": "e0e34b504736c7c493cc32845e13d78d85cd4f8f1bbae9f3b17ed855b77d228a"
+    },
+    {
+      "bytes": 16289,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/appendix/contact_stability_d0_retention_vs_round.pdf",
+      "sha256": "f1450147d9c0fe72aa978a8ff7ec7f407f6d3abf7d196016483ea259dd9e0678"
+    },
+    {
+      "bytes": 184652,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/appendix/contact_stability_candidate_trajectory.png",
+      "sha256": "cc633583d12f31ff25c920f23d269dc8aee64776ea65789a5fd3e381e64c5c47"
+    },
+    {
+      "bytes": 24183,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/appendix/contact_stability_candidate_trajectory.pdf",
+      "sha256": "df3d850798d93426d567c650902a81a5f053065df21dd088c73e9e2e5af5ef7c"
+    },
+    {
+      "bytes": 74890,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/appendix/contact_stability_ppo_kl_vs_round.png",
+      "sha256": "254b3e15813bd979e2e14b37ca88e4005f29e64abe5ea348ecf9e7612e452ced"
+    },
+    {
+      "bytes": 15294,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/appendix/contact_stability_ppo_kl_vs_round.pdf",
+      "sha256": "514634aac3463a54749680dc3ad4f483c92956667e67a2c0be966116dfa72a9d"
+    },
+    {
+      "bytes": 144959,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/appendix/contact_stability_accepted_updates.png",
+      "sha256": "77cef2cba675b1aeb8f2eb4808106d6555297bbb582ac7cc39d675d783a3f75e"
+    },
+    {
+      "bytes": 17554,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/appendix/contact_stability_accepted_updates.pdf",
+      "sha256": "6a04d7f380b8b65d35154b217e9b18fc8de4b6ed89053b53bdab8e9a7b57a40c"
+    },
+    {
+      "bytes": 132375,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/appendix/contact_stability_replay_integrity.png",
+      "sha256": "a3b9a6c71d2eb75703346c2e88b1ffb9842a463a39c6a63f6608475eab786b82"
+    },
+    {
+      "bytes": 19953,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/appendix/contact_stability_replay_integrity.pdf",
+      "sha256": "2cad0bebd7fe0a9b8526fcf22eabec64aa78db6f735ad6beb30d30a5cd543455"
+    },
+    {
+      "bytes": 122161,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/appendix/contact_stability_adapter_learning.png",
+      "sha256": "4a89fa16fc7658c3c0d083aaa8a95b3713c3aacdad844cc0d861a7be2fb5035e"
+    },
+    {
+      "bytes": 18407,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/appendix/contact_stability_adapter_learning.pdf",
+      "sha256": "5466bf3bc2969c8dddefd60a49ee1212f5ba718697b5ea30e004fbd5d176b1a5"
+    },
+    {
+      "bytes": 59881,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/main/contact_stability_paired_delta_forest.png",
+      "sha256": "379f89d37d859d2ee6d544e04fabd87468c647ff10ac99899a46bca5ef190784"
+    },
+    {
+      "bytes": 16638,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/main/contact_stability_paired_delta_forest.pdf",
+      "sha256": "4a18f7846d0b9f30bd8c6800e7ff9d64336fcc90c8105000c388d44cdb8f1886"
+    },
+    {
+      "bytes": 48368,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/main/contact_stability_repairs_vs_regressions.png",
+      "sha256": "403f906599eaec0f98bc760435f85fc5f8e266d797ba44cd1c4d5cfe3cc7da69"
+    },
+    {
+      "bytes": 12818,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/main/contact_stability_repairs_vs_regressions.pdf",
+      "sha256": "bf2fb123366294718b0a45ab5f17c5779d67b52bb7a590f7fbc2ed6d51ce2888"
+    },
+    {
+      "bytes": 460397,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/main/contact_stability_repaired_mechanism.png",
+      "sha256": "2eac64ec9ceb5e15e116846e8f99c6ff5b124ed3db677eb11cef40249c4c1eb8"
+    },
+    {
+      "bytes": 33128,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/figures/main/contact_stability_repaired_mechanism.pdf",
+      "sha256": "e3ee35f1f5498eeff2343f1a33b1b03203fbe75147e07f1691ceb46af13773d4"
+    }
+  ],
+  "mechanism_telemetry_disclosure": {
+    "contact_stability": {
+      "disclosure": "First-attempt same-initial-state telemetry replay: 5/10 policy-role outcomes matched the formal audit. Curves are descriptive replays; formal outcomes come only from the paired CSV.",
+      "selection_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/mechanism_selection.json",
+      "selection_sha256": "439837879a4620a89ea25f5d575eb9a8a2ecab74229ad9edbcfd1a2e094b12ef"
+    },
+    "lateral": {
+      "disclosure": "First-attempt same-initial-state telemetry replay: 7/10 policy-role outcomes matched the formal audit. Curves are descriptive replays; formal outcomes come only from the paired CSV.",
+      "selection_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/mechanism_selection.json",
+      "selection_sha256": "ecc39ae51117caee5cc3499147b466dbe59d88700e43f7a16d6da10d848a46ab"
+    }
+  },
+  "pdf_count": 22,
+  "png_count": 22,
+  "reporting_wrapper": "/home/carla/LZQW/SAFE100/humanoid/worktrees/v20_telemetry_amendment/experiments/scripts/plot_specialist_v20_replay_disclosed.py",
+  "schema_version": 1,
+  "source_files": {
+    "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/curves/candidate_metrics.csv": "3d0f2ae89df058359e26a5bfed7bfcf4def8e3ba377aed8ce8375388c9103685",
+    "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/curves/mechanism_metrics.csv": "29681231c94ad2f9e72de68f7fab73930c377f3361d08d0abf274f47ac3a33cd",
+    "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/curves/replay_metrics.csv": "843c75ca48aa38bc8f4d57826806e2fa35e858fcd1aaf1d18c0aa0d335e704fa",
+    "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/evidence_package_b575cf34/curves/round_metrics.csv": "1e839fa53ffc0dd514bf0934aea58de3d9253c9cda589dcaf478d5ccbd199900"
+  }
+}

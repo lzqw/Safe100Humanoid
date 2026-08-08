@@ -1,0 +1,469 @@
+{
+  "evidence_role": "descriptive first-attempt same-initial-state telemetry replays; formal paired CSV remains authoritative for episode outcomes",
+  "mechanism_metrics": {
+    "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/mechanism_metrics.csv",
+    "row_count": 3663,
+    "sha256": "9a37735f8e5b1c961878013c29e9a5f718813f5d06f3b64d28a0750d35f904f8"
+  },
+  "paired_audit_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/paired_episode_metrics.csv",
+  "paired_audit_csv_sha256": "170eb8ce10aeea0924880661ee3d0405472cb35f16225e0d06ab62381d4ef45e",
+  "schema_version": 2,
+  "selection_rule": "for each seed select the lowest pair_index failure_to_success pair; never replace an identity or retry until its outcome matches",
+  "selection_scope": "formal target paired audit only",
+  "selections": {
+    "173": {
+      "environment_id": 9,
+      "evaluation_seed": 5501000,
+      "formal_transition_class": "failure_to_success",
+      "pair_index": 9,
+      "selected": true,
+      "selection_changed_after_formal_audit": false,
+      "selection_rule": "lowest pair_index among formal failure_to_success pairs",
+      "traces": [
+        {
+          "actor_state_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+          "actor_state_sha256_matches_formal": true,
+          "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/baseline/seed173/target/actor.pt",
+          "checkpoint_sha256": "c024a05e24a9fd41f75d866e86cccab256ac267a72ceb8aa26934ff19885f68a",
+          "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed173/baseline/episodes.csv",
+          "episode_csv_sha256": "7ba9ab3021434f7510cae2c045502cd328ccf499952fae4637906508c43a0988",
+          "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed173/baseline/evaluation.json",
+          "evaluation_json_sha256": "a6914108efc9450250566d401129de7d758d1688aa0630cc82344ebcb231c203",
+          "first_attempt_reused": true,
+          "formal_episode": {
+            "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/baseline/seed173/target/DQHMED-seed5501000.csv",
+            "episode_csv_sha256": "4051e696a046894ccace84d25c3cfe535cfbbfc6fea15f6cc6f7b02f32a1ba56",
+            "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/baseline/seed173/target/DQHMED-seed5501000.json",
+            "evaluation_json_sha256": "3cfa997789d0c6c9413cd71eb4694afab0482a2e60e68c2902f1b62bea729b3e",
+            "failure_type": "lateral_heading_drift",
+            "fell": 1,
+            "success": 0
+          },
+          "initial_state_signature": "fae4c57a6dd2319b1a148d42635515eb199f35f778886c93615fb0f896681aab",
+          "initial_state_signature_matches_formal": true,
+          "outcome_field_matches_formal": {
+            "failure_type": false,
+            "fell": false,
+            "success": false
+          },
+          "outcome_matches_formal": false,
+          "policy_role": "baseline",
+          "replay_episode": {
+            "failure_type": "success",
+            "fell": 0,
+            "success": 1
+          },
+          "retry_until_outcome_matches": false,
+          "telemetry_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed173/baseline/telemetry.csv",
+          "telemetry_csv_sha256": "7bc34dead402a4b748c74bab7f854f23e8b32d44bcee74dda5cb14cc8bb2dafd",
+          "telemetry_rows": 403
+        },
+        {
+          "actor_state_sha256": "58072639f376291d1083453688e3ecdf347b7affa3e421f3906f6c624eae0d1c",
+          "actor_state_sha256_matches_formal": true,
+          "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/final/seed173/target/actor.pt",
+          "checkpoint_sha256": "5b2ef0ff0aea465d34f911abc3ac2fc2f4bc5f1ce86b35c7e422dc73e7bfae78",
+          "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed173/final/episodes.csv",
+          "episode_csv_sha256": "b53246a705ad871e522bdf9915214d9ac4241e8ffd790b954a3fbfb882cc19c6",
+          "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed173/final/evaluation.json",
+          "evaluation_json_sha256": "3f387b58c5c9298995d1e01069630950857a89182f55b606b1bc28ab89cd7ea2",
+          "first_attempt_reused": false,
+          "formal_episode": {
+            "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/final/seed173/target/DQHMED-seed5501000.csv",
+            "episode_csv_sha256": "7a0600992d1cdde96ccec6abfc199ec7512304c9d2cbacbde002630001d22d1f",
+            "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/final/seed173/target/DQHMED-seed5501000.json",
+            "evaluation_json_sha256": "884ba975aff1f65f363efabd379373cb4193e8fbdaceaa2b446eb233c9c58171",
+            "failure_type": "success",
+            "fell": 0,
+            "success": 1
+          },
+          "initial_state_signature": "fae4c57a6dd2319b1a148d42635515eb199f35f778886c93615fb0f896681aab",
+          "initial_state_signature_matches_formal": true,
+          "outcome_field_matches_formal": {
+            "failure_type": true,
+            "fell": true,
+            "success": true
+          },
+          "outcome_matches_formal": true,
+          "policy_role": "final",
+          "replay_episode": {
+            "failure_type": "success",
+            "fell": 0,
+            "success": 1
+          },
+          "retry_until_outcome_matches": false,
+          "telemetry_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed173/final/telemetry.csv",
+          "telemetry_csv_sha256": "5f49ac536738a71446ab08f9202fe9354e31ad67e1d56dde4dcf62170722d1a1",
+          "telemetry_rows": 387
+        }
+      ]
+    },
+    "273": {
+      "environment_id": 1,
+      "evaluation_seed": 5502000,
+      "formal_transition_class": "failure_to_success",
+      "pair_index": 1,
+      "selected": true,
+      "selection_changed_after_formal_audit": false,
+      "selection_rule": "lowest pair_index among formal failure_to_success pairs",
+      "traces": [
+        {
+          "actor_state_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+          "actor_state_sha256_matches_formal": true,
+          "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/baseline/seed273/target/actor.pt",
+          "checkpoint_sha256": "1cfa4624ca3d7f72d7322864c12568efa1113149a961d3a49108694e1f2a6167",
+          "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed273/baseline/episodes.csv",
+          "episode_csv_sha256": "66002c7a241c428326f3f96c292251363c9e465860721406c757b5b04e230725",
+          "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed273/baseline/evaluation.json",
+          "evaluation_json_sha256": "8241e93056c0d4014e28dfe7e636a1c06407db3c5c671b05a9f2f055c95e90a3",
+          "first_attempt_reused": false,
+          "formal_episode": {
+            "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/baseline/seed273/target/DQHMED-seed5502000.csv",
+            "episode_csv_sha256": "2bdaacf3206352b335729d792bfa0ffcf3d7a5b9b35739ecbe351bc72f672d87",
+            "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/baseline/seed273/target/DQHMED-seed5502000.json",
+            "evaluation_json_sha256": "1feaec58b38ec65f37b5f76c55f416104a4e9a8a7a532b8f8c9e5c363cd7b42f",
+            "failure_type": "lateral_heading_drift",
+            "fell": 1,
+            "success": 0
+          },
+          "initial_state_signature": "b9fa83e06ac5f1f35420243eb864d215c750e2e1b1805c834f6eaf1e32270b60",
+          "initial_state_signature_matches_formal": true,
+          "outcome_field_matches_formal": {
+            "failure_type": false,
+            "fell": false,
+            "success": false
+          },
+          "outcome_matches_formal": false,
+          "policy_role": "baseline",
+          "replay_episode": {
+            "failure_type": "success",
+            "fell": 0,
+            "success": 1
+          },
+          "retry_until_outcome_matches": false,
+          "telemetry_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed273/baseline/telemetry.csv",
+          "telemetry_csv_sha256": "9c5505f732db30237f80c54d44fd3d25aed0d6e97911334173e446dd72d9896e",
+          "telemetry_rows": 364
+        },
+        {
+          "actor_state_sha256": "e24d4a4b1cebae3a4d1e06a489037077cb70cb2c7d4efd9e7256011ced22b09c",
+          "actor_state_sha256_matches_formal": true,
+          "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/final/seed273/target/actor.pt",
+          "checkpoint_sha256": "0fe06971f011ddeb0fa4971c396f5f2a8504c43336f91db5ef85214e80a438c9",
+          "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed273/final/episodes.csv",
+          "episode_csv_sha256": "102f78d6f040fce4ff9de8b5f2263d4550755692e81e8bf4a33114e678460216",
+          "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed273/final/evaluation.json",
+          "evaluation_json_sha256": "7a442058bbe5989bbfe4419134cb7179daa28f0a479c9a58e80bb0de973a0429",
+          "first_attempt_reused": false,
+          "formal_episode": {
+            "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/final/seed273/target/DQHMED-seed5502000.csv",
+            "episode_csv_sha256": "f676bc37ae7653109459bb162aa0c0d988a9e4f155cad28c09c860d13ad7b8d4",
+            "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/final/seed273/target/DQHMED-seed5502000.json",
+            "evaluation_json_sha256": "5a4431d89340ae9186314a78281b8dbf4e1e49770b0f6db6d76c6287a4e332af",
+            "failure_type": "success",
+            "fell": 0,
+            "success": 1
+          },
+          "initial_state_signature": "b9fa83e06ac5f1f35420243eb864d215c750e2e1b1805c834f6eaf1e32270b60",
+          "initial_state_signature_matches_formal": true,
+          "outcome_field_matches_formal": {
+            "failure_type": false,
+            "fell": false,
+            "success": false
+          },
+          "outcome_matches_formal": false,
+          "policy_role": "final",
+          "replay_episode": {
+            "failure_type": "lateral_heading_drift",
+            "fell": 1,
+            "success": 0
+          },
+          "retry_until_outcome_matches": false,
+          "telemetry_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed273/final/telemetry.csv",
+          "telemetry_csv_sha256": "ddf8de0a3a69145f716d3cae81fa6bbd3e28cb82f71376eeda843e5294e137ff",
+          "telemetry_rows": 371
+        }
+      ]
+    },
+    "373": {
+      "environment_id": 1,
+      "evaluation_seed": 5503000,
+      "formal_transition_class": "failure_to_success",
+      "pair_index": 1,
+      "selected": true,
+      "selection_changed_after_formal_audit": false,
+      "selection_rule": "lowest pair_index among formal failure_to_success pairs",
+      "traces": [
+        {
+          "actor_state_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+          "actor_state_sha256_matches_formal": true,
+          "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/baseline/seed373/target/actor.pt",
+          "checkpoint_sha256": "9105ad8db5259b9acd3ed08e5cb5a4d140998c1feac68640a7787ca7e5bd53ff",
+          "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed373/baseline/episodes.csv",
+          "episode_csv_sha256": "518da0ee27a0e4a9c011e9ac3f96cd98ec4588401a1bd61566dcd39243b98b6e",
+          "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed373/baseline/evaluation.json",
+          "evaluation_json_sha256": "e0d45c334cd0c4be30a5b9a57817277bb652906cf0f649917f99848d93210a0d",
+          "first_attempt_reused": false,
+          "formal_episode": {
+            "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/baseline/seed373/target/DQHMED-seed5503000.csv",
+            "episode_csv_sha256": "9ced7f1641920f100b507d7e09ab1d037c329143f65cd05554bc32548a321df9",
+            "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/baseline/seed373/target/DQHMED-seed5503000.json",
+            "evaluation_json_sha256": "d1280ecdb88ade002fdf63e3d25fa05631dfd1a5097f3d33feb1ed30202f1f7a",
+            "failure_type": "lateral_heading_drift",
+            "fell": 1,
+            "success": 0
+          },
+          "initial_state_signature": "3a59eeecbc9512e6c5063f610a64ab423009a8499de99efcf4419bf220d08a11",
+          "initial_state_signature_matches_formal": true,
+          "outcome_field_matches_formal": {
+            "failure_type": true,
+            "fell": true,
+            "success": true
+          },
+          "outcome_matches_formal": true,
+          "policy_role": "baseline",
+          "replay_episode": {
+            "failure_type": "lateral_heading_drift",
+            "fell": 1,
+            "success": 0
+          },
+          "retry_until_outcome_matches": false,
+          "telemetry_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed373/baseline/telemetry.csv",
+          "telemetry_csv_sha256": "29ab3ea07005ffe55e9df554fa56017969f8be252a09a24d4d7ba70d33fd3a63",
+          "telemetry_rows": 420
+        },
+        {
+          "actor_state_sha256": "d190368e0dcce05884da596df0f4ed8b1ab4732e454ff329cd2482b0613b672f",
+          "actor_state_sha256_matches_formal": true,
+          "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/final/seed373/target/actor.pt",
+          "checkpoint_sha256": "f5ab583fd50d066cead30273d18ea03f4763833701dd2b9e3f72f4aef8b8a94e",
+          "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed373/final/episodes.csv",
+          "episode_csv_sha256": "2296cbaca89c24f9bb45c46ccff4ef9cc3f901dbe3f3ab78d010c393cf931ae7",
+          "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed373/final/evaluation.json",
+          "evaluation_json_sha256": "d0b8b4c51add2065a95618b19854aedeb816eefccec220b5cb0704ad078e48ee",
+          "first_attempt_reused": false,
+          "formal_episode": {
+            "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/final/seed373/target/DQHMED-seed5503000.csv",
+            "episode_csv_sha256": "bfb438149067c43829fe409754a2e203225a9132666677a789fd465f552854af",
+            "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/final/seed373/target/DQHMED-seed5503000.json",
+            "evaluation_json_sha256": "ff90fe2517b7ed52bda64c00b17211b203e90a24846100d9480a193430446667",
+            "failure_type": "success",
+            "fell": 0,
+            "success": 1
+          },
+          "initial_state_signature": "3a59eeecbc9512e6c5063f610a64ab423009a8499de99efcf4419bf220d08a11",
+          "initial_state_signature_matches_formal": true,
+          "outcome_field_matches_formal": {
+            "failure_type": true,
+            "fell": true,
+            "success": true
+          },
+          "outcome_matches_formal": true,
+          "policy_role": "final",
+          "replay_episode": {
+            "failure_type": "success",
+            "fell": 0,
+            "success": 1
+          },
+          "retry_until_outcome_matches": false,
+          "telemetry_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed373/final/telemetry.csv",
+          "telemetry_csv_sha256": "516bf4937736f0935d4e9d1e3517e2ffd7ad13dbf5ef1437a9e6aefff02f432e",
+          "telemetry_rows": 373
+        }
+      ]
+    },
+    "473": {
+      "environment_id": 0,
+      "evaluation_seed": 5504000,
+      "formal_transition_class": "failure_to_success",
+      "pair_index": 0,
+      "selected": true,
+      "selection_changed_after_formal_audit": false,
+      "selection_rule": "lowest pair_index among formal failure_to_success pairs",
+      "traces": [
+        {
+          "actor_state_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+          "actor_state_sha256_matches_formal": true,
+          "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/baseline/seed473/target/actor.pt",
+          "checkpoint_sha256": "67547ff5d5dd44dae5cb5fc39c5283f13c5f209d1f1ec25031e02279798df1bc",
+          "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed473/baseline/episodes.csv",
+          "episode_csv_sha256": "480ec220ca0734a7b618720443bc9dfda75dac50962fd3213e0b6949ec452c3e",
+          "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed473/baseline/evaluation.json",
+          "evaluation_json_sha256": "f04db67680625caeff839a423891d0a258e8829635963b99e274e7a7a8219cec",
+          "first_attempt_reused": false,
+          "formal_episode": {
+            "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/baseline/seed473/target/DQHMED-seed5504000.csv",
+            "episode_csv_sha256": "1d270d26ddcc6c23a1ce160dc6f898724fe2bbde1232bdd6090b6b063ff6ce37",
+            "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/baseline/seed473/target/DQHMED-seed5504000.json",
+            "evaluation_json_sha256": "d6c07dbfcc4bc8ec50dda68cf7c2f9487e03d1618498b518247c943903ced6dc",
+            "failure_type": "lateral_heading_drift",
+            "fell": 1,
+            "success": 0
+          },
+          "initial_state_signature": "e349eb1ed68432058644d05b1fd17148089d0df02824af9154f22f4681f073f0",
+          "initial_state_signature_matches_formal": true,
+          "outcome_field_matches_formal": {
+            "failure_type": true,
+            "fell": true,
+            "success": true
+          },
+          "outcome_matches_formal": true,
+          "policy_role": "baseline",
+          "replay_episode": {
+            "failure_type": "lateral_heading_drift",
+            "fell": 1,
+            "success": 0
+          },
+          "retry_until_outcome_matches": false,
+          "telemetry_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed473/baseline/telemetry.csv",
+          "telemetry_csv_sha256": "174cf0dcfa96dd80806d233d5a4e2662d817ef4f3d1b005344c4465f7284eb24",
+          "telemetry_rows": 343
+        },
+        {
+          "actor_state_sha256": "6272a88b24009ee5658326a0835c2e0fe848e65cda8d42b8169cc1a641c58a9e",
+          "actor_state_sha256_matches_formal": true,
+          "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/final/seed473/target/actor.pt",
+          "checkpoint_sha256": "9b77f992ac6b7ceb0b9ded8563fb95b0fe04dc1523d8ef2ba540a2e37b53a1c8",
+          "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed473/final/episodes.csv",
+          "episode_csv_sha256": "678d021f4d90fd54adfa7c544d2e930c12bf60a1d5bec04502723b9f34c79cc1",
+          "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed473/final/evaluation.json",
+          "evaluation_json_sha256": "8a2a35dd419bc8d8caf7e62e6dbd3820ace4e94b0babb2bb846dd0378d991f77",
+          "first_attempt_reused": false,
+          "formal_episode": {
+            "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/final/seed473/target/DQHMED-seed5504000.csv",
+            "episode_csv_sha256": "b3a82b003000cf4c639e7d62f160b2a82df1c376a4e5b8b3df2e8bd285129ec1",
+            "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/final/seed473/target/DQHMED-seed5504000.json",
+            "evaluation_json_sha256": "14515dba6088754e67b6a012ba2c6e9d35712f45e5756322aa423c39b6966613",
+            "failure_type": "success",
+            "fell": 0,
+            "success": 1
+          },
+          "initial_state_signature": "e349eb1ed68432058644d05b1fd17148089d0df02824af9154f22f4681f073f0",
+          "initial_state_signature_matches_formal": true,
+          "outcome_field_matches_formal": {
+            "failure_type": true,
+            "fell": true,
+            "success": true
+          },
+          "outcome_matches_formal": true,
+          "policy_role": "final",
+          "replay_episode": {
+            "failure_type": "success",
+            "fell": 0,
+            "success": 1
+          },
+          "retry_until_outcome_matches": false,
+          "telemetry_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed473/final/telemetry.csv",
+          "telemetry_csv_sha256": "a96bb9ff7d7a9a94c6154e891a99f47522e011c1a8e6a1f14c67e29b730376cc",
+          "telemetry_rows": 411
+        }
+      ]
+    },
+    "73": {
+      "environment_id": 0,
+      "evaluation_seed": 5500000,
+      "formal_transition_class": "failure_to_success",
+      "pair_index": 0,
+      "selected": true,
+      "selection_changed_after_formal_audit": false,
+      "selection_rule": "lowest pair_index among formal failure_to_success pairs",
+      "traces": [
+        {
+          "actor_state_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+          "actor_state_sha256_matches_formal": true,
+          "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/baseline/seed73/target/actor.pt",
+          "checkpoint_sha256": "d1140220a60e000364a754acade82c97d51a88752baaf41c5c2da91a401e6504",
+          "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed73/baseline/episodes.csv",
+          "episode_csv_sha256": "bfc499051e87c1f6e561a0f5e8f9e53d7ca82ebc002828b9c4fc048f3362ef13",
+          "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed73/baseline/evaluation.json",
+          "evaluation_json_sha256": "08616f821e652c7d50fe68c9f7ee188d924a7587b415c6e4125475bc40948515",
+          "first_attempt_reused": true,
+          "formal_episode": {
+            "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/baseline/seed73/target/DQHMED-seed5500000.csv",
+            "episode_csv_sha256": "5fdbf92dc1c482b8e4d0d6d252f24f1452d6747e43774abc6ef925a54cddda8d",
+            "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/baseline/seed73/target/DQHMED-seed5500000.json",
+            "evaluation_json_sha256": "318737a95ec356aee0371cf17c8882dbefb76af3f75d90f85336d303ae153ad2",
+            "failure_type": "contact_stability",
+            "fell": 1,
+            "success": 0
+          },
+          "initial_state_signature": "42d4a0ada210d46c906d4d39d007a3417285da656e3fd127a2393444409148c9",
+          "initial_state_signature_matches_formal": true,
+          "outcome_field_matches_formal": {
+            "failure_type": true,
+            "fell": true,
+            "success": true
+          },
+          "outcome_matches_formal": true,
+          "policy_role": "baseline",
+          "replay_episode": {
+            "failure_type": "contact_stability",
+            "fell": 1,
+            "success": 0
+          },
+          "retry_until_outcome_matches": false,
+          "telemetry_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed73/baseline/telemetry.csv",
+          "telemetry_csv_sha256": "416e98b113277dd08a068fa7cba740625c74f1c9dfac8d92834b1e3538f2925b",
+          "telemetry_rows": 213
+        },
+        {
+          "actor_state_sha256": "92383e1e34e8eac1c2ddb03411271b3daedb53096dc0afbb3475efb6863d0167",
+          "actor_state_sha256_matches_formal": true,
+          "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/final/seed73/target/actor.pt",
+          "checkpoint_sha256": "043cb129be8f9785e1b48e168b3b1f792f9ce5453983d2525775bed1037e6504",
+          "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed73/final/episodes.csv",
+          "episode_csv_sha256": "9b4fb7c69ffac46e75c71b0edff3f1ee36f9df5bbb2ad7abc35b3fd43c9dbfd8",
+          "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed73/final/evaluation.json",
+          "evaluation_json_sha256": "b8ef148251cbc16b322c046452676cb4aa47eaf206742e1bd0d2cd93165ee735",
+          "first_attempt_reused": true,
+          "formal_episode": {
+            "episode_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/final/seed73/target/DQHMED-seed5500000.csv",
+            "episode_csv_sha256": "7175e368cede9b9dd16f83c714f1ab49a392c5e86ac9b274c7fdfe25facd5bf4",
+            "evaluation_json": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/final/seed73/target/DQHMED-seed5500000.json",
+            "evaluation_json_sha256": "14a88b0a10938d2b3e23a7768ccffa48d28eadb30fed96cf5b6c54d0e83c2de8",
+            "failure_type": "success",
+            "fell": 0,
+            "success": 1
+          },
+          "initial_state_signature": "42d4a0ada210d46c906d4d39d007a3417285da656e3fd127a2393444409148c9",
+          "initial_state_signature_matches_formal": true,
+          "outcome_field_matches_formal": {
+            "failure_type": true,
+            "fell": true,
+            "success": true
+          },
+          "outcome_matches_formal": true,
+          "policy_role": "final",
+          "replay_episode": {
+            "failure_type": "success",
+            "fell": 0,
+            "success": 1
+          },
+          "retry_until_outcome_matches": false,
+          "telemetry_csv": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/raw/seed73/final/telemetry.csv",
+          "telemetry_csv_sha256": "7cbefc29c421167b2b6ea8e2c2125859a11ecb11f5d054428c59db43f85a34ef",
+          "telemetry_rows": 378
+        }
+      ]
+    }
+  },
+  "specialist_mode": "lateral",
+  "telemetry_amendment": {
+    "freeze_commit": "b575cf34aa76649b6c9f793514fbe3e221a32dcf",
+    "implementation_commit": "22654dd3eae5d40dadf3f0e7576e0f496b88065b",
+    "path": "/home/carla/LZQW/SAFE100/humanoid/worktrees/v20_telemetry_amendment/results/online/specialist_v20/telemetry_amendment.json",
+    "sha256": "c10b5d828ee6ddd33f245faa6add84e602d824210075fbf9f5c9144e5f0be150",
+    "status": "frozen_after_verified_lateral_outcome_before_contact_training"
+  },
+  "trace_reproduction": {
+    "all_actor_hashes_match_formal": true,
+    "all_initial_state_signatures_match_formal": true,
+    "first_attempt_reused_count": 3,
+    "formal_outcomes_replaced_by_replay": false,
+    "outcome_match_count": 7,
+    "outcome_mismatch_count": 3,
+    "retry_until_outcome_matches": false,
+    "selection_changed_after_formal_audit": false,
+    "trace_count": 10
+  }
+}
