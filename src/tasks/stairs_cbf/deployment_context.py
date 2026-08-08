@@ -50,7 +50,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "lateral",
     "family": "excluded_development_mixed_lateral",
     "formal": False,
-    "candidate_seed_prefix": 191,
+    "candidate_seed_prefix": 211,
     "direction": -1,
     "ranges": {
       "rise_profile_half_width": [0.0015, 0.0015],
@@ -78,7 +78,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "excluded_development_mixed_contact",
     "formal": False,
-    "candidate_seed_prefix": 192,
+    "candidate_seed_prefix": 212,
     "direction": 1,
     "ranges": {
       "foot_friction": [0.52, 0.30],
@@ -93,7 +93,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "lateral",
     "family": "command_delay_and_low_pass",
     "formal": True,
-    "candidate_seed_prefix": 193,
+    "candidate_seed_prefix": 213,
     "direction": 1,
     "ranges": {
       "rise_profile_half_width": [0.0035, 0.0035],
@@ -117,24 +117,25 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
   },
   "L2": {
     "mode": "lateral",
-    "family": "bilateral_hip_yaw_actuator_zero_offset",
+    "family": "extended_yaw_bias_and_yaw_pulse",
     "formal": True,
-    "candidate_seed_prefix": 194,
+    "candidate_seed_prefix": 214,
     "direction": -1,
     "ranges": {
       "rise_profile_half_width": [0.0, 0.0],
       "tread_profile_half_width": [0.0, 0.0],
       "command_forward_scale": [1.00, 1.00],
-      "command_delay_s": [0.0, 0.0],
-      "command_low_pass_s": [0.0, 0.0],
+      "command_delay_s": [0.08, 0.08],
+      "command_low_pass_s": [0.06, 0.06],
       "action_gain": [1.0, 1.0],
-      "action_bias_abs": [0.05, 0.45],
-      "action_bias_pattern": [
-        0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
-        0.0, 0.0, 1.0, 0.0, 0.0, 0.0
-      ],
+      "action_bias_abs": [0.0, 0.0],
       "action_delay_steps": [0, 0],
       "encoder_bias_abs": [0.0, 0.0],
+      "yaw_bias_abs": [0.30, 0.50],
+      "lateral_pulse_min": [0.035, 0.035],
+      "lateral_pulse_max": [0.085, 0.085],
+      "yaw_pulse_min": [0.34, 0.52],
+      "yaw_pulse_max": [0.72, 1.08],
       "centerline_lateral_gain": [0.50, 0.50],
       "centerline_heading_gain": [0.86, 0.86],
     },
@@ -143,7 +144,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "lateral",
     "family": "lateral_bias_and_lateral_pulse",
     "formal": True,
-    "candidate_seed_prefix": 195,
+    "candidate_seed_prefix": 215,
     "direction": 1,
     "ranges": {
       "rise_profile_half_width": [0.0035, 0.0035],
@@ -168,7 +169,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "lateral",
     "family": "weak_centerline_correction",
     "formal": True,
-    "candidate_seed_prefix": 196,
+    "candidate_seed_prefix": 216,
     "direction": -1,
     "ranges": {
       "rise_profile_half_width": [0.0015, 0.0015],
@@ -196,7 +197,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "lateral",
     "family": "moderate_mixed_lateral_shift",
     "formal": True,
-    "candidate_seed_prefix": 197,
+    "candidate_seed_prefix": 217,
     "direction": 1,
     "ranges": {
       "rise_profile_half_width": [0.0015, 0.0015],
@@ -224,7 +225,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "low_foot_friction",
     "formal": True,
-    "candidate_seed_prefix": 198,
+    "candidate_seed_prefix": 218,
     "direction": -1,
     "ranges": {"foot_friction": [0.52, 0.25]},
   },
@@ -232,7 +233,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "left_right_action_asymmetry",
     "formal": True,
-    "candidate_seed_prefix": 199,
+    "candidate_seed_prefix": 219,
     "direction": 1,
     "ranges": {"response_asymmetry_abs": [0.040, 0.200]},
   },
@@ -240,7 +241,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "action_gain_and_encoder_bias",
     "formal": True,
-    "candidate_seed_prefix": 200,
+    "candidate_seed_prefix": 220,
     "direction": -1,
     "ranges": {
       "action_gain": [0.916, 0.900],
@@ -251,7 +252,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "friction_and_command_dynamics_mismatch",
     "formal": True,
-    "candidate_seed_prefix": 201,
+    "candidate_seed_prefix": 221,
     "direction": 1,
     "ranges": {
       "foot_friction": [0.55, 0.32],
@@ -264,7 +265,7 @@ V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
     "mode": "contact_stability",
     "family": "moderate_mixed_contact_shift",
     "formal": True,
-    "candidate_seed_prefix": 202,
+    "candidate_seed_prefix": 222,
     "direction": -1,
     "ranges": {
       "foot_friction": [0.54, 0.32],
@@ -452,8 +453,8 @@ def _validate_parameters(parameters: DeploymentContextParameters) -> None:
     raise ValueError("deployment action gain is outside [0.8, 1.2]")
   if len(parameters.action_bias) != 12:
     raise ValueError("deployment action bias must match the 12-D actor action")
-  if not all(abs(value) <= 0.50 for value in parameters.action_bias):
-    raise ValueError("deployment action bias exceeds 0.50 raw-action units")
+  if not all(abs(value) <= 0.08 for value in parameters.action_bias):
+    raise ValueError("deployment action bias exceeds 0.08 raw-action units")
   if not 0 <= parameters.action_delay_steps <= 5:
     raise ValueError("deployment action delay is outside [0, 5] steps")
   if abs(parameters.encoder_bias) > 0.03:
@@ -1077,29 +1078,10 @@ def generate_v21_specialist_context(
     action_bias_width = _v21_range_value(
       ranges, "action_bias_abs", severity, 0.0
     )
-    action_bias_pattern = ranges.get("action_bias_pattern")
-    if action_bias_pattern is None:
-      action_bias = tuple(
-        round(rng.uniform(-action_bias_width, action_bias_width), 6)
-        for _ in range(12)
-      )
-    else:
-      if (
-        not isinstance(action_bias_pattern, list)
-        or len(action_bias_pattern) != 12
-        or any(
-          not isinstance(value, (int, float))
-          or isinstance(value, bool)
-          or not math.isfinite(float(value))
-          or abs(float(value)) > 1.0
-          for value in action_bias_pattern
-        )
-      ):
-        raise ValueError("v21 action-bias pattern must contain 12 finite weights")
-      action_bias = tuple(
-        round(direction * action_bias_width * float(value), 6)
-        for value in action_bias_pattern
-      )
+    action_bias = tuple(
+      round(rng.uniform(-action_bias_width, action_bias_width), 6)
+      for _ in range(12)
+    )
     lateral_bias = direction * _v21_range_value(
       ranges, "lateral_bias_abs", severity, 0.0
     )

@@ -12,10 +12,14 @@ the only `L2` qualifier sat exactly on two gates and was not treated as robust.
 Pilot 3 isolated `L2` and found one qualifier with strict margin on every
 scaled gate. The replacement 512-episode calibration then froze `L_dev`,
 `C_dev`, and `L1`, but cleanly stopped at `L2`: all 12 candidates remained too
-easy and none reached 100 falls. No adaptation, monitor, or audit was started.
-The current boundary is a fourth non-formal base-only pilot that replaces the
-falsified yaw-command family with a deterministic bilateral hip-yaw actuator
-zero-offset family and uses entirely fresh randomness.
+easy and none reached 100 falls. Pilot 4 then tested a deterministic bilateral
+hip-yaw actuator zero offset. It produced a sharp difficulty cliff but no
+qualifier: the matched-success point had only 53.57% lateral purity, while the
+closest mechanism point was already below 70% success and still below 80%
+purity. No adaptation, monitor, or audit was started. The current boundary is
+a fifth non-formal base-only pilot that returns to the mechanism-pure yaw
+command family and prospectively extends its previously too-easy high end with
+entirely fresh randomness.
 
 本文记录 v21 的前瞻性实验设计。第一轮修正并预先冻结的 `L_dev` base-only sweep
 完成了全部 12 个候选，但因没有候选满足校准门槛而停止。随后一轮非正式 base-only
@@ -25,9 +29,11 @@ zero-offset family and uses entirely fresh randomness.
 不视为稳健。pilot 3 隔离 `L2` 后找到了一个在每条 scaled gate 上都有严格余量的
 合格点。随后 replacement 512-episode 校准冻结了 `L_dev`、`C_dev` 和 `L1`，但在
 `L2` clean fail-fast：12 个候选仍然都太容易，没有一个达到 100 次跌倒。没有启动
-任何 adaptation、monitor 或 audit。当前边界是第四轮非正式 base-only pilot：它用
-确定性的双侧 hip-yaw actuator 零偏移替换已被证伪的 yaw-command family，并使用
-全新随机数。
+任何 adaptation、monitor 或 audit。pilot 4 随后测试了确定性的双侧 hip-yaw
+actuator 零偏移；它产生了明显的难度 cliff，但没有合格点：matched-success 点只有
+53.57% lateral purity，最接近目标机制的点成功率已低于 70%，purity 也仍低于 80%。
+当前边界是第五轮非正式 base-only pilot：它回到机制更纯的 yaw-command family，
+前瞻性地扩展此前过易范围的高端，并使用全新随机数。
 
 ## 实验单位 / Experimental unit
 
@@ -54,7 +60,7 @@ claim. The ten formal contexts are:
 | Mode | Context | Primary frozen deployment shift |
 | --- | --- | --- |
 | Lateral | L1 | command delay + low-pass |
-| Lateral | L2 | bilateral hip-yaw actuator zero offset |
+| Lateral | L2 | extended yaw bias + yaw pulse |
 | Lateral | L3 | lateral bias + lateral pulse |
 | Lateral | L4 | weak centerline correction |
 | Lateral | L5 | moderate mixed lateral shift |
@@ -81,12 +87,15 @@ those four revisions but left `L2` on a two-gate boundary. Pilot 3 therefore
 removes the remaining geometry/action/encoder carrier from `L2` and strengthens
 only its yaw-dominant command disturbance. Its one 128-episode qualifier did
 not replicate at 512 episodes: the formal range produced only 64–85 falls.
-Pilot 4 therefore replaces the family rather than increasing command magnitude
-again. It applies the same hidden zero offset to both hip-yaw actuator channels
-while keeping geometry, command dynamics, encoder, and all other actuator
-channels nominal. This plant-side heading disturbance is distinct from `L1`
-command latency, `L3` lateral commands, `L4` centering, and the `L5` mixed
-shift. It remains base-policy range evidence, not formal selection.
+Pilot 4 therefore tested a plant-side alternative: the same hidden zero offset
+on both hip-yaw actuator channels. The sweep created enough failures but did
+not isolate heading drift, so that family is rejected rather than narrowed.
+Pilot 5 returns to the higher-purity command-side yaw mechanism, starts near
+the old sweep's high end, and extends yaw bias and pulse magnitude while
+holding geometry, actuator, encoder, centering, and the small excitation
+carrier fixed. It remains distinct from `L1` command latency, `L3` lateral
+commands, `L4` centering, and the `L5` mixed shift. It is base-policy range
+evidence, not formal selection.
 
 ## Algorithm
 

@@ -597,6 +597,16 @@ def _range_pilot(args: argparse.Namespace) -> dict[str, Any]:
     != _sha256(replacement_protocol_path)
   ):
     raise RuntimeError("invalid v21 replacement-calibration failure boundary")
+  if args.pilot_id == 4:
+    prior_range_boundary_valid = (
+      prior_summary.get("formal_calibration_ready") is True
+      and prior_next_contexts == []
+    )
+  else:
+    prior_range_boundary_valid = (
+      prior_summary.get("formal_calibration_ready") is False
+      and prior_next_contexts == list(pilot_contexts)
+    )
   if (
     prior_protocol.get("protocol_id") != PROTOCOL_ID
     or prior_protocol.get("protocol_revision")
@@ -607,8 +617,7 @@ def _range_pilot(args: argparse.Namespace) -> dict[str, Any]:
     or prior_summary.get("formal_context_selection") is not False
     or prior_summary.get("adaptation_process_started") is not False
     or prior_summary.get("adapted_policy_outcomes_observed") is not False
-    or prior_summary.get("formal_calibration_ready") is not True
-    or prior_next_contexts != []
+    or not prior_range_boundary_valid
     or prior_summary.get("prospective_protocol", {}).get("sha256")
     != _sha256(prior_protocol_path)
   ):
