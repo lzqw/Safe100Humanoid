@@ -33,6 +33,7 @@ LOG="${SAFE100_LOG_PATH:-$LOG_ROOT/train_${CONTEXT_ID}_${METHOD_ROLE}_${LABEL}.l
 mkdir -p "$OUTPUT" "$(dirname "$LOG")"
 export MUJOCO_GL=egl
 export PYTHONUNBUFFERED=1
+export PYTHONPATH="$REPO${PYTHONPATH:+:$PYTHONPATH}"
 DEVELOPMENT_ARGS=()
 case "$CONTEXT_ID" in L_dev|C_dev) DEVELOPMENT_ARGS=(--development) ;; esac
 

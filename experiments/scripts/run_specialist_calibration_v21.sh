@@ -27,6 +27,7 @@ LOG="$LOG_ROOT/calibration_${CONTEXT_ID}.log"
 mkdir -p "$OUTPUT" "$(dirname "$CONTEXT")" "$SUMMARY_ROOT" "$(dirname "$LOG")"
 export MUJOCO_GL=egl
 export PYTHONUNBUFFERED=1
+export PYTHONPATH="$REPO${PYTHONPATH:+:$PYTHONPATH}"
 
 "$PYTHON" experiments/scripts/calibrate_deployment_contexts_v21.py \
   --repo "$REPO" \
