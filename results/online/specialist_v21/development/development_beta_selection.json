@@ -1,0 +1,207 @@
+{
+  "contexts": [
+    "L_dev",
+    "C_dev"
+  ],
+  "development_execution_amendment": {
+    "checks": {
+      "actual_source_changes": true,
+      "allowed_source_changes": true,
+      "committed_amendment": true,
+      "development_training_completed": true,
+      "development_training_outcomes_disclosed": true,
+      "disposition": true,
+      "evaluation_seeds_unchanged": true,
+      "formal_contexts_remain_unseen": true,
+      "formal_outcomes_not_seen": true,
+      "frozen_evaluation_design_unchanged": true,
+      "paired_episode_count_unchanged": true,
+      "protocol_id": true,
+      "raw_evaluations_not_started": true,
+      "runner_not_constructed": true,
+      "selection_metrics_not_written": true,
+      "selection_outcomes_not_seen": true,
+      "selection_source_sha256": true,
+      "stage": true,
+      "training_artifacts_not_mutated": true,
+      "training_artifacts_reused": true,
+      "training_not_rerun": true,
+      "training_protocol_commit": true,
+      "training_protocol_sha256": true,
+      "zero_actors_evaluated": true
+    },
+    "evaluation_implementation_commit": "51c2fb4bdb8cc7969a9ace47dc814f59e9c7fc20",
+    "file": "results/online/specialist_v21/development/development_selection_execution_amendment.json",
+    "sha256": "54d3304e380cbaf25235b773d29768895fdd751573f6c8be47634ccfc3c1208c",
+    "training_protocol_commit": "4142ede4946cc6f99eaa2b2c45af9bfebe651f77"
+  },
+  "development_training_protocol_commit": "4142ede4946cc6f99eaa2b2c45af9bfebe651f77",
+  "evaluation_implementation_commit": "51c2fb4bdb8cc7969a9ace47dc814f59e9c7fc20",
+  "evidence_role": "development-only beta selection; excluded from formal claims",
+  "formal_context_outcomes_seen": false,
+  "metrics_csv": {
+    "path": "/home/carla/LZQW/SAFE100/humanoid/worktrees/v21_development/results/online/specialist_v21/development/development_beta_metrics.csv",
+    "row_count": 8,
+    "sha256": "d279f509cf668ed709f88ec28f991fcd3657eec84c46e84b05e946dcfae7c47c"
+  },
+  "paired_episodes_per_policy_per_context": 512,
+  "protocol_id": "safe100-deployment-unit-local-matched-success-v21",
+  "schema_version": 1,
+  "selection": {
+    "rows": [
+      {
+        "beta": 0.0,
+        "context_scores": {
+          "C_dev": 0.766677272245201,
+          "L_dev": 0.466445840144541
+        },
+        "mean_regression_rate": 0.1705651588979458,
+        "mean_selection_score": 0.616561556194871,
+        "worst_context_selection_score": 0.466445840144541
+      },
+      {
+        "beta": 1.0,
+        "context_scores": {
+          "C_dev": 0.6536218050694665,
+          "L_dev": 0.5342424503140326
+        },
+        "mean_regression_rate": 0.1794738448667654,
+        "mean_selection_score": 0.5939321276917495,
+        "worst_context_selection_score": 0.5342424503140326
+      },
+      {
+        "beta": 4.0,
+        "context_scores": {
+          "C_dev": 0.694276522784318,
+          "L_dev": 0.44020476641142564
+        },
+        "mean_regression_rate": 0.18390275061332007,
+        "mean_selection_score": 0.5672406445978718,
+        "worst_context_selection_score": 0.44020476641142564
+      },
+      {
+        "beta": 16.0,
+        "context_scores": {
+          "C_dev": 0.6380316046240322,
+          "L_dev": 0.4435601823969715
+        },
+        "mean_regression_rate": 0.18599990955648762,
+        "mean_selection_score": 0.5407958935105018,
+        "worst_context_selection_score": 0.4435601823969715
+      }
+    ],
+    "selected_beta": 0.0,
+    "selection_metric": "mean across L_dev/C_dev of repair_rate - regression_rate",
+    "tie_breaks": [
+      "higher worst-context score",
+      "lower mean regression rate",
+      "lower beta"
+    ]
+  },
+  "training_manifests": {
+    "C_dev/beta_0": {
+      "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_development/training/C_dev/control_beta_0/accepted_final.pt",
+      "checks": {
+        "beta": true,
+        "context": true,
+        "development": true,
+        "protocol": true,
+        "role": true,
+        "rounds": true,
+        "seed": true
+      },
+      "summary": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_development/training/C_dev/control_beta_0/specialist_summary.json"
+    },
+    "C_dev/beta_1": {
+      "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_development/training/C_dev/v21_beta_1/accepted_final.pt",
+      "checks": {
+        "beta": true,
+        "context": true,
+        "development": true,
+        "protocol": true,
+        "role": true,
+        "rounds": true,
+        "seed": true
+      },
+      "summary": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_development/training/C_dev/v21_beta_1/specialist_summary.json"
+    },
+    "C_dev/beta_16": {
+      "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_development/training/C_dev/v21_beta_16/accepted_final.pt",
+      "checks": {
+        "beta": true,
+        "context": true,
+        "development": true,
+        "protocol": true,
+        "role": true,
+        "rounds": true,
+        "seed": true
+      },
+      "summary": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_development/training/C_dev/v21_beta_16/specialist_summary.json"
+    },
+    "C_dev/beta_4": {
+      "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_development/training/C_dev/v21_beta_4/accepted_final.pt",
+      "checks": {
+        "beta": true,
+        "context": true,
+        "development": true,
+        "protocol": true,
+        "role": true,
+        "rounds": true,
+        "seed": true
+      },
+      "summary": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_development/training/C_dev/v21_beta_4/specialist_summary.json"
+    },
+    "L_dev/beta_0": {
+      "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_development/training/L_dev/control_beta_0/accepted_final.pt",
+      "checks": {
+        "beta": true,
+        "context": true,
+        "development": true,
+        "protocol": true,
+        "role": true,
+        "rounds": true,
+        "seed": true
+      },
+      "summary": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_development/training/L_dev/control_beta_0/specialist_summary.json"
+    },
+    "L_dev/beta_1": {
+      "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_development/training/L_dev/v21_beta_1/accepted_final.pt",
+      "checks": {
+        "beta": true,
+        "context": true,
+        "development": true,
+        "protocol": true,
+        "role": true,
+        "rounds": true,
+        "seed": true
+      },
+      "summary": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_development/training/L_dev/v21_beta_1/specialist_summary.json"
+    },
+    "L_dev/beta_16": {
+      "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_development/training/L_dev/v21_beta_16/accepted_final.pt",
+      "checks": {
+        "beta": true,
+        "context": true,
+        "development": true,
+        "protocol": true,
+        "role": true,
+        "rounds": true,
+        "seed": true
+      },
+      "summary": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_development/training/L_dev/v21_beta_16/specialist_summary.json"
+    },
+    "L_dev/beta_4": {
+      "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_development/training/L_dev/v21_beta_4/accepted_final.pt",
+      "checks": {
+        "beta": true,
+        "context": true,
+        "development": true,
+        "protocol": true,
+        "role": true,
+        "rounds": true,
+        "seed": true
+      },
+      "summary": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_development/training/L_dev/v21_beta_4/specialist_summary.json"
+    }
+  }
+}

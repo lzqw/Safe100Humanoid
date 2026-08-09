@@ -1,0 +1,82 @@
+{
+  "development_training": {
+    "artifact_root": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_development/training",
+    "completed_run_count": 8,
+    "fixed_rounds_per_run": 8,
+    "initial_actor_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+    "protocol_commit": "4142ede4946cc6f99eaa2b2c45af9bfebe651f77",
+    "protocol_sha256": "93f126fce2a12d314a480963cb1dbebcee1aef575865c4c04ff8bc99acd29073",
+    "training_artifacts_mutated_or_rerun_after_initialization_failure": false,
+    "training_summary_csv": {
+      "path": "results/online/specialist_v21/development/development_training_summary.csv",
+      "sha256": "f0c1817459c947fcccdbde86bd34035a64e2e51c6daf318b6dd28a7f3e5512bf",
+      "size_bytes": 2837
+    }
+  },
+  "evaluation_initialization_failure": {
+    "actors_evaluated": 0,
+    "amendment": "results/online/specialist_v21/development/development_selection_execution_amendment.json",
+    "formal_outcomes_observed": false,
+    "raw_evaluations_started": false,
+    "selection_metrics_written": false
+  },
+  "fresh_development_selection": {
+    "contexts": [
+      "L_dev",
+      "C_dev"
+    ],
+    "evaluation_implementation_commit": "51c2fb4bdb8cc7969a9ace47dc814f59e9c7fc20",
+    "fresh_episode_rollouts": 5120,
+    "log": {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v21_development/selection_retry_001.log",
+      "sha256": "732d91fe2135f4406451c80e85ac192c17f70e57b951a35e6fc38f1ae00e848a",
+      "size_bytes": 27758
+    },
+    "metrics_csv": {
+      "path": "results/online/specialist_v21/development/development_beta_metrics.csv",
+      "row_count": 8,
+      "sha256": "d279f509cf668ed709f88ec28f991fcd3657eec84c46e84b05e946dcfae7c47c",
+      "size_bytes": 1174
+    },
+    "paired_episodes_per_policy_per_context": 512,
+    "policy_count_per_context": 5,
+    "raw_evidence_tree": {
+      "file_count": 90,
+      "sha256": "4a4d578f31f50ba67a76711853547b072c2a8112752b63fdc4fec51a38f4d35d",
+      "size_bytes": 43758539
+    },
+    "selected_beta": 0.0,
+    "selection_json": {
+      "path": "results/online/specialist_v21/development/development_beta_selection.json",
+      "sha256": "cd4aa3560db3bd6bf42affdf66feb54228060e50df4e345571ea99470fb92a0c",
+      "size_bytes": 7737
+    },
+    "validation": {
+      "all_amendment_checks_passed": true,
+      "all_pairing_keys_equal": true,
+      "all_policy_context_episode_counts_equal_512": true,
+      "independent_recomputation_matches_csv": true,
+      "raw_batch_count": 40,
+      "selection_rule_and_tie_break_recomputed": true
+    }
+  },
+  "formal_freeze": {
+    "formal_adaptation_or_audit_outcomes_observed": false,
+    "path": "results/online/specialist_v21/protocol_formal.json",
+    "protocol_revision": 2,
+    "selected_beta": 0.0,
+    "sha256": "7ffc0d31733735cb570d72ea2fd0ab833dad5efd033bac71681021d564aa5d67",
+    "size_bytes": 53831,
+    "source_commit": "51c2fb4bdb8cc7969a9ace47dc814f59e9c7fc20"
+  },
+  "protocol_id": "safe100-deployment-unit-local-matched-success-v21",
+  "schema_version": 1,
+  "verification": {
+    "full_experiment_test_suite": {
+      "passed": 128,
+      "preexisting_failed": 1,
+      "preexisting_failure": "v20 audit seal hashes files already changed before the v21 evaluation amendment"
+    },
+    "targeted_v21_tests_passed": 17
+  }
+}
