@@ -27,6 +27,8 @@ from specialist_v21_protocol import (
   CONTEXT_FORMAL_AUDIT_SEEDS,
   CONTEXT_MONITOR_SEEDS,
   CONTEXTS,
+  DEVELOPMENT_SELECTION_AMENDMENT_SOURCE_FILES,
+  DEVELOPMENT_SELECTION_AMENDMENT_STAGE,
   DEVELOPMENT_SELECTION_EPISODES,
   FORMAL_BOOTSTRAP_SAMPLES,
   FORMAL_BOOTSTRAP_SEED,
@@ -132,6 +134,129 @@ def _source_hashes(repo: Path) -> dict[str, str]:
   if missing:
     raise FileNotFoundError(f"v21 prospective source files are missing: {missing}")
   return {relative: _sha256(repo / relative) for relative in SOURCE_FILES}
+
+
+def _validate_development_execution_amendment(
+  *,
+  repo: Path,
+  current_commit: str,
+  input_commit: str,
+  development: dict[str, Any],
+  development_path: Path,
+  selection: dict[str, Any],
+  amendment_path: Path,
+) -> dict[str, Any]:
+  amendment = json.loads(amendment_path.read_text())
+  failed_attempt = amendment.get("failed_attempt", {})
+  repair_scope = amendment.get("repair_scope", {})
+  retry_constraints = amendment.get("retry_constraints", {})
+  changed = set(
+    _git_output(repo, "diff", "--name-only", input_commit, current_commit)
+    .splitlines()
+  )
+  changed_sources = tuple(sorted(changed & set(SOURCE_FILES)))
+  expected_sources = tuple(sorted(DEVELOPMENT_SELECTION_AMENDMENT_SOURCE_FILES))
+  selection_binding = selection.get("development_execution_amendment", {})
+  selection_implementation_commit = selection.get(
+    "evaluation_implementation_commit"
+  )
+  implementation_is_ancestor = (
+    isinstance(selection_implementation_commit, str)
+    and subprocess.run(
+      [
+        "git",
+        "merge-base",
+        "--is-ancestor",
+        selection_implementation_commit,
+        current_commit,
+      ],
+      cwd=repo,
+      check=False,
+    ).returncode
+    == 0
+  )
+  checks = {
+    "protocol_id": amendment.get("protocol_id") == PROTOCOL_ID,
+    "stage": amendment.get("stage") == DEVELOPMENT_SELECTION_AMENDMENT_STAGE,
+    "disposition": amendment.get("disposition")
+    == "infrastructure_retry_with_identical_frozen_evaluation_design",
+    "training_protocol_commit": amendment.get("training_protocol", {}).get(
+      "git_commit"
+    )
+    == input_commit,
+    "training_protocol_sha256": amendment.get("training_protocol", {}).get(
+      "sha256"
+    )
+    == _sha256(development_path),
+    "selection_source_sha256": failed_attempt.get("selection_source_sha256")
+    == development["sealed_inputs"]["source_file_sha256"][
+      "experiments/scripts/select_development_beta_v21.py"
+    ],
+    "selection_metrics_not_written": failed_attempt.get(
+      "selection_metrics_written"
+    )
+    is False,
+    "zero_actors_evaluated": failed_attempt.get("actors_evaluated") == 0,
+    "runner_not_constructed": failed_attempt.get("runner_constructed") is False,
+    "raw_evaluations_not_started": failed_attempt.get("raw_evaluations_started")
+    is False,
+    "selection_outcomes_not_seen": amendment.get("selection_outcomes_observed")
+    is False,
+    "formal_outcomes_not_seen": amendment.get("formal_outcomes_observed") is False,
+    "development_training_not_rerun": amendment.get(
+      "development_training_rerun"
+    )
+    is False,
+    "training_artifacts_not_mutated": amendment.get("training_artifacts_mutated")
+    is False,
+    "frozen_evaluation_design_unchanged": all(
+      repair_scope.get(key) is False
+      for key in (
+        "adaptation_code_or_artifacts_changed",
+        "beta_grid_changed",
+        "candidate_gate_changed",
+        "evaluation_contexts_or_seeds_changed",
+        "evaluation_episode_count_changed",
+        "formal_analysis_or_gate_changed",
+        "selection_formula_or_tie_break_changed",
+      )
+    ),
+    "training_artifacts_reused": retry_constraints.get(
+      "development_training_artifacts_reused_without_mutation"
+    )
+    is True,
+    "formal_contexts_remain_unseen": retry_constraints.get(
+      "formal_contexts_remain_unseen"
+    )
+    is True,
+    "paired_episode_count_unchanged": retry_constraints.get(
+      "same_fresh_episodes_per_policy_per_context"
+    )
+    == DEVELOPMENT_SELECTION_EPISODES,
+    "evaluation_seeds_unchanged": retry_constraints.get(
+      "same_frozen_evaluation_seeds"
+    )
+    is True,
+    "allowed_source_changes": tuple(
+      sorted(amendment.get("allowed_source_changes", []))
+    )
+    == expected_sources,
+    "actual_source_changes": changed_sources == expected_sources,
+    "selection_amendment_sha256": selection_binding.get("sha256")
+    == _sha256(amendment_path),
+    "selection_training_commit": selection.get(
+      "development_training_protocol_commit"
+    )
+    == input_commit,
+    "selection_implementation_is_ancestor": implementation_is_ancestor,
+  }
+  failed = [name for name, passed in checks.items() if not passed]
+  if failed:
+    raise RuntimeError(f"invalid v21 development execution amendment: {failed}")
+  binding = _verify_protocol_blob(repo, amendment_path, current_commit)
+  binding["checks"] = checks
+  binding["evaluation_implementation_commit"] = selection_implementation_commit
+  return binding
 
 
 def _precalibration(args: argparse.Namespace) -> dict[str, Any]:
@@ -712,6 +837,9 @@ def _range_pilot(args: argparse.Namespace) -> dict[str, Any]:
 
 def _formal(args: argparse.Namespace) -> dict[str, Any]:
   repo = args.repo.resolve()
+  current_commit = _git_output(repo, "rev-parse", "HEAD")
+  if _git_output(repo, "status", "--porcelain", "--untracked-files=no"):
+    raise RuntimeError("v21 formal freeze requires clean tracked files")
   development_path = args.input_protocol.resolve()
   development = json.loads(development_path.read_text())
   binding = _verify_protocol_blob(repo, development_path, args.input_commit)
@@ -720,8 +848,6 @@ def _formal(args: argparse.Namespace) -> dict[str, Any]:
     or development.get("protocol_revision") != 1
   ):
     raise RuntimeError("unexpected v21 development protocol")
-  if _source_hashes(repo) != development["sealed_inputs"]["source_file_sha256"]:
-    raise RuntimeError("v21 source changed after development protocol freeze")
   selection_path = args.development_selection.resolve()
   selection = json.loads(selection_path.read_text())
   if (
@@ -730,6 +856,25 @@ def _formal(args: argparse.Namespace) -> dict[str, Any]:
     or selection.get("contexts") != list(V21_DEVELOPMENT_CONTEXTS)
   ):
     raise RuntimeError("invalid v21 development beta selection")
+  current_hashes = _source_hashes(repo)
+  amendment_binding = None
+  if current_hashes != development["sealed_inputs"]["source_file_sha256"]:
+    if args.development_execution_amendment is None:
+      raise RuntimeError(
+        "v21 source changed after development freeze without an execution "
+        "amendment"
+      )
+    amendment_binding = _validate_development_execution_amendment(
+      repo=repo,
+      current_commit=current_commit,
+      input_commit=args.input_commit,
+      development=development,
+      development_path=development_path,
+      selection=selection,
+      amendment_path=args.development_execution_amendment.resolve(),
+    )
+  elif args.development_execution_amendment is not None:
+    raise RuntimeError("v21 execution amendment supplied without source drift")
   selected_beta = float(selection["selection"]["selected_beta"])
   if selected_beta not in BETA_GRID:
     raise RuntimeError("development selected beta outside the frozen grid")
@@ -737,6 +882,7 @@ def _formal(args: argparse.Namespace) -> dict[str, Any]:
   payload["protocol_revision"] = 2
   payload["status"] = "prospectively_frozen_before_formal_adaptation"
   payload["development_protocol"] = binding
+  payload["development_execution_amendment"] = amendment_binding
   payload["development_selection"] = {
     "file": _relative(repo, selection_path),
     "file_sha256": _sha256(selection_path),
@@ -744,10 +890,13 @@ def _formal(args: argparse.Namespace) -> dict[str, Any]:
   }
   payload["formal"]["selected_beta"] = selected_beta
   payload["formal"]["formal_beta_is_frozen"] = True
+  payload["sealed_inputs"]["source_commit"] = current_commit
+  payload["sealed_inputs"]["source_file_sha256"] = current_hashes
   payload["fresh_evidence_boundary"] = {
     "base_only_calibration_completed": True,
     "development_beta_selection_completed": True,
     "development_contexts_excluded_from_formal_claims": True,
+    "development_selection_initialization_retry": amendment_binding is not None,
     "formal_adaptation_or_audit_outcomes_seen": False,
     "this_protocol_must_be_committed_before_formal_adaptation": True,
   }
@@ -775,6 +924,7 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--input-commit")
   parser.add_argument("--context-dir", type=Path)
   parser.add_argument("--development-selection", type=Path)
+  parser.add_argument("--development-execution-amendment", type=Path)
   parser.add_argument("--superseded-protocol", type=Path)
   parser.add_argument("--execution-amendment", type=Path)
   parser.add_argument("--failed-protocol", type=Path)

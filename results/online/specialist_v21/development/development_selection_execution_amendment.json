@@ -1,0 +1,62 @@
+{
+  "allowed_source_changes": [
+    "docs/DEPLOYMENT_V21_PROTOCOL.md",
+    "experiments/scripts/specialist_v21_protocol.py",
+    "experiments/scripts/select_development_beta_v21.py",
+    "experiments/scripts/evaluate_learning_curve_v21.py",
+    "experiments/scripts/audit_deployment_v21.py",
+    "experiments/scripts/freeze_specialist_v21_protocol.py",
+    "experiments/tests/test_specialist_v21.py"
+  ],
+  "development_training_completed_before_failure": true,
+  "development_training_outcomes_observed": true,
+  "development_training_rerun": false,
+  "disposition": "infrastructure_retry_with_identical_frozen_evaluation_design",
+  "failed_attempt": {
+    "actors_evaluated": 0,
+    "exception": "ValueError: brief PPO requires PPO clip 0.05",
+    "failure_log": {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v21_development/queue_development.log",
+      "sha256": "15ccd806f8d8beb5b32890d23523e27686b73286870244b94e9b14897aea5870",
+      "size_bytes": 77310757
+    },
+    "failure_point": "read-only evaluation runner construction",
+    "raw_evaluations_started": false,
+    "runner_constructed": false,
+    "selection_metrics_written": false,
+    "selection_source_sha256": "f836c0dbed2c34d845b03ac567722b90bb2ad0cabad551b6064a22b11ba8a639"
+  },
+  "failure_class": "evaluation_runner_configuration_omission",
+  "formal_outcomes_observed": false,
+  "observed_at_utc": "2026-08-09T04:58:12Z",
+  "protocol_id": "safe100-deployment-unit-local-matched-success-v21",
+  "repair_scope": {
+    "adaptation_code_or_artifacts_changed": false,
+    "beta_grid_changed": false,
+    "candidate_gate_changed": false,
+    "evaluation_contexts_or_seeds_changed": false,
+    "evaluation_episode_count_changed": false,
+    "evaluation_runner_change": "supply the already frozen v21 PPO invariant values required to construct a read-only checkpoint loader",
+    "formal_analysis_or_gate_changed": false,
+    "selection_formula_or_tie_break_changed": false
+  },
+  "retry_constraints": {
+    "development_training_artifacts_reused_without_mutation": true,
+    "formal_contexts_remain_unseen": true,
+    "same_development_contexts": [
+      "L_dev",
+      "C_dev"
+    ],
+    "same_fresh_episodes_per_policy_per_context": 512,
+    "same_frozen_evaluation_seeds": true
+  },
+  "schema_version": 1,
+  "selection_outcomes_observed": false,
+  "stage": "development_beta_selection_runner_initialization",
+  "training_artifacts_mutated": false,
+  "training_protocol": {
+    "file": "results/online/specialist_v21/protocol_development.json",
+    "git_commit": "4142ede4946cc6f99eaa2b2c45af9bfebe651f77",
+    "sha256": "93f126fce2a12d314a480963cb1dbebcee1aef575865c4c04ff8bc99acd29073"
+  }
+}

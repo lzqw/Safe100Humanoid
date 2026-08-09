@@ -6,6 +6,7 @@ import ast
 import json
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -18,6 +19,8 @@ from specialist_v21_protocol import (
   CONFIRMATION_BLOCKS,
   CONFIRMATION_EPISODES_PER_BLOCK,
   CONTEXTS,
+  DEVELOPMENT_SELECTION_AMENDMENT_SOURCE_FILES,
+  DEVELOPMENT_SELECTION_AMENDMENT_STAGE,
   FORMAL_CONTEXTS_BY_MODE,
   FORMAL_D0_EPISODES,
   FORMAL_MONITOR_EPISODES,
@@ -26,6 +29,7 @@ from specialist_v21_protocol import (
   RANGE_PILOT_ID,
   V21_DEVELOPMENT_CONTEXTS,
   V21_FORMAL_CONTEXTS,
+  configure_v21_policy_evaluation_algorithm,
   confirmation_block_gate,
   deployment_mode_gate,
   fixed_budget_status,
@@ -257,6 +261,62 @@ def test_v21_budget_and_evaluation_counts_match_the_frozen_design() -> None:
   assert zero.retained_update_count_is_gate is False
   with pytest.raises(ValueError, match="exactly 8"):
     fixed_budget_status(actual_rounds=7, retained_update_count=0)
+
+
+def test_v21_read_only_evaluation_runner_satisfies_training_invariants() -> None:
+  cfg = SimpleNamespace()
+  configure_v21_policy_evaluation_algorithm(
+    cfg, matched_success_preservation_beta=4.0
+  )
+  assert cfg.actor_learning_rate == 5.0e-6
+  assert cfg.critic_learning_rate == 1.0e-4
+  assert cfg.actor_layer_multipliers == (0.10, 0.25, 0.50, 1.0)
+  assert cfg.std_scale_from_base == 0.35
+  assert cfg.brief_ppo_refinement is True
+  assert cfg.failure_focused_refinement is True
+  assert cfg.observable_failure_conditioned_refinement is True
+  assert cfg.kl_early_stopping is True
+  assert cfg.fall_redistribution_horizon == 100
+  assert cfg.fall_redistribution_decay == 0.97
+  assert cfg.fall_redistribution_amount == 2.0
+  assert cfg.matched_success_preservation_beta == 4.0
+  assert cfg.clip_param == 0.05
+  assert cfg.desired_kl == 0.003
+  assert cfg.num_learning_epochs == 1
+  assert cfg.num_mini_batches == 4
+  assert cfg.schedule == "fixed"
+  assert cfg.entropy_coef == 0.0
+  assert cfg.normalize_advantage_per_mini_batch is True
+  with pytest.raises(ValueError, match="finite and non-negative"):
+    configure_v21_policy_evaluation_algorithm(
+      SimpleNamespace(), matched_success_preservation_beta=float("nan")
+    )
+
+
+def test_v21_evaluation_initialization_amendment_is_narrow_and_shared() -> None:
+  assert DEVELOPMENT_SELECTION_AMENDMENT_STAGE == (
+    "development_beta_selection_runner_initialization"
+  )
+  assert set(DEVELOPMENT_SELECTION_AMENDMENT_SOURCE_FILES) == {
+    "docs/DEPLOYMENT_V21_PROTOCOL.md",
+    "experiments/scripts/specialist_v21_protocol.py",
+    "experiments/scripts/select_development_beta_v21.py",
+    "experiments/scripts/evaluate_learning_curve_v21.py",
+    "experiments/scripts/audit_deployment_v21.py",
+    "experiments/scripts/freeze_specialist_v21_protocol.py",
+    "experiments/tests/test_specialist_v21.py",
+  }
+  for relative in (
+    "experiments/scripts/select_development_beta_v21.py",
+    "experiments/scripts/evaluate_learning_curve_v21.py",
+    "experiments/scripts/audit_deployment_v21.py",
+  ):
+    source = (REPO / relative).read_text()
+    assert "configure_v21_policy_evaluation_algorithm(" in source
+  freezer = (
+    REPO / "experiments/scripts/freeze_specialist_v21_protocol.py"
+  ).read_text()
+  assert '"--development-execution-amendment"' in freezer
 
 
 def test_v21_formal_gate_uses_five_deployment_contexts_per_mode() -> None:

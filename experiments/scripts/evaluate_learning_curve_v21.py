@@ -20,6 +20,7 @@ from specialist_v21_protocol import (
   FORMAL_MONITOR_EPISODES,
   FORMAL_ROUNDS,
   PROTOCOL_ID,
+  configure_v21_policy_evaluation_algorithm,
   repair_regression_rates,
 )
 
@@ -137,29 +138,9 @@ def main() -> None:
   env_cfg.actions["joint_pos"].enabled = True
   agent_cfg = load_rl_cfg(task)
   configure_v19_observable_refinement_runner(agent_cfg)
-  alg_cfg = agent_cfg.algorithm
-  alg_cfg.actor_learning_rate = 5.0e-6
-  alg_cfg.critic_learning_rate = 1.0e-4
-  alg_cfg.actor_layer_multipliers = (0.10, 0.25, 0.50, 1.0)
-  alg_cfg.log_std_learning_rate = 0.0
-  alg_cfg.std_scale_from_base = 0.35
-  alg_cfg.pre_intervention_weight = 0.0
-  alg_cfg.intervention_advantage_weight = 0.0
-  alg_cfg.base_anchor_weight = 0.0
-  alg_cfg.d0_retention_anchor_weight = 0.0
-  alg_cfg.neighbor_retention_anchor_weight = 0.0
-  alg_cfg.safe_bc_weight = 0.0
-  alg_cfg.correction_distillation_weight = 0.0
-  alg_cfg.brief_ppo_refinement = True
-  alg_cfg.failure_focused_refinement = True
-  alg_cfg.observable_failure_conditioned_refinement = True
-  alg_cfg.task_first_constrained = False
-  alg_cfg.actor_new_feature_count = 5
-  alg_cfg.actor_new_feature_learning_rate_multiplier = 1.0
-  alg_cfg.freeze_legacy_actor_input_columns = True
-  alg_cfg.hard_case_policy_weight = 1.0
-  alg_cfg.success_counterexample_policy_weight = 1.25
-  alg_cfg.matched_success_preservation_beta = beta
+  configure_v21_policy_evaluation_algorithm(
+    agent_cfg.algorithm, matched_success_preservation_beta=beta
+  )
   base_env = ManagerBasedRlEnv(env_cfg, device=args.device)
   env = RslRlVecEnvWrapper(base_env, clip_actions=agent_cfg.clip_actions)
   runner_cls = load_runner_cls(task)

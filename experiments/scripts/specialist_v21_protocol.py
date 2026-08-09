@@ -34,6 +34,19 @@ FORMAL_CONTEXTS_BY_MODE = {
   ),
 }
 BETA_GRID = (0.0, 1.0, 4.0, 16.0)
+V21_ACTOR_LAYER_MULTIPLIERS = (0.10, 0.25, 0.50, 1.0)
+DEVELOPMENT_SELECTION_AMENDMENT_STAGE = (
+  "development_beta_selection_runner_initialization"
+)
+DEVELOPMENT_SELECTION_AMENDMENT_SOURCE_FILES = (
+  "docs/DEPLOYMENT_V21_PROTOCOL.md",
+  "experiments/scripts/specialist_v21_protocol.py",
+  "experiments/scripts/select_development_beta_v21.py",
+  "experiments/scripts/evaluate_learning_curve_v21.py",
+  "experiments/scripts/audit_deployment_v21.py",
+  "experiments/scripts/freeze_specialist_v21_protocol.py",
+  "experiments/tests/test_specialist_v21.py",
+)
 FORMAL_ROUNDS = 8
 FORMAL_TARGET_EPISODES = 1024
 FORMAL_D0_EPISODES = 256
@@ -96,6 +109,54 @@ CONTEXT_MONITOR_SEEDS = {
   for index, context_id in enumerate(CONTEXTS)
 }
 FORMAL_BOOTSTRAP_SEED = 81_100_000
+
+
+def configure_v21_policy_evaluation_algorithm(
+  cfg: Any, *, matched_success_preservation_beta: float
+) -> None:
+  """Configure the online runner for read-only v21 checkpoint evaluation.
+
+  Constructing the custom online PPO class validates its complete protocol
+  configuration even when the caller will only load and evaluate actors. Keep
+  every evaluation entry point on the same invariant-satisfying settings as
+  v21 training so a loader cannot silently drift from the frozen architecture.
+  """
+  beta = float(matched_success_preservation_beta)
+  if not math.isfinite(beta) or beta < 0.0:
+    raise ValueError("v21 evaluation beta must be finite and non-negative")
+  cfg.actor_learning_rate = 5.0e-6
+  cfg.critic_learning_rate = 1.0e-4
+  cfg.actor_layer_multipliers = V21_ACTOR_LAYER_MULTIPLIERS
+  cfg.log_std_learning_rate = 0.0
+  cfg.std_scale_from_base = 0.35
+  cfg.pre_intervention_weight = 0.0
+  cfg.intervention_advantage_weight = 0.0
+  cfg.base_anchor_weight = 0.0
+  cfg.d0_retention_anchor_weight = 0.0
+  cfg.neighbor_retention_anchor_weight = 0.0
+  cfg.safe_bc_weight = 0.0
+  cfg.correction_distillation_weight = 0.0
+  cfg.task_first_constrained = False
+  cfg.brief_ppo_refinement = True
+  cfg.failure_focused_refinement = True
+  cfg.observable_failure_conditioned_refinement = True
+  cfg.actor_new_feature_count = 5
+  cfg.actor_new_feature_learning_rate_multiplier = 1.0
+  cfg.freeze_legacy_actor_input_columns = True
+  cfg.kl_early_stopping = True
+  cfg.fall_redistribution_horizon = 100
+  cfg.fall_redistribution_decay = 0.97
+  cfg.fall_redistribution_amount = 2.0
+  cfg.hard_case_policy_weight = 1.0
+  cfg.success_counterexample_policy_weight = 1.25
+  cfg.matched_success_preservation_beta = beta
+  cfg.clip_param = 0.05
+  cfg.desired_kl = 0.003
+  cfg.num_learning_epochs = 1
+  cfg.num_mini_batches = 4
+  cfg.schedule = "fixed"
+  cfg.entropy_coef = 0.0
+  cfg.normalize_advantage_per_mini_batch = True
 
 
 @dataclass(frozen=True)

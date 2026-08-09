@@ -89,6 +89,35 @@ context，但在 `C4` 停止：粗网格从 severity 0.363636 的 91 次跌倒�
 的 512-episode 校准，使用全新的候选与评估随机性，并写入隔离目录。仍未启动任何
 adaptation、monitor 或正式 audit。
 
+## 开发选择执行修订 / Development-selection execution amendment
+
+All eight frozen development training runs completed under commit `4142ede`.
+The first beta-selection invocation then stopped during read-only runner
+construction, before evaluating any actor or writing any selection metric. The
+loader enabled the already frozen brief-PPO mode but omitted the invariant
+values (`clip=0.05`, target KL `0.003`, one epoch, four minibatches, fixed
+schedule, and the frozen fall-redistribution settings) that the online class
+validates at construction. This is an execution defect, not an observed beta
+outcome.
+
+The committed amendment
+`development/development_selection_execution_amendment.json` permits only a
+shared evaluation-loader configuration fix, its regression tests, this
+disclosure, and the formal-freeze binding needed to carry the fix forward.
+Training artifacts, contexts, seeds, 512 paired episodes, beta grid, RR-RG
+score, tie breaks, formal gates, and all formal-context blindness remain
+unchanged. Development training is not rerun. The selection retry records the
+original training-protocol commit separately from its evaluation-implementation
+commit, and formal revision 2 must bind both before any formal adaptation.
+
+开发阶段 8 个冻结训练均已在提交 `4142ede` 下完成。首次 beta 选择在只读 runner
+构造阶段即停止，尚未评估任何 actor，也没有写出任何选择指标。原因是 loader 启用了
+已冻结的 brief-PPO 模式，却漏设在线算法在构造时强制校验的参数（`clip=0.05`、目标
+KL `0.003`、单 epoch、4 个 minibatch、固定 schedule 和已冻结的跌倒惩罚回传设置）。
+这是执行缺陷，不是观察到 beta 结果后的调整。修订只允许补齐共享的评估 loader
+配置、回归测试、本披露和正式冻结绑定；训练产物、context、seed、512 个配对 episode、
+beta 网格、RR-RG 公式与 tie-break、正式门槛均不改变，也不重跑开发训练。
+
 ## 实验单位 / Experimental unit
 
 One formal unit is exactly:
