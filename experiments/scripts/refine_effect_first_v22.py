@@ -47,6 +47,7 @@ from specialist_v22_protocol import (
   ROLLOUT_STEPS,
   ROUNDS,
   VALIDATION_EPISODES,
+  V22_CONTEXT_SCHEMA_VERSION,
   candidate_confirmation_gate,
   select_best_so_far,
 )
@@ -196,6 +197,8 @@ def _validate_frozen_protocol(
   expected_status = f"prospectively_frozen_before_{args.context_id}_adaptation"
   checks = {
     "protocol_id": protocol.get("protocol_id") == PROTOCOL_ID,
+    "context_schema": protocol.get("context_schema_version")
+    == V22_CONTEXT_SCHEMA_VERSION,
     "revision": isinstance(protocol.get("protocol_revision"), int)
     and protocol["protocol_revision"] >= 1,
     "status": protocol.get("status") == expected_status,

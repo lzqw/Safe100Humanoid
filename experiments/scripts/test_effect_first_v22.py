@@ -28,6 +28,7 @@ from specialist_v22_protocol import (
   PROTOCOL_ID,
   REPORT_BOOTSTRAP_SAMPLES,
   ROUNDS,
+  V22_CONTEXT_SCHEMA_VERSION,
   configure_v22_policy_evaluation_algorithm,
   development_success_gate,
 )
@@ -118,6 +119,7 @@ def main() -> None:
   expected_status = f"prospectively_frozen_before_{context_id}_adaptation"
   if (
     protocol.get("protocol_id") != PROTOCOL_ID
+    or protocol.get("context_schema_version") != V22_CONTEXT_SCHEMA_VERSION
     or protocol.get("status") != expected_status
     or protocol.get("final_test", {}).get("target_paired_episodes")
     != FINAL_TARGET_EPISODES

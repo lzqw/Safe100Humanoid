@@ -23,6 +23,7 @@ from specialist_v22_protocol import (
   EVAL_BATCH_SIZE,
   POLICY_METHOD,
   PROTOCOL_ID,
+  V22_CONTEXT_SCHEMA_VERSION,
   configure_v22_policy_evaluation_algorithm,
 )
 
@@ -88,6 +89,8 @@ def main() -> None:
   calibration = protocol.get("calibration", {})
   checks = {
     "protocol_id": protocol.get("protocol_id") == PROTOCOL_ID,
+    "context_schema": protocol.get("context_schema_version")
+    == V22_CONTEXT_SCHEMA_VERSION,
     "revision": protocol.get("protocol_revision") == 0,
     "status": protocol.get("status")
     == "prospectively_frozen_before_base_only_calibration",

@@ -46,6 +46,7 @@ from specialist_v22_protocol import (
   fresh_randomness_report,
 )
 from src.tasks.stairs_cbf.deployment_context import (
+  V22_CONTEXT_SCHEMA_VERSION,
   V22_CONTEXT_SPECS,
   load_calibrated_v22_context,
 )
@@ -146,6 +147,7 @@ def _common_payload(repo: Path, args: argparse.Namespace) -> dict[str, Any]:
   specs = {context_id: V22_CONTEXT_SPECS[context_id] for context_id in CONTEXTS}
   return {
     "schema_version": 1,
+    "context_schema_version": V22_CONTEXT_SCHEMA_VERSION,
     "protocol_id": PROTOCOL_ID,
     "policy_method": POLICY_METHOD,
     "experiment_class": "development/effect-first, not a formal generalization audit",

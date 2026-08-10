@@ -15,7 +15,10 @@ if str(REPO_ROOT) not in sys.path:
   sys.path.insert(0, str(REPO_ROOT))
 
 from specialist_v21_protocol import configure_v21_policy_evaluation_algorithm
-from src.tasks.stairs_cbf.deployment_context import V22_CONTEXT_SPECS
+from src.tasks.stairs_cbf.deployment_context import (
+  V22_CONTEXT_SCHEMA_VERSION,
+  V22_CONTEXT_SPECS,
+)
 
 PROTOCOL_ID = "safe100-effect-first-development-v22"
 POLICY_METHOD = "Effect-First Best-So-Far PPO v22"
