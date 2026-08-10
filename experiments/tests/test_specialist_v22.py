@@ -1,0 +1,305 @@
+"""Protocol and source-boundary regression tests for v22 effect-first."""
+
+from __future__ import annotations
+
+import ast
+import json
+import sys
+from copy import deepcopy
+from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
+
+REPO = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO / "experiments/scripts"))
+
+from specialist_v22_protocol import (
+  CALIBRATION_EPISODES,
+  CALIBRATION_MINIMUM_PURITY,
+  CALIBRATION_SUCCESS_BOUNDS,
+  CANDIDATE_CONFIRM_EPISODES,
+  CANDIDATE_D0_EPISODES,
+  CANDIDATE_FRACTIONS,
+  CANDIDATE_SCREEN_EPISODES,
+  CONTEXT_CALIBRATION_CANDIDATE_SEEDS,
+  CONTEXTS,
+  FINAL_D0_EPISODES,
+  FINAL_TARGET_EPISODES,
+  REPORT_BOOTSTRAP_SAMPLES,
+  ROUNDS,
+  VALIDATION_EPISODES,
+  all_v22_random_seeds,
+  candidate_confirmation_gate,
+  configure_v22_policy_evaluation_algorithm,
+  development_success_gate,
+  fresh_randomness_report,
+  select_best_so_far,
+)
+from src.tasks.stairs_cbf.deployment_context import (
+  V22_CALIBRATION_KIND,
+  V22_CONTEXT_KIND,
+  V22_CONTEXT_SPECS,
+  generate_v22_specialist_context,
+  validate_calibrated_v22_context,
+  validate_frozen_deployment_context,
+)
+
+
+def test_v22_has_exactly_two_pure_conditional_contexts() -> None:
+  assert CONTEXTS == ("L_effect", "C_effect")
+  assert set(CONTEXTS) == set(V22_CONTEXT_SPECS)
+  assert V22_CONTEXT_SPECS["L_effect"]["family"] == (
+    "pure_lateral_bias_and_pulse"
+  )
+  assert V22_CONTEXT_SPECS["C_effect"]["family"] == "pure_low_foot_friction"
+
+
+def test_v22_candidates_are_deterministic_hashed_and_valid() -> None:
+  hashes = set()
+  for context_id, seeds in CONTEXT_CALIBRATION_CANDIDATE_SEEDS.items():
+    first = generate_v22_specialist_context(context_id, seeds[0])
+    last = generate_v22_specialist_context(context_id, seeds[-1])
+    assert first["kind"] == V22_CONTEXT_KIND
+    assert first["candidate_severity"] == 0.0
+    assert last["candidate_severity"] == 1.0
+    assert validate_frozen_deployment_context(first) == first
+    assert validate_frozen_deployment_context(json.loads(json.dumps(last))) == last
+    assert first["parameters_sha256"] != last["parameters_sha256"]
+    hashes.update((first["parameters_sha256"], last["parameters_sha256"]))
+  assert len(hashes) == 4
+
+
+def test_v22_lateral_varies_only_bias_and_lateral_pulse_magnitude() -> None:
+  seeds = CONTEXT_CALIBRATION_CANDIDATE_SEEDS["L_effect"]
+  first = generate_v22_specialist_context("L_effect", seeds[0])
+  last = generate_v22_specialist_context("L_effect", seeds[-1])
+  assert first["target"] == last["target"]
+  target = first["target"]
+  assert target["action_gain"] == 1.0
+  assert target["action_delay_steps"] == 0
+  assert target["encoder_bias"] == 0.0
+  assert target["command_delay_s"] == 0.0
+  assert target["command_low_pass_s"] == 0.0
+  assert not any(target["action_bias"])
+  changed = {
+    key
+    for key in first["scenario"]
+    if first["scenario"][key] != last["scenario"][key]
+  }
+  assert changed == {
+    "lateral_command_bias",
+    "lateral_pulse_min",
+    "lateral_pulse_max",
+  }
+  for payload in (first, last):
+    scenario = payload["scenario"]
+    assert scenario["yaw_command_bias"] == 0.0
+    assert scenario["yaw_pulse_min"] == 0.0
+    assert scenario["yaw_pulse_max"] == 0.0
+    assert scenario["foot_friction"] == 0.65
+    assert scenario["stair_half_width"] == 1.2
+    assert scenario["centerline_lateral_gain"] == 0.8
+    assert scenario["centerline_heading_gain"] == 1.4
+
+
+def test_v22_contact_varies_only_foot_friction() -> None:
+  seeds = CONTEXT_CALIBRATION_CANDIDATE_SEEDS["C_effect"]
+  first = generate_v22_specialist_context("C_effect", seeds[0])
+  last = generate_v22_specialist_context("C_effect", seeds[-1])
+  assert first["target"] == last["target"]
+  changed = {
+    key
+    for key in first["scenario"]
+    if first["scenario"][key] != last["scenario"][key]
+  }
+  assert changed == {"foot_friction"}
+  for payload in (first, last):
+    scenario = payload["scenario"]
+    assert scenario["contact_observation_delay_steps"] == 0
+    assert scenario["gait_phase_offset"] == 0.0
+    assert scenario["left_response_scale"] == 1.0
+    assert scenario["right_response_scale"] == 1.0
+    assert scenario["lateral_command_bias"] == 0.0
+
+
+def _calibrated_context() -> dict:
+  context_id = "L_effect"
+  seeds = list(CONTEXT_CALIBRATION_CANDIDATE_SEEDS[context_id])
+  payload = generate_v22_specialist_context(context_id, seeds[0])
+  attempt = {
+    "candidate_seed": seeds[0],
+    "base_policy_only": True,
+    "num_episodes": 512,
+    "success_rate": 0.70,
+    "fall_count": 154,
+    "target_failure_fraction": 0.90,
+    "target_failure_type": "lateral_heading_drift",
+    "parameters_sha256": payload["parameters_sha256"],
+    "qualifies": True,
+  }
+  payload["calibration"] = {
+    "kind": V22_CALIBRATION_KIND,
+    "adapted_policy_evaluations_used": False,
+    "success_rate_bounds": [0.65, 0.75],
+    "minimum_target_failure_fraction": 0.85,
+    "minimum_fall_count": 100,
+    "episodes_per_candidate": 512,
+    "candidate_seeds": seeds,
+    "attempts": [attempt],
+    "selected_candidate_seed": seeds[0],
+    "selected_parameters_sha256": payload["parameters_sha256"],
+  }
+  return payload
+
+
+def test_v22_calibration_validator_enforces_first_base_only_qualifier() -> None:
+  payload = _calibrated_context()
+  assert validate_calibrated_v22_context(payload) == payload
+  adapted = deepcopy(payload)
+  adapted["calibration"]["adapted_policy_evaluations_used"] = True
+  with pytest.raises(ValueError, match="adapted policy"):
+    validate_calibrated_v22_context(adapted)
+  skipped = deepcopy(payload)
+  first = deepcopy(skipped["calibration"]["attempts"][0])
+  first["qualifies"] = True
+  second_seed = skipped["calibration"]["candidate_seeds"][1]
+  second_context = generate_v22_specialist_context("L_effect", second_seed)
+  second = deepcopy(first)
+  second.update(
+    candidate_seed=second_seed,
+    parameters_sha256=second_context["parameters_sha256"],
+  )
+  skipped["calibration"]["attempts"] = [first, second]
+  skipped["calibration"]["selected_candidate_seed"] = second_seed
+  skipped["calibration"]["selected_parameters_sha256"] = second_context[
+    "parameters_sha256"
+  ]
+  skipped.update(second_context)
+  skipped["calibration"] = deepcopy(payload["calibration"])
+  skipped["calibration"].update(
+    attempts=[first, second],
+    selected_candidate_seed=second_seed,
+    selected_parameters_sha256=second_context["parameters_sha256"],
+  )
+  with pytest.raises(ValueError, match="skipped an earlier"):
+    validate_calibrated_v22_context(skipped)
+
+
+def test_v22_counts_and_gates_match_effect_first_design() -> None:
+  assert CALIBRATION_EPISODES == 512
+  assert CALIBRATION_SUCCESS_BOUNDS == (0.65, 0.75)
+  assert CALIBRATION_MINIMUM_PURITY == 0.85
+  assert ROUNDS == 8
+  assert CANDIDATE_FRACTIONS == (0.5, 1.0, 1.5)
+  assert CANDIDATE_SCREEN_EPISODES == 64
+  assert CANDIDATE_CONFIRM_EPISODES == 128
+  assert CANDIDATE_D0_EPISODES == 128
+  assert VALIDATION_EPISODES == 256
+  assert FINAL_TARGET_EPISODES == 512
+  assert FINAL_D0_EPISODES == 256
+  assert REPORT_BOOTSTRAP_SAMPLES == 2_000
+  accepted, reasons = candidate_confirmation_gate(
+    success_delta=0.01, fall_delta=0.03, finite=True
+  )
+  assert accepted is True
+  assert not reasons
+  rejected, _ = candidate_confirmation_gate(
+    success_delta=0.0, fall_delta=0.0, finite=True
+  )
+  assert rejected is False
+  gate = development_success_gate(
+    target_success_delta=0.03,
+    target_fall_delta=0.01,
+    d0_success_delta=-0.05,
+  )
+  assert gate["passed"] is True
+  assert gate["strict_zero_fall_increase_passed"] is False
+
+
+def test_v22_best_so_far_uses_validation_success_fall_and_earlier_tie() -> None:
+  rows = [
+    {"round": 0, "success_rate": 0.70, "fall_rate": 0.30, "d0_safe": True},
+    {"round": 2, "success_rate": 0.75, "fall_rate": 0.31, "d0_safe": True},
+    {"round": 4, "success_rate": 0.76, "fall_rate": 0.33, "d0_safe": True},
+    {"round": 6, "success_rate": 0.75, "fall_rate": 0.31, "d0_safe": True},
+  ]
+  assert select_best_so_far(rows)["round"] == 2
+  rows[1]["d0_safe"] = False
+  assert select_best_so_far(rows)["round"] == 6
+
+
+def test_v22_evaluation_configuration_is_beta_zero_v20_v21_core() -> None:
+  cfg = SimpleNamespace()
+  configure_v22_policy_evaluation_algorithm(cfg)
+  assert cfg.matched_success_preservation_beta == 0.0
+  assert cfg.brief_ppo_refinement is True
+  assert cfg.observable_failure_conditioned_refinement is True
+  assert cfg.actor_new_feature_count == 5
+  assert cfg.freeze_legacy_actor_input_columns is True
+  assert cfg.num_learning_epochs == 1
+  assert cfg.num_mini_batches == 4
+
+
+def test_v22_expanded_randomness_is_fresh_and_unique_against_history() -> None:
+  seeds = all_v22_random_seeds()
+  assert len(seeds) > 100
+  report = fresh_randomness_report(REPO)
+  assert report["passed"] is True
+  assert report["collisions"] == []
+
+
+def test_v22_training_is_fixed_budget_and_monitor_is_not_a_candidate_gate() -> None:
+  path = REPO / "experiments/scripts/refine_effect_first_v22.py"
+  tree = ast.parse(path.read_text())
+  loops = [
+    node
+    for node in ast.walk(tree)
+    if isinstance(node, ast.For)
+    and isinstance(node.target, ast.Name)
+    and node.target.id == "round_index"
+  ]
+  training_loops = [
+    node
+    for node in loops
+    if any(
+      isinstance(child, ast.Call)
+      and isinstance(child.func, ast.Name)
+      and child.func.id == "_save_checkpoint"
+      for child in ast.walk(node)
+    )
+  ]
+  assert len(training_loops) == 1
+  assert not any(isinstance(node, ast.Break) for node in ast.walk(training_loops[0]))
+  source = path.read_text()
+  assert "validation_monitor_used_for_candidate_or_training" in source
+  assert '"validation_monitor_used_for_candidate_or_training": False' in source
+  assert "candidate_confirmation_gate(" in source
+  assert "confirmation_block_gate" not in source
+  assert "matched_success_preservation_beta = 0.0" in source
+
+
+def test_v22_final_test_and_plot_scope_are_minimal() -> None:
+  final_source = (REPO / "experiments/scripts/test_effect_first_v22.py").read_text()
+  plot_source = (REPO / "experiments/scripts/plot_effect_first_v22.py").read_text()
+  assert "FINAL_TARGET_EPISODES" in final_source
+  assert "FINAL_D0_EPISODES" in final_source
+  assert 'POLICY_ROLES = ("base", "best")' in final_source
+  assert '"confidence_intervals_are_report_only": True' in final_source
+  assert plot_source.count("_save(figure, output_dir, stem)") == 1
+  for stem in (
+    "validation_learning_curve",
+    "base_vs_best_final",
+    "repair_vs_regression",
+    "failure_specific_telemetry",
+  ):
+    assert f'("{stem}",' in plot_source
+
+
+def test_v22_contact_freeze_requires_passed_lateral_result() -> None:
+  source = (
+    REPO / "experiments/scripts/freeze_effect_first_v22_protocol.py"
+  ).read_text()
+  assert 'if args.context_id == "C_effect":' in source
+  assert 'lateral.get("development_gate", {}).get("passed") is not True' in source
+  assert "contact cannot start because the lateral gate did not pass" in source

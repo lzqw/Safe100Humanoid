@@ -45,6 +45,33 @@ V21_CONTEXT_KIND = "local_matched_success_preservation_v21"
 V21_CALIBRATION_KIND = (
   "base_policy_context_family_first_qualifying_v21"
 )
+V22_CONTEXT_SCHEMA_VERSION = 1
+V22_CONTEXT_KIND = "effect_first_development_v22"
+V22_CALIBRATION_KIND = (
+  "base_policy_pure_context_first_qualifying_v22"
+)
+V22_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
+  "L_effect": {
+    "mode": "lateral",
+    "family": "pure_lateral_bias_and_pulse",
+    "candidate_seed_prefix": 510,
+    "candidate_index_bounds": [8, 23],
+    "direction": 1,
+    "ranges": {
+      "lateral_bias_abs": [0.080, 0.200],
+      "lateral_pulse_min": [0.120, 0.250],
+      "lateral_pulse_max": [0.280, 0.550],
+    },
+  },
+  "C_effect": {
+    "mode": "contact_stability",
+    "family": "pure_low_foot_friction",
+    "candidate_seed_prefix": 511,
+    "candidate_index_bounds": [8, 23],
+    "direction": -1,
+    "ranges": {"foot_friction": [0.440, 0.250]},
+  },
+}
 V21_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
   "L_dev": {
     "mode": "lateral",
@@ -394,7 +421,7 @@ def _canonical_json(value: Mapping[str, Any]) -> bytes:
 
 def deployment_context_sha256(payload: Mapping[str, Any]) -> str:
   """Hash only the frozen parameters and schema, excluding calibration metrics."""
-  if payload["kind"] == V21_CONTEXT_KIND:
+  if payload["kind"] in (V21_CONTEXT_KIND, V22_CONTEXT_KIND):
     identity = {
       "kind": payload["kind"],
       "schema_version": payload["schema_version"],
@@ -1333,6 +1360,153 @@ def generate_v21_specialist_context(
   return payload
 
 
+def generate_v22_specialist_context(
+  context_id: str, candidate_seed: int
+) -> dict[str, Any]:
+  """Generate one pure, one-dimensional v22 effect-first candidate.
+
+  The lateral family changes only lateral command bias and lateral pulse
+  magnitude.  The contact family changes only foot friction.  All geometry,
+  action, sensing, command-dynamics, phase, and response-asymmetry fields stay
+  nominal and identical across candidates.
+  """
+  if context_id not in V22_CONTEXT_SPECS:
+    raise ValueError(f"unsupported v22 context ID: {context_id!r}")
+  spec = V22_CONTEXT_SPECS[context_id]
+  lower, upper = (int(value) for value in spec["candidate_index_bounds"])
+  candidate_index = candidate_seed % 100
+  expected_prefix = int(spec["candidate_seed_prefix"])
+  if (
+    candidate_seed // 100 != expected_prefix
+    or not lower <= candidate_index <= upper
+  ):
+    raise ValueError(
+      f"v22 {context_id} candidate seeds must be "
+      f"{expected_prefix * 100 + lower}--{expected_prefix * 100 + upper}"
+    )
+  severity = (candidate_index - lower) / float(upper - lower)
+  ranges = spec["ranges"]
+  mode = str(spec["mode"])
+  direction = float(spec["direction"])
+  if direction not in (-1.0, 1.0):
+    raise ValueError(f"v22 {context_id} direction must be -1 or +1")
+
+  if mode == "lateral":
+    num_steps = 11
+    target = DeploymentContextParameters(
+      num_steps=num_steps,
+      rise_profile=(0.138,) * num_steps,
+      tread_profile=(0.338,) * num_steps,
+      command_forward_scale=1.0,
+      command_delay_s=0.0,
+      command_low_pass_s=0.0,
+      action_gain=1.0,
+      action_bias=(0.0,) * 12,
+      action_delay_steps=0,
+      encoder_bias=0.0,
+      episode_length_s=40.0,
+    )
+    lateral_bias = direction * _v21_range_value(
+      ranges, "lateral_bias_abs", severity, 0.0
+    )
+    lateral_pulse_min = _v21_range_value(
+      ranges, "lateral_pulse_min", severity, 0.0
+    )
+    lateral_pulse_max = _v21_range_value(
+      ranges, "lateral_pulse_max", severity, 0.0
+    )
+    scenario = V19ScenarioParameters(
+      disturbance_pulses_with_centering=True,
+      lateral_command_bias=round(lateral_bias, 6),
+      yaw_command_bias=0.0,
+      lateral_pulse_min=round(lateral_pulse_min, 6),
+      lateral_pulse_max=round(lateral_pulse_max, 6),
+      yaw_pulse_min=0.0,
+      yaw_pulse_max=0.0,
+      pulse_interval_min_s=2.0,
+      pulse_interval_max_s=3.4,
+      pulse_duration_min_s=0.30,
+      pulse_duration_max_s=0.55,
+      centerline_lateral_gain=0.80,
+      centerline_heading_gain=1.40,
+      centerline_max_lateral_velocity=0.16,
+      centerline_max_yaw_velocity=0.45,
+      toe_margin=0.075,
+      foot_friction=0.65,
+      contact_observation_delay_steps=0,
+      gait_phase_offset=0.0,
+      left_response_scale=1.0,
+      right_response_scale=1.0,
+      recovery_reward_scale=0.50,
+      edge_penalty_scale=0.20,
+      centerline_heading_reference_bias=0.0,
+      stair_half_width=1.20,
+    )
+  else:
+    num_steps = 24
+    target = DeploymentContextParameters(
+      num_steps=num_steps,
+      rise_profile=(0.138,) * num_steps,
+      tread_profile=(0.355,) * num_steps,
+      command_forward_scale=1.0,
+      command_delay_s=0.0,
+      command_low_pass_s=0.0,
+      action_gain=1.0,
+      action_bias=(0.0,) * 12,
+      action_delay_steps=0,
+      encoder_bias=0.0,
+      episode_length_s=40.0,
+    )
+    scenario = V19ScenarioParameters(
+      disturbance_pulses_with_centering=False,
+      lateral_command_bias=0.0,
+      yaw_command_bias=0.0,
+      lateral_pulse_min=0.0,
+      lateral_pulse_max=0.0,
+      yaw_pulse_min=0.0,
+      yaw_pulse_max=0.0,
+      pulse_interval_min_s=3.0,
+      pulse_interval_max_s=7.0,
+      pulse_duration_min_s=0.2,
+      pulse_duration_max_s=0.6,
+      centerline_lateral_gain=2.0,
+      centerline_heading_gain=3.0,
+      centerline_max_lateral_velocity=0.50,
+      centerline_max_yaw_velocity=1.0,
+      toe_margin=0.060,
+      foot_friction=round(
+        _v21_range_value(ranges, "foot_friction", severity, 0.65), 6
+      ),
+      contact_observation_delay_steps=0,
+      gait_phase_offset=0.0,
+      left_response_scale=1.0,
+      right_response_scale=1.0,
+      recovery_reward_scale=0.40,
+      edge_penalty_scale=0.0,
+      centerline_heading_reference_bias=0.0,
+      stair_half_width=1.20,
+    )
+
+  _validate_parameters(target)
+  _validate_v19_scenario(mode, scenario, v21=True)
+  family_spec_sha256 = hashlib.sha256(_canonical_json(spec)).hexdigest()
+  payload: dict[str, Any] = {
+    "kind": V22_CONTEXT_KIND,
+    "schema_version": V22_CONTEXT_SCHEMA_VERSION,
+    "calibration_candidate_seed": int(candidate_seed),
+    "specialist_mode": mode,
+    "context_id": context_id,
+    "context_family": spec["family"],
+    "formal_context": False,
+    "family_spec_sha256": family_spec_sha256,
+    "candidate_severity": round(severity, 12),
+    "target": asdict(target),
+    "scenario": asdict(scenario),
+  }
+  payload["parameters_sha256"] = deployment_context_sha256(payload)
+  return payload
+
+
 def _validated_deployment_parameters(raw: Mapping[str, Any]) -> dict[str, Any]:
   parameters = DeploymentContextParameters(
     num_steps=int(raw["num_steps"]),
@@ -1483,7 +1657,54 @@ def _validate_frozen_v21_context(payload: Mapping[str, Any]) -> dict[str, Any]:
   }
 
 
+def _validate_frozen_v22_context(payload: Mapping[str, Any]) -> dict[str, Any]:
+  if payload.get("schema_version") != V22_CONTEXT_SCHEMA_VERSION:
+    raise ValueError("unexpected v22 context schema version")
+  context_id = str(payload.get("context_id"))
+  if context_id not in V22_CONTEXT_SPECS:
+    raise ValueError("v22 context ID is missing or invalid")
+  seed = payload.get("calibration_candidate_seed")
+  if not isinstance(seed, int):
+    raise ValueError("v22 context candidate seed is missing")
+  target = payload.get("target")
+  scenario_raw = payload.get("scenario")
+  if not isinstance(target, Mapping) or not isinstance(scenario_raw, Mapping):
+    raise ValueError("v22 context target or scenario is missing")
+  scenario = _v19_scenario_from_mapping(scenario_raw)
+  mode = str(payload.get("specialist_mode"))
+  _validate_v19_scenario(mode, scenario, v21=True)
+  normalized = dict(payload)
+  normalized["target"] = _validated_deployment_parameters(target)
+  normalized["scenario"] = asdict(scenario)
+  expected = generate_v22_specialist_context(context_id, seed)
+  immutable_fields = (
+    "kind",
+    "schema_version",
+    "calibration_candidate_seed",
+    "specialist_mode",
+    "context_id",
+    "context_family",
+    "formal_context",
+    "family_spec_sha256",
+    "candidate_severity",
+    "target",
+    "scenario",
+    "parameters_sha256",
+  )
+  differing = [
+    field for field in immutable_fields if normalized.get(field) != expected[field]
+  ]
+  if differing:
+    raise ValueError(f"v22 context differs from its frozen family: {differing}")
+  return {
+    **normalized,
+    **{field: expected[field] for field in immutable_fields},
+  }
+
+
 def validate_frozen_deployment_context(payload: Mapping[str, Any]) -> dict[str, Any]:
+  if payload.get("kind") == V22_CONTEXT_KIND:
+    return _validate_frozen_v22_context(payload)
   if payload.get("kind") == V21_CONTEXT_KIND:
     return _validate_frozen_v21_context(payload)
   if payload.get("kind") == V19_CONTEXT_KIND:
@@ -1569,7 +1790,10 @@ def validate_calibrated_deployment_context(
     raise ValueError("selected calibration hash differs from frozen context")
   if calibration.get("selected_candidate_seed") != selected["candidate_seed"]:
     raise ValueError("calibration selected-candidate metadata is inconsistent")
-  if calibration.get("selected_parameters_sha256") != output["parameters_sha256"]:
+  if (
+    calibration.get("selected_parameters_sha256")
+    != output["parameters_sha256"]
+  ):
     raise ValueError("calibration selected hash is inconsistent")
   output["calibration"] = dict(calibration)
   return output
@@ -1750,6 +1974,78 @@ def load_calibrated_v21_context(path: str | Path) -> dict[str, Any]:
   return validate_calibrated_v21_context(payload)
 
 
+def validate_calibrated_v22_context(
+  payload: Mapping[str, Any],
+) -> dict[str, Any]:
+  """Validate first-qualifying, base-only v22 effect-first calibration."""
+  if payload.get("kind") != V22_CONTEXT_KIND:
+    raise ValueError("expected a v22 effect-first deployment context")
+  output = _validate_frozen_v22_context(payload)
+  calibration = payload.get("calibration")
+  if not isinstance(calibration, Mapping):
+    raise ValueError("v22 context is missing calibration evidence")
+  if calibration.get("kind") != V22_CALIBRATION_KIND:
+    raise ValueError("unexpected v22 calibration kind")
+  if calibration.get("adapted_policy_evaluations_used") is not False:
+    raise ValueError("v22 context calibration used an adapted policy")
+  if calibration.get("success_rate_bounds") != [0.65, 0.75]:
+    raise ValueError("v22 success-rate bounds must be [0.65, 0.75]")
+  if calibration.get("minimum_target_failure_fraction") != 0.85:
+    raise ValueError("v22 target-failure purity must be at least 0.85")
+  if calibration.get("minimum_fall_count") != 100:
+    raise ValueError("v22 calibration must require at least 100 falls")
+  if calibration.get("episodes_per_candidate") != 512:
+    raise ValueError("v22 calibration requires exactly 512 episodes")
+  candidate_seeds = calibration.get("candidate_seeds")
+  attempts = calibration.get("attempts")
+  if (
+    not isinstance(candidate_seeds, list)
+    or not candidate_seeds
+    or candidate_seeds != sorted(set(candidate_seeds))
+  ):
+    raise ValueError("v22 calibration seeds are missing or unordered")
+  if not isinstance(attempts, list) or not attempts:
+    raise ValueError("v22 calibration attempts are missing")
+  if len(attempts) > len(candidate_seeds):
+    raise ValueError("v22 calibration attempts exceed candidate seeds")
+  target_type = V19_SPECIALIST_FAILURE_TYPES[output["specialist_mode"]]
+  for index, attempt in enumerate(attempts):
+    if attempt.get("candidate_seed") != candidate_seeds[index]:
+      raise ValueError("v22 calibration did not inspect candidates in order")
+    if attempt.get("base_policy_only") is not True:
+      raise ValueError("v22 calibration attempt was not base-policy only")
+    if int(attempt.get("num_episodes", 0)) != 512:
+      raise ValueError("v22 calibration attempt does not have 512 episodes")
+    qualifies = (
+      0.65 <= float(attempt.get("success_rate", -1.0)) <= 0.75
+      and int(attempt.get("fall_count", -1)) >= 100
+      and float(attempt.get("target_failure_fraction", -1.0)) >= 0.85
+      and attempt.get("target_failure_type") == target_type
+    )
+    if bool(attempt.get("qualifies")) is not qualifies:
+      raise ValueError("v22 calibration qualification metadata is inconsistent")
+    if index < len(attempts) - 1 and qualifies:
+      raise ValueError("v22 calibration skipped an earlier qualifying context")
+    if index == len(attempts) - 1 and not qualifies:
+      raise ValueError("selected v22 context fails calibration gates")
+  selected = attempts[-1]
+  if selected["candidate_seed"] != output["calibration_candidate_seed"]:
+    raise ValueError("selected v22 seed differs from frozen context")
+  if selected.get("parameters_sha256") != output["parameters_sha256"]:
+    raise ValueError("selected v22 hash differs from frozen context")
+  if calibration.get("selected_candidate_seed") != selected["candidate_seed"]:
+    raise ValueError("v22 selected-candidate metadata is inconsistent")
+  if calibration.get("selected_parameters_sha256") != output["parameters_sha256"]:
+    raise ValueError("v22 selected-hash metadata is inconsistent")
+  output["calibration"] = dict(calibration)
+  return output
+
+
+def load_calibrated_v22_context(path: str | Path) -> dict[str, Any]:
+  payload = json.loads(Path(path).resolve().read_text())
+  return validate_calibrated_v22_context(payload)
+
+
 def configure_v19_actor_interface(
   cfg,
   payload: Mapping[str, Any],
@@ -1758,8 +2054,12 @@ def configure_v19_actor_interface(
 ) -> dict[str, object]:
   """Install the v19 interface and, only on target, its gait-clock shift."""
   validated = validate_frozen_deployment_context(payload)
-  if validated.get("kind") not in (V19_CONTEXT_KIND, V21_CONTEXT_KIND):
-    raise ValueError("observable actor interface requires a v19/v21 context")
+  if validated.get("kind") not in (
+    V19_CONTEXT_KIND,
+    V21_CONTEXT_KIND,
+    V22_CONTEXT_KIND,
+  ):
+    raise ValueError("observable actor interface requires a v19/v21/v22 context")
   mode = validated["specialist_mode"]
   scenario = V19ScenarioParameters(**validated["scenario"])
   from .config import configure_v19_observable_refinement_env
@@ -1822,6 +2122,7 @@ def apply_frozen_deployment_context(
   observable_specialist = validated.get("kind") in (
     V19_CONTEXT_KIND,
     V21_CONTEXT_KIND,
+    V22_CONTEXT_KIND,
   )
   specialist = legacy_specialist or observable_specialist
   if role not in ({"target"} if specialist else {"target", "neighbor"}):
