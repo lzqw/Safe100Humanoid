@@ -122,6 +122,28 @@ def _verify_git_blob(repo: Path, path: Path, commit: str) -> dict[str, str]:
   return {"file": relative, "sha256": digest, "git_commit": commit}
 
 
+def _verified_supersession_depth(repo: Path, prior: dict[str, Any]) -> int:
+  """Verify every nested protocol binding and return the full chain depth."""
+  depth = 1
+  cursor = prior
+  seen: set[tuple[str, str]] = set()
+  while "superseded_precalibration_boundary" in cursor:
+    reference = cursor["superseded_precalibration_boundary"].get("protocol")
+    if not isinstance(reference, dict):
+      raise RuntimeError("invalid nested v22 supersession protocol reference")
+    key = (str(reference.get("file")), str(reference.get("git_commit")))
+    if key in seen:
+      raise RuntimeError("v22 supersession protocol chain contains a cycle")
+    seen.add(key)
+    path = (repo / key[0]).resolve()
+    binding = _verify_git_blob(repo, path, key[1])
+    if binding["sha256"] != reference.get("sha256"):
+      raise RuntimeError("nested v22 supersession protocol hash differs")
+    cursor = json.loads(path.read_text())
+    depth += 1
+  return depth
+
+
 def _parse_args() -> argparse.Namespace:
   parser = argparse.ArgumentParser()
   parser.add_argument("--repo", type=Path, required=True)
@@ -264,6 +286,7 @@ def _common_payload(repo: Path, args: argparse.Namespace) -> dict[str, Any]:
 def _precalibration(repo: Path, args: argparse.Namespace) -> dict[str, Any]:
   payload = _common_payload(repo, args)
   superseded = None
+  supersession_depth = 0
   supplied = (
     args.superseded_protocol is not None,
     args.superseded_commit is not None,
@@ -291,6 +314,7 @@ def _precalibration(repo: Path, args: argparse.Namespace) -> dict[str, Any]:
       is not False
     ):
       raise RuntimeError("invalid v22 superseded precalibration protocol")
+    supersession_depth = _verified_supersession_depth(repo, prior)
     superseded = {
       "protocol": binding,
       "disposition": "superseded_before_first_base_policy_episode",
@@ -301,10 +325,11 @@ def _precalibration(repo: Path, args: argparse.Namespace) -> dict[str, Any]:
       "external_calibration_artifacts_created": False,
       "waiting_queue_terminated_before_gpu_execution": True,
       "historical_v17_v21_results_modified": False,
+      "verified_protocol_chain_depth": supersession_depth,
     }
   payload.update(
     protocol_revision=0,
-    precalibration_boundary_revision=1 if superseded is not None else 0,
+    precalibration_boundary_revision=supersession_depth,
     status="prospectively_frozen_before_base_only_calibration",
     fresh_evidence_boundary={
       "base_only_calibration_outcomes_seen": False,

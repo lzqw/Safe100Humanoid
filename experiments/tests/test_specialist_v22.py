@@ -506,6 +506,8 @@ def test_v22_contact_freeze_requires_passed_lateral_result() -> None:
   assert '"--superseded-before-any-base-evaluation"' in source
   assert '"--supersession-reason"' in source
   assert '"superseded_before_first_base_policy_episode"' in source
+  assert '"verified_protocol_chain_depth"' in source
+  assert "_verified_supersession_depth" in source
   assert '"base_policy_episode_outcomes_observed": False' in source
   assert '"context_schema_version": V22_CONTEXT_SCHEMA_VERSION' in source
   calibration_source = (
