@@ -62,6 +62,15 @@ A resumed second round improved D0/DQN but regressed 512-episode DQ success and
 was therefore rolled back, demonstrating that acceptance remains transactional
 across rounds.
 
+The later prospectively frozen specialist v21 study selected beta 0 in its
+excluded development contexts. Its full 10-context formal run completed, but
+neither the lateral nor contact-stability v21 claim passed the registered
+cross-context gate. The negative result, paired intervals, D0 rollbacks,
+mechanism diagnostics, figures, and integrity manifests are reported in
+[the v21 formal results](docs/FORMAL_V21_RESULTS.md); see also
+[the frozen v21 protocol](docs/DEPLOYMENT_V21_PROTOCOL.md) and
+[the v21 development result](docs/DEVELOPMENT_V21_RESULTS.md).
+
 ## One-seed result
 
 Evaluation uses a fixed 13 cm six-step staircase, 128 deterministic episodes,

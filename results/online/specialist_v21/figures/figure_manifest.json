@@ -1,0 +1,60 @@
+{
+  "figures": [
+    {
+      "bytes": 99254,
+      "path": "results/online/specialist_v21/figures/formal_context_forest.png",
+      "sha256": "804de0361f21144a614a26b4628778c5d9a4491e054c57a3ff3914b5a8929702"
+    },
+    {
+      "bytes": 19460,
+      "path": "results/online/specialist_v21/figures/formal_context_forest.pdf",
+      "sha256": "8540f32f733b1d491ba9550093a9a6e87e8179f9221d1d74e4989afd70d99fb9"
+    },
+    {
+      "bytes": 86706,
+      "path": "results/online/specialist_v21/figures/repair_regression_selectivity.png",
+      "sha256": "dce2dbd522582784ebb1d91edd00bdcf3e6e0382ec345ad66d91ccd1d14e4ed2"
+    },
+    {
+      "bytes": 16726,
+      "path": "results/online/specialist_v21/figures/repair_regression_selectivity.pdf",
+      "sha256": "b41c803f31c95e297571f6e21bce8d391e733cb387b7b141fd01b085ca8a3702"
+    },
+    {
+      "bytes": 242590,
+      "path": "results/online/specialist_v21/figures/unseen_monitor_learning_curve.png",
+      "sha256": "8aa014e998a30ef77b03dbb4ec8bd6322617e6ef10424b4f314bd5d9272222dd"
+    },
+    {
+      "bytes": 26182,
+      "path": "results/online/specialist_v21/figures/unseen_monitor_learning_curve.pdf",
+      "sha256": "d48752627dda150e358091c0eb08a896048d62c450896946be9222b04ecede06"
+    },
+    {
+      "bytes": 629342,
+      "path": "results/online/specialist_v21/figures/mechanism_lateral.png",
+      "sha256": "11293a60d0daa5e59ea60d42418abb1dd8f997421ef01bdbd1aa4e67a5a24794"
+    },
+    {
+      "bytes": 49667,
+      "path": "results/online/specialist_v21/figures/mechanism_lateral.pdf",
+      "sha256": "95ff117907518c0795adf8169284303ca455b3e9bfcdad16108250a55cab9ec3"
+    },
+    {
+      "bytes": 800259,
+      "path": "results/online/specialist_v21/figures/mechanism_contact_stability.png",
+      "sha256": "40f6cd6aa30c5ab2acddbf4af025a4bb307e4e6df1284cc8c071b7d91e8753eb"
+    },
+    {
+      "bytes": 47508,
+      "path": "results/online/specialist_v21/figures/mechanism_contact_stability.pdf",
+      "sha256": "6b790fcaa413259a61be3389df688c6d49067c1f0f039b9b2522065600517fb1"
+    }
+  ],
+  "formal_results": {
+    "path": "results/online/specialist_v21/formal/formal_results.json",
+    "sha256": "1d664ad127e4a4752ab70909859eedda80ac928899680c4752e5c735cec29972"
+  },
+  "protocol_id": "safe100-deployment-unit-local-matched-success-v21",
+  "schema_version": 1
+}

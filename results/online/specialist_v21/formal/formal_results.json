@@ -1,0 +1,1037 @@
+{
+  "all_mode_gates_passed": false,
+  "audit_bindings": {
+    "C1": {
+      "adaptation_seed": 171201,
+      "context_parameters_sha256": "daee0d16e9534265f6736d6086e20cf49799156f10133f8175e68427aff090ee",
+      "inline_telemetry_sha256": "f283d072f1aab6929e3aa60a919bc6bdbe108a6f6e329ab2864f2a0b39592db1",
+      "paired_episode_sha256": "886bf7e49b7b1cc229c239d7adafbbd81fbb5066460747feaaf242ee996be797",
+      "selected_beta": 0.0,
+      "summary_sha256": "71e1542a86f487cb302526f2a815e32914c8b85582ce19d7a021a82b2eb10309"
+    },
+    "C2": {
+      "adaptation_seed": 171202,
+      "context_parameters_sha256": "d510ba5e88687c9bfbadefc90f07eeb63970366bc4e1df0a42e492e05c8fe2f0",
+      "inline_telemetry_sha256": "b61165324f43d3add3a2d178d9614ce86b710232c2d0958c85610cbf9de9ce87",
+      "paired_episode_sha256": "2c7629346300e543e716f7089a728e2acc1235d521d1ae9977b5947caffd81c5",
+      "selected_beta": 0.0,
+      "summary_sha256": "5b5b719c2b6c5ad4d4467462a6b05ee769d4a6d4a4990d5cad89b6e6674a1076"
+    },
+    "C3": {
+      "adaptation_seed": 171203,
+      "context_parameters_sha256": "532cc45c6054a292cd7f35e303e4f557712694fa20ba839ea49a80c481185fb6",
+      "inline_telemetry_sha256": "938d7383ef2ef80c88b15ec2c04731104bfca6d6be06bf0f10ef84b7a1fe4d09",
+      "paired_episode_sha256": "d679d544c1fd850769daea4495dcab5b22355f53bbce9e1105e850f6bcc57a18",
+      "selected_beta": 0.0,
+      "summary_sha256": "19c5f206c766af62c42ea16f3d230abfc1ad8bf0f0a60edc22081f4a95d5040c"
+    },
+    "C4": {
+      "adaptation_seed": 171204,
+      "context_parameters_sha256": "39be704264c04fd86ce39e5042a291d814f955d5631cbb96bbcde774d1e9b54c",
+      "inline_telemetry_sha256": "f53507fad604134f321219c906a4d64bdca4fdc25f31da92709d6121e102d3b6",
+      "paired_episode_sha256": "bac8610980cbd821ca7a04c8a2c23c6c3abd7cef94a4c011919df4e4b720c7ed",
+      "selected_beta": 0.0,
+      "summary_sha256": "f6d67d4a1f24012c54d3b12883f287846c99f384ffce21692b0b9f343bb6ce25"
+    },
+    "C5": {
+      "adaptation_seed": 171205,
+      "context_parameters_sha256": "42a5275b8907cdfe676374addb73e68052c249715bef0efa691f2e225e996b6e",
+      "inline_telemetry_sha256": "525155878f6e87ad7156783a563a94add7c1d7ad4242063a6178a781583325fd",
+      "paired_episode_sha256": "6798d5baca765736f0553080081208e18724565eceb1be2c5e5325a156985774",
+      "selected_beta": 0.0,
+      "summary_sha256": "834093c53ad2e25a817857c4f0b84774ef551f4c3765dfaef53b951dea2e6f7d"
+    },
+    "L1": {
+      "adaptation_seed": 171101,
+      "context_parameters_sha256": "4bcc70a32250201aee6e1a2ad2cc08bc306e951a903e312f82d399037083185b",
+      "inline_telemetry_sha256": "c8eb9b4c7c5e18440b8df5848609f98252424b7f3a5f58d8fbc386ff8bd701b8",
+      "paired_episode_sha256": "e569eda09221d216fc8c1f77b1d4b4e0c0de1c55ffca63f39270702da2658110",
+      "selected_beta": 0.0,
+      "summary_sha256": "91ea2a8bc28185dde829b8b0ade163e28452e31169fae4a6f3d4e857de29af70"
+    },
+    "L2": {
+      "adaptation_seed": 171102,
+      "context_parameters_sha256": "0f4e9786504ceacd6074ef66369e01c6a6e26df249da36155e86ed6ccd174a73",
+      "inline_telemetry_sha256": "f788712560bb0ea06b5b81138a0738e0ac9c838028d703877116bfb9363b492d",
+      "paired_episode_sha256": "a81d4b7b4c20f94d7a44402e3b3e709b4046738e8d99e3c9ed0849ab3ca49161",
+      "selected_beta": 0.0,
+      "summary_sha256": "ff8f4c3e2fc898c1ab24dbf1c97d6de70cc9dbbf7667f086a423dec131c3ad6c"
+    },
+    "L3": {
+      "adaptation_seed": 171103,
+      "context_parameters_sha256": "f18a5045c432ca992f6c07fbe90e647828b6758eab13ac5d2df2ecd6cbc75b2c",
+      "inline_telemetry_sha256": "acee16edb94b2367ff6b2ff52fbf6f226348557cf5c8013c7dc2036e9b46b883",
+      "paired_episode_sha256": "c50742cce58ed1bf9d65e85a3de65f093a2df9f8d55b787319ddd9ec6509c3f8",
+      "selected_beta": 0.0,
+      "summary_sha256": "69ba4cd72d2f2f680b4aa0908e14b1c29998e890fdf20d9ba9c63ea9ee2e5207"
+    },
+    "L4": {
+      "adaptation_seed": 171104,
+      "context_parameters_sha256": "9b1767a0de84b41833d05f8fd24e5aed98468771ed2ab63082242f65bda6901d",
+      "inline_telemetry_sha256": "be268deee575d188830b1607e8d665c4119aba5dcc16e54c60a0a6490084dde0",
+      "paired_episode_sha256": "1891f58313f4f9bad64729222c957e1255c9e269d58a02d0bb7980fe56763252",
+      "selected_beta": 0.0,
+      "summary_sha256": "e7cbf7bc52c4f08098bf9f93234d31b7254c0230783c5bc37998bd7a132f2a3e"
+    },
+    "L5": {
+      "adaptation_seed": 171105,
+      "context_parameters_sha256": "bbe8905c6bb3c4644dc3108517f2e2f23e741c46e547ea3524e2f90ca06649ee",
+      "inline_telemetry_sha256": "dc3ee08e2ce53b5264dc1ce61e91d489c34d0acce670a3e96fd0a61e8931a748",
+      "paired_episode_sha256": "ff3b3ecdb7097b6d2907504a9d39e549e9dcb02deb093e82a24e93a37f12e537",
+      "selected_beta": 0.0,
+      "summary_sha256": "ce31b3fe207e2014ce1d37442c5dc5ff822905971a2308498233e87590c2c9c5"
+    }
+  },
+  "base_referenced_control_vs_v21_selectivity": {
+    "contact_stability": {
+      "interpretation": "Preservation is more selective when base-referenced RR is retained while base-referenced RG decreases; no post-hoc threshold is used.",
+      "target_regression_rate": {
+        "control_mean": 0.20519958423176785,
+        "v21_mean": 0.21247937474568807,
+        "v21_minus_control_mean_lcb95_ucb95": [
+          0.007279790513920209,
+          -0.007853670858713347,
+          0.018079030742464752
+        ],
+        "v21_minus_control_per_context": {
+          "C1": -0.021871202916160376,
+          "C2": 0.005174644243208293,
+          "C3": 0.021170610211706103,
+          "C4": 0.01612903225806453,
+          "C5": 0.015795868772782495
+        }
+      },
+      "target_repair_minus_regression": {
+        "control_mean": 0.5273284835586127,
+        "v21_mean": 0.5630051734514426,
+        "v21_minus_control_mean_lcb95_ucb95": [
+          0.035676689892829974,
+          0.011128526920933912,
+          0.06769561311652739
+        ],
+        "v21_minus_control_per_context": {
+          "C1": 0.09649806858780219,
+          "C2": 0.030681929461970903,
+          "C3": 0.015028484810918341,
+          "C4": 0.0022195915951463974,
+          "C5": 0.03395537500831203
+        }
+      },
+      "target_repair_rate": {
+        "control_mean": 0.7325280677903806,
+        "v21_mean": 0.7754845481971308,
+        "v21_minus_control_mean_lcb95_ucb95": [
+          0.042956480406750194,
+          0.02813073780918136,
+          0.059701492537313425
+        ],
+        "v21_minus_control_per_context": {
+          "C1": 0.07462686567164178,
+          "C2": 0.03585657370517925,
+          "C3": 0.03619909502262442,
+          "C4": 0.01834862385321101,
+          "C5": 0.04975124378109452
+        }
+      }
+    },
+    "lateral": {
+      "interpretation": "Preservation is more selective when base-referenced RR is retained while base-referenced RG decreases; no post-hoc threshold is used.",
+      "target_regression_rate": {
+        "control_mean": 0.17245560885102953,
+        "v21_mean": 0.1933962958585592,
+        "v21_minus_control_mean_lcb95_ucb95": [
+          0.020940687007529688,
+          0.003545197331868877,
+          0.04177204936815069
+        ],
+        "v21_minus_control_per_context": {
+          "L1": 0.011749347258485643,
+          "L2": 0.03508771929824561,
+          "L3": 0.05487804878048781,
+          "L4": -0.006150061500615006,
+          "L5": 0.009138381201044377
+        }
+      },
+      "target_repair_minus_regression": {
+        "control_mean": 0.4593198599834281,
+        "v21_mean": 0.48119912284594335,
+        "v21_minus_control_mean_lcb95_ucb95": [
+          0.02187926286251528,
+          -0.07112531818203822,
+          0.13998180835033483
+        ],
+        "v21_minus_control_per_context": {
+          "L1": -0.0776408201267027,
+          "L2": -0.004114267970811936,
+          "L3": 0.24414155906264945,
+          "L4": -0.09811534134298688,
+          "L5": 0.04512518469042848
+        }
+      },
+      "target_repair_rate": {
+        "control_mean": 0.6317754688344577,
+        "v21_mean": 0.6745954187045026,
+        "v21_minus_control_mean_lcb95_ucb95": [
+          0.042819949870044983,
+          -0.06488482310150996,
+          0.1724281603977257
+        ],
+        "v21_minus_control_per_context": {
+          "L1": -0.06589147286821706,
+          "L2": 0.030973451327433676,
+          "L3": 0.2990196078431373,
+          "L4": -0.10426540284360186,
+          "L5": 0.054263565891472854
+        }
+      }
+    }
+  },
+  "bootstrap_samples": 10000,
+  "evidence_role": "fresh formal cross-deployment tri-policy reconstruction",
+  "experimental_unit": "one fixed deployment context and one adaptation",
+  "formal_adaptation_count": 20,
+  "formal_context_count": 10,
+  "formal_v21_claims": {
+    "contact_stability": {
+      "formal_gate": {
+        "conditions": {
+          "at_least_four_of_five_contexts_positive": false,
+          "mean_d0_success_delta_at_least_minus_five_pp": true,
+          "mean_target_fall_delta_at_most_three_pp": true,
+          "mean_target_success_delta_strictly_positive": false
+        },
+        "context_count": 5,
+        "mean_d0_success_delta": -0.00625,
+        "mean_target_fall_delta": 0.0015625,
+        "mean_target_success_delta": -0.0017578125,
+        "passed": false,
+        "positive_context_count": 3
+      },
+      "strong_evidence_lcb95_positive": false,
+      "target_success_delta_mean_lcb95_ucb95": [
+        -0.0017578125,
+        -0.018359375,
+        0.0109375
+      ]
+    },
+    "lateral": {
+      "formal_gate": {
+        "conditions": {
+          "at_least_four_of_five_contexts_positive": false,
+          "mean_d0_success_delta_at_least_minus_five_pp": true,
+          "mean_target_fall_delta_at_most_three_pp": true,
+          "mean_target_success_delta_strictly_positive": true
+        },
+        "context_count": 5,
+        "mean_d0_success_delta": -0.00390625,
+        "mean_target_fall_delta": -0.002734375,
+        "mean_target_success_delta": 0.002734375,
+        "passed": false,
+        "positive_context_count": 3
+      },
+      "strong_evidence_lcb95_positive": false,
+      "target_success_delta_mean_lcb95_ucb95": [
+        0.002734375,
+        -0.00390625,
+        0.009375
+      ]
+    }
+  },
+  "mode_results": {
+    "contact_stability": {
+      "contexts": [
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5"
+      ],
+      "control_minus_base": {
+        "d0_fall_delta": {
+          "mean_lcb95_ucb95": [
+            0.0,
+            -0.00703125,
+            0.00703125
+          ],
+          "per_context": {
+            "C1": -0.0078125,
+            "C2": 0.0078125,
+            "C3": -0.01171875,
+            "C4": 0.00390625,
+            "C5": 0.0078125
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "d0_success_delta": {
+          "mean_lcb95_ucb95": [
+            -0.00234375,
+            -0.01796875,
+            0.01328125
+          ],
+          "per_context": {
+            "C1": -0.01171875,
+            "C2": -0.02734375,
+            "C3": 0.0234375,
+            "C4": 0.015625,
+            "C5": -0.01171875
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "formal_gate": {
+          "conditions": {
+            "at_least_four_of_five_contexts_positive": false,
+            "mean_d0_success_delta_at_least_minus_five_pp": true,
+            "mean_target_fall_delta_at_most_three_pp": true,
+            "mean_target_success_delta_strictly_positive": false
+          },
+          "context_count": 5,
+          "mean_d0_success_delta": -0.00234375,
+          "mean_target_fall_delta": 0.0048828125,
+          "mean_target_success_delta": -0.005078125,
+          "passed": false,
+          "positive_context_count": 2
+        },
+        "target_fall_delta": {
+          "mean_lcb95_ucb95": [
+            0.0048828125,
+            -0.0107421875,
+            0.0205078125
+          ],
+          "per_context": {
+            "C1": 0.0224609375,
+            "C2": -0.0068359375,
+            "C3": -0.0205078125,
+            "C4": 0.0009765625,
+            "C5": 0.0283203125
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_regression_rate": {
+          "mean_lcb95_ucb95": [
+            0.20519958423176785,
+            0.18893335895616228,
+            0.22136975260294833
+          ],
+          "per_context": {
+            "C1": 0.21628189550425272,
+            "C2": 0.23027166882276842,
+            "C3": 0.17434620174346202,
+            "C4": 0.19975186104218362,
+            "C5": 0.20534629404617255
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_repair_minus_regression": {
+          "mean_lcb95_ucb95": [
+            0.5273284835586127,
+            0.5059858358764793,
+            0.548637851341947
+          ],
+          "per_context": {
+            "C1": 0.5548623831027125,
+            "C2": 0.5067801240059169,
+            "C3": 0.5496356987090266,
+            "C4": 0.5341930930862568,
+            "C5": 0.4911711188891509
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_repair_rate": {
+          "mean_lcb95_ucb95": [
+            0.7325280677903806,
+            0.7114884294125702,
+            0.754271938080365
+          ],
+          "per_context": {
+            "C1": 0.7711442786069652,
+            "C2": 0.7370517928286853,
+            "C3": 0.7239819004524887,
+            "C4": 0.7339449541284404,
+            "C5": 0.6965174129353234
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_success_delta": {
+          "mean_lcb95_ucb95": [
+            -0.005078125,
+            -0.0205078125,
+            0.0103515625
+          ],
+          "per_context": {
+            "C1": -0.0224609375,
+            "C2": 0.0068359375,
+            "C3": 0.01953125,
+            "C4": -0.0009765625,
+            "C5": -0.0283203125
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_success_lcb95_positive": false
+      },
+      "v21_minus_base": {
+        "d0_fall_delta": {
+          "mean_lcb95_ucb95": [
+            0.01015625,
+            -0.00390625,
+            0.02421875
+          ],
+          "per_context": {
+            "C1": 0.02734375,
+            "C2": 0.02734375,
+            "C3": 0.0,
+            "C4": 0.01171875,
+            "C5": -0.015625
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "d0_success_delta": {
+          "mean_lcb95_ucb95": [
+            -0.00625,
+            -0.021875,
+            0.009375
+          ],
+          "per_context": {
+            "C1": -0.0078125,
+            "C2": -0.02734375,
+            "C3": 0.01171875,
+            "C4": 0.015625,
+            "C5": -0.0234375
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "formal_gate": {
+          "conditions": {
+            "at_least_four_of_five_contexts_positive": false,
+            "mean_d0_success_delta_at_least_minus_five_pp": true,
+            "mean_target_fall_delta_at_most_three_pp": true,
+            "mean_target_success_delta_strictly_positive": false
+          },
+          "context_count": 5,
+          "mean_d0_success_delta": -0.00625,
+          "mean_target_fall_delta": 0.0015625,
+          "mean_target_success_delta": -0.0017578125,
+          "passed": false,
+          "positive_context_count": 3
+        },
+        "target_fall_delta": {
+          "mean_lcb95_ucb95": [
+            0.0015625,
+            -0.011328125,
+            0.018359375
+          ],
+          "per_context": {
+            "C1": -0.009765625,
+            "C2": -0.01171875,
+            "C3": -0.01171875,
+            "C4": 0.009765625,
+            "C5": 0.03125
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_regression_rate": {
+          "mean_lcb95_ucb95": [
+            0.21247937474568807,
+            0.19914718047735386,
+            0.22581156901402233
+          ],
+          "per_context": {
+            "C1": 0.19441069258809235,
+            "C2": 0.23544631306597671,
+            "C3": 0.19551681195516812,
+            "C4": 0.21588089330024815,
+            "C5": 0.22114216281895505
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_repair_minus_regression": {
+          "mean_lcb95_ucb95": [
+            0.5630051734514426,
+            0.532108082125124,
+            0.6087744064977904
+          ],
+          "per_context": {
+            "C1": 0.6513604516905147,
+            "C2": 0.5374620534678878,
+            "C3": 0.564664183519945,
+            "C4": 0.5364126846814032,
+            "C5": 0.5251264938974629
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_repair_rate": {
+          "mean_lcb95_ucb95": [
+            0.7754845481971308,
+            0.7514610929742503,
+            0.8115350847572094
+          ],
+          "per_context": {
+            "C1": 0.845771144278607,
+            "C2": 0.7729083665338645,
+            "C3": 0.7601809954751131,
+            "C4": 0.7522935779816514,
+            "C5": 0.746268656716418
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_success_delta": {
+          "mean_lcb95_ucb95": [
+            -0.0017578125,
+            -0.018359375,
+            0.0109375
+          ],
+          "per_context": {
+            "C1": 0.009765625,
+            "C2": 0.01171875,
+            "C3": 0.0107421875,
+            "C4": -0.009765625,
+            "C5": -0.03125
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_success_lcb95_positive": false
+      },
+      "v21_minus_control": {
+        "d0_fall_delta": {
+          "mean_lcb95_ucb95": [
+            0.01015625,
+            -0.0078125,
+            0.02578125
+          ],
+          "per_context": {
+            "C1": 0.03515625,
+            "C2": 0.01953125,
+            "C3": 0.01171875,
+            "C4": 0.0078125,
+            "C5": -0.0234375
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "d0_success_delta": {
+          "mean_lcb95_ucb95": [
+            -0.00390625,
+            -0.009375,
+            0.0015625
+          ],
+          "per_context": {
+            "C1": 0.00390625,
+            "C2": 0.0,
+            "C3": -0.01171875,
+            "C4": 0.0,
+            "C5": -0.01171875
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "formal_gate": {
+          "conditions": {
+            "at_least_four_of_five_contexts_positive": false,
+            "mean_d0_success_delta_at_least_minus_five_pp": true,
+            "mean_target_fall_delta_at_most_three_pp": true,
+            "mean_target_success_delta_strictly_positive": true
+          },
+          "context_count": 5,
+          "mean_d0_success_delta": -0.00390625,
+          "mean_target_fall_delta": -0.0033203125,
+          "mean_target_success_delta": 0.0033203125,
+          "passed": false,
+          "positive_context_count": 2
+        },
+        "target_fall_delta": {
+          "mean_lcb95_ucb95": [
+            -0.0033203125,
+            -0.0185546875,
+            0.0076171875
+          ],
+          "per_context": {
+            "C1": -0.0322265625,
+            "C2": -0.0048828125,
+            "C3": 0.0087890625,
+            "C4": 0.0087890625,
+            "C5": 0.0029296875
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_regression_rate": {
+          "mean_lcb95_ucb95": [
+            0.2083740094041729,
+            0.19485771475617558,
+            0.22266749257926816
+          ],
+          "per_context": {
+            "C1": 0.19,
+            "C2": 0.2358974358974359,
+            "C3": 0.1919805589307412,
+            "C4": 0.21366459627329193,
+            "C5": 0.21032745591939547
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_repair_minus_regression": {
+          "mean_lcb95_ucb95": [
+            0.5514484444197038,
+            0.5192307536937959,
+            0.5975238372011538
+          ],
+          "per_context": {
+            "C1": 0.635892857142857,
+            "C2": 0.5386927280369904,
+            "C3": 0.5493129734075672,
+            "C4": 0.5306276411696305,
+            "C5": 0.5027160223414741
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_repair_rate": {
+          "mean_lcb95_ucb95": [
+            0.7598224538238767,
+            0.7305932517282556,
+            0.7951112412177986
+          ],
+          "per_context": {
+            "C1": 0.8258928571428571,
+            "C2": 0.7745901639344263,
+            "C3": 0.7412935323383084,
+            "C4": 0.7442922374429224,
+            "C5": 0.7130434782608696
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_success_delta": {
+          "mean_lcb95_ucb95": [
+            0.0033203125,
+            -0.0076171875,
+            0.0185546875
+          ],
+          "per_context": {
+            "C1": 0.0322265625,
+            "C2": 0.0048828125,
+            "C3": -0.0087890625,
+            "C4": -0.0087890625,
+            "C5": -0.0029296875
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_success_lcb95_positive": false
+      }
+    },
+    "lateral": {
+      "contexts": [
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "L5"
+      ],
+      "control_minus_base": {
+        "d0_fall_delta": {
+          "mean_lcb95_ucb95": [
+            0.00390625,
+            -0.003125,
+            0.0109375
+          ],
+          "per_context": {
+            "L1": -0.0078125,
+            "L2": 0.015625,
+            "L3": 0.0,
+            "L4": 0.0078125,
+            "L5": 0.00390625
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "d0_success_delta": {
+          "mean_lcb95_ucb95": [
+            0.003125,
+            -0.0203125,
+            0.028125
+          ],
+          "per_context": {
+            "L1": 0.046875,
+            "L2": -0.03515625,
+            "L3": 0.0,
+            "L4": 0.0,
+            "L5": 0.00390625
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "formal_gate": {
+          "conditions": {
+            "at_least_four_of_five_contexts_positive": false,
+            "mean_d0_success_delta_at_least_minus_five_pp": true,
+            "mean_target_fall_delta_at_most_three_pp": true,
+            "mean_target_success_delta_strictly_positive": true
+          },
+          "context_count": 5,
+          "mean_d0_success_delta": 0.003125,
+          "mean_target_fall_delta": -0.0109375,
+          "mean_target_success_delta": 0.0107421875,
+          "passed": false,
+          "positive_context_count": 3
+        },
+        "target_fall_delta": {
+          "mean_lcb95_ucb95": [
+            -0.0109375,
+            -0.0216796875,
+            -0.0001953125
+          ],
+          "per_context": {
+            "L1": -0.021484375,
+            "L2": -0.0283203125,
+            "L3": 0.0009765625,
+            "L4": -0.0087890625,
+            "L5": 0.0029296875
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_regression_rate": {
+          "mean_lcb95_ucb95": [
+            0.17245560885102953,
+            0.14013804651091527,
+            0.19942321094229215
+          ],
+          "per_context": {
+            "L1": 0.20887728459530025,
+            "L2": 0.16541353383458646,
+            "L3": 0.11097560975609756,
+            "L4": 0.17466174661746617,
+            "L5": 0.20234986945169714
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_repair_minus_regression": {
+          "mean_lcb95_ucb95": [
+            0.4593198599834281,
+            0.3807344362645109,
+            0.5344913786009539
+          ],
+          "per_context": {
+            "L1": 0.49654907199384707,
+            "L2": 0.546975846696387,
+            "L3": 0.325298900047824,
+            "L4": 0.5409780638090741,
+            "L5": 0.38679741737000833
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_repair_rate": {
+          "mean_lcb95_ucb95": [
+            0.6317754688344577,
+            0.5227221253320021,
+            0.7122969477008348
+          ],
+          "per_context": {
+            "L1": 0.7054263565891473,
+            "L2": 0.7123893805309734,
+            "L3": 0.4362745098039216,
+            "L4": 0.7156398104265402,
+            "L5": 0.5891472868217055
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_success_delta": {
+          "mean_lcb95_ucb95": [
+            0.0107421875,
+            -0.0001953125,
+            0.0216796875
+          ],
+          "per_context": {
+            "L1": 0.021484375,
+            "L2": 0.0283203125,
+            "L3": -0.001953125,
+            "L4": 0.0087890625,
+            "L5": -0.0029296875
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_success_lcb95_positive": false
+      },
+      "v21_minus_base": {
+        "d0_fall_delta": {
+          "mean_lcb95_ucb95": [
+            0.0015625,
+            -0.0046875,
+            0.0078125
+          ],
+          "per_context": {
+            "L1": -0.0078125,
+            "L2": 0.0078125,
+            "L3": -0.00390625,
+            "L4": 0.0,
+            "L5": 0.01171875
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "d0_success_delta": {
+          "mean_lcb95_ucb95": [
+            -0.00390625,
+            -0.028125,
+            0.01875
+          ],
+          "per_context": {
+            "L1": 0.03125,
+            "L2": -0.046875,
+            "L3": 0.015625,
+            "L4": -0.015625,
+            "L5": -0.00390625
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "formal_gate": {
+          "conditions": {
+            "at_least_four_of_five_contexts_positive": false,
+            "mean_d0_success_delta_at_least_minus_five_pp": true,
+            "mean_target_fall_delta_at_most_three_pp": true,
+            "mean_target_success_delta_strictly_positive": true
+          },
+          "context_count": 5,
+          "mean_d0_success_delta": -0.00390625,
+          "mean_target_fall_delta": -0.002734375,
+          "mean_target_success_delta": 0.002734375,
+          "passed": false,
+          "positive_context_count": 3
+        },
+        "target_fall_delta": {
+          "mean_lcb95_ucb95": [
+            -0.002734375,
+            -0.009375,
+            0.00390625
+          ],
+          "per_context": {
+            "L1": 0.00390625,
+            "L2": -0.0078125,
+            "L3": -0.013671875,
+            "L4": 0.0078125,
+            "L5": -0.00390625
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_regression_rate": {
+          "mean_lcb95_ucb95": [
+            0.1933962958585592,
+            0.17384638808794103,
+            0.21294620362917738
+          ],
+          "per_context": {
+            "L1": 0.2206266318537859,
+            "L2": 0.20050125313283207,
+            "L3": 0.16585365853658537,
+            "L4": 0.16851168511685116,
+            "L5": 0.21148825065274152
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_repair_minus_regression": {
+          "mean_lcb95_ucb95": [
+            0.48119912284594335,
+            0.42890488606424987,
+            0.5366211116234865
+          ],
+          "per_context": {
+            "L1": 0.41890825186714437,
+            "L2": 0.5428615787255751,
+            "L3": 0.5694404591104735,
+            "L4": 0.4428627224660872,
+            "L5": 0.4319226020604368
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_repair_rate": {
+          "mean_lcb95_ucb95": [
+            0.6745954187045026,
+            0.6290458870641832,
+            0.7209834993886421
+          ],
+          "per_context": {
+            "L1": 0.6395348837209303,
+            "L2": 0.7433628318584071,
+            "L3": 0.7352941176470589,
+            "L4": 0.6113744075829384,
+            "L5": 0.6434108527131783
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_success_delta": {
+          "mean_lcb95_ucb95": [
+            0.002734375,
+            -0.00390625,
+            0.009375
+          ],
+          "per_context": {
+            "L1": -0.00390625,
+            "L2": 0.0078125,
+            "L3": 0.013671875,
+            "L4": -0.0078125,
+            "L5": 0.00390625
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_success_lcb95_positive": false
+      },
+      "v21_minus_control": {
+        "d0_fall_delta": {
+          "mean_lcb95_ucb95": [
+            -0.00234375,
+            -0.00703125,
+            0.003125
+          ],
+          "per_context": {
+            "L1": 0.0,
+            "L2": -0.0078125,
+            "L3": -0.00390625,
+            "L4": -0.0078125,
+            "L5": 0.0078125
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "d0_success_delta": {
+          "mean_lcb95_ucb95": [
+            -0.00703125,
+            -0.01484375,
+            0.0046875
+          ],
+          "per_context": {
+            "L1": -0.015625,
+            "L2": -0.01171875,
+            "L3": 0.015625,
+            "L4": -0.015625,
+            "L5": -0.0078125
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "formal_gate": {
+          "conditions": {
+            "at_least_four_of_five_contexts_positive": false,
+            "mean_d0_success_delta_at_least_minus_five_pp": true,
+            "mean_target_fall_delta_at_most_three_pp": true,
+            "mean_target_success_delta_strictly_positive": false
+          },
+          "context_count": 5,
+          "mean_d0_success_delta": -0.00703125,
+          "mean_target_fall_delta": 0.008203125,
+          "mean_target_success_delta": -0.0080078125,
+          "passed": false,
+          "positive_context_count": 2
+        },
+        "target_fall_delta": {
+          "mean_lcb95_ucb95": [
+            0.008203125,
+            -0.0060546875,
+            0.0216796875
+          ],
+          "per_context": {
+            "L1": 0.025390625,
+            "L2": 0.0205078125,
+            "L3": -0.0146484375,
+            "L4": 0.0166015625,
+            "L5": -0.0068359375
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_regression_rate": {
+          "mean_lcb95_ucb95": [
+            0.20122616696884488,
+            0.18404482853798232,
+            0.22081571475303408
+          ],
+          "per_context": {
+            "L1": 0.23857868020304568,
+            "L2": 0.2007255139056832,
+            "L3": 0.1784841075794621,
+            "L4": 0.18126520681265207,
+            "L5": 0.20707732634338138
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_repair_minus_regression": {
+          "mean_lcb95_ucb95": [
+            0.497681494765971,
+            0.443627459730661,
+            0.5613896142453831
+          ],
+          "per_context": {
+            "L1": 0.44786199776305596,
+            "L2": 0.5353150952313727,
+            "L3": 0.6079236594108292,
+            "L4": 0.4722001397220014,
+            "L5": 0.42510658170259563
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_repair_rate": {
+          "mean_lcb95_ucb95": [
+            0.6989076617348159,
+            0.6515478374254726,
+            0.7464209313806155
+          ],
+          "per_context": {
+            "L1": 0.6864406779661016,
+            "L2": 0.7360406091370558,
+            "L3": 0.7864077669902912,
+            "L4": 0.6534653465346535,
+            "L5": 0.632183908045977
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_success_delta": {
+          "mean_lcb95_ucb95": [
+            -0.0080078125,
+            -0.0216796875,
+            0.006640625
+          ],
+          "per_context": {
+            "L1": -0.025390625,
+            "L2": -0.0205078125,
+            "L3": 0.015625,
+            "L4": -0.0166015625,
+            "L5": 0.0068359375
+          },
+          "statistical_unit": "deployment_context"
+        },
+        "target_success_lcb95_positive": false
+      }
+    }
+  },
+  "paired_d0_episodes_per_policy_per_context": 256,
+  "paired_target_episodes_per_policy_per_context": 1024,
+  "policy_method": "Local Matched-Success Preservation v21",
+  "protocol": {
+    "git_commit": "833099b2e7e03974cf93e1216e925444de1904c6",
+    "path": "results/online/specialist_v21/protocol_formal.json",
+    "sha256": "7ffc0d31733735cb570d72ea2fd0ab833dad5efd033bac71681021d564aa5d67"
+  },
+  "protocol_id": "safe100-deployment-unit-local-matched-success-v21",
+  "schema_version": 1,
+  "statistical_unit": "deployment_context",
+  "tables": {
+    "formal_context_metrics": {
+      "path": "results/online/specialist_v21/formal/formal_context_metrics.csv",
+      "rows": 60,
+      "sha256": "87152cb35c8fa496e2fa1911ec3a0b513ac27bb325f2368e7b7fdda87c8d387f"
+    },
+    "formal_mode_metrics": {
+      "path": "results/online/specialist_v21/formal/formal_mode_metrics.csv",
+      "rows": 42,
+      "sha256": "34d40b56ce07ccf986f75d6817e52588ed638c272956052b52b9172610b37e2d"
+    },
+    "mechanism_normalized_curves": {
+      "path": "results/online/specialist_v21/formal/mechanism_normalized_curves.csv",
+      "post_audit_replay_used": false,
+      "rows": 3939,
+      "sha256": "b2247c38c3fa307c7c96da72a655c564ee1d6995d8970da780bb1cebc4a573e8"
+    },
+    "mechanism_trace_metrics": {
+      "path": "results/online/specialist_v21/formal/mechanism_trace_metrics.csv",
+      "rows": 240,
+      "same_rollout_outcome_bound": true,
+      "sha256": "5d13703e51f422c5bc16ac57578dd1a2f56fc1519524d3f0fea3cdc62fb41ed1"
+    },
+    "unseen_monitor_aggregate": {
+      "path": "results/online/specialist_v21/formal/unseen_monitor_aggregate.csv",
+      "rows": 216,
+      "sha256": "3e5d0a3dea47a544c1769be1a4e647acbd5920e59777fc2cbbf3dc88a05024aa"
+    },
+    "unseen_monitor_curves": {
+      "path": "results/online/specialist_v21/formal/unseen_monitor_curves.csv",
+      "rows": 180,
+      "sha256": "35039b1cc9a2559613072d9dda12937a406dc7f352fe0376d4b9d74bca48560d"
+    }
+  }
+}
