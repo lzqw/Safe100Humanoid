@@ -483,3 +483,11 @@ def test_v22_contact_freeze_requires_passed_lateral_result() -> None:
   assert '"superseded_before_first_base_policy_episode"' in source
   assert '"base_policy_episode_outcomes_observed": False' in source
   assert '"context_schema_version": V22_CONTEXT_SCHEMA_VERSION' in source
+  calibration_source = (
+    REPO / "experiments/scripts/calibrate_effect_first_v22.py"
+  ).read_text()
+  assert '"calibration_negative_no_candidate_qualified"' in calibration_source
+  assert 'output_dir / "calibration_negative.json"' in calibration_source
+  assert '"conditional_disposition": "stop_v22_before_lateral_adaptation"' in (
+    calibration_source
+  )

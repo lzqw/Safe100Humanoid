@@ -255,6 +255,35 @@ def main() -> None:
     env.close()
 
   if selected_payload is None:
+    negative = {
+      "schema_version": 1,
+      "protocol_id": PROTOCOL_ID,
+      "policy_method": POLICY_METHOD,
+      "status": "calibration_negative_no_candidate_qualified",
+      "context_id": context_id,
+      "mode": mode,
+      "base_policy_only": True,
+      "adapted_policy_evaluations_used": False,
+      "candidate_seeds": candidate_seeds,
+      "candidate_count_evaluated": len(attempts),
+      "all_declared_candidates_evaluated": len(attempts) == len(candidate_seeds),
+      "qualification": {
+        "success_rate_bounds_inclusive": list(CALIBRATION_SUCCESS_BOUNDS),
+        "minimum_fall_count": CALIBRATION_MINIMUM_FALLS,
+        "target_failure_type": target_failure_type,
+        "minimum_target_failure_fraction": CALIBRATION_MINIMUM_PURITY,
+        "episodes_per_candidate": CALIBRATION_EPISODES,
+      },
+      "attempts": attempts,
+      "prospective_protocol_file_sha256": _sha256(protocol_path),
+      "prospective_protocol_git_commit": current_commit,
+      "base_policy_checkpoint_sha256": _sha256(checkpoint),
+      "adaptation_started": False,
+      "final_test_started": False,
+      "conditional_disposition": "stop_v22_before_lateral_adaptation",
+    }
+    _write_immutable_json(output_dir / "calibration_negative.json", negative)
+    print(json.dumps(negative, indent=2, sort_keys=True), flush=True)
     raise RuntimeError(f"no declared v22 {context_id} candidate passed every gate")
   calibration_evidence = {
     "kind": V22_CALIBRATION_KIND,
