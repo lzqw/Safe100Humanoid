@@ -36,10 +36,13 @@ from specialist_v22_protocol import (
   fresh_randomness_report,
   select_best_so_far,
 )
+from src.tasks.stairs_cbf.config import g1_online_stairs_env_cfg
 from src.tasks.stairs_cbf.deployment_context import (
   V22_CALIBRATION_KIND,
   V22_CONTEXT_KIND,
+  V22_CONTEXT_SCHEMA_VERSION,
   V22_CONTEXT_SPECS,
+  apply_frozen_deployment_context,
   generate_v22_specialist_context,
   validate_calibrated_v22_context,
   validate_frozen_deployment_context,
@@ -47,12 +50,18 @@ from src.tasks.stairs_cbf.deployment_context import (
 
 
 def test_v22_has_exactly_two_pure_conditional_contexts() -> None:
+  assert V22_CONTEXT_SCHEMA_VERSION == 2
   assert CONTEXTS == ("L_effect", "C_effect")
   assert set(CONTEXTS) == set(V22_CONTEXT_SPECS)
   assert V22_CONTEXT_SPECS["L_effect"]["family"] == (
     "pure_lateral_bias_and_pulse"
   )
   assert V22_CONTEXT_SPECS["C_effect"]["family"] == "pure_low_foot_friction"
+  assert V22_CONTEXT_SPECS["L_effect"]["effect_axes"] == [
+    "lateral_command_bias",
+    "lateral_disturbance_pulse",
+  ]
+  assert V22_CONTEXT_SPECS["C_effect"]["effect_axes"] == ["foot_friction"]
 
 
 def test_v22_candidates_are_deterministic_hashed_and_valid() -> None:
@@ -103,6 +112,7 @@ def test_v22_lateral_varies_only_bias_and_lateral_pulse_magnitude() -> None:
     assert scenario["yaw_pulse_min"] == 0.0
     assert scenario["yaw_pulse_max"] == 0.0
     assert scenario["foot_friction"] == 0.60
+    assert scenario["toe_margin"] == 0.08
     assert scenario["stair_half_width"] == 1.2
     assert scenario["centerline_lateral_gain"] == 0.8
     assert scenario["centerline_heading_gain"] == 1.4
@@ -128,11 +138,99 @@ def test_v22_contact_varies_only_foot_friction() -> None:
   assert changed == {"foot_friction"}
   for payload in (first, last):
     scenario = payload["scenario"]
+    assert scenario["disturbance_pulses_with_centering"] is False
+    assert (scenario["lateral_pulse_min"], scenario["lateral_pulse_max"]) == (
+      0.02,
+      0.08,
+    )
+    assert (scenario["yaw_pulse_min"], scenario["yaw_pulse_max"]) == (
+      0.05,
+      0.20,
+    )
+    assert scenario["centerline_lateral_gain"] == 0.80
+    assert scenario["centerline_heading_gain"] == 1.40
+    assert scenario["centerline_max_lateral_velocity"] == 0.16
+    assert scenario["centerline_max_yaw_velocity"] == 0.45
+    assert scenario["toe_margin"] == 0.08
     assert scenario["contact_observation_delay_steps"] == 0
     assert scenario["gait_phase_offset"] == 0.0
     assert scenario["left_response_scale"] == 1.0
     assert scenario["right_response_scale"] == 1.0
     assert scenario["lateral_command_bias"] == 0.0
+
+
+def test_v22_application_changes_only_declared_physical_effect_axes() -> None:
+  common_command_fields = (
+    "forward_velocity_range",
+    "command_delay_range_s",
+    "low_pass_time_constant_s",
+    "closed_loop_centering",
+    "stair_half_width",
+    "centerline_lateral_gain",
+    "centerline_heading_gain",
+    "centerline_max_lateral_velocity",
+    "centerline_max_yaw_velocity",
+    "centerline_heading_reference_bias",
+  )
+  all_command_fields = common_command_fields + (
+    "disturbance_pulses_with_centering",
+    "fixed_lateral_bias",
+    "fixed_yaw_bias",
+    "lateral_pulse_abs_range",
+    "yaw_pulse_abs_range",
+    "pulse_interval_range_s",
+    "pulse_duration_range_s",
+  )
+  for context_id, seeds in CONTEXT_CALIBRATION_CANDIDATE_SEEDS.items():
+    for seed in (seeds[0], seeds[-1]):
+      nominal = g1_online_stairs_env_cfg("DQHMED")
+      cfg = g1_online_stairs_env_cfg("DQHMED")
+      payload = generate_v22_specialist_context(context_id, seed)
+      metadata = apply_frozen_deployment_context(cfg, payload, role="target")
+      command = cfg.commands["twist"]
+      nominal_command = nominal.commands["twist"]
+      action = cfg.actions["joint_pos"]
+      stairs = next(
+        iter(cfg.scene.terrain.terrain_generator.sub_terrains.values())
+      )
+
+      assert stairs.num_steps == 9
+      assert stairs.step_height_profile == (0.13,) * 9
+      assert stairs.step_width_profile == (0.35,) * 9
+      assert cfg.episode_length_s == 35.0
+      assert action.deployment_action_gain == 1.0
+      assert action.deployment_action_scale is None
+      assert action.deployment_action_bias is None
+      assert action.deployment_action_delay_steps == 0
+      assert action.deployment_contact_delay_steps == 0
+      assert action.deployment_contact_phase_offset == 0.0
+      assert action.toe_margin == 0.08
+      assert cfg.events["encoder_bias"].params["bias_range"] == (0.0, 0.0)
+      for field in common_command_fields:
+        assert getattr(command, field) == getattr(nominal_command, field)
+      assert metadata["applied_command_delay_range_s"] == (0.04, 0.16)
+
+      friction = cfg.events["specialist_foot_friction"].params["ranges"]
+      scenario = payload["scenario"]
+      assert friction == (scenario["foot_friction"],) * 2
+      if context_id == "L_effect":
+        assert metadata["declared_effect_axes"] == [
+          "lateral_command_bias",
+          "lateral_disturbance_pulse",
+        ]
+        assert command.disturbance_pulses_with_centering is True
+        assert command.fixed_lateral_bias == scenario["lateral_command_bias"]
+        assert command.lateral_pulse_abs_range == (
+          scenario["lateral_pulse_min"],
+          scenario["lateral_pulse_max"],
+        )
+        assert command.fixed_yaw_bias == 0.0
+        assert command.yaw_pulse_abs_range == (0.0, 0.0)
+        assert friction == (0.60, 0.60)
+      else:
+        assert metadata["declared_effect_axes"] == ["foot_friction"]
+        for field in all_command_fields:
+          assert getattr(command, field) == getattr(nominal_command, field)
 
 
 def _calibrated_context() -> dict:

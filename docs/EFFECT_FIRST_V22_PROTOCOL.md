@@ -30,9 +30,20 @@ v21 family defaults: 9 steps, 0.13 m rises, 0.35 m treads, a 35 s episode,
 the original `[0.04, 0.16]` s command-delay distribution, a 0.08 s command
 low-pass time constant, action gain 1 with zero action delay/bias, zero encoder
 bias, and foot friction 0.60 except for the contact family's single friction
-axis. The scalar `command_delay_s = 0.10` stored in the generic context record
-is the nominal midpoint; v22 explicitly preserves and hashes the full nominal
-delay distribution when applying the environment.
+axis. The centerline controller remains at gains `0.80/1.40` and command limits
+`0.16/0.45`, while the CBF toe margin remains `0.08 m`. The scalar
+`command_delay_s = 0.10` stored in the generic context record is the nominal
+midpoint; v22 explicitly preserves and hashes the full nominal delay
+distribution when applying the environment. Contact also retains the inactive
+nominal pulse configuration; pulses remain disabled, so friction is its only
+physical effect axis. Lateral explicitly zeros yaw-pulse magnitude when it
+enables its lateral-only disturbance pulse.
+
+The v22 context schema is version 2. Its family specification declares and
+hashes the only allowed physical effect axes: `lateral_command_bias` plus
+`lateral_disturbance_pulse` for `L_effect`, and `foot_friction` for `C_effect`.
+Config-level regression tests apply both severity endpoints to a fresh
+`DQHMED` configuration and verify every other physical carrier remains nominal.
 
 Execution is conditional and sequential. `L_effect` is calibrated, adapted, and
 tested first. Contact calibration and adaptation are prohibited unless the

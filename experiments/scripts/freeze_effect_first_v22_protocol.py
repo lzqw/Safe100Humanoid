@@ -286,7 +286,8 @@ def _precalibration(repo: Path, args: argparse.Namespace) -> dict[str, Any]:
       "disposition": "superseded_before_first_base_policy_episode",
       "reason": (
         "source audit found inherited v21 non-nominal geometry, command "
-        "dynamics, episode length, and friction in nominal carriers"
+        "dynamics, episode length, friction, centerline control, and CBF toe "
+        "margin in nominal carriers"
       ),
       "calibration_process_started": False,
       "base_policy_episode_outcomes_observed": False,

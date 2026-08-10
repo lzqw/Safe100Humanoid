@@ -45,7 +45,7 @@ V21_CONTEXT_KIND = "local_matched_success_preservation_v21"
 V21_CALIBRATION_KIND = (
   "base_policy_context_family_first_qualifying_v21"
 )
-V22_CONTEXT_SCHEMA_VERSION = 1
+V22_CONTEXT_SCHEMA_VERSION = 2
 V22_CONTEXT_KIND = "effect_first_development_v22"
 V22_CALIBRATION_KIND = (
   "base_policy_pure_context_first_qualifying_v22"
@@ -54,6 +54,7 @@ V22_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
   "L_effect": {
     "mode": "lateral",
     "family": "pure_lateral_bias_and_pulse",
+    "effect_axes": ["lateral_command_bias", "lateral_disturbance_pulse"],
     "candidate_seed_prefix": 510,
     "candidate_index_bounds": [8, 23],
     "direction": 1,
@@ -66,6 +67,7 @@ V22_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
   "C_effect": {
     "mode": "contact_stability",
     "family": "pure_low_foot_friction",
+    "effect_axes": ["foot_friction"],
     "candidate_seed_prefix": 511,
     "candidate_index_bounds": [8, 23],
     "direction": -1,
@@ -568,7 +570,11 @@ def _validate_specialist_scenario(
 
 
 def _validate_v19_scenario(
-  mode: str, parameters: V19ScenarioParameters, *, v21: bool = False
+  mode: str,
+  parameters: V19ScenarioParameters,
+  *,
+  v21: bool = False,
+  allow_inactive_contact_pulse_ranges: bool = False,
 ) -> None:
   if mode not in V19_SPECIALIST_MODES:
     raise ValueError(f"unsupported v19 specialist mode: {mode!r}")
@@ -660,8 +666,13 @@ def _validate_v19_scenario(
       or parameters.yaw_command_bias != 0.0
       or parameters.centerline_heading_reference_bias != 0.0
       or parameters.stair_half_width != 1.20
-      or parameters.lateral_pulse_max != 0.0
-      or parameters.yaw_pulse_max != 0.0
+      or (
+        not allow_inactive_contact_pulse_ranges
+        and (
+          parameters.lateral_pulse_max != 0.0
+          or parameters.yaw_pulse_max != 0.0
+        )
+      )
     )
     if forbidden:
       raise ValueError("v19 contact context contains a lateral/yaw disturbance")
@@ -1435,7 +1446,7 @@ def generate_v22_specialist_context(
       centerline_heading_gain=1.40,
       centerline_max_lateral_velocity=0.16,
       centerline_max_yaw_velocity=0.45,
-      toe_margin=0.075,
+      toe_margin=0.080,
       foot_friction=0.60,
       contact_observation_delay_steps=0,
       gait_phase_offset=0.0,
@@ -1465,21 +1476,21 @@ def generate_v22_specialist_context(
       disturbance_pulses_with_centering=False,
       lateral_command_bias=0.0,
       yaw_command_bias=0.0,
-      lateral_pulse_min=0.0,
-      lateral_pulse_max=0.0,
-      yaw_pulse_min=0.0,
-      yaw_pulse_max=0.0,
+      lateral_pulse_min=0.02,
+      lateral_pulse_max=0.08,
+      yaw_pulse_min=0.05,
+      yaw_pulse_max=0.20,
       pulse_interval_min_s=3.0,
       pulse_interval_max_s=7.0,
       pulse_duration_min_s=0.2,
       pulse_duration_max_s=0.6,
-      centerline_lateral_gain=2.0,
-      centerline_heading_gain=3.0,
-      centerline_max_lateral_velocity=0.50,
-      centerline_max_yaw_velocity=1.0,
-      toe_margin=0.060,
+      centerline_lateral_gain=0.80,
+      centerline_heading_gain=1.40,
+      centerline_max_lateral_velocity=0.16,
+      centerline_max_yaw_velocity=0.45,
+      toe_margin=0.080,
       foot_friction=round(
-        _v21_range_value(ranges, "foot_friction", severity, 0.65), 6
+        _v21_range_value(ranges, "foot_friction", severity, 0.60), 6
       ),
       contact_observation_delay_steps=0,
       gait_phase_offset=0.0,
@@ -1492,7 +1503,12 @@ def generate_v22_specialist_context(
     )
 
   _validate_parameters(target)
-  _validate_v19_scenario(mode, scenario, v21=True)
+  _validate_v19_scenario(
+    mode,
+    scenario,
+    v21=True,
+    allow_inactive_contact_pulse_ranges=True,
+  )
   family_spec_sha256 = hashlib.sha256(_canonical_json(spec)).hexdigest()
   payload: dict[str, Any] = {
     "kind": V22_CONTEXT_KIND,
@@ -1677,7 +1693,12 @@ def _validate_frozen_v22_context(payload: Mapping[str, Any]) -> dict[str, Any]:
     raise ValueError("v22 context target or scenario is missing")
   scenario = _v19_scenario_from_mapping(scenario_raw)
   mode = str(payload.get("specialist_mode"))
-  _validate_v19_scenario(mode, scenario, v21=True)
+  _validate_v19_scenario(
+    mode,
+    scenario,
+    v21=True,
+    allow_inactive_contact_pulse_ranges=True,
+  )
   normalized = dict(payload)
   normalized["target"] = _validated_deployment_parameters(target)
   normalized["scenario"] = asdict(scenario)
@@ -2124,6 +2145,7 @@ def apply_frozen_deployment_context(
 ) -> dict[str, Any]:
   """Apply a frozen context entirely on the environment side."""
   validated = validate_frozen_deployment_context(payload)
+  effect_first_v22 = validated.get("kind") == V22_CONTEXT_KIND
   legacy_specialist = validated.get("kind") == SPECIALIST_CONTEXT_KIND
   observable_specialist = validated.get("kind") in (
     V19_CONTEXT_KIND,
@@ -2190,7 +2212,11 @@ def apply_frozen_deployment_context(
   action.step_width = stairs.step_width
   action.step_height = sum(parameters.rise_profile) / parameters.num_steps
   action.deployment_action_gain = parameters.action_gain
-  action.deployment_action_bias = parameters.action_bias
+  action.deployment_action_bias = (
+    None
+    if effect_first_v22 and not any(parameters.action_bias)
+    else parameters.action_bias
+  )
   action.deployment_action_delay_steps = parameters.action_delay_steps
 
   scenario_metadata = None
@@ -2242,7 +2268,7 @@ def apply_frozen_deployment_context(
         "right_knee_joint": scenario.right_response_scale,
         "right_ankle_pitch_joint": scenario.right_response_scale,
       }
-      if mode == "contact_stability"
+      if mode == "contact_stability" and not effect_first_v22
       else None
     )
     action.deployment_contact_phase_offset = (
@@ -2370,4 +2396,9 @@ def apply_frozen_deployment_context(
     "applied_command_delay_range_s": tuple(command.command_delay_range_s),
     "scenario": scenario_metadata,
     "actor_context_fields_added": 5 if observable_specialist else 0,
+    "declared_effect_axes": (
+      list(V22_CONTEXT_SPECS[validated["context_id"]]["effect_axes"])
+      if effect_first_v22
+      else None
+    ),
   }
