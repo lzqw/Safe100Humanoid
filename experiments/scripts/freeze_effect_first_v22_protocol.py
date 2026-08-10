@@ -130,6 +130,11 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--precalibration-protocol", type=Path)
   parser.add_argument("--precalibration-commit")
   parser.add_argument("--lateral-final-result", type=Path)
+  parser.add_argument("--superseded-protocol", type=Path)
+  parser.add_argument("--superseded-commit")
+  parser.add_argument(
+    "--superseded-before-any-base-evaluation", action="store_true"
+  )
   return parser.parse_args()
 
 
@@ -251,8 +256,48 @@ def _common_payload(repo: Path, args: argparse.Namespace) -> dict[str, Any]:
 
 def _precalibration(repo: Path, args: argparse.Namespace) -> dict[str, Any]:
   payload = _common_payload(repo, args)
+  superseded = None
+  supplied = (
+    args.superseded_protocol is not None,
+    args.superseded_commit is not None,
+  )
+  if supplied[0] != supplied[1]:
+    raise ValueError("v22 superseded protocol and commit must be supplied together")
+  if args.superseded_protocol is not None:
+    if not args.superseded_before_any_base_evaluation:
+      raise ValueError("v22 supersession must attest that no base evaluation began")
+    assert args.superseded_commit is not None
+    superseded_path = args.superseded_protocol.resolve()
+    prior = json.loads(superseded_path.read_text())
+    binding = _verify_git_blob(repo, superseded_path, args.superseded_commit)
+    if (
+      prior.get("protocol_id") != PROTOCOL_ID
+      or prior.get("protocol_revision") != 0
+      or prior.get("status")
+      != "prospectively_frozen_before_base_only_calibration"
+      or prior.get("fresh_evidence_boundary", {}).get(
+        "base_only_calibration_outcomes_seen"
+      )
+      is not False
+    ):
+      raise RuntimeError("invalid v22 superseded precalibration protocol")
+    superseded = {
+      "protocol": binding,
+      "disposition": "superseded_before_first_base_policy_episode",
+      "reason": (
+        "source audit found inherited v21 non-nominal geometry, command "
+        "dynamics, episode length, and friction in nominal carriers"
+      ),
+      "calibration_process_started": False,
+      "base_policy_episode_outcomes_observed": False,
+      "adapted_policy_outcomes_observed": False,
+      "external_calibration_artifacts_created": False,
+      "waiting_queue_terminated_before_gpu_execution": True,
+      "historical_v17_v21_results_modified": False,
+    }
   payload.update(
     protocol_revision=0,
+    precalibration_boundary_revision=1 if superseded is not None else 0,
     status="prospectively_frozen_before_base_only_calibration",
     fresh_evidence_boundary={
       "base_only_calibration_outcomes_seen": False,
@@ -261,6 +306,8 @@ def _precalibration(repo: Path, args: argparse.Namespace) -> dict[str, Any]:
       "protocol_must_be_committed_before_calibration": True,
     },
   )
+  if superseded is not None:
+    payload["superseded_precalibration_boundary"] = superseded
   return payload
 
 

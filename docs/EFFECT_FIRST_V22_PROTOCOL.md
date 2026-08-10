@@ -25,6 +25,15 @@ Only two one-dimensional context families are declared:
    encoder bias, gait phase, contact sensing, and left/right response remain
    nominal and fixed.
 
+"Nominal" is bound to the actual `DQHMED` configuration rather than the older
+v21 family defaults: 9 steps, 0.13 m rises, 0.35 m treads, a 35 s episode,
+the original `[0.04, 0.16]` s command-delay distribution, a 0.08 s command
+low-pass time constant, action gain 1 with zero action delay/bias, zero encoder
+bias, and foot friction 0.60 except for the contact family's single friction
+axis. The scalar `command_delay_s = 0.10` stored in the generic context record
+is the nominal midpoint; v22 explicitly preserves and hashes the full nominal
+delay distribution when applying the environment.
+
 Execution is conditional and sequential. `L_effect` is calibrated, adapted, and
 tested first. Contact calibration and adaptation are prohibited unless the
 lateral fresh final test passes the development gate. If lateral fails, the

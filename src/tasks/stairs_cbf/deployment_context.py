@@ -434,6 +434,10 @@ def deployment_context_sha256(payload: Mapping[str, Any]) -> str:
       "target": payload["target"],
       "scenario": payload["scenario"],
     }
+    if payload["kind"] == V22_CONTEXT_KIND:
+      identity["nominal_command_delay_range_s"] = payload[
+        "nominal_command_delay_range_s"
+      ]
   elif payload["kind"] in (SPECIALIST_CONTEXT_KIND, V19_CONTEXT_KIND):
     identity = {
       "kind": payload["kind"],
@@ -1392,19 +1396,19 @@ def generate_v22_specialist_context(
     raise ValueError(f"v22 {context_id} direction must be -1 or +1")
 
   if mode == "lateral":
-    num_steps = 11
+    num_steps = 9
     target = DeploymentContextParameters(
       num_steps=num_steps,
-      rise_profile=(0.138,) * num_steps,
-      tread_profile=(0.338,) * num_steps,
+      rise_profile=(0.130,) * num_steps,
+      tread_profile=(0.350,) * num_steps,
       command_forward_scale=1.0,
-      command_delay_s=0.0,
-      command_low_pass_s=0.0,
+      command_delay_s=0.10,
+      command_low_pass_s=0.08,
       action_gain=1.0,
       action_bias=(0.0,) * 12,
       action_delay_steps=0,
       encoder_bias=0.0,
-      episode_length_s=40.0,
+      episode_length_s=35.0,
     )
     lateral_bias = direction * _v21_range_value(
       ranges, "lateral_bias_abs", severity, 0.0
@@ -1432,7 +1436,7 @@ def generate_v22_specialist_context(
       centerline_max_lateral_velocity=0.16,
       centerline_max_yaw_velocity=0.45,
       toe_margin=0.075,
-      foot_friction=0.65,
+      foot_friction=0.60,
       contact_observation_delay_steps=0,
       gait_phase_offset=0.0,
       left_response_scale=1.0,
@@ -1443,19 +1447,19 @@ def generate_v22_specialist_context(
       stair_half_width=1.20,
     )
   else:
-    num_steps = 24
+    num_steps = 9
     target = DeploymentContextParameters(
       num_steps=num_steps,
-      rise_profile=(0.138,) * num_steps,
-      tread_profile=(0.355,) * num_steps,
+      rise_profile=(0.130,) * num_steps,
+      tread_profile=(0.350,) * num_steps,
       command_forward_scale=1.0,
-      command_delay_s=0.0,
-      command_low_pass_s=0.0,
+      command_delay_s=0.10,
+      command_low_pass_s=0.08,
       action_gain=1.0,
       action_bias=(0.0,) * 12,
       action_delay_steps=0,
       encoder_bias=0.0,
-      episode_length_s=40.0,
+      episode_length_s=35.0,
     )
     scenario = V19ScenarioParameters(
       disturbance_pulses_with_centering=False,
@@ -1500,6 +1504,7 @@ def generate_v22_specialist_context(
     "formal_context": False,
     "family_spec_sha256": family_spec_sha256,
     "candidate_severity": round(severity, 12),
+    "nominal_command_delay_range_s": [0.04, 0.16],
     "target": asdict(target),
     "scenario": asdict(scenario),
   }
@@ -1642,6 +1647,7 @@ def _validate_frozen_v21_context(payload: Mapping[str, Any]) -> dict[str, Any]:
     "formal_context",
     "family_spec_sha256",
     "candidate_severity",
+    "nominal_command_delay_range_s",
     "target",
     "scenario",
     "parameters_sha256",
@@ -2166,10 +2172,17 @@ def apply_frozen_deployment_context(
     low * parameters.command_forward_scale,
     high * parameters.command_forward_scale,
   )
-  command.command_delay_range_s = (
-    parameters.command_delay_s,
-    parameters.command_delay_s,
-  )
+  if validated.get("kind") == V22_CONTEXT_KIND:
+    nominal_delay_range = tuple(
+      float(value) for value in validated["nominal_command_delay_range_s"]
+    )
+    if tuple(command.command_delay_range_s) != nominal_delay_range:
+      raise ValueError("v22 command-delay distribution is not nominal")
+  else:
+    command.command_delay_range_s = (
+      parameters.command_delay_s,
+      parameters.command_delay_s,
+    )
   command.low_pass_time_constant_s = parameters.command_low_pass_s
 
   action = cfg.actions["joint_pos"]
@@ -2354,6 +2367,7 @@ def apply_frozen_deployment_context(
     "role": role,
     "parameters_sha256": validated["parameters_sha256"],
     "parameters": asdict(parameters),
+    "applied_command_delay_range_s": tuple(command.command_delay_range_s),
     "scenario": scenario_metadata,
     "actor_context_fields_added": 5 if observable_specialist else 0,
   }

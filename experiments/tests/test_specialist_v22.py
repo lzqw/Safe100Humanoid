@@ -76,11 +76,16 @@ def test_v22_lateral_varies_only_bias_and_lateral_pulse_magnitude() -> None:
   last = generate_v22_specialist_context("L_effect", seeds[-1])
   assert first["target"] == last["target"]
   target = first["target"]
+  assert target["num_steps"] == 9
+  assert target["rise_profile"] == (0.13,) * 9
+  assert target["tread_profile"] == (0.35,) * 9
+  assert target["episode_length_s"] == 35.0
   assert target["action_gain"] == 1.0
   assert target["action_delay_steps"] == 0
   assert target["encoder_bias"] == 0.0
-  assert target["command_delay_s"] == 0.0
-  assert target["command_low_pass_s"] == 0.0
+  assert target["command_delay_s"] == 0.10
+  assert target["command_low_pass_s"] == 0.08
+  assert first["nominal_command_delay_range_s"] == [0.04, 0.16]
   assert not any(target["action_bias"])
   changed = {
     key
@@ -97,7 +102,7 @@ def test_v22_lateral_varies_only_bias_and_lateral_pulse_magnitude() -> None:
     assert scenario["yaw_command_bias"] == 0.0
     assert scenario["yaw_pulse_min"] == 0.0
     assert scenario["yaw_pulse_max"] == 0.0
-    assert scenario["foot_friction"] == 0.65
+    assert scenario["foot_friction"] == 0.60
     assert scenario["stair_half_width"] == 1.2
     assert scenario["centerline_lateral_gain"] == 0.8
     assert scenario["centerline_heading_gain"] == 1.4
@@ -108,6 +113,13 @@ def test_v22_contact_varies_only_foot_friction() -> None:
   first = generate_v22_specialist_context("C_effect", seeds[0])
   last = generate_v22_specialist_context("C_effect", seeds[-1])
   assert first["target"] == last["target"]
+  assert first["target"]["num_steps"] == 9
+  assert first["target"]["rise_profile"] == (0.13,) * 9
+  assert first["target"]["tread_profile"] == (0.35,) * 9
+  assert first["target"]["command_delay_s"] == 0.10
+  assert first["target"]["command_low_pass_s"] == 0.08
+  assert first["target"]["episode_length_s"] == 35.0
+  assert first["nominal_command_delay_range_s"] == [0.04, 0.16]
   changed = {
     key
     for key in first["scenario"]
@@ -303,3 +315,6 @@ def test_v22_contact_freeze_requires_passed_lateral_result() -> None:
   assert 'if args.context_id == "C_effect":' in source
   assert 'lateral.get("development_gate", {}).get("passed") is not True' in source
   assert "contact cannot start because the lateral gate did not pass" in source
+  assert '"--superseded-before-any-base-evaluation"' in source
+  assert '"superseded_before_first_base_policy_episode"' in source
+  assert '"base_policy_episode_outcomes_observed": False' in source
