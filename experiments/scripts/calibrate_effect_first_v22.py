@@ -24,6 +24,7 @@ from specialist_v22_protocol import (
   POLICY_METHOD,
   PROTOCOL_ID,
   V22_CONTEXT_SCHEMA_VERSION,
+  calibration_evaluation_seed,
   configure_v22_policy_evaluation_algorithm,
 )
 
@@ -178,7 +179,7 @@ def main() -> None:
       candidate_dir = output_dir / f"candidate_seed{candidate_seed}"
       candidate_path = candidate_dir / "context.json"
       _write_immutable_json(candidate_path, candidate)
-      evaluation_seed = evaluation_seed_base + 100 * candidate_index
+      evaluation_seed = calibration_evaluation_seed(context_id, candidate_index)
       evaluation = _evaluate_state(
         runner,
         base_actor,

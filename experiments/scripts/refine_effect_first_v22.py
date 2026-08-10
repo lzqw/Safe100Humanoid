@@ -39,16 +39,26 @@ from specialist_v22_protocol import (
   CONTEXT_ADAPTATION_SEEDS,
   CONTEXT_VALIDATION_SEEDS,
   CONTEXTS,
+  DUAL_ROLLOUT_BATCHES,
   EVAL_BATCH_SIZE,
+  FAILURE_DISCOVERY_MAX_ROLLOUTS,
+  FAILURE_START_FRACTION,
   MODES,
+  NORMAL_FAILURE_SUCCESS_SLOTS,
   NUM_ENVS,
   POLICY_METHOD,
   PROTOCOL_ID,
   ROLLOUT_STEPS,
   ROUNDS,
+  SUCCESS_START_FRACTION,
   VALIDATION_EPISODES,
   V22_CONTEXT_SCHEMA_VERSION,
+  candidate_confirmation_seed,
+  candidate_d0_seed,
   candidate_confirmation_gate,
+  candidate_screen_seed,
+  dual_rollout_seed,
+  failure_discovery_seed,
   select_best_so_far,
 )
 
@@ -99,13 +109,21 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument(
     "--validation-num-episodes", type=int, default=VALIDATION_EPISODES
   )
-  parser.add_argument("--failure-start-fraction", type=float, default=0.1875)
-  parser.add_argument("--success-start-fraction", type=float, default=0.1875)
+  parser.add_argument(
+    "--failure-start-fraction", type=float, default=FAILURE_START_FRACTION
+  )
+  parser.add_argument(
+    "--success-start-fraction", type=float, default=SUCCESS_START_FRACTION
+  )
   parser.add_argument("--failure-policy-weight", type=float, default=1.0)
   parser.add_argument("--success-policy-weight", type=float, default=1.25)
   parser.add_argument("--bank-capacity", type=int, default=256)
   parser.add_argument("--success-pool-capacity", type=int, default=1024)
-  parser.add_argument("--failure-discovery-max-rollouts", type=int, default=12)
+  parser.add_argument(
+    "--failure-discovery-max-rollouts",
+    type=int,
+    default=FAILURE_DISCOVERY_MAX_ROLLOUTS,
+  )
   parser.add_argument("--actor-learning-rate", type=float, default=5.0e-6)
   parser.add_argument("--critic-learning-rate", type=float, default=1.0e-4)
   parser.add_argument("--fall-penalty-weight", type=float, default=-100.0)
@@ -141,8 +159,18 @@ def _validate_args(args: argparse.Namespace) -> None:
       args.validation_num_episodes,
       VALIDATION_EPISODES,
     ),
-    "failure_start_fraction": (args.failure_start_fraction, 0.1875),
-    "success_start_fraction": (args.success_start_fraction, 0.1875),
+    "failure_start_fraction": (
+      args.failure_start_fraction,
+      FAILURE_START_FRACTION,
+    ),
+    "success_start_fraction": (
+      args.success_start_fraction,
+      SUCCESS_START_FRACTION,
+    ),
+    "failure_discovery_max_rollouts": (
+      args.failure_discovery_max_rollouts,
+      FAILURE_DISCOVERY_MAX_ROLLOUTS,
+    ),
     "failure_policy_weight": (args.failure_policy_weight, 1.0),
     "success_policy_weight": (args.success_policy_weight, 1.25),
     "actor_learning_rate": (args.actor_learning_rate, 5.0e-6),
@@ -405,11 +433,15 @@ def main() -> None:
   specialist_generator = torch.Generator(device="cpu")
   required_failure_starts = round(args.num_envs * args.failure_start_fraction)
   required_success_starts = round(args.num_envs * args.success_start_fraction)
-  if (required_failure_starts, required_success_starts) != (12, 12):
+  if (
+    args.num_envs - required_failure_starts - required_success_starts,
+    required_failure_starts,
+    required_success_starts,
+  ) != NORMAL_FAILURE_SUCCESS_SLOTS:
     raise RuntimeError("v22 must realize exactly 40/12/12 environment slots")
   obs, _ = env.reset()
 
-  d0_seed = args.seed + 300_000
+  d0_seed = candidate_d0_seed(args.context_id)
   baseline_eval = _evaluate_state(
     runner,
     initial_actor_state,
@@ -462,7 +494,7 @@ def main() -> None:
   discovery: list[dict[str, Any]] = []
   for discovery_index in range(args.failure_discovery_max_rollouts):
     before_discovery = runner.snapshot_candidate_state()
-    rollout_seed = args.seed + 500_000 + discovery_index
+    rollout_seed = failure_discovery_seed(args.context_id, discovery_index)
     _seed_rollout(rollout_seed, specialist_generator)
     obs, metrics, _ = _collect_and_update_specialist(
       runner,
@@ -551,9 +583,11 @@ def main() -> None:
     rollout_batches = []
     rollout_metrics = []
     rollout_seeds = []
-    for batch_index in range(2):
+    for batch_index in range(DUAL_ROLLOUT_BATCHES):
       runner.restore_candidate_state(before)
-      rollout_seed = args.seed + 1_000_000 + 10 * round_index + batch_index
+      rollout_seed = dual_rollout_seed(
+        args.context_id, round_index, batch_index
+      )
       rollout_seeds.append(rollout_seed)
       _seed_rollout(rollout_seed, specialist_generator)
       obs, metrics, batch = _collect_and_update_specialist(
@@ -586,7 +620,7 @@ def main() -> None:
     update_metrics["collector_metrics"] = rollout_metrics
     full_candidate_state = _actor_state(runner.alg.actor)
 
-    screening_seed = args.seed + 20_000 * round_index
+    screening_seed = candidate_screen_seed(args.context_id, round_index)
     old_screen = _evaluate_state(
       runner,
       old_actor_state,
@@ -647,7 +681,9 @@ def main() -> None:
       else None
     )
 
-    confirmation_seed = args.seed + 20_000 * round_index + 10_000
+    confirmation_seed = candidate_confirmation_seed(
+      args.context_id, round_index
+    )
     target_gate_accepted = False
     selected_fraction = None
     if screened_best is not None:
@@ -930,10 +966,10 @@ def main() -> None:
     "single_privileged_critic": True,
     "auxiliary_risk_or_cost_heads": False,
     "rollout_per_round": {
-      "batch_count": 2,
+      "batch_count": DUAL_ROLLOUT_BATCHES,
       "environments_per_batch": args.num_envs,
       "steps_per_environment": args.rollout_steps,
-      "normal_failure_success_slots": [40, 12, 12],
+      "normal_failure_success_slots": list(NORMAL_FAILURE_SUCCESS_SLOTS),
     },
     "candidate_selection": {
       "fractions": list(args.candidate_fractions),

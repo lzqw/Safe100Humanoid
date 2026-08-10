@@ -26,15 +26,24 @@ from specialist_v22_protocol import (
   CONTEXT_CALIBRATION_CANDIDATE_SEEDS,
   CONTEXT_REPORT_BOOTSTRAP_SEEDS,
   CONTEXTS,
+  DUAL_ROLLOUT_BATCHES,
+  FAILURE_DISCOVERY_MAX_ROLLOUTS,
   FINAL_D0_EPISODES,
   FINAL_TARGET_EPISODES,
+  NORMAL_FAILURE_SUCCESS_SLOTS,
   REPORT_BOOTSTRAP_SAMPLES,
   ROUNDS,
   VALIDATION_EPISODES,
   all_v22_random_seeds,
+  calibration_evaluation_seed,
+  candidate_confirmation_seed,
+  candidate_d0_seed,
   candidate_confirmation_gate,
+  candidate_screen_seed,
   configure_v22_policy_evaluation_algorithm,
   development_success_gate,
+  dual_rollout_seed,
+  failure_discovery_seed,
   fresh_randomness_report,
   select_best_so_far,
 )
@@ -341,6 +350,9 @@ def test_v22_counts_and_gates_match_effect_first_design() -> None:
   assert CALIBRATION_SUCCESS_BOUNDS == (0.65, 0.75)
   assert CALIBRATION_MINIMUM_PURITY == 0.85
   assert ROUNDS == 8
+  assert DUAL_ROLLOUT_BATCHES == 2
+  assert NORMAL_FAILURE_SUCCESS_SLOTS == (40, 12, 12)
+  assert FAILURE_DISCOVERY_MAX_ROLLOUTS == 12
   assert CANDIDATE_FRACTIONS == (0.5, 1.0, 1.5)
   assert CANDIDATE_SCREEN_EPISODES == 64
   assert CANDIDATE_CONFIRM_EPISODES == 128
@@ -400,6 +412,12 @@ def test_v22_expanded_randomness_is_fresh_and_unique_against_history() -> None:
   for context_id, role_seeds in CONTEXT_REPORT_BOOTSTRAP_SEEDS.items():
     assert set(role_seeds.values()) <= seeds
     assert CONTEXT_ADAPTATION_SEEDS[context_id] + 900_000 not in seeds
+    assert candidate_d0_seed(context_id) in seeds
+    assert calibration_evaluation_seed(context_id, 0) in seeds
+    assert failure_discovery_seed(context_id, 11) in seeds
+    assert dual_rollout_seed(context_id, 8, 1) in seeds
+    assert candidate_screen_seed(context_id, 8) in seeds
+    assert candidate_confirmation_seed(context_id, 8) in seeds
   assert len(seeds) > 100
   report = fresh_randomness_report(REPO)
   assert report["passed"] is True

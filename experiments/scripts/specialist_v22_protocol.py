@@ -31,6 +31,11 @@ MODES = {
 ROUNDS = 8
 NUM_ENVS = 64
 ROLLOUT_STEPS = 1024
+DUAL_ROLLOUT_BATCHES = 2
+NORMAL_FAILURE_SUCCESS_SLOTS = (40, 12, 12)
+FAILURE_START_FRACTION = NORMAL_FAILURE_SUCCESS_SLOTS[1] / NUM_ENVS
+SUCCESS_START_FRACTION = NORMAL_FAILURE_SUCCESS_SLOTS[2] / NUM_ENVS
+FAILURE_DISCOVERY_MAX_ROLLOUTS = 12
 CANDIDATE_FRACTIONS = (0.5, 1.0, 1.5)
 CANDIDATE_SCREEN_EPISODES = 64
 CANDIDATE_CONFIRM_EPISODES = 128
@@ -87,6 +92,37 @@ CONTEXT_REPORT_BOOTSTRAP_SEEDS = {
   "L_effect": {"target": 97_000_000, "D0": 97_000_010},
   "C_effect": {"target": 97_100_000, "D0": 97_100_010},
 }
+
+
+def calibration_evaluation_seed(context_id: str, candidate_index: int) -> int:
+  return CONTEXT_CALIBRATION_EVALUATION_SEEDS[context_id] + 100 * candidate_index
+
+
+def failure_discovery_seed(context_id: str, discovery_index: int) -> int:
+  return CONTEXT_ADAPTATION_SEEDS[context_id] + 500_000 + discovery_index
+
+
+def dual_rollout_seed(
+  context_id: str, round_index: int, batch_index: int
+) -> int:
+  return (
+    CONTEXT_ADAPTATION_SEEDS[context_id]
+    + 1_000_000
+    + 10 * round_index
+    + batch_index
+  )
+
+
+def candidate_screen_seed(context_id: str, round_index: int) -> int:
+  return CONTEXT_ADAPTATION_SEEDS[context_id] + 20_000 * round_index
+
+
+def candidate_confirmation_seed(context_id: str, round_index: int) -> int:
+  return candidate_screen_seed(context_id, round_index) + 10_000
+
+
+def candidate_d0_seed(context_id: str) -> int:
+  return CONTEXT_ADAPTATION_SEEDS[context_id] + 300_000
 
 
 def configure_v22_policy_evaluation_algorithm(cfg: Any) -> None:
@@ -212,23 +248,29 @@ def all_v22_random_seeds() -> set[int]:
   for context_id in CONTEXTS:
     candidates = CONTEXT_CALIBRATION_CANDIDATE_SEEDS[context_id]
     seeds.update(candidates)
-    calibration_base = CONTEXT_CALIBRATION_EVALUATION_SEEDS[context_id]
     for index in range(len(candidates)):
-      seeds.update(calibration_base + 100 * index + repeat for repeat in range(4))
+      evaluation_seed = calibration_evaluation_seed(context_id, index)
+      seeds.update(evaluation_seed + repeat for repeat in range(4))
     adaptation = CONTEXT_ADAPTATION_SEEDS[context_id]
     seeds.add(adaptation)
-    seeds.update(adaptation + 500_000 + index for index in range(12))
     seeds.update(
-      adaptation + 1_000_000 + 10 * round_index + batch_index
-      for round_index in range(1, ROUNDS + 1)
-      for batch_index in range(2)
+      failure_discovery_seed(context_id, index)
+      for index in range(FAILURE_DISCOVERY_MAX_ROLLOUTS)
     )
-    seeds.update(adaptation + 20_000 * round_index for round_index in range(1, 9))
     seeds.update(
-      adaptation + 20_000 * round_index + 10_000
+      dual_rollout_seed(context_id, round_index, batch_index)
+      for round_index in range(1, ROUNDS + 1)
+      for batch_index in range(DUAL_ROLLOUT_BATCHES)
+    )
+    seeds.update(
+      candidate_screen_seed(context_id, round_index)
       for round_index in range(1, ROUNDS + 1)
     )
-    seeds.add(adaptation + 300_000)
+    seeds.update(
+      candidate_confirmation_seed(context_id, round_index)
+      for round_index in range(1, ROUNDS + 1)
+    )
+    seeds.add(candidate_d0_seed(context_id))
     seeds.update(CONTEXT_VALIDATION_SEEDS[context_id] + repeat for repeat in range(2))
     seeds.update(CONTEXT_FINAL_TARGET_SEEDS[context_id] + repeat for repeat in range(4))
     seeds.update(CONTEXT_FINAL_D0_SEEDS[context_id] + repeat for repeat in range(2))
