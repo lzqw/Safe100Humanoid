@@ -22,7 +22,9 @@ from specialist_v22_protocol import (
   CANDIDATE_D0_EPISODES,
   CANDIDATE_FRACTIONS,
   CANDIDATE_SCREEN_EPISODES,
+  CONTEXT_ADAPTATION_SEEDS,
   CONTEXT_CALIBRATION_CANDIDATE_SEEDS,
+  CONTEXT_REPORT_BOOTSTRAP_SEEDS,
   CONTEXTS,
   FINAL_D0_EPISODES,
   FINAL_TARGET_EPISODES,
@@ -390,7 +392,14 @@ def test_v22_evaluation_configuration_is_beta_zero_v20_v21_core() -> None:
 
 
 def test_v22_expanded_randomness_is_fresh_and_unique_against_history() -> None:
+  assert CONTEXT_REPORT_BOOTSTRAP_SEEDS == {
+    "L_effect": {"target": 97_000_000, "D0": 97_000_010},
+    "C_effect": {"target": 97_100_000, "D0": 97_100_010},
+  }
   seeds = all_v22_random_seeds()
+  for context_id, role_seeds in CONTEXT_REPORT_BOOTSTRAP_SEEDS.items():
+    assert set(role_seeds.values()) <= seeds
+    assert CONTEXT_ADAPTATION_SEEDS[context_id] + 900_000 not in seeds
   assert len(seeds) > 100
   report = fresh_randomness_report(REPO)
   assert report["passed"] is True

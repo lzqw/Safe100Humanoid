@@ -222,16 +222,14 @@ def main() -> None:
   paired_rows: list[dict[str, Any]] = []
   telemetry_rows: list[dict[str, Any]] = []
   comparisons: dict[str, Any] = {}
-  for evaluation_index, (evaluation_role, domain, episode_count, seed) in enumerate(
+  for evaluation_role, domain, episode_count, seed in (
     (
-      (
-        "target",
-        "DQHMED",
-        FINAL_TARGET_EPISODES,
-        CONTEXT_FINAL_TARGET_SEEDS[context_id],
-      ),
-      ("D0", "D0", FINAL_D0_EPISODES, CONTEXT_FINAL_D0_SEEDS[context_id]),
-    )
+      "target",
+      "DQHMED",
+      FINAL_TARGET_EPISODES,
+      CONTEXT_FINAL_TARGET_SEEDS[context_id],
+    ),
+    ("D0", "D0", FINAL_D0_EPISODES, CONTEXT_FINAL_D0_SEEDS[context_id]),
   ):
     repeats = episode_count // EVAL_BATCH_SIZE
     summaries: dict[str, Any] = {}
@@ -290,8 +288,7 @@ def main() -> None:
       ordered["base"],
       ordered["best"],
       bootstrap_samples=REPORT_BOOTSTRAP_SAMPLES,
-      bootstrap_seed=CONTEXT_REPORT_BOOTSTRAP_SEEDS[context_id]
-      + 10 * evaluation_index,
+      bootstrap_seed=CONTEXT_REPORT_BOOTSTRAP_SEEDS[context_id][evaluation_role],
     )
     comparisons[evaluation_role] = comparison
     raw[evaluation_role] = summaries

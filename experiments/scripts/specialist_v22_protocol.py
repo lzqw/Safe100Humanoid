@@ -84,8 +84,8 @@ CONTEXT_FINAL_D0_SEEDS = {
   "C_effect": 96_100_000,
 }
 CONTEXT_REPORT_BOOTSTRAP_SEEDS = {
-  "L_effect": 97_000_000,
-  "C_effect": 97_100_000,
+  "L_effect": {"target": 97_000_000, "D0": 97_000_010},
+  "C_effect": {"target": 97_100_000, "D0": 97_100_010},
 }
 
 
@@ -229,11 +229,10 @@ def all_v22_random_seeds() -> set[int]:
       for round_index in range(1, ROUNDS + 1)
     )
     seeds.add(adaptation + 300_000)
-    seeds.add(adaptation + 900_000)
     seeds.update(CONTEXT_VALIDATION_SEEDS[context_id] + repeat for repeat in range(2))
     seeds.update(CONTEXT_FINAL_TARGET_SEEDS[context_id] + repeat for repeat in range(4))
     seeds.update(CONTEXT_FINAL_D0_SEEDS[context_id] + repeat for repeat in range(2))
-    seeds.add(CONTEXT_REPORT_BOOTSTRAP_SEEDS[context_id])
+    seeds.update(CONTEXT_REPORT_BOOTSTRAP_SEEDS[context_id].values())
   return seeds
 
 
