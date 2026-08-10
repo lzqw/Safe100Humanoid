@@ -47,6 +47,10 @@ def evaluate_policy(
   from mjlab.rl import RslRlVecEnvWrapper
   from mjlab.tasks.registry import load_env_cfg, load_rl_cfg
 
+  from src.tasks.stairs_cbf.deployment_context import (
+    OBSERVABLE_SPECIALIST_CONTEXT_KINDS,
+  )
+
   # Reset every RNG used by reset events and command generation so old and
   # candidate policies receive paired initial states and joystick traces.
   random.seed(seed)
@@ -84,10 +88,7 @@ def evaluate_policy(
   if v19_context is not None and (
     deployment_context is None
     or deployment_context.get("kind")
-    not in (
-      "observable_failure_conditioned_brief_ppo_v19",
-      "local_matched_success_preservation_v21",
-    )
+    not in OBSERVABLE_SPECIALIST_CONTEXT_KINDS
   ):
     from src.tasks.stairs_cbf.deployment_context import (
       configure_v19_actor_interface,
@@ -916,6 +917,7 @@ def main() -> None:
 
   import src.tasks  # noqa: F401
   from src.tasks.stairs_cbf.deployment_context import (
+    OBSERVABLE_SPECIALIST_CONTEXT_KINDS,
     apply_frozen_deployment_context,
     deployment_context_role_for_task,
     load_frozen_deployment_context,
@@ -935,14 +937,16 @@ def main() -> None:
     v19_context is None
     and deployment_context is not None
     and deployment_context.get("kind")
-    == "observable_failure_conditioned_brief_ppo_v19"
+    in OBSERVABLE_SPECIALIST_CONTEXT_KINDS
   ):
     v19_context = deployment_context
-  if v19_context is not None and v19_context.get("kind") not in (
-    "observable_failure_conditioned_brief_ppo_v19",
-    "local_matched_success_preservation_v21",
+  if (
+    v19_context is not None
+    and v19_context.get("kind") not in OBSERVABLE_SPECIALIST_CONTEXT_KINDS
   ):
-    raise ValueError("--v19-context is not a v19/v21 observable-failure context")
+    raise ValueError(
+      "--v19-context is not a v19/v21/v22 observable-failure context"
+    )
   inferred_role = deployment_context_role_for_task(args.task)
   context_role = args.deployment_context_role or inferred_role
   if inferred_role is not None and deployment_context is None:
@@ -958,10 +962,7 @@ def main() -> None:
   if v19_context is not None and (
     deployment_context is None
     or deployment_context.get("kind")
-    not in (
-      "observable_failure_conditioned_brief_ppo_v19",
-      "local_matched_success_preservation_v21",
-    )
+    not in OBSERVABLE_SPECIALIST_CONTEXT_KINDS
   ):
     from src.tasks.stairs_cbf.deployment_context import (
       configure_v19_actor_interface,

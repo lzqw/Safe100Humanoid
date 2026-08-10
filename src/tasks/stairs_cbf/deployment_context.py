@@ -50,6 +50,11 @@ V22_CONTEXT_KIND = "effect_first_development_v22"
 V22_CALIBRATION_KIND = (
   "base_policy_pure_context_first_qualifying_v22"
 )
+OBSERVABLE_SPECIALIST_CONTEXT_KINDS = (
+  V19_CONTEXT_KIND,
+  V21_CONTEXT_KIND,
+  V22_CONTEXT_KIND,
+)
 V22_CONTEXT_SPECS: dict[str, dict[str, Any]] = {
   "L_effect": {
     "mode": "lateral",
@@ -2081,11 +2086,7 @@ def configure_v19_actor_interface(
 ) -> dict[str, object]:
   """Install the v19 interface and, only on target, its gait-clock shift."""
   validated = validate_frozen_deployment_context(payload)
-  if validated.get("kind") not in (
-    V19_CONTEXT_KIND,
-    V21_CONTEXT_KIND,
-    V22_CONTEXT_KIND,
-  ):
+  if validated.get("kind") not in OBSERVABLE_SPECIALIST_CONTEXT_KINDS:
     raise ValueError("observable actor interface requires a v19/v21/v22 context")
   mode = validated["specialist_mode"]
   scenario = V19ScenarioParameters(**validated["scenario"])
@@ -2147,10 +2148,8 @@ def apply_frozen_deployment_context(
   validated = validate_frozen_deployment_context(payload)
   effect_first_v22 = validated.get("kind") == V22_CONTEXT_KIND
   legacy_specialist = validated.get("kind") == SPECIALIST_CONTEXT_KIND
-  observable_specialist = validated.get("kind") in (
-    V19_CONTEXT_KIND,
-    V21_CONTEXT_KIND,
-    V22_CONTEXT_KIND,
+  observable_specialist = (
+    validated.get("kind") in OBSERVABLE_SPECIALIST_CONTEXT_KINDS
   )
   specialist = legacy_specialist or observable_specialist
   if role not in ({"target"} if specialist else {"target", "neighbor"}):

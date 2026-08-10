@@ -78,29 +78,28 @@ def _evaluate_state(
   actor_state_sha256 = _actor_state_sha256(actor_state)
   if deployment_context is not None:
     from src.tasks.stairs_cbf.deployment_context import (
+      OBSERVABLE_SPECIALIST_CONTEXT_KINDS,
       load_frozen_deployment_context,
     )
 
     deployment_context = deployment_context.resolve()
     loaded_context = load_frozen_deployment_context(deployment_context)
     context_hash = loaded_context["parameters_sha256"]
-    if loaded_context.get("kind") in (
-      "observable_failure_conditioned_brief_ppo_v19",
-      "local_matched_success_preservation_v21",
-    ):
+    if loaded_context.get("kind") in OBSERVABLE_SPECIALIST_CONTEXT_KINDS:
       v19_context = deployment_context
       v19_mode = loaded_context["specialist_mode"]
   if v19_context is not None:
     from src.tasks.stairs_cbf.deployment_context import (
-      V19_CONTEXT_KIND,
-      V21_CONTEXT_KIND,
+      OBSERVABLE_SPECIALIST_CONTEXT_KINDS,
       load_frozen_deployment_context,
     )
 
     v19_context = v19_context.resolve()
     loaded_v19 = load_frozen_deployment_context(v19_context)
-    if loaded_v19.get("kind") not in (V19_CONTEXT_KIND, V21_CONTEXT_KIND):
-      raise ValueError("--v19-context must identify an observable v19/v21 context")
+    if loaded_v19.get("kind") not in OBSERVABLE_SPECIALIST_CONTEXT_KINDS:
+      raise ValueError(
+        "--v19-context must identify an observable v19/v21/v22 context"
+      )
     v19_mode = loaded_v19["specialist_mode"]
   checkpoint_payload = runner.alg.save()
   checkpoint_payload["actor_state_dict"] = {

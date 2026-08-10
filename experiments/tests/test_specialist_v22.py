@@ -36,8 +36,10 @@ from specialist_v22_protocol import (
   fresh_randomness_report,
   select_best_so_far,
 )
+from online_refine_stairs import _evaluate_state
 from src.tasks.stairs_cbf.config import g1_online_stairs_env_cfg
 from src.tasks.stairs_cbf.deployment_context import (
+  OBSERVABLE_SPECIALIST_CONTEXT_KINDS,
   V22_CALIBRATION_KIND,
   V22_CONTEXT_KIND,
   V22_CONTEXT_SCHEMA_VERSION,
@@ -231,6 +233,42 @@ def test_v22_application_changes_only_declared_physical_effect_axes() -> None:
         assert metadata["declared_effect_axes"] == ["foot_friction"]
         for field in all_command_fields:
           assert getattr(command, field) == getattr(nominal_command, field)
+
+
+def test_v22_is_accepted_by_isolated_observable_evaluation_boundary(
+  tmp_path: Path,
+) -> None:
+  assert V22_CONTEXT_KIND in OBSERVABLE_SPECIALIST_CONTEXT_KINDS
+  payload = generate_v22_specialist_context(
+    "L_effect", CONTEXT_CALIBRATION_CANDIDATE_SEEDS["L_effect"][0]
+  )
+  context_path = tmp_path / "v22_context.json"
+  context_path.write_text(json.dumps(payload))
+
+  class _Algorithm:
+    @staticmethod
+    def save() -> dict:
+      return {}
+
+  runner = SimpleNamespace(alg=_Algorithm())
+  assert _evaluate_state(
+    runner,
+    {},
+    domains=(),
+    num_envs=1,
+    num_episodes=1,
+    seed=1,
+    device="cpu",
+    deployment_context=context_path,
+    v19_context=context_path,
+  ) == {}
+  for relative in (
+    "experiments/scripts/online_refine_stairs.py",
+    "experiments/scripts/evaluate_online_stairs.py",
+  ):
+    source = (REPO / relative).read_text()
+    assert "OBSERVABLE_SPECIALIST_CONTEXT_KINDS" in source
+    assert "v19/v21/v22" in source
 
 
 def _calibrated_context() -> dict:
