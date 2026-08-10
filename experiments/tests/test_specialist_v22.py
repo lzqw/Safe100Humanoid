@@ -452,6 +452,7 @@ def test_v22_contact_freeze_requires_passed_lateral_result() -> None:
   assert 'lateral.get("development_gate", {}).get("passed") is not True' in source
   assert "contact cannot start because the lateral gate did not pass" in source
   assert '"--superseded-before-any-base-evaluation"' in source
+  assert '"--supersession-reason"' in source
   assert '"superseded_before_first_base_policy_episode"' in source
   assert '"base_policy_episode_outcomes_observed": False' in source
   assert '"context_schema_version": V22_CONTEXT_SCHEMA_VERSION' in source

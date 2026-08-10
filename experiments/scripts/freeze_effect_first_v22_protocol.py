@@ -133,6 +133,7 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--lateral-final-result", type=Path)
   parser.add_argument("--superseded-protocol", type=Path)
   parser.add_argument("--superseded-commit")
+  parser.add_argument("--supersession-reason")
   parser.add_argument(
     "--superseded-before-any-base-evaluation", action="store_true"
   )
@@ -262,9 +263,12 @@ def _precalibration(repo: Path, args: argparse.Namespace) -> dict[str, Any]:
   supplied = (
     args.superseded_protocol is not None,
     args.superseded_commit is not None,
+    args.supersession_reason is not None,
   )
-  if supplied[0] != supplied[1]:
-    raise ValueError("v22 superseded protocol and commit must be supplied together")
+  if len(set(supplied)) != 1:
+    raise ValueError(
+      "v22 superseded protocol, commit, and reason must be supplied together"
+    )
   if args.superseded_protocol is not None:
     if not args.superseded_before_any_base_evaluation:
       raise ValueError("v22 supersession must attest that no base evaluation began")
@@ -286,11 +290,7 @@ def _precalibration(repo: Path, args: argparse.Namespace) -> dict[str, Any]:
     superseded = {
       "protocol": binding,
       "disposition": "superseded_before_first_base_policy_episode",
-      "reason": (
-        "source audit found inherited v21 non-nominal geometry, command "
-        "dynamics, episode length, friction, centerline control, and CBF toe "
-        "margin in nominal carriers"
-      ),
+      "reason": args.supersession_reason,
       "calibration_process_started": False,
       "base_policy_episode_outcomes_observed": False,
       "adapted_policy_outcomes_observed": False,

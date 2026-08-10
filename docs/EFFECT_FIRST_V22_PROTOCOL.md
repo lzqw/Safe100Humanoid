@@ -45,6 +45,11 @@ hashes the only allowed physical effect axes: `lateral_command_bias` plus
 Config-level regression tests apply both severity endpoints to a fresh
 `DQHMED` configuration and verify every other physical carrier remains nominal.
 
+Every replaced prospective boundary is retained in Git and linked by commit,
+file hash, and an explicit supersession reason. A replacement is permitted only
+before any base-policy episode has run; the freezer rejects partial lineage
+arguments and records that the waiting queue was terminated before GPU use.
+
 Execution is conditional and sequential. `L_effect` is calibrated, adapted, and
 tested first. Contact calibration and adaptation are prohibited unless the
 lateral fresh final test passes the development gate. If lateral fails, the
