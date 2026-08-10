@@ -16,6 +16,7 @@ sys.path.insert(0, str(REPO / "experiments/scripts"))
 
 from specialist_v22_protocol import (
   CALIBRATION_EPISODES,
+  CALIBRATION_MINIMUM_FAILURES,
   CALIBRATION_MINIMUM_PURITY,
   CALIBRATION_SUCCESS_BOUNDS,
   CANDIDATE_CONFIRM_EPISODES,
@@ -286,13 +287,28 @@ def _calibrated_context() -> dict:
   context_id = "L_effect"
   seeds = list(CONTEXT_CALIBRATION_CANDIDATE_SEEDS[context_id])
   payload = generate_v22_specialist_context(context_id, seeds[0])
+  success_count = 358
+  failure_count = 512 - success_count
+  target_failure_count = 139
+  non_fall_failure_count = 10
+  fall_count = failure_count - non_fall_failure_count
   attempt = {
     "candidate_seed": seeds[0],
     "base_policy_only": True,
     "num_episodes": 512,
-    "success_rate": 0.70,
-    "fall_count": 154,
-    "target_failure_fraction": 0.90,
+    "success_count": success_count,
+    "success_rate": success_count / 512,
+    "failure_count": failure_count,
+    "fall_count": fall_count,
+    "non_fall_failure_count": non_fall_failure_count,
+    "failure_type_counts": {
+      "lateral_heading_drift": target_failure_count,
+      "contact_stability": 0,
+      "non_lateral_high_cbf_demand": 0,
+      "non_lateral_balance_or_phase": fall_count - target_failure_count,
+      "other_non_lateral": 0,
+    },
+    "target_failure_fraction": target_failure_count / failure_count,
     "target_failure_type": "lateral_heading_drift",
     "parameters_sha256": payload["parameters_sha256"],
     "qualifies": True,
@@ -302,7 +318,7 @@ def _calibrated_context() -> dict:
     "adapted_policy_evaluations_used": False,
     "success_rate_bounds": [0.65, 0.75],
     "minimum_target_failure_fraction": 0.85,
-    "minimum_fall_count": 100,
+    "minimum_failure_count": 100,
     "episodes_per_candidate": 512,
     "candidate_seeds": seeds,
     "attempts": [attempt],
@@ -319,6 +335,14 @@ def test_v22_calibration_validator_enforces_first_base_only_qualifier() -> None:
   adapted["calibration"]["adapted_policy_evaluations_used"] = True
   with pytest.raises(ValueError, match="adapted policy"):
     validate_calibrated_v22_context(adapted)
+  fall_only_purity = deepcopy(payload)
+  attempt = fall_only_purity["calibration"]["attempts"][0]
+  attempt["target_failure_fraction"] = (
+    attempt["failure_type_counts"]["lateral_heading_drift"]
+    / attempt["fall_count"]
+  )
+  with pytest.raises(ValueError, match="purity denominator"):
+    validate_calibrated_v22_context(fall_only_purity)
   skipped = deepcopy(payload)
   first = deepcopy(skipped["calibration"]["attempts"][0])
   first["qualifies"] = True
@@ -347,6 +371,7 @@ def test_v22_calibration_validator_enforces_first_base_only_qualifier() -> None:
 
 def test_v22_counts_and_gates_match_effect_first_design() -> None:
   assert CALIBRATION_EPISODES == 512
+  assert CALIBRATION_MINIMUM_FAILURES == 100
   assert CALIBRATION_SUCCESS_BOUNDS == (0.65, 0.75)
   assert CALIBRATION_MINIMUM_PURITY == 0.85
   assert ROUNDS == 8

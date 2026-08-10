@@ -12,7 +12,7 @@ from typing import Any
 
 from specialist_v22_protocol import (
   CALIBRATION_EPISODES,
-  CALIBRATION_MINIMUM_FALLS,
+  CALIBRATION_MINIMUM_FAILURES,
   CALIBRATION_MINIMUM_PURITY,
   CALIBRATION_SUCCESS_BOUNDS,
   CANDIDATE_CONFIRM_EPISODES,
@@ -166,7 +166,7 @@ def _common_payload(repo: Path, args: argparse.Namespace) -> dict[str, Any]:
       "adapted_policy_evaluations_used": False,
       "first_qualifying_candidate_is_frozen": True,
       "success_rate_bounds_inclusive": list(CALIBRATION_SUCCESS_BOUNDS),
-      "minimum_fall_count": CALIBRATION_MINIMUM_FALLS,
+      "minimum_failure_count": CALIBRATION_MINIMUM_FAILURES,
       "minimum_target_failure_fraction": CALIBRATION_MINIMUM_PURITY,
       "episodes_per_candidate": CALIBRATION_EPISODES,
       "eval_batch_size": EVAL_BATCH_SIZE,
@@ -365,9 +365,10 @@ def _adaptation(repo: Path, args: argparse.Namespace) -> dict[str, Any]:
       "selected_base_success_rate": context["calibration"]["attempts"][-1][
         "success_rate"
       ],
-      "selected_fall_count": context["calibration"]["attempts"][-1][
-        "fall_count"
+      "selected_failure_count": context["calibration"]["attempts"][-1][
+        "failure_count"
       ],
+      "selected_fall_count": context["calibration"]["attempts"][-1]["fall_count"],
       "selected_target_failure_fraction": context["calibration"]["attempts"][
         -1
       ]["target_failure_fraction"],

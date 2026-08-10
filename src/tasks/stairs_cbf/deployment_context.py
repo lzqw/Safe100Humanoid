@@ -2024,8 +2024,8 @@ def validate_calibrated_v22_context(
     raise ValueError("v22 success-rate bounds must be [0.65, 0.75]")
   if calibration.get("minimum_target_failure_fraction") != 0.85:
     raise ValueError("v22 target-failure purity must be at least 0.85")
-  if calibration.get("minimum_fall_count") != 100:
-    raise ValueError("v22 calibration must require at least 100 falls")
+  if calibration.get("minimum_failure_count") != 100:
+    raise ValueError("v22 calibration must require at least 100 failures")
   if calibration.get("episodes_per_candidate") != 512:
     raise ValueError("v22 calibration requires exactly 512 episodes")
   candidate_seeds = calibration.get("candidate_seeds")
@@ -2048,10 +2048,43 @@ def validate_calibrated_v22_context(
       raise ValueError("v22 calibration attempt was not base-policy only")
     if int(attempt.get("num_episodes", 0)) != 512:
       raise ValueError("v22 calibration attempt does not have 512 episodes")
+    num_episodes = int(attempt.get("num_episodes", 0))
+    success_count = int(attempt.get("success_count", -1))
+    failure_count = int(attempt.get("failure_count", -1))
+    fall_count = int(attempt.get("fall_count", -1))
+    non_fall_failure_count = int(attempt.get("non_fall_failure_count", -1))
+    success_rate = float(attempt.get("success_rate", -1.0))
+    failure_type_counts = attempt.get("failure_type_counts")
+    if (
+      not isinstance(failure_type_counts, Mapping)
+      or success_count + failure_count != num_episodes
+      or fall_count + non_fall_failure_count != failure_count
+      or sum(int(value) for value in failure_type_counts.values()) != fall_count
+      or not math.isclose(
+        success_rate,
+        success_count / num_episodes,
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
+      )
+    ):
+      raise ValueError("v22 calibration outcome counts are inconsistent")
+    target_failure_fraction = float(
+      attempt.get("target_failure_fraction", -1.0)
+    )
+    expected_target_fraction = int(
+      failure_type_counts.get(target_type, 0)
+    ) / max(1, failure_count)
+    if not math.isclose(
+      target_failure_fraction,
+      expected_target_fraction,
+      rel_tol=0.0,
+      abs_tol=1.0e-12,
+    ):
+      raise ValueError("v22 target-failure purity denominator is inconsistent")
     qualifies = (
-      0.65 <= float(attempt.get("success_rate", -1.0)) <= 0.75
-      and int(attempt.get("fall_count", -1)) >= 100
-      and float(attempt.get("target_failure_fraction", -1.0)) >= 0.85
+      0.65 <= success_rate <= 0.75
+      and failure_count >= 100
+      and target_failure_fraction >= 0.85
       and attempt.get("target_failure_type") == target_type
     )
     if bool(attempt.get("qualifies")) is not qualifies:

@@ -66,6 +66,12 @@ candidate satisfying every condition is frozen:
 - at least 100 failures occur;
 - at least 85% of failures have the declared target type.
 
+Here `failure` means every non-success episode. Falls retain their detailed
+failure-mode label, while timeouts or other non-fall failures remain in the
+purity denominator; they cannot be silently dropped to inflate target-failure
+purity. Calibration records success, total failure, fall, and non-fall failure
+counts and validates their exact accounting identity.
+
 Only `pi0` is evaluated. Adapted-policy outcomes cannot affect context
 construction or selection. If no candidate qualifies, the phase stops before
 adaptation and records a calibration-negative result.

@@ -14,7 +14,7 @@ from typing import Any
 from online_refine_stairs import _actor_state, _evaluate_state
 from specialist_v22_protocol import (
   CALIBRATION_EPISODES,
-  CALIBRATION_MINIMUM_FALLS,
+  CALIBRATION_MINIMUM_FAILURES,
   CALIBRATION_MINIMUM_PURITY,
   CALIBRATION_SUCCESS_BOUNDS,
   CONTEXT_CALIBRATION_CANDIDATE_SEEDS,
@@ -111,8 +111,8 @@ def main() -> None:
     "batch": calibration.get("eval_batch_size") == EVAL_BATCH_SIZE,
     "bounds": calibration.get("success_rate_bounds_inclusive")
     == list(CALIBRATION_SUCCESS_BOUNDS),
-    "minimum_falls": calibration.get("minimum_fall_count")
-    == CALIBRATION_MINIMUM_FALLS,
+    "minimum_failures": calibration.get("minimum_failure_count")
+    == CALIBRATION_MINIMUM_FAILURES,
     "purity": calibration.get("minimum_target_failure_fraction")
     == CALIBRATION_MINIMUM_PURITY,
   }
@@ -198,17 +198,23 @@ def main() -> None:
       counts = {
         key: int(value) for key, value in evaluation["failure_type_counts"].items()
       }
-      fall_count = sum(counts.values())
-      fractions = {
-        key: value / max(1, fall_count) for key, value in counts.items()
-      }
+      num_episodes = int(evaluation["num_episodes"])
       success_rate = float(evaluation["success_rate"])
+      success_count = round(success_rate * num_episodes)
+      failure_count = num_episodes - success_count
+      fall_count = sum(counts.values())
+      non_fall_failure_count = failure_count - fall_count
+      if non_fall_failure_count < 0:
+        raise RuntimeError("v22 calibration outcome counts are inconsistent")
+      fractions = {
+        key: value / max(1, failure_count) for key, value in counts.items()
+      }
       target_fraction = fractions[target_failure_type]
       qualifies = (
         CALIBRATION_SUCCESS_BOUNDS[0]
         <= success_rate
         <= CALIBRATION_SUCCESS_BOUNDS[1]
-        and fall_count >= CALIBRATION_MINIMUM_FALLS
+        and failure_count >= CALIBRATION_MINIMUM_FAILURES
         and target_fraction >= CALIBRATION_MINIMUM_PURITY
       )
       attempt = {
@@ -221,9 +227,12 @@ def main() -> None:
         "parameters_sha256": candidate["parameters_sha256"],
         "base_policy_only": True,
         "num_episodes": CALIBRATION_EPISODES,
+        "success_count": success_count,
         "success_rate": success_rate,
         "fall_rate": float(evaluation["fall_rate"]),
+        "failure_count": failure_count,
         "fall_count": fall_count,
+        "non_fall_failure_count": non_fall_failure_count,
         "failure_type_counts": counts,
         "failure_type_fractions": fractions,
         "target_failure_type": target_failure_type,
@@ -269,7 +278,7 @@ def main() -> None:
       "all_declared_candidates_evaluated": len(attempts) == len(candidate_seeds),
       "qualification": {
         "success_rate_bounds_inclusive": list(CALIBRATION_SUCCESS_BOUNDS),
-        "minimum_fall_count": CALIBRATION_MINIMUM_FALLS,
+        "minimum_failure_count": CALIBRATION_MINIMUM_FAILURES,
         "target_failure_type": target_failure_type,
         "minimum_target_failure_fraction": CALIBRATION_MINIMUM_PURITY,
         "episodes_per_candidate": CALIBRATION_EPISODES,
@@ -291,7 +300,7 @@ def main() -> None:
     "selection_rule": "first base-only candidate satisfying every frozen gate",
     "success_rate_bounds": list(CALIBRATION_SUCCESS_BOUNDS),
     "minimum_target_failure_fraction": CALIBRATION_MINIMUM_PURITY,
-    "minimum_fall_count": CALIBRATION_MINIMUM_FALLS,
+    "minimum_failure_count": CALIBRATION_MINIMUM_FAILURES,
     "episodes_per_candidate": CALIBRATION_EPISODES,
     "candidate_seeds": candidate_seeds,
     "attempts": attempts,
