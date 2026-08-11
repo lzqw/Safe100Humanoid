@@ -1,0 +1,168 @@
+{
+  "base_checkpoint": {
+    "reference": "artifacts/retention_v13/arm_b_state_retention/accepted_final.pt",
+    "sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8"
+  },
+  "context": {
+    "adapted_policy_outcomes_used_for_context": false,
+    "calibration_base_success_rate": 0.6875,
+    "calibration_failure_count": 160,
+    "calibration_lateral_purity": 0.925,
+    "calibration_selected_candidate_seed": 51011,
+    "context_id": "L_effect",
+    "file": "results/online/specialist_v22/calibration/L_effect/context.json",
+    "file_sha256": "650a97519168382bf4f7fc45580fa179cb3c51a1f18195f4850c5667d6f0d6a7",
+    "parameters_sha256": "f3d4470ec01c7f55982d93b4be53dcafb13c0d2d82f4c03f34835f84c99cf4ae",
+    "reused_without_reselection": true
+  },
+  "development_gate": {
+    "contact_context_eligible_only_after_pass": true,
+    "maximum_target_fall_delta": 0.01,
+    "minimum_D0_success_delta": -0.05,
+    "minimum_target_success_delta": 0.03,
+    "point_estimates_only": true,
+    "used_for_training_rollback_stopping_or_selection": false
+  },
+  "evaluation": {
+    "D0_episodes": 256,
+    "D0_seed_start": 126000000,
+    "base_and_final_conditions_paired": true,
+    "batch_size": 128,
+    "confidence_intervals_are_gates": false,
+    "repairs_and_regressions_reported": true,
+    "report_bootstrap_samples": 2000,
+    "report_bootstrap_seeds": {
+      "D0": 127000010,
+      "target": 127000000
+    },
+    "target_episodes": 512,
+    "target_seed_start": 125000000
+  },
+  "excluded": {
+    "candidate_fractions": true,
+    "candidate_screen_or_confirmation": true,
+    "dual_rollout": true,
+    "failure_precursor_bank": true,
+    "grouped_advantages": true,
+    "matched_success_bank": true,
+    "multi_context_or_off_diagonal_audit": true,
+    "specialist_reward": true,
+    "state_restart": true,
+    "target_or_D0_training_gate": true,
+    "validation_or_best_so_far_selection": true
+  },
+  "experiment_class": "single frozen lateral context development test",
+  "final_policy": {
+    "round_start_and_end_checkpoints_are_recovery_and_curve_only": true,
+    "rule": "round 8 actor, independent of performance"
+  },
+  "fresh_execution_seeds": {
+    "adaptation_seed": 123230001,
+    "final_D0_seed_start": 126000000,
+    "final_target_seed_start": 125000000,
+    "report_bootstrap_seeds": {
+      "D0": 127000010,
+      "target": 127000000
+    }
+  },
+  "implementation_boundary": {
+    "all_execution_sources_committed_before_outcomes": true,
+    "git_commit": "883fc3f59691df98633711e77a5d05a451e64f23",
+    "source_files": {
+      "docs/CBF_PROXIMAL_V23_PROTOCOL.md": "927ceb695b78e4466173e9675b5a5b68f80aa7e5008c362201271c1895690b2e",
+      "experiments/scripts/audit_proximal_v23.py": "0a862cf354a9c81cd311e3f6c053ca04005adcd9c4f7fe1a1abb52f22820c93b",
+      "experiments/scripts/evaluate_proximal_v23.py": "1628fa95cb4b3faa3dfd7159b4442d520ba71f9a0623a15d0e770fb7c5604913",
+      "experiments/scripts/freeze_proximal_v23_protocol.py": "8d8c9b56f439f374ea1628e7bafae34144b8aec23477eb5814ce667dfe9bbdfe",
+      "experiments/scripts/plot_proximal_v23.py": "cc2a24960d5d1d9a1ee1069e114089e66d0c99229565d5377dfa5a7b0b4a8f86",
+      "experiments/scripts/proximal_v23_io.py": "04077ac25965163cde89f3d2ec0ff27ea822c686acc19562bc3c90990fd61052",
+      "experiments/scripts/proximal_v23_protocol.py": "1aaff5866c5587f8a151a9cd93d9c62915e6aa16893e30013d3ef53e9dcfeea7",
+      "experiments/scripts/refine_proximal_v23.py": "e4bc51395e68bb771a1e6d4738db46b24383e5193ca521678a5d4d6c8ca5d437",
+      "experiments/scripts/run_proximal_v23.sh": "1854555704c00aa697cba23ffe34231cd0a6c56d5c11f07a67507b711e113a60",
+      "experiments/tests/test_proximal_v23.py": "819cd6903eb9cf7699f5e6c9c39052afa32e329968b811bcab6447ff1406ed20",
+      "results/online/specialist_v22/calibration/L_effect/context.json": "650a97519168382bf4f7fc45580fa179cb3c51a1f18195f4850c5667d6f0d6a7",
+      "src/tasks/stairs_cbf/actions.py": "e04354c1bb9bfe4f57055a98dde22a1e13a30ff3a7b02af93633bd90001a5514",
+      "src/tasks/stairs_cbf/command.py": "efd9ec3faed1f5aa14aff03802cf3cce4a9d61a8041fffc684e54d152a6a4104",
+      "src/tasks/stairs_cbf/config.py": "22a57df095616e1f19f7cf6f18d7ba173ecef7901bf2a85da2a5faaa11c32f8a",
+      "src/tasks/stairs_cbf/deployment_context.py": "65e5bbe7f4379eb5a114fc9261c818a7e9a12bfa77078379761fdab75020e80d",
+      "src/tasks/stairs_cbf/mdp.py": "631a9fefcf2026521c1c43ecf2dc1851124ce47921a1ddf4191ae7db31475754",
+      "src/tasks/stairs_cbf/online.py": "0b53dd2d58a2bc4745cb523b73853f5af5f172a6406c7d121415ad9ee18aa90a",
+      "src/tasks/stairs_cbf/proximal.py": "d879fc138dc3bebe26d913182519b0280884e30ed7f529be2bdd9e259b8c4838",
+      "src/tasks/stairs_cbf/proximal_context.py": "84fcb94ec8e78200a836c1e4baf0bf4cfba8614c51fb882e71dcf8e6904ac4d6"
+    }
+  },
+  "learning_semantics": {
+    "actor_observation_dim": 405,
+    "critic_observation_dim": 838,
+    "forward_kl": "analytic diagonal Gaussian KL(pi_theta || pi_k)",
+    "moving_reference": "current round-start pi_k, refreshed every round",
+    "normal_physical_initial_states_only": true,
+    "one_on_policy_batch_per_round": true,
+    "ordinary_cbf_intervention_is_failure": false,
+    "ppo_stores_raw_sampled_action_and_behavior_log_probability": true,
+    "reference_stop_gradient": true,
+    "reward": "base task + fall event + dual-CBF; specialist term absent",
+    "runtime_cbf_executes_filtered_action": true,
+    "single_actor": true,
+    "single_privileged_critic": true
+  },
+  "policy_method": "CBF-Shielded KL-Regularized Online PPO v23",
+  "prospective_execution": {
+    "adapted_policy_outcomes_observed": false,
+    "formal_adaptation_started": false,
+    "fresh_adaptation_count_planned": 1
+  },
+  "protocol_id": "safe100-cbf-proximal-online-refinement-v23",
+  "randomness_preflight": {
+    "collisions": [],
+    "historical_collisions": [],
+    "historical_json_file_count": 293,
+    "historical_json_files_sha256": "d57d739b874567f2494c800aa6c86ee82619394ac06d14373a38b8a1806f09f7",
+    "historical_scope": "all parseable JSON below results/online except proximal_v23",
+    "historical_unique_declared_seed_count": 2546,
+    "passed": true,
+    "proposed_internal_collisions": [],
+    "proposed_seed_occurrence_count": 9,
+    "proposed_unique_seed_count": 9,
+    "protocol_id": "safe100-cbf-proximal-online-refinement-v23",
+    "schema_version": 1
+  },
+  "rollback": {
+    "allowed_reasons": [
+      "non-finite actor/critic/loss/gradient state",
+      "moving forward KL above 0.01",
+      "raw-action or behavior-Gaussian routing corruption",
+      "actor or critic optimizer-state corruption"
+    ],
+    "performance_rollback_forbidden": true,
+    "restores": [
+      "actor",
+      "critic",
+      "actor optimizer",
+      "critic optimizer"
+    ]
+  },
+  "schema_version": 1,
+  "training": {
+    "actor_learning_rate": 5e-06,
+    "critic_epochs": 2,
+    "critic_learning_rate": 0.0001,
+    "entropy_coefficient": 0.0,
+    "freeze_log_std": true,
+    "gae_lambda": 0.95,
+    "gamma": 0.99,
+    "hard_kl_ceiling": 0.01,
+    "maximum_actor_epochs": 2,
+    "maximum_gradient_norm": 0.5,
+    "maximum_std": 0.25,
+    "mini_batches": 4,
+    "minimum_std": 0.05,
+    "moving_kl_beta": 0.5,
+    "num_envs": 64,
+    "ppo_clip": 0.05,
+    "rollout_steps": 1024,
+    "rounds": 8,
+    "std_scale_from_base": 0.35,
+    "target_kl": 0.003,
+    "whole_batch_advantage_normalization": true
+  }
+}
