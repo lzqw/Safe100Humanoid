@@ -1,0 +1,205 @@
+{
+  "artifacts": {
+    "external_root": "/home/carla/LZQW/SAFE100/humanoid",
+    "files": {
+      "bank_discovery": {
+        "bytes": 1057928,
+        "path": "artifacts/specialist_v22/training/L_effect/bank_discovery.json",
+        "sha256": "4c31a2dba72a129c7c011b41301044457bfee9af3e1aadfc728902d6c0a233e3"
+      },
+      "baseline_candidate_gate_eval": {
+        "bytes": 22976,
+        "path": "artifacts/specialist_v22/training/L_effect/baseline_candidate_gate_eval.json",
+        "sha256": "dac353cceacfaece427f3f91ba6f5a89931bee3fc5586bba77e91a05f874d100"
+      },
+      "launcher_log": {
+        "bytes": 16628,
+        "path": "logs/specialist_v22/lateral_train_test_launcher.log",
+        "sha256": "7e6358842e510da8f7c87506cfb17020d11184d0e837465ad4e319643ba7ff7a"
+      },
+      "training_log": {
+        "bytes": 12608,
+        "path": "logs/specialist_v22/train_L_effect.log",
+        "sha256": "f7a288ba95c4095856e0b8a6811b87c5aa0adae4425b8bcc06a9a9c087c556b1"
+      },
+      "validation_actor": {
+        "path": "artifacts/specialist_v22/training/L_effect/validation_monitor/raw/round_000/actor.pt",
+        "sha256": "8613b51907b06f4a8845d60bb40c31ef1b6cdc977af7207394b9b44a2c1bc7b4"
+      },
+      "validation_seed_94000000": {
+        "path": "artifacts/specialist_v22/training/L_effect/validation_monitor/raw/round_000/DQHMED-seed94000000.json",
+        "sha256": "b4cde3d9a18dacc17e4dc14495a365e42562a615d2c6c3f5064f5dffa57bfbe9"
+      },
+      "validation_seed_94000001": {
+        "path": "artifacts/specialist_v22/training/L_effect/validation_monitor/raw/round_000/DQHMED-seed94000001.json",
+        "sha256": "dd44c847a01d3f77a232e46c3d4a224f13c8c1c6bc5b562e92cfc9b94b184c4e"
+      }
+    },
+    "large_raw_artifacts_committed_to_git": false
+  },
+  "baseline_observations_before_discovery": {
+    "actor_state_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+    "candidate_gate": {
+      "D0": {
+        "episodes": 128,
+        "fall_rate": 0.03125,
+        "seed": 22510001,
+        "success_rate": 0.921875
+      },
+      "L_effect": {
+        "episodes": 128,
+        "fall_rate": 0.3359375,
+        "seed": 22510001,
+        "success_rate": 0.6640625
+      }
+    },
+    "fixed_isolated_validation_monitor": {
+      "episodes": 256,
+      "fall_rate": 0.28125,
+      "seeds": [
+        94000000,
+        94000001
+      ],
+      "success_rate": 0.71875
+    },
+    "policy_role": "pi0_only"
+  },
+  "boundary": {
+    "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+    "context_file_sha256": "650a97519168382bf4f7fc45580fa179cb3c51a1f18195f4850c5667d6f0d6a7",
+    "context_parameters_sha256": "f3d4470ec01c7f55982d93b4be53dcafb13c0d2d82f4c03f34835f84c99cf4ae",
+    "evidence_commit": "88bb8bb37c00f6cf02653a22d9042d0b20a6c40e",
+    "protocol_file": "results/online/specialist_v22/protocol_lateral_adaptation.json",
+    "protocol_sha256": "4cf3611645adaf4ca9cb49c37bf8839c26ebc6628867ef031c8fd77e7cec97ef",
+    "source_sha256": {
+      "experiments/scripts/online_refine_stairs.py": "bfe8e49f61291480083c4a089b28e104747a4ae6e83ebb45e3f2fbf756b4b160",
+      "experiments/scripts/refine_effect_first_v22.py": "61d9d3af2eda5c738629683539888c2551df3b378f95f2553de51f0026e0e889",
+      "src/tasks/stairs_cbf/hard_cases.py": "b20cd15228dcdfcc6ad16955b5177ff4c3c714237b73c9a0e02eb316ab90f430"
+    }
+  },
+  "context_id": "L_effect",
+  "discovery_audit": {
+    "final_record": {
+      "failure_bank": {
+        "centerline_sign_counts": {
+          "-1": 13,
+          "1": 243
+        },
+        "entry_count": 256,
+        "error_growth_bin_counts": {
+          "high": 162,
+          "low": 94
+        },
+        "heading_sign_counts": {
+          "-1": 248,
+          "1": 8
+        },
+        "riser_stage_counts": {
+          "early": 33,
+          "late": 115,
+          "mid": 108
+        },
+        "support_foot_counts": {
+          "0": 121,
+          "1": 135
+        }
+      },
+      "joint_balance_preflight_error": "matched restart strata cannot realize balanced observable marginals",
+      "joint_balance_preflight_passed": false,
+      "rollout_seed": 22710012,
+      "success_bank_entry_count": 227
+    },
+    "first_record": {
+      "failure_bank": {
+        "centerline_sign_counts": {
+          "1": 256
+        },
+        "entry_count": 256,
+        "error_growth_bin_counts": {
+          "high": 167,
+          "low": 89
+        },
+        "heading_sign_counts": {
+          "-1": 256
+        },
+        "riser_stage_counts": {
+          "early": 30,
+          "late": 120,
+          "mid": 106
+        },
+        "support_foot_counts": {
+          "0": 118,
+          "1": 138
+        }
+      },
+      "joint_balance_preflight": {
+        "exact_match_passed": true,
+        "maximum_marginal_imbalance": 0,
+        "pair_count": 12,
+        "primary_marginal_counts": {
+          "centerline_sign": {
+            "1": 12
+          },
+          "error_growth_bin": {
+            "high": 6,
+            "low": 6
+          },
+          "heading_sign": {
+            "-1": 12
+          },
+          "riser_stage": {
+            "early": 4,
+            "late": 4,
+            "mid": 4
+          },
+          "support_foot": {
+            "0": 6,
+            "1": 6
+          }
+        },
+        "passed": true
+      },
+      "rollout_seed": 22710001,
+      "success_bank_entry_count": 207
+    },
+    "parameters_restored_after_every_discovery_rollout": true,
+    "rollout_count": 12,
+    "rollout_seeds": [
+      22710001,
+      22710002,
+      22710003,
+      22710004,
+      22710005,
+      22710006,
+      22710007,
+      22710008,
+      22710009,
+      22710010,
+      22710011,
+      22710012
+    ]
+  },
+  "disposition": {
+    "contact_calibration_or_adaptation_started": false,
+    "final_test_started": false,
+    "identical_retry_allowed": false,
+    "next_action": "prospective_successor_revision_with_mechanism_aligned_replay_balance_and_fresh_execution_seeds",
+    "poor_policy_outcome_claimed": false,
+    "revision1_preserved_as_negative_structural_evidence": true
+  },
+  "protocol_id": "safe100-effect-first-development-v22",
+  "revision": 1,
+  "schema_version": 1,
+  "status": "structural_preflight_stop_before_any_ppo_update",
+  "stop": {
+    "adapted_checkpoint_files_created": 0,
+    "candidate_evaluations_started": false,
+    "completed_at": "2026-08-11T10:23:50+08:00",
+    "exception": "RuntimeError: v22 specialist bank invariant failed: ['matched restart marginals are not jointly feasible']",
+    "fixed_eight_round_loop_entered": false,
+    "ppo_update_count": 0,
+    "root_cause": "The fixed positive lateral bias/pulse context naturally produced one dominant centerline/heading direction. Revision 1 required both signs and kept discovering until rare counter-direction strata made its all-observed joint quota problem infeasible, even though the first rollout already supplied exact matched pairs with balanced riser-stage, support-foot, and growth marginals.",
+    "saved_round_checkpoints": 0,
+    "structural_not_infrastructure_failure": true
+  }
+}
