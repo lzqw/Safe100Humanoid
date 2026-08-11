@@ -10,3 +10,5 @@ results/online/brief_ppo_v14/final_audit/paired_episode_metrics.csv binary
 results/online/failure_focused_v15/**/*.csv binary
 results/online/dominant_failure_v16/**/*.csv binary
 results/online/specialist_v21/**/*.csv binary
+results/online/proximal_v24/**/*.csv binary
+results/online/proximal_completion/*.csv binary

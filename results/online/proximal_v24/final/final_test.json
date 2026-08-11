@@ -1,0 +1,1824 @@
+{
+  "D0": {
+    "contact_mismatch": {
+      "baseline_mean": 0.174582872656174,
+      "bootstrap_samples": 2000,
+      "bootstrap_seed": 137000105,
+      "confidence_interval_is_gate": false,
+      "delta": -0.004611582029610872,
+      "final_mean": 0.16997129062656313,
+      "paired_bootstrap_ci95": [
+        -0.013809618457162286,
+        0.005227111835119997
+      ]
+    },
+    "correction_norm": {
+      "baseline_mean": 0.0009572698472899571,
+      "bootstrap_samples": 2000,
+      "bootstrap_seed": 137000107,
+      "confidence_interval_is_gate": false,
+      "delta": 2.4545233005768274e-05,
+      "final_mean": 0.0009818150802957254,
+      "paired_bootstrap_ci95": [
+        -0.0006416461740788492,
+        0.0008240000899780637
+      ]
+    },
+    "failure_type_counts": {
+      "baseline": {
+        "contact_stability": 8
+      },
+      "final": {
+        "contact_stability": 9
+      }
+    },
+    "fall": {
+      "baseline_mean": 0.03125,
+      "bootstrap_samples": 2000,
+      "bootstrap_seed": 137000101,
+      "confidence_interval_is_gate": false,
+      "delta": 0.00390625,
+      "final_mean": 0.03515625,
+      "paired_bootstrap_ci95": [
+        -0.0234375,
+        0.03125
+      ]
+    },
+    "intervention_per_riser": {
+      "baseline_mean": 0.6692057456821203,
+      "bootstrap_samples": 2000,
+      "bootstrap_seed": 137000106,
+      "confidence_interval_is_gate": false,
+      "delta": -0.02766927401535213,
+      "final_mean": 0.6415364716667682,
+      "paired_bootstrap_ci95": [
+        -0.2539957781977137,
+        0.20462402325792936
+      ]
+    },
+    "paired_conditions": 256,
+    "reached_riser": {
+      "baseline_mean": 5.87890625,
+      "bootstrap_samples": 2000,
+      "bootstrap_seed": 137000103,
+      "confidence_interval_is_gate": false,
+      "delta": 0.03125,
+      "final_mean": 5.91015625,
+      "paired_bootstrap_ci95": [
+        -0.06640625,
+        0.12890625
+      ]
+    },
+    "recovery_takeover": {
+      "baseline_mean": 0.48828125,
+      "bootstrap_samples": 2000,
+      "bootstrap_seed": 137000108,
+      "confidence_interval_is_gate": false,
+      "delta": 0.01171875,
+      "final_mean": 0.5,
+      "paired_bootstrap_ci95": [
+        -0.0703125,
+        0.09375
+      ]
+    },
+    "recovery_takeover_counts": {
+      "baseline": 125,
+      "final": 128
+    },
+    "repairs_regressions": {
+      "base_failure_count": 30,
+      "base_success_count": 226,
+      "net_success_change": 3,
+      "paired_conditions": 256,
+      "regression_count": 18,
+      "regression_rate_given_base_success": 0.07964601769911504,
+      "repair_count": 21,
+      "repair_rate_given_base_failure": 0.7
+    },
+    "return": {
+      "baseline_mean": 8.581093551183585,
+      "bootstrap_samples": 2000,
+      "bootstrap_seed": 137000102,
+      "confidence_interval_is_gate": false,
+      "delta": -0.18015491653932258,
+      "final_mean": 8.400938634644262,
+      "paired_bootstrap_ci95": [
+        -0.8537572215704131,
+        0.4999697825624018
+      ]
+    },
+    "slip_signal": {
+      "baseline_mean": 0.05819425718073035,
+      "bootstrap_samples": 2000,
+      "bootstrap_seed": 137000104,
+      "confidence_interval_is_gate": false,
+      "delta": 0.0025007625663420185,
+      "final_mean": 0.060695019747072365,
+      "paired_bootstrap_ci95": [
+        0.0001353243576886598,
+        0.004938217014205292
+      ]
+    },
+    "success": {
+      "baseline_mean": 0.8828125,
+      "bootstrap_samples": 2000,
+      "bootstrap_seed": 137000100,
+      "confidence_interval_is_gate": false,
+      "delta": 0.01171875,
+      "final_mean": 0.89453125,
+      "paired_bootstrap_ci95": [
+        -0.03515625,
+        0.05859375
+      ]
+    }
+  },
+  "checkpoint": {
+    "actor_sha256": "2240ec7178f84a2a215c22b128da8bb22436f1d7d58d427708f12f1c433fa8bd",
+    "fixed_round": 8,
+    "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/proximal_v24/contact/training/final_round_08.pt",
+    "performance_selected": false,
+    "sha256": "beafb298f3a2cc955732bbe290867606142a601b6c82e01606fe784515482e50"
+  },
+  "context": {
+    "file": "/home/carla/LZQW/SAFE100/humanoid/worktrees/v23_proximal/results/online/proximal_v24/calibration/context.json",
+    "file_sha256": "7e827d08ec3f7561a90ea838c9f008308a7d1a5e6d81ae381fa2eb0c3b4ef275",
+    "parameters_sha256": "5e79a1cff0d8db75bcdf0072ed8592755c946666dce9affd0ac6c11a091a1864",
+    "pure_contact_audit": {
+      "actuator_nominal": true,
+      "command_nominal": true,
+      "disturbance_pulses_disabled": true,
+      "foot_friction": 0.326,
+      "navigation_nominal": true,
+      "only_changed_physical_axis": "foot_friction",
+      "passed": true,
+      "phase_nominal": true,
+      "sensor_nominal": true,
+      "terrain_nominal": true
+    },
+    "selected_foot_friction": 0.326
+  },
+  "development_gate": {
+    "conditions": {
+      "d0_success_delta_at_least_minus_five_pp": true,
+      "target_fall_delta_at_most_one_pp": true,
+      "target_success_delta_at_least_three_pp": false
+    },
+    "confidence_intervals_are_gates": false,
+    "d0_success_delta": 0.01171875,
+    "passed": false,
+    "target_fall_delta": 0.0078125,
+    "target_success_delta": -0.0078125
+  },
+  "experiment_name": "v24 Contact Completion",
+  "independent_contact_context_run": true,
+  "input_checks": {
+    "base_checkpoint": true,
+    "context_file": true,
+    "context_parameters": true,
+    "final_checkpoint": true,
+    "protocol_id": true,
+    "training_experiment_name": true,
+    "training_method": true,
+    "training_protocol_id": true
+  },
+  "joint_lateral_contact_gate": false,
+  "paired_evaluation": {
+    "D0_episodes": 256,
+    "D0_seed_start": 136000000,
+    "base_and_final_initial_conditions_identical": true,
+    "confidence_intervals_are_report_only": true,
+    "deterministic_policy_mean": true,
+    "original_actor_observation_interface": true,
+    "runtime_cbf": true,
+    "target_episodes": 512,
+    "target_seed_start": 135000000
+  },
+  "policy_method": "CBF-Shielded KL-Regularized Online PPO v23",
+  "protocol_id": "safe100-cbf-proximal-contact-completion-v24",
+  "raw_evaluations": {
+    "baseline_D0": {
+      "actor_state_sha256": "7afed309902a323a43b47005c01529c84160944bb8cea2c45d000b38b18cc099",
+      "failure_type_counts": {
+        "contact_stability": 8
+      },
+      "fall_rate": 0.03125,
+      "fall_rate_std": 0.011048543456039806,
+      "initial_state_signatures": [
+        "2a533ca283a065c51d81d94ee5354151a5d2b0345cd784253e855e21d8d608ae",
+        "bc5a8cce6f5eecf6c8f0172292763b92cc8b5c86c4e0de7b07558bfb11f4b6ed"
+      ],
+      "intervention_per_riser": 0.6692057456821203,
+      "intervention_per_riser_std": 0.04520696209996763,
+      "mean_contact_mismatch": 0.174582872656174,
+      "mean_contact_mismatch_std": 0.00455799200563489,
+      "mean_correction_norm": 0.0009572698472899571,
+      "mean_correction_norm_std": 0.00027760548784026536,
+      "mean_reached_riser": 5.87890625,
+      "mean_reached_riser_std": 0.03866990209613932,
+      "mean_return": 8.581093551183585,
+      "mean_return_std": 0.11872098086676093,
+      "mean_slip_signal": 0.05819425718073035,
+      "mean_slip_signal_std": 0.002143900731594001,
+      "num_episodes": 256,
+      "original_observation_interface": true,
+      "paired_one_initial_episode_per_env": true,
+      "recovery_takeover_count": 125,
+      "recovery_takeover_rate": 0.48828125,
+      "recovery_takeover_rate_std": 0.005524271728019903,
+      "repeats": 2,
+      "replicates": [
+        {
+          "actor_observation_dim": 405,
+          "actor_state_sha256": "7afed309902a323a43b47005c01529c84160944bb8cea2c45d000b38b18cc099",
+          "contact_failure_purity_over_falls": 1.0,
+          "contact_fall_count": 5,
+          "deployment_context": null,
+          "deterministic_policy_mean": true,
+          "failure_type_counts": {
+            "contact_stability": 5
+          },
+          "fall_rate": 0.0390625,
+          "initial_state_signature": "2a533ca283a065c51d81d94ee5354151a5d2b0345cd784253e855e21d8d608ae",
+          "intervention_per_riser": 0.63723959622439,
+          "mean_contact_mismatch": 0.1713598856003955,
+          "mean_correction_norm": 0.0011535665702364084,
+          "mean_reached_riser": 5.8515625,
+          "mean_return": 8.49714514054358,
+          "mean_slip_signal": 0.059710223926231265,
+          "num_envs": 128,
+          "num_episodes": 128,
+          "one_initial_episode_per_env": true,
+          "original_observation_interface": true,
+          "pure_contact_context_audit": null,
+          "recovery_takeover_count": 63,
+          "recovery_takeover_rate": 0.4921875,
+          "runtime_filter": true,
+          "schema_version": 1,
+          "seed": 136000000,
+          "success_rate": 0.8984375,
+          "task": "Unitree-G1-Stairs-Online-D0",
+          "timeout_rate": 0.0625
+        },
+        {
+          "actor_observation_dim": 405,
+          "actor_state_sha256": "7afed309902a323a43b47005c01529c84160944bb8cea2c45d000b38b18cc099",
+          "contact_failure_purity_over_falls": 1.0,
+          "contact_fall_count": 3,
+          "deployment_context": null,
+          "deterministic_policy_mean": true,
+          "failure_type_counts": {
+            "contact_stability": 3
+          },
+          "fall_rate": 0.0234375,
+          "initial_state_signature": "bc5a8cce6f5eecf6c8f0172292763b92cc8b5c86c4e0de7b07558bfb11f4b6ed",
+          "intervention_per_riser": 0.7011718951398507,
+          "mean_contact_mismatch": 0.1778058597119525,
+          "mean_correction_norm": 0.0007609731243435058,
+          "mean_reached_riser": 5.90625,
+          "mean_return": 8.66504196182359,
+          "mean_slip_signal": 0.05667829043522943,
+          "num_envs": 128,
+          "num_episodes": 128,
+          "one_initial_episode_per_env": true,
+          "original_observation_interface": true,
+          "pure_contact_context_audit": null,
+          "recovery_takeover_count": 62,
+          "recovery_takeover_rate": 0.484375,
+          "runtime_filter": true,
+          "schema_version": 1,
+          "seed": 136000001,
+          "success_rate": 0.8671875,
+          "task": "Unitree-G1-Stairs-Online-D0",
+          "timeout_rate": 0.109375
+        }
+      ],
+      "runtime_filter": true,
+      "seeds": [
+        136000000,
+        136000001
+      ],
+      "success_rate": 0.8828125,
+      "success_rate_std": 0.02209708691207961,
+      "task": "Unitree-G1-Stairs-Online-D0",
+      "timeout_rate": 0.0859375,
+      "timeout_rate_std": 0.03314563036811941
+    },
+    "baseline_target": {
+      "actor_state_sha256": "7afed309902a323a43b47005c01529c84160944bb8cea2c45d000b38b18cc099",
+      "failure_type_counts": {
+        "contact_stability": 122,
+        "lateral_heading_drift": 20
+      },
+      "fall_rate": 0.27734375,
+      "fall_rate_std": 0.018597469865997005,
+      "initial_state_signatures": [
+        "cc4b43b188bac213fc62e21c9f8e05f6d7eccab7e928c90c1fa64b2ab8fc4cc3",
+        "dfbc3da37bebeb0a5d970b18935e72a81670af42c95677a394d9592ff0dad997",
+        "27adeb1c01eea53cb288784336da32e115e475a366385cc09b4cdde2c016fd13",
+        "9c36b6ff562c0f3165046a8b9d830d1d0e0e80d2da8cc7f10a347f359763bc08"
+      ],
+      "intervention_per_riser": 1.4070576193917077,
+      "intervention_per_riser_std": 0.07879416185455171,
+      "mean_contact_mismatch": 0.15201664403139148,
+      "mean_contact_mismatch_std": 0.0010079537095921706,
+      "mean_correction_norm": 0.002171340994672734,
+      "mean_correction_norm_std": 0.000220307349615442,
+      "mean_reached_riser": 8.359375,
+      "mean_reached_riser_std": 0.11158481919598204,
+      "mean_return": 6.057223026175052,
+      "mean_return_std": 0.29288262506772306,
+      "mean_slip_signal": 0.09130562448990531,
+      "mean_slip_signal_std": 0.0005201347528377773,
+      "num_episodes": 512,
+      "original_observation_interface": true,
+      "paired_one_initial_episode_per_env": true,
+      "recovery_takeover_count": 365,
+      "recovery_takeover_rate": 0.712890625,
+      "recovery_takeover_rate_std": 0.02658929408419549,
+      "repeats": 4,
+      "replicates": [
+        {
+          "actor_observation_dim": 405,
+          "actor_state_sha256": "7afed309902a323a43b47005c01529c84160944bb8cea2c45d000b38b18cc099",
+          "contact_failure_purity_over_falls": 0.8918918918918919,
+          "contact_fall_count": 33,
+          "deployment_context": {
+            "actor_context_fields_added": 0,
+            "applied_command_delay_range_s": [
+              0.04,
+              0.16
+            ],
+            "cbf_proximal_interface": {
+              "deployable_failure_group_absent": true,
+              "historical_adapter_removed_before_environment_construction": true,
+              "original_observation_interface": true,
+              "specialist_reward_term_absent": true
+            },
+            "declared_effect_axes": [
+              "foot_friction"
+            ],
+            "parameters": {
+              "action_bias": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "action_delay_steps": 0,
+              "action_gain": 1.0,
+              "command_delay_s": 0.1,
+              "command_forward_scale": 1.0,
+              "command_low_pass_s": 0.08,
+              "encoder_bias": 0.0,
+              "episode_length_s": 35.0,
+              "num_steps": 9,
+              "rise_profile": [
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13
+              ],
+              "tread_profile": [
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35
+              ]
+            },
+            "parameters_sha256": "5e79a1cff0d8db75bcdf0072ed8592755c946666dce9affd0ac6c11a091a1864",
+            "role": "target",
+            "scenario": {
+              "observable_actor": {
+                "actor_feature_count": 5,
+                "actor_gait_phase_observation_offset": 0.0,
+                "contact_observation_delay_steps": 0,
+                "mode": "contact_stability",
+                "phase_offset": 0.0,
+                "reward_class": "V19ContactRecoveryReward",
+                "target_contact_phase_shift_applied": false
+              },
+              "parameters": {
+                "centerline_heading_gain": 1.4,
+                "centerline_heading_reference_bias": 0.0,
+                "centerline_lateral_gain": 0.8,
+                "centerline_max_lateral_velocity": 0.16,
+                "centerline_max_yaw_velocity": 0.45,
+                "contact_observation_delay_steps": 0,
+                "disturbance_pulses_with_centering": false,
+                "edge_penalty_scale": 0.0,
+                "foot_friction": 0.326,
+                "gait_phase_offset": 0.0,
+                "lateral_command_bias": 0.0,
+                "lateral_pulse_max": 0.08,
+                "lateral_pulse_min": 0.02,
+                "left_response_scale": 1.0,
+                "pulse_duration_max_s": 0.6,
+                "pulse_duration_min_s": 0.2,
+                "pulse_interval_max_s": 7.0,
+                "pulse_interval_min_s": 3.0,
+                "recovery_reward_scale": 0.4,
+                "right_response_scale": 1.0,
+                "stair_half_width": 1.2,
+                "toe_margin": 0.08,
+                "yaw_command_bias": 0.0,
+                "yaw_pulse_max": 0.2,
+                "yaw_pulse_min": 0.05
+              },
+              "specialist_mode": "contact_stability",
+              "target_failure_type": "contact_stability"
+            }
+          },
+          "deterministic_policy_mean": true,
+          "failure_type_counts": {
+            "contact_stability": 33,
+            "lateral_heading_drift": 4
+          },
+          "fall_rate": 0.2890625,
+          "initial_state_signature": "cc4b43b188bac213fc62e21c9f8e05f6d7eccab7e928c90c1fa64b2ab8fc4cc3",
+          "intervention_per_riser": 1.454445706505794,
+          "mean_contact_mismatch": 0.15273861365858465,
+          "mean_correction_norm": 0.002348856810597766,
+          "mean_reached_riser": 8.2421875,
+          "mean_return": 6.140609908849001,
+          "mean_slip_signal": 0.09104646713240072,
+          "num_envs": 128,
+          "num_episodes": 128,
+          "one_initial_episode_per_env": true,
+          "original_observation_interface": true,
+          "pure_contact_context_audit": {
+            "actuator_nominal": true,
+            "command_nominal": true,
+            "disturbance_pulses_disabled": true,
+            "foot_friction": 0.326,
+            "navigation_nominal": true,
+            "only_changed_physical_axis": "foot_friction",
+            "passed": true,
+            "phase_nominal": true,
+            "sensor_nominal": true,
+            "terrain_nominal": true
+          },
+          "recovery_takeover_count": 90,
+          "recovery_takeover_rate": 0.703125,
+          "runtime_filter": true,
+          "schema_version": 1,
+          "seed": 135000000,
+          "success_rate": 0.7109375,
+          "task": "Unitree-G1-Stairs-Online-DQHMED",
+          "timeout_rate": 0.0
+        },
+        {
+          "actor_observation_dim": 405,
+          "actor_state_sha256": "7afed309902a323a43b47005c01529c84160944bb8cea2c45d000b38b18cc099",
+          "contact_failure_purity_over_falls": 0.8648648648648649,
+          "contact_fall_count": 32,
+          "deployment_context": {
+            "actor_context_fields_added": 0,
+            "applied_command_delay_range_s": [
+              0.04,
+              0.16
+            ],
+            "cbf_proximal_interface": {
+              "deployable_failure_group_absent": true,
+              "historical_adapter_removed_before_environment_construction": true,
+              "original_observation_interface": true,
+              "specialist_reward_term_absent": true
+            },
+            "declared_effect_axes": [
+              "foot_friction"
+            ],
+            "parameters": {
+              "action_bias": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "action_delay_steps": 0,
+              "action_gain": 1.0,
+              "command_delay_s": 0.1,
+              "command_forward_scale": 1.0,
+              "command_low_pass_s": 0.08,
+              "encoder_bias": 0.0,
+              "episode_length_s": 35.0,
+              "num_steps": 9,
+              "rise_profile": [
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13
+              ],
+              "tread_profile": [
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35
+              ]
+            },
+            "parameters_sha256": "5e79a1cff0d8db75bcdf0072ed8592755c946666dce9affd0ac6c11a091a1864",
+            "role": "target",
+            "scenario": {
+              "observable_actor": {
+                "actor_feature_count": 5,
+                "actor_gait_phase_observation_offset": 0.0,
+                "contact_observation_delay_steps": 0,
+                "mode": "contact_stability",
+                "phase_offset": 0.0,
+                "reward_class": "V19ContactRecoveryReward",
+                "target_contact_phase_shift_applied": false
+              },
+              "parameters": {
+                "centerline_heading_gain": 1.4,
+                "centerline_heading_reference_bias": 0.0,
+                "centerline_lateral_gain": 0.8,
+                "centerline_max_lateral_velocity": 0.16,
+                "centerline_max_yaw_velocity": 0.45,
+                "contact_observation_delay_steps": 0,
+                "disturbance_pulses_with_centering": false,
+                "edge_penalty_scale": 0.0,
+                "foot_friction": 0.326,
+                "gait_phase_offset": 0.0,
+                "lateral_command_bias": 0.0,
+                "lateral_pulse_max": 0.08,
+                "lateral_pulse_min": 0.02,
+                "left_response_scale": 1.0,
+                "pulse_duration_max_s": 0.6,
+                "pulse_duration_min_s": 0.2,
+                "pulse_interval_max_s": 7.0,
+                "pulse_interval_min_s": 3.0,
+                "recovery_reward_scale": 0.4,
+                "right_response_scale": 1.0,
+                "stair_half_width": 1.2,
+                "toe_margin": 0.08,
+                "yaw_command_bias": 0.0,
+                "yaw_pulse_max": 0.2,
+                "yaw_pulse_min": 0.05
+              },
+              "specialist_mode": "contact_stability",
+              "target_failure_type": "contact_stability"
+            }
+          },
+          "deterministic_policy_mean": true,
+          "failure_type_counts": {
+            "contact_stability": 32,
+            "lateral_heading_drift": 5
+          },
+          "fall_rate": 0.2890625,
+          "initial_state_signature": "dfbc3da37bebeb0a5d970b18935e72a81670af42c95677a394d9592ff0dad997",
+          "intervention_per_riser": 1.4928850587457418,
+          "mean_contact_mismatch": 0.15301827457733452,
+          "mean_correction_norm": 0.0020981579521321125,
+          "mean_reached_riser": 8.3671875,
+          "mean_return": 5.7284277733415365,
+          "mean_slip_signal": 0.09124545013764873,
+          "num_envs": 128,
+          "num_episodes": 128,
+          "one_initial_episode_per_env": true,
+          "original_observation_interface": true,
+          "pure_contact_context_audit": {
+            "actuator_nominal": true,
+            "command_nominal": true,
+            "disturbance_pulses_disabled": true,
+            "foot_friction": 0.326,
+            "navigation_nominal": true,
+            "only_changed_physical_axis": "foot_friction",
+            "passed": true,
+            "phase_nominal": true,
+            "sensor_nominal": true,
+            "terrain_nominal": true
+          },
+          "recovery_takeover_count": 88,
+          "recovery_takeover_rate": 0.6875,
+          "runtime_filter": true,
+          "schema_version": 1,
+          "seed": 135000001,
+          "success_rate": 0.7109375,
+          "task": "Unitree-G1-Stairs-Online-DQHMED",
+          "timeout_rate": 0.0
+        },
+        {
+          "actor_observation_dim": 405,
+          "actor_state_sha256": "7afed309902a323a43b47005c01529c84160944bb8cea2c45d000b38b18cc099",
+          "contact_failure_purity_over_falls": 0.8125,
+          "contact_fall_count": 26,
+          "deployment_context": {
+            "actor_context_fields_added": 0,
+            "applied_command_delay_range_s": [
+              0.04,
+              0.16
+            ],
+            "cbf_proximal_interface": {
+              "deployable_failure_group_absent": true,
+              "historical_adapter_removed_before_environment_construction": true,
+              "original_observation_interface": true,
+              "specialist_reward_term_absent": true
+            },
+            "declared_effect_axes": [
+              "foot_friction"
+            ],
+            "parameters": {
+              "action_bias": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "action_delay_steps": 0,
+              "action_gain": 1.0,
+              "command_delay_s": 0.1,
+              "command_forward_scale": 1.0,
+              "command_low_pass_s": 0.08,
+              "encoder_bias": 0.0,
+              "episode_length_s": 35.0,
+              "num_steps": 9,
+              "rise_profile": [
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13
+              ],
+              "tread_profile": [
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35
+              ]
+            },
+            "parameters_sha256": "5e79a1cff0d8db75bcdf0072ed8592755c946666dce9affd0ac6c11a091a1864",
+            "role": "target",
+            "scenario": {
+              "observable_actor": {
+                "actor_feature_count": 5,
+                "actor_gait_phase_observation_offset": 0.0,
+                "contact_observation_delay_steps": 0,
+                "mode": "contact_stability",
+                "phase_offset": 0.0,
+                "reward_class": "V19ContactRecoveryReward",
+                "target_contact_phase_shift_applied": false
+              },
+              "parameters": {
+                "centerline_heading_gain": 1.4,
+                "centerline_heading_reference_bias": 0.0,
+                "centerline_lateral_gain": 0.8,
+                "centerline_max_lateral_velocity": 0.16,
+                "centerline_max_yaw_velocity": 0.45,
+                "contact_observation_delay_steps": 0,
+                "disturbance_pulses_with_centering": false,
+                "edge_penalty_scale": 0.0,
+                "foot_friction": 0.326,
+                "gait_phase_offset": 0.0,
+                "lateral_command_bias": 0.0,
+                "lateral_pulse_max": 0.08,
+                "lateral_pulse_min": 0.02,
+                "left_response_scale": 1.0,
+                "pulse_duration_max_s": 0.6,
+                "pulse_duration_min_s": 0.2,
+                "pulse_interval_max_s": 7.0,
+                "pulse_interval_min_s": 3.0,
+                "recovery_reward_scale": 0.4,
+                "right_response_scale": 1.0,
+                "stair_half_width": 1.2,
+                "toe_margin": 0.08,
+                "yaw_command_bias": 0.0,
+                "yaw_pulse_max": 0.2,
+                "yaw_pulse_min": 0.05
+              },
+              "specialist_mode": "contact_stability",
+              "target_failure_type": "contact_stability"
+            }
+          },
+          "deterministic_policy_mean": true,
+          "failure_type_counts": {
+            "contact_stability": 26,
+            "lateral_heading_drift": 6
+          },
+          "fall_rate": 0.25,
+          "initial_state_signature": "27adeb1c01eea53cb288784336da32e115e475a366385cc09b4cdde2c016fd13",
+          "intervention_per_riser": 1.3320715677109547,
+          "mean_contact_mismatch": 0.15101698646321893,
+          "mean_correction_norm": 0.001891912976304977,
+          "mean_reached_riser": 8.3203125,
+          "mean_return": 6.416748210787773,
+          "mean_slip_signal": 0.09087798692053184,
+          "num_envs": 128,
+          "num_episodes": 128,
+          "one_initial_episode_per_env": true,
+          "original_observation_interface": true,
+          "pure_contact_context_audit": {
+            "actuator_nominal": true,
+            "command_nominal": true,
+            "disturbance_pulses_disabled": true,
+            "foot_friction": 0.326,
+            "navigation_nominal": true,
+            "only_changed_physical_axis": "foot_friction",
+            "passed": true,
+            "phase_nominal": true,
+            "sensor_nominal": true,
+            "terrain_nominal": true
+          },
+          "recovery_takeover_count": 96,
+          "recovery_takeover_rate": 0.75,
+          "runtime_filter": true,
+          "schema_version": 1,
+          "seed": 135000002,
+          "success_rate": 0.75,
+          "task": "Unitree-G1-Stairs-Online-DQHMED",
+          "timeout_rate": 0.0
+        },
+        {
+          "actor_observation_dim": 405,
+          "actor_state_sha256": "7afed309902a323a43b47005c01529c84160944bb8cea2c45d000b38b18cc099",
+          "contact_failure_purity_over_falls": 0.8611111111111112,
+          "contact_fall_count": 31,
+          "deployment_context": {
+            "actor_context_fields_added": 0,
+            "applied_command_delay_range_s": [
+              0.04,
+              0.16
+            ],
+            "cbf_proximal_interface": {
+              "deployable_failure_group_absent": true,
+              "historical_adapter_removed_before_environment_construction": true,
+              "original_observation_interface": true,
+              "specialist_reward_term_absent": true
+            },
+            "declared_effect_axes": [
+              "foot_friction"
+            ],
+            "parameters": {
+              "action_bias": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "action_delay_steps": 0,
+              "action_gain": 1.0,
+              "command_delay_s": 0.1,
+              "command_forward_scale": 1.0,
+              "command_low_pass_s": 0.08,
+              "encoder_bias": 0.0,
+              "episode_length_s": 35.0,
+              "num_steps": 9,
+              "rise_profile": [
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13
+              ],
+              "tread_profile": [
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35
+              ]
+            },
+            "parameters_sha256": "5e79a1cff0d8db75bcdf0072ed8592755c946666dce9affd0ac6c11a091a1864",
+            "role": "target",
+            "scenario": {
+              "observable_actor": {
+                "actor_feature_count": 5,
+                "actor_gait_phase_observation_offset": 0.0,
+                "contact_observation_delay_steps": 0,
+                "mode": "contact_stability",
+                "phase_offset": 0.0,
+                "reward_class": "V19ContactRecoveryReward",
+                "target_contact_phase_shift_applied": false
+              },
+              "parameters": {
+                "centerline_heading_gain": 1.4,
+                "centerline_heading_reference_bias": 0.0,
+                "centerline_lateral_gain": 0.8,
+                "centerline_max_lateral_velocity": 0.16,
+                "centerline_max_yaw_velocity": 0.45,
+                "contact_observation_delay_steps": 0,
+                "disturbance_pulses_with_centering": false,
+                "edge_penalty_scale": 0.0,
+                "foot_friction": 0.326,
+                "gait_phase_offset": 0.0,
+                "lateral_command_bias": 0.0,
+                "lateral_pulse_max": 0.08,
+                "lateral_pulse_min": 0.02,
+                "left_response_scale": 1.0,
+                "pulse_duration_max_s": 0.6,
+                "pulse_duration_min_s": 0.2,
+                "pulse_interval_max_s": 7.0,
+                "pulse_interval_min_s": 3.0,
+                "recovery_reward_scale": 0.4,
+                "right_response_scale": 1.0,
+                "stair_half_width": 1.2,
+                "toe_margin": 0.08,
+                "yaw_command_bias": 0.0,
+                "yaw_pulse_max": 0.2,
+                "yaw_pulse_min": 0.05
+              },
+              "specialist_mode": "contact_stability",
+              "target_failure_type": "contact_stability"
+            }
+          },
+          "deterministic_policy_mean": true,
+          "failure_type_counts": {
+            "contact_stability": 31,
+            "lateral_heading_drift": 5
+          },
+          "fall_rate": 0.28125,
+          "initial_state_signature": "9c36b6ff562c0f3165046a8b9d830d1d0e0e80d2da8cc7f10a347f359763bc08",
+          "intervention_per_riser": 1.3488281446043402,
+          "mean_contact_mismatch": 0.1512927014264278,
+          "mean_correction_norm": 0.00234643623965608,
+          "mean_reached_riser": 8.5078125,
+          "mean_return": 5.943106211721897,
+          "mean_slip_signal": 0.09205259376903996,
+          "num_envs": 128,
+          "num_episodes": 128,
+          "one_initial_episode_per_env": true,
+          "original_observation_interface": true,
+          "pure_contact_context_audit": {
+            "actuator_nominal": true,
+            "command_nominal": true,
+            "disturbance_pulses_disabled": true,
+            "foot_friction": 0.326,
+            "navigation_nominal": true,
+            "only_changed_physical_axis": "foot_friction",
+            "passed": true,
+            "phase_nominal": true,
+            "sensor_nominal": true,
+            "terrain_nominal": true
+          },
+          "recovery_takeover_count": 91,
+          "recovery_takeover_rate": 0.7109375,
+          "runtime_filter": true,
+          "schema_version": 1,
+          "seed": 135000003,
+          "success_rate": 0.71875,
+          "task": "Unitree-G1-Stairs-Online-DQHMED",
+          "timeout_rate": 0.0
+        }
+      ],
+      "runtime_filter": true,
+      "seeds": [
+        135000000,
+        135000001,
+        135000002,
+        135000003
+      ],
+      "success_rate": 0.72265625,
+      "success_rate_std": 0.018597469865997005,
+      "task": "Unitree-G1-Stairs-Online-DQHMED",
+      "timeout_rate": 0.0,
+      "timeout_rate_std": 0.0
+    },
+    "final_D0": {
+      "actor_state_sha256": "2240ec7178f84a2a215c22b128da8bb22436f1d7d58d427708f12f1c433fa8bd",
+      "failure_type_counts": {
+        "contact_stability": 9
+      },
+      "fall_rate": 0.03515625,
+      "fall_rate_std": 0.016572815184059706,
+      "initial_state_signatures": [
+        "2a533ca283a065c51d81d94ee5354151a5d2b0345cd784253e855e21d8d608ae",
+        "bc5a8cce6f5eecf6c8f0172292763b92cc8b5c86c4e0de7b07558bfb11f4b6ed"
+      ],
+      "intervention_per_riser": 0.6415364716667682,
+      "intervention_per_riser_std": 0.041432038618693774,
+      "mean_contact_mismatch": 0.16997129062656313,
+      "mean_contact_mismatch_std": 0.0062104125436096376,
+      "mean_correction_norm": 0.0009818150802957254,
+      "mean_correction_norm_std": 0.0002645666230031762,
+      "mean_reached_riser": 5.91015625,
+      "mean_reached_riser_std": 0.005524271728019903,
+      "mean_return": 8.400938634644262,
+      "mean_return_std": 0.40837293919108036,
+      "mean_slip_signal": 0.060695019747072365,
+      "mean_slip_signal_std": 0.00094697458274132,
+      "num_episodes": 256,
+      "original_observation_interface": true,
+      "paired_one_initial_episode_per_env": true,
+      "recovery_takeover_count": 128,
+      "recovery_takeover_rate": 0.5,
+      "recovery_takeover_rate_std": 0.08838834764831845,
+      "repeats": 2,
+      "replicates": [
+        {
+          "actor_observation_dim": 405,
+          "actor_state_sha256": "2240ec7178f84a2a215c22b128da8bb22436f1d7d58d427708f12f1c433fa8bd",
+          "contact_failure_purity_over_falls": 1.0,
+          "contact_fall_count": 6,
+          "deployment_context": null,
+          "deterministic_policy_mean": true,
+          "failure_type_counts": {
+            "contact_stability": 6
+          },
+          "fall_rate": 0.046875,
+          "initial_state_signature": "2a533ca283a065c51d81d94ee5354151a5d2b0345cd784253e855e21d8d608ae",
+          "intervention_per_riser": 0.6708333471324295,
+          "mean_contact_mismatch": 0.1743627154501155,
+          "mean_correction_norm": 0.0011688919334968961,
+          "mean_reached_riser": 5.90625,
+          "mean_return": 8.112175360089168,
+          "mean_slip_signal": 0.061364631896140054,
+          "num_envs": 128,
+          "num_episodes": 128,
+          "one_initial_episode_per_env": true,
+          "original_observation_interface": true,
+          "pure_contact_context_audit": null,
+          "recovery_takeover_count": 56,
+          "recovery_takeover_rate": 0.4375,
+          "runtime_filter": true,
+          "schema_version": 1,
+          "seed": 136000000,
+          "success_rate": 0.859375,
+          "task": "Unitree-G1-Stairs-Online-D0",
+          "timeout_rate": 0.09375
+        },
+        {
+          "actor_observation_dim": 405,
+          "actor_state_sha256": "2240ec7178f84a2a215c22b128da8bb22436f1d7d58d427708f12f1c433fa8bd",
+          "contact_failure_purity_over_falls": 1.0,
+          "contact_fall_count": 3,
+          "deployment_context": null,
+          "deterministic_policy_mean": true,
+          "failure_type_counts": {
+            "contact_stability": 3
+          },
+          "fall_rate": 0.0234375,
+          "initial_state_signature": "bc5a8cce6f5eecf6c8f0172292763b92cc8b5c86c4e0de7b07558bfb11f4b6ed",
+          "intervention_per_riser": 0.6122395962011069,
+          "mean_contact_mismatch": 0.16557986580301076,
+          "mean_correction_norm": 0.0007947382270945547,
+          "mean_reached_riser": 5.9140625,
+          "mean_return": 8.689701909199357,
+          "mean_slip_signal": 0.060025407598004676,
+          "num_envs": 128,
+          "num_episodes": 128,
+          "one_initial_episode_per_env": true,
+          "original_observation_interface": true,
+          "pure_contact_context_audit": null,
+          "recovery_takeover_count": 72,
+          "recovery_takeover_rate": 0.5625,
+          "runtime_filter": true,
+          "schema_version": 1,
+          "seed": 136000001,
+          "success_rate": 0.9296875,
+          "task": "Unitree-G1-Stairs-Online-D0",
+          "timeout_rate": 0.046875
+        }
+      ],
+      "runtime_filter": true,
+      "seeds": [
+        136000000,
+        136000001
+      ],
+      "success_rate": 0.89453125,
+      "success_rate_std": 0.04971844555217912,
+      "task": "Unitree-G1-Stairs-Online-D0",
+      "timeout_rate": 0.0703125,
+      "timeout_rate_std": 0.03314563036811941
+    },
+    "final_target": {
+      "actor_state_sha256": "2240ec7178f84a2a215c22b128da8bb22436f1d7d58d427708f12f1c433fa8bd",
+      "failure_type_counts": {
+        "contact_stability": 132,
+        "lateral_heading_drift": 14
+      },
+      "fall_rate": 0.28515625,
+      "fall_rate_std": 0.027436598314720676,
+      "initial_state_signatures": [
+        "cc4b43b188bac213fc62e21c9f8e05f6d7eccab7e928c90c1fa64b2ab8fc4cc3",
+        "dfbc3da37bebeb0a5d970b18935e72a81670af42c95677a394d9592ff0dad997",
+        "27adeb1c01eea53cb288784336da32e115e475a366385cc09b4cdde2c016fd13",
+        "9c36b6ff562c0f3165046a8b9d830d1d0e0e80d2da8cc7f10a347f359763bc08"
+      ],
+      "intervention_per_riser": 1.6024902633798774,
+      "intervention_per_riser_std": 0.1045048661992645,
+      "mean_contact_mismatch": 0.15325541062338743,
+      "mean_contact_mismatch_std": 0.0012601660722145374,
+      "mean_correction_norm": 0.002854937199614986,
+      "mean_correction_norm_std": 0.0005690323216897502,
+      "mean_reached_riser": 8.220703125,
+      "mean_reached_riser_std": 0.11681799384040044,
+      "mean_return": 5.77654520701617,
+      "mean_return_std": 0.40783429713634733,
+      "mean_slip_signal": 0.09200401468842756,
+      "mean_slip_signal_std": 0.0013525148479915721,
+      "num_episodes": 512,
+      "original_observation_interface": true,
+      "paired_one_initial_episode_per_env": true,
+      "recovery_takeover_count": 359,
+      "recovery_takeover_rate": 0.701171875,
+      "recovery_takeover_rate_std": 0.029491540762776366,
+      "repeats": 4,
+      "replicates": [
+        {
+          "actor_observation_dim": 405,
+          "actor_state_sha256": "2240ec7178f84a2a215c22b128da8bb22436f1d7d58d427708f12f1c433fa8bd",
+          "contact_failure_purity_over_falls": 0.9090909090909091,
+          "contact_fall_count": 30,
+          "deployment_context": {
+            "actor_context_fields_added": 0,
+            "applied_command_delay_range_s": [
+              0.04,
+              0.16
+            ],
+            "cbf_proximal_interface": {
+              "deployable_failure_group_absent": true,
+              "historical_adapter_removed_before_environment_construction": true,
+              "original_observation_interface": true,
+              "specialist_reward_term_absent": true
+            },
+            "declared_effect_axes": [
+              "foot_friction"
+            ],
+            "parameters": {
+              "action_bias": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "action_delay_steps": 0,
+              "action_gain": 1.0,
+              "command_delay_s": 0.1,
+              "command_forward_scale": 1.0,
+              "command_low_pass_s": 0.08,
+              "encoder_bias": 0.0,
+              "episode_length_s": 35.0,
+              "num_steps": 9,
+              "rise_profile": [
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13
+              ],
+              "tread_profile": [
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35
+              ]
+            },
+            "parameters_sha256": "5e79a1cff0d8db75bcdf0072ed8592755c946666dce9affd0ac6c11a091a1864",
+            "role": "target",
+            "scenario": {
+              "observable_actor": {
+                "actor_feature_count": 5,
+                "actor_gait_phase_observation_offset": 0.0,
+                "contact_observation_delay_steps": 0,
+                "mode": "contact_stability",
+                "phase_offset": 0.0,
+                "reward_class": "V19ContactRecoveryReward",
+                "target_contact_phase_shift_applied": false
+              },
+              "parameters": {
+                "centerline_heading_gain": 1.4,
+                "centerline_heading_reference_bias": 0.0,
+                "centerline_lateral_gain": 0.8,
+                "centerline_max_lateral_velocity": 0.16,
+                "centerline_max_yaw_velocity": 0.45,
+                "contact_observation_delay_steps": 0,
+                "disturbance_pulses_with_centering": false,
+                "edge_penalty_scale": 0.0,
+                "foot_friction": 0.326,
+                "gait_phase_offset": 0.0,
+                "lateral_command_bias": 0.0,
+                "lateral_pulse_max": 0.08,
+                "lateral_pulse_min": 0.02,
+                "left_response_scale": 1.0,
+                "pulse_duration_max_s": 0.6,
+                "pulse_duration_min_s": 0.2,
+                "pulse_interval_max_s": 7.0,
+                "pulse_interval_min_s": 3.0,
+                "recovery_reward_scale": 0.4,
+                "right_response_scale": 1.0,
+                "stair_half_width": 1.2,
+                "toe_margin": 0.08,
+                "yaw_command_bias": 0.0,
+                "yaw_pulse_max": 0.2,
+                "yaw_pulse_min": 0.05
+              },
+              "specialist_mode": "contact_stability",
+              "target_failure_type": "contact_stability"
+            }
+          },
+          "deterministic_policy_mean": true,
+          "failure_type_counts": {
+            "contact_stability": 30,
+            "lateral_heading_drift": 3
+          },
+          "fall_rate": 0.2578125,
+          "initial_state_signature": "cc4b43b188bac213fc62e21c9f8e05f6d7eccab7e928c90c1fa64b2ab8fc4cc3",
+          "intervention_per_riser": 1.7037171660922468,
+          "mean_contact_mismatch": 0.15141334937652573,
+          "mean_correction_norm": 0.0028278207611734663,
+          "mean_reached_riser": 8.2578125,
+          "mean_return": 6.005270188674331,
+          "mean_slip_signal": 0.09253116458421573,
+          "num_envs": 128,
+          "num_episodes": 128,
+          "one_initial_episode_per_env": true,
+          "original_observation_interface": true,
+          "pure_contact_context_audit": {
+            "actuator_nominal": true,
+            "command_nominal": true,
+            "disturbance_pulses_disabled": true,
+            "foot_friction": 0.326,
+            "navigation_nominal": true,
+            "only_changed_physical_axis": "foot_friction",
+            "passed": true,
+            "phase_nominal": true,
+            "sensor_nominal": true,
+            "terrain_nominal": true
+          },
+          "recovery_takeover_count": 93,
+          "recovery_takeover_rate": 0.7265625,
+          "runtime_filter": true,
+          "schema_version": 1,
+          "seed": 135000000,
+          "success_rate": 0.7421875,
+          "task": "Unitree-G1-Stairs-Online-DQHMED",
+          "timeout_rate": 0.0
+        },
+        {
+          "actor_observation_dim": 405,
+          "actor_state_sha256": "2240ec7178f84a2a215c22b128da8bb22436f1d7d58d427708f12f1c433fa8bd",
+          "contact_failure_purity_over_falls": 0.8461538461538461,
+          "contact_fall_count": 33,
+          "deployment_context": {
+            "actor_context_fields_added": 0,
+            "applied_command_delay_range_s": [
+              0.04,
+              0.16
+            ],
+            "cbf_proximal_interface": {
+              "deployable_failure_group_absent": true,
+              "historical_adapter_removed_before_environment_construction": true,
+              "original_observation_interface": true,
+              "specialist_reward_term_absent": true
+            },
+            "declared_effect_axes": [
+              "foot_friction"
+            ],
+            "parameters": {
+              "action_bias": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "action_delay_steps": 0,
+              "action_gain": 1.0,
+              "command_delay_s": 0.1,
+              "command_forward_scale": 1.0,
+              "command_low_pass_s": 0.08,
+              "encoder_bias": 0.0,
+              "episode_length_s": 35.0,
+              "num_steps": 9,
+              "rise_profile": [
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13
+              ],
+              "tread_profile": [
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35
+              ]
+            },
+            "parameters_sha256": "5e79a1cff0d8db75bcdf0072ed8592755c946666dce9affd0ac6c11a091a1864",
+            "role": "target",
+            "scenario": {
+              "observable_actor": {
+                "actor_feature_count": 5,
+                "actor_gait_phase_observation_offset": 0.0,
+                "contact_observation_delay_steps": 0,
+                "mode": "contact_stability",
+                "phase_offset": 0.0,
+                "reward_class": "V19ContactRecoveryReward",
+                "target_contact_phase_shift_applied": false
+              },
+              "parameters": {
+                "centerline_heading_gain": 1.4,
+                "centerline_heading_reference_bias": 0.0,
+                "centerline_lateral_gain": 0.8,
+                "centerline_max_lateral_velocity": 0.16,
+                "centerline_max_yaw_velocity": 0.45,
+                "contact_observation_delay_steps": 0,
+                "disturbance_pulses_with_centering": false,
+                "edge_penalty_scale": 0.0,
+                "foot_friction": 0.326,
+                "gait_phase_offset": 0.0,
+                "lateral_command_bias": 0.0,
+                "lateral_pulse_max": 0.08,
+                "lateral_pulse_min": 0.02,
+                "left_response_scale": 1.0,
+                "pulse_duration_max_s": 0.6,
+                "pulse_duration_min_s": 0.2,
+                "pulse_interval_max_s": 7.0,
+                "pulse_interval_min_s": 3.0,
+                "recovery_reward_scale": 0.4,
+                "right_response_scale": 1.0,
+                "stair_half_width": 1.2,
+                "toe_margin": 0.08,
+                "yaw_command_bias": 0.0,
+                "yaw_pulse_max": 0.2,
+                "yaw_pulse_min": 0.05
+              },
+              "specialist_mode": "contact_stability",
+              "target_failure_type": "contact_stability"
+            }
+          },
+          "deterministic_policy_mean": true,
+          "failure_type_counts": {
+            "contact_stability": 33,
+            "lateral_heading_drift": 6
+          },
+          "fall_rate": 0.3046875,
+          "initial_state_signature": "dfbc3da37bebeb0a5d970b18935e72a81670af42c95677a394d9592ff0dad997",
+          "intervention_per_riser": 1.460140774375759,
+          "mean_contact_mismatch": 0.15373136074049398,
+          "mean_correction_norm": 0.0020596880180022703,
+          "mean_reached_riser": 8.0546875,
+          "mean_return": 5.777113379910588,
+          "mean_slip_signal": 0.09116217849077657,
+          "num_envs": 128,
+          "num_episodes": 128,
+          "one_initial_episode_per_env": true,
+          "original_observation_interface": true,
+          "pure_contact_context_audit": {
+            "actuator_nominal": true,
+            "command_nominal": true,
+            "disturbance_pulses_disabled": true,
+            "foot_friction": 0.326,
+            "navigation_nominal": true,
+            "only_changed_physical_axis": "foot_friction",
+            "passed": true,
+            "phase_nominal": true,
+            "sensor_nominal": true,
+            "terrain_nominal": true
+          },
+          "recovery_takeover_count": 86,
+          "recovery_takeover_rate": 0.671875,
+          "runtime_filter": true,
+          "schema_version": 1,
+          "seed": 135000001,
+          "success_rate": 0.6953125,
+          "task": "Unitree-G1-Stairs-Online-DQHMED",
+          "timeout_rate": 0.0
+        },
+        {
+          "actor_observation_dim": 405,
+          "actor_state_sha256": "2240ec7178f84a2a215c22b128da8bb22436f1d7d58d427708f12f1c433fa8bd",
+          "contact_failure_purity_over_falls": 0.9,
+          "contact_fall_count": 36,
+          "deployment_context": {
+            "actor_context_fields_added": 0,
+            "applied_command_delay_range_s": [
+              0.04,
+              0.16
+            ],
+            "cbf_proximal_interface": {
+              "deployable_failure_group_absent": true,
+              "historical_adapter_removed_before_environment_construction": true,
+              "original_observation_interface": true,
+              "specialist_reward_term_absent": true
+            },
+            "declared_effect_axes": [
+              "foot_friction"
+            ],
+            "parameters": {
+              "action_bias": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "action_delay_steps": 0,
+              "action_gain": 1.0,
+              "command_delay_s": 0.1,
+              "command_forward_scale": 1.0,
+              "command_low_pass_s": 0.08,
+              "encoder_bias": 0.0,
+              "episode_length_s": 35.0,
+              "num_steps": 9,
+              "rise_profile": [
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13
+              ],
+              "tread_profile": [
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35
+              ]
+            },
+            "parameters_sha256": "5e79a1cff0d8db75bcdf0072ed8592755c946666dce9affd0ac6c11a091a1864",
+            "role": "target",
+            "scenario": {
+              "observable_actor": {
+                "actor_feature_count": 5,
+                "actor_gait_phase_observation_offset": 0.0,
+                "contact_observation_delay_steps": 0,
+                "mode": "contact_stability",
+                "phase_offset": 0.0,
+                "reward_class": "V19ContactRecoveryReward",
+                "target_contact_phase_shift_applied": false
+              },
+              "parameters": {
+                "centerline_heading_gain": 1.4,
+                "centerline_heading_reference_bias": 0.0,
+                "centerline_lateral_gain": 0.8,
+                "centerline_max_lateral_velocity": 0.16,
+                "centerline_max_yaw_velocity": 0.45,
+                "contact_observation_delay_steps": 0,
+                "disturbance_pulses_with_centering": false,
+                "edge_penalty_scale": 0.0,
+                "foot_friction": 0.326,
+                "gait_phase_offset": 0.0,
+                "lateral_command_bias": 0.0,
+                "lateral_pulse_max": 0.08,
+                "lateral_pulse_min": 0.02,
+                "left_response_scale": 1.0,
+                "pulse_duration_max_s": 0.6,
+                "pulse_duration_min_s": 0.2,
+                "pulse_interval_max_s": 7.0,
+                "pulse_interval_min_s": 3.0,
+                "recovery_reward_scale": 0.4,
+                "right_response_scale": 1.0,
+                "stair_half_width": 1.2,
+                "toe_margin": 0.08,
+                "yaw_command_bias": 0.0,
+                "yaw_pulse_max": 0.2,
+                "yaw_pulse_min": 0.05
+              },
+              "specialist_mode": "contact_stability",
+              "target_failure_type": "contact_stability"
+            }
+          },
+          "deterministic_policy_mean": true,
+          "failure_type_counts": {
+            "contact_stability": 36,
+            "lateral_heading_drift": 4
+          },
+          "fall_rate": 0.3125,
+          "initial_state_signature": "27adeb1c01eea53cb288784336da32e115e475a366385cc09b4cdde2c016fd13",
+          "intervention_per_riser": 1.5965185132226907,
+          "mean_contact_mismatch": 0.15361349878367037,
+          "mean_correction_norm": 0.0032729822530741526,
+          "mean_reached_riser": 8.328125,
+          "mean_return": 5.203431986272335,
+          "mean_slip_signal": 0.09365330293076113,
+          "num_envs": 128,
+          "num_episodes": 128,
+          "one_initial_episode_per_env": true,
+          "original_observation_interface": true,
+          "pure_contact_context_audit": {
+            "actuator_nominal": true,
+            "command_nominal": true,
+            "disturbance_pulses_disabled": true,
+            "foot_friction": 0.326,
+            "navigation_nominal": true,
+            "only_changed_physical_axis": "foot_friction",
+            "passed": true,
+            "phase_nominal": true,
+            "sensor_nominal": true,
+            "terrain_nominal": true
+          },
+          "recovery_takeover_count": 87,
+          "recovery_takeover_rate": 0.6796875,
+          "runtime_filter": true,
+          "schema_version": 1,
+          "seed": 135000002,
+          "success_rate": 0.6875,
+          "task": "Unitree-G1-Stairs-Online-DQHMED",
+          "timeout_rate": 0.0
+        },
+        {
+          "actor_observation_dim": 405,
+          "actor_state_sha256": "2240ec7178f84a2a215c22b128da8bb22436f1d7d58d427708f12f1c433fa8bd",
+          "contact_failure_purity_over_falls": 0.9705882352941176,
+          "contact_fall_count": 33,
+          "deployment_context": {
+            "actor_context_fields_added": 0,
+            "applied_command_delay_range_s": [
+              0.04,
+              0.16
+            ],
+            "cbf_proximal_interface": {
+              "deployable_failure_group_absent": true,
+              "historical_adapter_removed_before_environment_construction": true,
+              "original_observation_interface": true,
+              "specialist_reward_term_absent": true
+            },
+            "declared_effect_axes": [
+              "foot_friction"
+            ],
+            "parameters": {
+              "action_bias": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "action_delay_steps": 0,
+              "action_gain": 1.0,
+              "command_delay_s": 0.1,
+              "command_forward_scale": 1.0,
+              "command_low_pass_s": 0.08,
+              "encoder_bias": 0.0,
+              "episode_length_s": 35.0,
+              "num_steps": 9,
+              "rise_profile": [
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13
+              ],
+              "tread_profile": [
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35
+              ]
+            },
+            "parameters_sha256": "5e79a1cff0d8db75bcdf0072ed8592755c946666dce9affd0ac6c11a091a1864",
+            "role": "target",
+            "scenario": {
+              "observable_actor": {
+                "actor_feature_count": 5,
+                "actor_gait_phase_observation_offset": 0.0,
+                "contact_observation_delay_steps": 0,
+                "mode": "contact_stability",
+                "phase_offset": 0.0,
+                "reward_class": "V19ContactRecoveryReward",
+                "target_contact_phase_shift_applied": false
+              },
+              "parameters": {
+                "centerline_heading_gain": 1.4,
+                "centerline_heading_reference_bias": 0.0,
+                "centerline_lateral_gain": 0.8,
+                "centerline_max_lateral_velocity": 0.16,
+                "centerline_max_yaw_velocity": 0.45,
+                "contact_observation_delay_steps": 0,
+                "disturbance_pulses_with_centering": false,
+                "edge_penalty_scale": 0.0,
+                "foot_friction": 0.326,
+                "gait_phase_offset": 0.0,
+                "lateral_command_bias": 0.0,
+                "lateral_pulse_max": 0.08,
+                "lateral_pulse_min": 0.02,
+                "left_response_scale": 1.0,
+                "pulse_duration_max_s": 0.6,
+                "pulse_duration_min_s": 0.2,
+                "pulse_interval_max_s": 7.0,
+                "pulse_interval_min_s": 3.0,
+                "recovery_reward_scale": 0.4,
+                "right_response_scale": 1.0,
+                "stair_half_width": 1.2,
+                "toe_margin": 0.08,
+                "yaw_command_bias": 0.0,
+                "yaw_pulse_max": 0.2,
+                "yaw_pulse_min": 0.05
+              },
+              "specialist_mode": "contact_stability",
+              "target_failure_type": "contact_stability"
+            }
+          },
+          "deterministic_policy_mean": true,
+          "failure_type_counts": {
+            "contact_stability": 33,
+            "lateral_heading_drift": 1
+          },
+          "fall_rate": 0.265625,
+          "initial_state_signature": "9c36b6ff562c0f3165046a8b9d830d1d0e0e80d2da8cc7f10a347f359763bc08",
+          "intervention_per_riser": 1.6495845998288132,
+          "mean_contact_mismatch": 0.15426343359285966,
+          "mean_correction_norm": 0.0032592577662100553,
+          "mean_reached_riser": 8.2421875,
+          "mean_return": 6.120365273207426,
+          "mean_slip_signal": 0.09066941274795681,
+          "num_envs": 128,
+          "num_episodes": 128,
+          "one_initial_episode_per_env": true,
+          "original_observation_interface": true,
+          "pure_contact_context_audit": {
+            "actuator_nominal": true,
+            "command_nominal": true,
+            "disturbance_pulses_disabled": true,
+            "foot_friction": 0.326,
+            "navigation_nominal": true,
+            "only_changed_physical_axis": "foot_friction",
+            "passed": true,
+            "phase_nominal": true,
+            "sensor_nominal": true,
+            "terrain_nominal": true
+          },
+          "recovery_takeover_count": 93,
+          "recovery_takeover_rate": 0.7265625,
+          "runtime_filter": true,
+          "schema_version": 1,
+          "seed": 135000003,
+          "success_rate": 0.734375,
+          "task": "Unitree-G1-Stairs-Online-DQHMED",
+          "timeout_rate": 0.0
+        }
+      ],
+      "runtime_filter": true,
+      "seeds": [
+        135000000,
+        135000001,
+        135000002,
+        135000003
+      ],
+      "success_rate": 0.71484375,
+      "success_rate_std": 0.027436598314720676,
+      "task": "Unitree-G1-Stairs-Online-DQHMED",
+      "timeout_rate": 0.0,
+      "timeout_rate_std": 0.0
+    }
+  },
+  "schema_version": 1,
+  "smoke": false,
+  "target": {
+    "contact_mismatch": {
+      "baseline_mean": 0.15201664403139148,
+      "bootstrap_samples": 2000,
+      "bootstrap_seed": 137000005,
+      "confidence_interval_is_gate": false,
+      "delta": 0.0012387665919959545,
+      "final_mean": 0.15325541062338743,
+      "paired_bootstrap_ci95": [
+        -0.0013742339644522872,
+        0.003734756393896529
+      ]
+    },
+    "correction_norm": {
+      "baseline_mean": 0.002171340994672734,
+      "bootstrap_samples": 2000,
+      "bootstrap_seed": 137000007,
+      "confidence_interval_is_gate": false,
+      "delta": 0.0006835962049422523,
+      "final_mean": 0.002854937199614986,
+      "paired_bootstrap_ci95": [
+        3.2667399272491396e-05,
+        0.0013926481229223553
+      ]
+    },
+    "failure_type_counts": {
+      "baseline": {
+        "contact_stability": 122,
+        "lateral_heading_drift": 20
+      },
+      "final": {
+        "contact_stability": 132,
+        "lateral_heading_drift": 14
+      }
+    },
+    "fall": {
+      "baseline_mean": 0.27734375,
+      "bootstrap_samples": 2000,
+      "bootstrap_seed": 137000001,
+      "confidence_interval_is_gate": false,
+      "delta": 0.0078125,
+      "final_mean": 0.28515625,
+      "paired_bootstrap_ci95": [
+        -0.048828125,
+        0.058642578124999734
+      ]
+    },
+    "intervention_per_riser": {
+      "baseline_mean": 1.4070576193917077,
+      "bootstrap_samples": 2000,
+      "bootstrap_seed": 137000006,
+      "confidence_interval_is_gate": false,
+      "delta": 0.19543264398816973,
+      "final_mean": 1.6024902633798774,
+      "paired_bootstrap_ci95": [
+        0.034499766922454,
+        0.3697883928609372
+      ]
+    },
+    "paired_conditions": 512,
+    "reached_riser": {
+      "baseline_mean": 8.359375,
+      "bootstrap_samples": 2000,
+      "bootstrap_seed": 137000003,
+      "confidence_interval_is_gate": false,
+      "delta": -0.138671875,
+      "final_mean": 8.220703125,
+      "paired_bootstrap_ci95": [
+        -0.347705078125,
+        0.064453125
+      ]
+    },
+    "recovery_takeover": {
+      "baseline_mean": 0.712890625,
+      "bootstrap_samples": 2000,
+      "bootstrap_seed": 137000008,
+      "confidence_interval_is_gate": false,
+      "delta": -0.01171875,
+      "final_mean": 0.701171875,
+      "paired_bootstrap_ci95": [
+        -0.064453125,
+        0.043017578124999734
+      ]
+    },
+    "recovery_takeover_counts": {
+      "baseline": 365,
+      "final": 359
+    },
+    "repairs_regressions": {
+      "base_failure_count": 142,
+      "base_success_count": 370,
+      "net_success_change": -4,
+      "paired_conditions": 512,
+      "regression_count": 99,
+      "regression_rate_given_base_success": 0.26756756756756755,
+      "repair_count": 95,
+      "repair_rate_given_base_failure": 0.6690140845070423
+    },
+    "return": {
+      "baseline_mean": 6.057223026175052,
+      "bootstrap_samples": 2000,
+      "bootstrap_seed": 137000002,
+      "confidence_interval_is_gate": false,
+      "delta": -0.2806778191588819,
+      "final_mean": 5.77654520701617,
+      "paired_bootstrap_ci95": [
+        -1.0172682715463452,
+        0.4555325563764191
+      ]
+    },
+    "slip_signal": {
+      "baseline_mean": 0.09130562448990531,
+      "bootstrap_samples": 2000,
+      "bootstrap_seed": 137000004,
+      "confidence_interval_is_gate": false,
+      "delta": 0.0006983901985222474,
+      "final_mean": 0.09200401468842756,
+      "paired_bootstrap_ci95": [
+        -0.0011121205581730465,
+        0.0025151228568574876
+      ]
+    },
+    "success": {
+      "baseline_mean": 0.72265625,
+      "bootstrap_samples": 2000,
+      "bootstrap_seed": 137000000,
+      "confidence_interval_is_gate": false,
+      "delta": -0.0078125,
+      "final_mean": 0.71484375,
+      "paired_bootstrap_ci95": [
+        -0.060546875,
+        0.044921875
+      ]
+    }
+  },
+  "v23_lateral_result_modified_or_recomputed": false
+}

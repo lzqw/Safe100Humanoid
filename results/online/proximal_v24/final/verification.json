@@ -1,0 +1,83 @@
+{
+  "checks": {
+    "D0_success_reconstructed": true,
+    "action_routing_exact": true,
+    "algorithm_exactly_v23": true,
+    "base_checkpoint": true,
+    "base_only_first_qualifier": true,
+    "confidence_intervals_report_only": true,
+    "context_file_bound": true,
+    "context_parameters_bound": true,
+    "development_gate_reconstructed": true,
+    "experiment_identity": true,
+    "final_actor_is_round_8": true,
+    "hard_rollbacks_restore_actor": true,
+    "no_performance_rollback": true,
+    "no_performance_selection": true,
+    "original_actor_interface": true,
+    "paired_D0_row_count_256": true,
+    "paired_initial_conditions": true,
+    "paired_row_count_768": true,
+    "paired_target_row_count_512": true,
+    "policy_storage_exact": true,
+    "protocol_frozen_before_adaptation": true,
+    "protocol_id": true,
+    "protocol_randomness_preflight": true,
+    "pure_low_friction_only": true,
+    "repairs_regressions_reconstructed": true,
+    "required_contact_telemetry_present": true,
+    "round_actor_hash_chain": true,
+    "round_count_8": true,
+    "round_numbers_1_to_8": true,
+    "round_statuses_valid": true,
+    "runtime_cbf": true,
+    "single_independent_contact_result": true,
+    "target_fall_reconstructed": true,
+    "target_success_reconstructed": true,
+    "updated_round_kl_below_hard_ceiling": true,
+    "v23_final_byte_unchanged": true,
+    "v23_lateral_values_unchanged": true,
+    "v23_protocol_byte_unchanged": true
+  },
+  "hard_rollback_count": 0,
+  "input_sha256": {
+    "context.json": "7e827d08ec3f7561a90ea838c9f008308a7d1a5e6d81ae381fa2eb0c3b4ef275",
+    "final_test.json": "262c570ed5c15368f454e7fa2064ec789a29379cbefdf27481e9b0ad0a43a62a",
+    "paired_episode_metrics.csv": "95e97a417c967c08cd6b4059b981bd86620c94731cf8d19e1eb3efe41fccd027",
+    "protocol.json": "d52de9034523350dc5ebda1143d26ab02737d31cafccc764d3c9a092c4e6f39b",
+    "training_summary.json": "abbb3c9dc8a039e843263d44a1939a21306eb11936dbe4d847a7bd2b415cd4a8",
+    "v23_final_test.json": "7cbbbfc596e5ad39177c946998055fa460c646730a00385701b595f77cff0148",
+    "v23_protocol.json": "745e888e47d9d33fe87fffa4bbaba618a7e91f37b55ebbf8cb08f578fc1d8f38"
+  },
+  "maximum_accepted_moving_forward_kl": 0.0037828264757990837,
+  "overall_verification_passed": true,
+  "paired_rows": {
+    "D0": 256,
+    "target": 512,
+    "total": 768
+  },
+  "protocol_id": "safe100-cbf-proximal-contact-completion-v24",
+  "reconstructed": {
+    "D0_regressions": 18,
+    "D0_repairs": 21,
+    "D0_success_delta": 0.01171875,
+    "development_gate": {
+      "conditions": {
+        "d0_success_delta_at_least_minus_five_pp": true,
+        "target_fall_delta_at_most_one_pp": true,
+        "target_success_delta_at_least_three_pp": false
+      },
+      "confidence_intervals_are_gates": false,
+      "d0_success_delta": 0.01171875,
+      "passed": false,
+      "target_fall_delta": 0.0078125,
+      "target_success_delta": -0.0078125
+    },
+    "target_fall_delta": 0.0078125,
+    "target_regressions": 99,
+    "target_repairs": 95,
+    "target_success_delta": -0.0078125
+  },
+  "schema_version": 1,
+  "verification_scope": "post-outcome deterministic reconstruction; never a training gate"
+}

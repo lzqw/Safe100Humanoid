@@ -1,0 +1,41 @@
+{
+  "D0": {
+    "baseline_fall_rate": 0.0078125,
+    "baseline_success_rate": 0.92578125,
+    "fall_delta": 0.01953125,
+    "final_fall_rate": 0.02734375,
+    "final_success_rate": 0.9453125,
+    "paired_episodes": 256,
+    "regressions": 11,
+    "repairs": 16,
+    "success_delta": 0.01953125
+  },
+  "development_gate": {
+    "conditions": {
+      "d0_success_delta_at_least_minus_five_pp": true,
+      "target_fall_delta_at_most_one_pp": true,
+      "target_success_delta_at_least_three_pp": false
+    },
+    "confidence_intervals_are_gates": false,
+    "d0_success_delta": 0.01953125,
+    "passed": false,
+    "target_fall_delta": 0.00390625,
+    "target_success_delta": -0.00390625
+  },
+  "recomputed": false,
+  "scene": "pure lateral",
+  "schema_version": 1,
+  "source_file_sha256": "7cbbbfc596e5ad39177c946998055fa460c646730a00385701b595f77cff0148",
+  "target": {
+    "baseline_fall_rate": 0.306640625,
+    "baseline_success_rate": 0.693359375,
+    "fall_delta": 0.00390625,
+    "final_fall_rate": 0.310546875,
+    "final_success_rate": 0.689453125,
+    "paired_episodes": 512,
+    "regressions": 95,
+    "repairs": 93,
+    "success_delta": -0.00390625
+  },
+  "version": "v23"
+}

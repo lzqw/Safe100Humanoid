@@ -1,0 +1,17 @@
+{
+  "figure_categories": [
+    "round_curve",
+    "base_vs_final",
+    "repairs_vs_regressions"
+  ],
+  "figure_count": 3,
+  "files": [
+    "/home/carla/LZQW/SAFE100/humanoid/artifacts/proximal_v24/contact/figures/round_curve.png",
+    "/home/carla/LZQW/SAFE100/humanoid/artifacts/proximal_v24/contact/figures/round_curve.pdf",
+    "/home/carla/LZQW/SAFE100/humanoid/artifacts/proximal_v24/contact/figures/base_vs_final.png",
+    "/home/carla/LZQW/SAFE100/humanoid/artifacts/proximal_v24/contact/figures/base_vs_final.pdf",
+    "/home/carla/LZQW/SAFE100/humanoid/artifacts/proximal_v24/contact/figures/repairs_vs_regressions.png",
+    "/home/carla/LZQW/SAFE100/humanoid/artifacts/proximal_v24/contact/figures/repairs_vs_regressions.pdf"
+  ],
+  "selection_or_gate_use": false
+}
