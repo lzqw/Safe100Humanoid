@@ -1,0 +1,63 @@
+{
+  "checks": {
+    "all_round_statuses_updated": true,
+    "base_and_final_initial_state_signatures_identical": true,
+    "contact_not_run_after_failed_lateral_gate": true,
+    "development_gate_reconstructed": true,
+    "final_actor_is_round_8": true,
+    "final_checkpoint_sha256_matches_summary": true,
+    "hard_rollback_count_zero": true,
+    "maximum_moving_forward_kl_below_hard_ceiling": true,
+    "original_actor_observation_interface": true,
+    "paired_D0_row_count_256": true,
+    "paired_repair_regression_counts_reconstruct": true,
+    "paired_row_count_768": true,
+    "paired_target_row_count_512": true,
+    "performance_rollback_count_zero": true,
+    "policy_storage_max_abs_error_zero": true,
+    "protocol_validation_all_true": true,
+    "round_actor_hash_chain_continuous": true,
+    "round_count_8": true,
+    "runtime_cbf_enabled": true,
+    "training_performance_selection_absent": true,
+    "executed_action_routing_max_abs_error_zero": true
+  },
+  "development_gate": {
+    "conditions": {
+      "D0_success_delta_at_least_minus_0.05": true,
+      "target_fall_delta_at_most_0.01": true,
+      "target_success_delta_at_least_0.03": false
+    },
+    "passed": false
+  },
+  "input_sha256": {
+    "final_test.json": "7cbbbfc596e5ad39177c946998055fa460c646730a00385701b595f77cff0148",
+    "paired_episode_metrics.csv": "ca160cfcf05d3284839e8ba66d36d51baa1c6c79a64f2053738f26bd1f848146",
+    "protocol.json": "745e888e47d9d33fe87fffa4bbaba618a7e91f37b55ebbf8cb08f578fc1d8f38",
+    "training_summary.json": "3c5d0d659abe3ea83ec9169b306299c3cd093d9248acbd2dbce294008b8d5373"
+  },
+  "maximum_moving_forward_kl": 0.0016897526802495122,
+  "moving_forward_kl_hard_ceiling": 0.01,
+  "outcomes": {
+    "D0": {
+      "fall_delta": 0.01953125,
+      "regressions": 11,
+      "repairs": 16,
+      "success_delta": 0.01953125
+    },
+    "target": {
+      "fall_delta": 0.00390625,
+      "regressions": 95,
+      "repairs": 93,
+      "success_delta": -0.00390625
+    }
+  },
+  "overall_verification_passed": true,
+  "paired_rows": {
+    "D0": 256,
+    "target": 512,
+    "total": 768
+  },
+  "schema_version": 1,
+  "verification_scope": "post-outcome deterministic reconstruction; not a training gate"
+}

@@ -1,0 +1,20 @@
+{
+  "adapted_policy_outcomes_observed": false,
+  "fresh_adaptation_count": 1,
+  "protocol": {
+    "file": "/home/carla/LZQW/SAFE100/humanoid/worktrees/v23_proximal/results/online/proximal_v23/protocol.json",
+    "implementation_commit": "883fc3f59691df98633711e77a5d05a451e64f23",
+    "sha256": "745e888e47d9d33fe87fffa4bbaba618a7e91f37b55ebbf8cb08f578fc1d8f38",
+    "validation": {
+      "algorithm": true,
+      "base_checkpoint": true,
+      "context_file": true,
+      "context_parameters": true,
+      "execution_not_started_at_freeze": true,
+      "implementation_is_ancestor": true,
+      "method": true,
+      "protocol_id": true,
+      "randomness_preflight": true
+    }
+  }
+}
