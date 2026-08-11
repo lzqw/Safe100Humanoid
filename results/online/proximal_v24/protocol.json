@@ -1,0 +1,245 @@
+{
+  "base_checkpoint": {
+    "reference": "/home/carla/LZQW/SAFE100/humanoid/artifacts/retention_v13/arm_b_state_retention/accepted_final.pt",
+    "sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8"
+  },
+  "calibration_evidence": {
+    "checks": {
+      "adapted_policy_absent": true,
+      "base_only": true,
+      "context_file": true,
+      "context_parameters": true,
+      "first_qualifier": true,
+      "precalibration_id": true,
+      "precalibration_sha": true,
+      "precalibration_status": true,
+      "qualifies": true,
+      "selected_friction": true,
+      "selected_seed": true
+    },
+    "file": "results/online/proximal_v24/calibration/calibration_summary.json",
+    "git_commit": "d3b43c85453c336a6177f5d0da63bb8987d391f3",
+    "sha256": "4bb252f52bc351720a8b3a14565b69476c0ef16bf3f0fac43587e831fe053551"
+  },
+  "context": {
+    "adapted_outcomes_used_for_selection": false,
+    "base_policy_only_first_qualifier": true,
+    "base_success_rate": 0.703125,
+    "calibration_evaluation_seeds": [
+      132400900,
+      132400901,
+      132400902,
+      132400903
+    ],
+    "contact_purity_over_all_non_success": 0.881578947368421,
+    "context_id": "C_effect",
+    "fall_count": 152,
+    "family": "pure_low_foot_friction",
+    "file": "results/online/proximal_v24/calibration/context.json",
+    "file_sha256": "7e827d08ec3f7561a90ea838c9f008308a7d1a5e6d81ae381fa2eb0c3b4ef275",
+    "mode": "contact_stability",
+    "parameters_sha256": "5e79a1cff0d8db75bcdf0072ed8592755c946666dce9affd0ac6c11a091a1864",
+    "pure_context_audit": {
+      "actuator_nominal": true,
+      "command_nominal": true,
+      "disturbance_pulses_disabled": true,
+      "foot_friction": 0.326,
+      "navigation_nominal": true,
+      "only_changed_physical_axis": "foot_friction",
+      "passed": true,
+      "phase_nominal": true,
+      "sensor_nominal": true,
+      "terrain_nominal": true
+    },
+    "selected_candidate_index": 9,
+    "selected_candidate_parameter_seed": 51117,
+    "selected_foot_friction": 0.326
+  },
+  "development_gate": {
+    "maximum_target_fall_delta": 0.01,
+    "minimum_D0_success_delta": -0.05,
+    "minimum_target_success_delta": 0.03,
+    "point_estimates_only": true,
+    "used_for_training_rollback_stopping_or_selection": false
+  },
+  "evaluation": {
+    "D0_episodes": 256,
+    "D0_seed_start": 136000000,
+    "base_and_final_conditions_paired": true,
+    "batch_size": 128,
+    "confidence_intervals_are_gates": false,
+    "deterministic_policy_mean": true,
+    "repairs_and_regressions_reported": true,
+    "report_bootstrap_samples": 2000,
+    "report_bootstrap_seeds": {
+      "D0": 137000100,
+      "target": 137000000
+    },
+    "runtime_cbf": true,
+    "target_episodes": 512,
+    "target_seed_start": 135000000
+  },
+  "excluded": {
+    "additional_actor_observations": true,
+    "candidate_line_search": true,
+    "failure_precursor_or_matched_success_bank": true,
+    "multi_context_or_multiple_adaptation_seed": true,
+    "multiple_critics_or_risk_head": true,
+    "off_diagonal_macro_or_candidate_ablation": true,
+    "performance_gate_or_best_checkpoint": true,
+    "specialist_reward": true,
+    "state_restart": true
+  },
+  "experiment_class": "independent single pure-low-friction contact completion test",
+  "experiment_name": "v24 Contact Completion",
+  "final_policy": {
+    "round_start_and_end_checkpoints_are_recovery_and_curve_only": true,
+    "rule": "round 8 actor, independent of performance"
+  },
+  "fresh_execution_seeds": {
+    "D0_seed_start": 136000000,
+    "adaptation_seed": 133240001,
+    "final_target_seed_start": 135000000,
+    "report_bootstrap_seeds": {
+      "D0": 137000100,
+      "target": 137000000
+    }
+  },
+  "implementation_boundary": {
+    "all_formal_sources_and_selected_context_committed_before_adaptation": true,
+    "calibrated_context": {
+      "file": "results/online/proximal_v24/calibration/context.json",
+      "git_commit": "d3b43c85453c336a6177f5d0da63bb8987d391f3",
+      "sha256": "7e827d08ec3f7561a90ea838c9f008308a7d1a5e6d81ae381fa2eb0c3b4ef275"
+    },
+    "calibration_summary": {
+      "file": "results/online/proximal_v24/calibration/calibration_summary.json",
+      "git_commit": "d3b43c85453c336a6177f5d0da63bb8987d391f3",
+      "sha256": "4bb252f52bc351720a8b3a14565b69476c0ef16bf3f0fac43587e831fe053551"
+    },
+    "git_commit": "d3b43c85453c336a6177f5d0da63bb8987d391f3",
+    "precalibration_protocol": {
+      "file": "results/online/proximal_v24/precalibration_protocol.json",
+      "git_commit": "d3b43c85453c336a6177f5d0da63bb8987d391f3",
+      "sha256": "55b8f9a870ac85e975b98cb54ede076da5395e31ed67368458687b462b528fc6"
+    },
+    "source_files": {
+      "docs/CBF_PROXIMAL_V24_CONTACT_COMPLETION.md": "dd322093680e72a657d89163f40c13889fffa5699055dc92000cb492f9f8837a",
+      "experiments/scripts/audit_proximal_v24.py": "1742b4a79971d6ca1c489c0e31e36a9c275c17906e036ac65609ecde0330fafd",
+      "experiments/scripts/build_proximal_completion.py": "af8be8e9ce763fc32eb698077373ed596f7de3999e20eaa7b0572ea9d63359f9",
+      "experiments/scripts/calibrate_proximal_v24.py": "68dc559d42e5a04a5138a47833d45bd9d8b5bc59914cda5df52ed899b5eca163",
+      "experiments/scripts/evaluate_proximal_v24.py": "f868cb16ac3375af1635cd0edc7e05234bf5038f581edbbb80249b54af9cd754",
+      "experiments/scripts/freeze_proximal_v24_precalibration.py": "1c9e883b0985341d795d0c88f817d4a1081bf90ae0f704096a9bfc79ad310c6c",
+      "experiments/scripts/freeze_proximal_v24_protocol.py": "3a8fe481eec8ddcc61a4bb253f40d3a44fecdb9652dcfe957081e987dbc5f695",
+      "experiments/scripts/plot_proximal_v24.py": "b2aba6a641425abc126f0f257bedb1f2d5d22a5c15fe08dc4e6f52a5e1ca4c26",
+      "experiments/scripts/proximal_v23_io.py": "04077ac25965163cde89f3d2ec0ff27ea822c686acc19562bc3c90990fd61052",
+      "experiments/scripts/proximal_v23_protocol.py": "1aaff5866c5587f8a151a9cd93d9c62915e6aa16893e30013d3ef53e9dcfeea7",
+      "experiments/scripts/proximal_v24_protocol.py": "ba58c41069d4e1c390d75ad0fc2ce275e2949bde68262003dc893cd6ef63fad1",
+      "experiments/scripts/refine_proximal_v23.py": "e4bc51395e68bb771a1e6d4738db46b24383e5193ca521678a5d4d6c8ca5d437",
+      "experiments/scripts/refine_proximal_v24.py": "d7eac95f600a2b76204f62ee3d86cf14874c3c84bcbf701d9f52c495983d34cf",
+      "experiments/scripts/run_proximal_v24.sh": "6eff31b7b69c64d75a3f81062ffa914b56d157b1398abebdbe88c7c8abd53f41",
+      "experiments/scripts/verify_proximal_v24.py": "f34fe23a9d8f7c29df602bd6c342aa04270ead5655b0c17616813ced2de42620",
+      "experiments/tests/test_proximal_v24.py": "d6e144a344b4745a8c7e4a6da75ff7a5044324f790c1758f3d5dd602476c2482",
+      "src/tasks/stairs_cbf/actions.py": "e04354c1bb9bfe4f57055a98dde22a1e13a30ff3a7b02af93633bd90001a5514",
+      "src/tasks/stairs_cbf/command.py": "efd9ec3faed1f5aa14aff03802cf3cce4a9d61a8041fffc684e54d152a6a4104",
+      "src/tasks/stairs_cbf/config.py": "22a57df095616e1f19f7cf6f18d7ba173ecef7901bf2a85da2a5faaa11c32f8a",
+      "src/tasks/stairs_cbf/deployment_context.py": "65e5bbe7f4379eb5a114fc9261c818a7e9a12bfa77078379761fdab75020e80d",
+      "src/tasks/stairs_cbf/hard_cases.py": "fc9d8f21d7315026fdfbcb910e6cf38579a3c142d466f9432f1200a64b07ce21",
+      "src/tasks/stairs_cbf/mdp.py": "631a9fefcf2026521c1c43ecf2dc1851124ce47921a1ddf4191ae7db31475754",
+      "src/tasks/stairs_cbf/proximal.py": "d879fc138dc3bebe26d913182519b0280884e30ed7f529be2bdd9e259b8c4838",
+      "src/tasks/stairs_cbf/proximal_context.py": "84fcb94ec8e78200a836c1e4baf0bf4cfba8614c51fb882e71dcf8e6904ac4d6"
+    }
+  },
+  "learning_semantics": {
+    "actor_observation_dim": 405,
+    "critic_observation_dim": 838,
+    "moving_reference": "round-start pi_k refreshed every round",
+    "one_on_policy_batch_per_round": true,
+    "ordinary_cbf_intervention_is_failure": false,
+    "ppo_stores_raw_policy_action_and_behavior_log_probability": true,
+    "reference_stop_gradient": true,
+    "reward": "unchanged v23 base + fall + dual-CBF reward",
+    "runtime_cbf_executes_filtered_action": true,
+    "single_actor": true,
+    "single_privileged_critic": true
+  },
+  "policy_method": "CBF-Shielded KL-Regularized Online PPO v23",
+  "prospective_execution": {
+    "adaptation_started": false,
+    "adapted_policy_outcomes_observed": false,
+    "calibration_completed": true,
+    "final_evaluation_started": false,
+    "fresh_adaptation_count_planned": 1,
+    "outcome_driven_rerun_forbidden": true
+  },
+  "protocol_id": "safe100-cbf-proximal-contact-completion-v24",
+  "randomness_preflight": {
+    "collisions": [],
+    "historical_collisions": [],
+    "historical_json_file_count": 302,
+    "historical_json_files_sha256": "80d7e8fab64d8b12721171c979d2bd5144d9d705cfe133d11506e9b24745a2b8",
+    "historical_scope": "all parseable JSON below results/online except proximal_v24 and proximal_completion",
+    "historical_unique_declared_seed_count": 2561,
+    "passed": true,
+    "proposed_internal_collisions": [],
+    "proposed_seed_occurrence_count": 89,
+    "proposed_unique_seed_count": 89,
+    "protocol_id": "safe100-cbf-proximal-contact-completion-v24",
+    "schema_version": 1
+  },
+  "rollback": {
+    "allowed_reasons": [
+      "non-finite actor/critic/loss/gradient state",
+      "moving forward KL above 0.01",
+      "raw-action or behavior-Gaussian routing corruption",
+      "actor or critic optimizer-state corruption"
+    ],
+    "performance_rollback_forbidden": true
+  },
+  "schema_version": 1,
+  "status": "prospectively_frozen_after_base_only_calibration_before_adaptation",
+  "training": {
+    "actor_learning_rate": 5e-06,
+    "critic_epochs": 2,
+    "critic_learning_rate": 0.0001,
+    "entropy_coefficient": 0.0,
+    "freeze_log_std": true,
+    "gae_lambda": 0.95,
+    "gamma": 0.99,
+    "hard_kl_ceiling": 0.01,
+    "maximum_actor_epochs": 2,
+    "maximum_gradient_norm": 0.5,
+    "maximum_std": 0.25,
+    "mini_batches": 4,
+    "minimum_std": 0.05,
+    "moving_kl_beta": 0.5,
+    "num_envs": 64,
+    "ppo_clip": 0.05,
+    "rollout_steps": 1024,
+    "rounds": 8,
+    "std_scale_from_base": 0.35,
+    "target_kl": 0.003,
+    "whole_batch_advantage_normalization": true
+  },
+  "v23_lateral_immutable": {
+    "checks": {
+      "entire_result_git_tree": true,
+      "final_test_sha256": true,
+      "frozen_values": true,
+      "protocol_sha256": true
+    },
+    "final_test_sha256": "7cbbbfc596e5ad39177c946998055fa460c646730a00385701b595f77cff0148",
+    "negative_result": {
+      "target_base_success": 0.693359375,
+      "target_fall_delta": 0.00390625,
+      "target_final_success": 0.689453125,
+      "target_regressions": 95,
+      "target_repairs": 93,
+      "target_success_delta": -0.00390625
+    },
+    "protocol_sha256": "745e888e47d9d33fe87fffa4bbaba618a7e91f37b55ebbf8cb08f578fc1d8f38",
+    "rerun_or_recomputed": false,
+    "result_git_tree": "68f489ac49af8020912f7e3e71d317e7f8fc1f0f",
+    "unchanged": true
+  }
+}
