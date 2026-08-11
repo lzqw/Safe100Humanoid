@@ -1,0 +1,50 @@
+{
+  "context_ids": [
+    "L_effect"
+  ],
+  "figure_categories": 4,
+  "files": [
+    {
+      "bytes": 65068,
+      "file": "validation_learning_curve.png",
+      "sha256": "67f9d055110733f1d35ca3ec70475b986f9f3d1a3ac23d9199ffd3e39d58fc0c"
+    },
+    {
+      "bytes": 15443,
+      "file": "validation_learning_curve.pdf",
+      "sha256": "d8c081fc40589fc15af5653d1f4645977d1339be0fa43589317d82b6ab9bd506"
+    },
+    {
+      "bytes": 54959,
+      "file": "base_vs_best_final.png",
+      "sha256": "f65266ee6a31052c4d0b55a3a81e3b33cc37a0c31639e79b3d58bfc803e36f07"
+    },
+    {
+      "bytes": 15309,
+      "file": "base_vs_best_final.pdf",
+      "sha256": "189a3f87053322b9b52f7331aa40aba90a35990fcfe168e5d32a7400ed495f68"
+    },
+    {
+      "bytes": 43367,
+      "file": "repair_vs_regression.png",
+      "sha256": "88d487889bfd746d5e8ac24b94540b7c966d0aa8df908b822c9412e43030eb52"
+    },
+    {
+      "bytes": 15293,
+      "file": "repair_vs_regression.pdf",
+      "sha256": "4682de7e5e570ed2912c7be09ec4f0fb5bbd8646a17c325076ef7515a08d9ad8"
+    },
+    {
+      "bytes": 128559,
+      "file": "failure_specific_telemetry.png",
+      "sha256": "9825d7553fbab5479e2ba82faf1635fe680192b2f4b5ae96bffb1b0584f6d212"
+    },
+    {
+      "bytes": 19461,
+      "file": "failure_specific_telemetry.pdf",
+      "sha256": "fe40366c061faa88f58de957ad1f079ccdd384d7ce0876614c564e4db15efe77"
+    }
+  ],
+  "protocol_id": "safe100-effect-first-development-v22",
+  "schema_version": 1
+}
