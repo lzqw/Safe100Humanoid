@@ -1,0 +1,718 @@
+{
+  "calibration": {
+    "adapted_policy_evaluations_used": false,
+    "attempts": [
+      {
+        "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+        "aggregate_telemetry": {
+          "intervention_per_riser": 0.9151313086622395,
+          "mean_contact_mismatch": 0.14374817060888745,
+          "mean_correction_norm": 0.0017016931566818175,
+          "mean_reached_riser": 8.7109375,
+          "mean_return": 7.781627148389816,
+          "mean_slip_signal": 0.07423415051016491,
+          "recovery_takeover_rate": 0.771484375
+        },
+        "base_policy_only": true,
+        "candidate_foot_friction": 0.44,
+        "candidate_index": 0,
+        "candidate_parameter_seed": 51108,
+        "contact_fall_count": 55,
+        "contact_purity_over_all_non_success": 0.5913978494623656,
+        "contact_purity_over_falls": 0.5913978494623656,
+        "context_file_sha256": "48f788efba03aed579928824fc2352e2d92ed11e3081052ddb6267a252ecf3c8",
+        "evaluation_seeds": [
+          132400000,
+          132400001,
+          132400002,
+          132400003
+        ],
+        "failure_type_counts": {
+          "contact_stability": 55,
+          "lateral_heading_drift": 38
+        },
+        "fall_count": 93,
+        "fall_rate": 0.181640625,
+        "non_success_count": 93,
+        "num_episodes": 512,
+        "parameters_sha256": "b8b84b1911484d8a72f77fdc18be370c6b2e7c3190d83bb5b142d80d84d029dd",
+        "pure_contact_context_audit": {
+          "actuator_nominal": true,
+          "command_nominal": true,
+          "disturbance_pulses_disabled": true,
+          "foot_friction": 0.44,
+          "navigation_nominal": true,
+          "only_changed_physical_axis": "foot_friction",
+          "passed": true,
+          "phase_nominal": true,
+          "sensor_nominal": true,
+          "terrain_nominal": true
+        },
+        "qualification_conditions": {
+          "at_least_100_falls": false,
+          "contact_purity_over_all_non_success_at_least_85_percent": false,
+          "contact_purity_over_falls_at_least_85_percent": false,
+          "success_rate_in_closed_65_75_percent_interval": false
+        },
+        "qualifies": false,
+        "success_count": 419,
+        "success_rate": 0.818359375,
+        "timeout_count": 0
+      },
+      {
+        "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+        "aggregate_telemetry": {
+          "intervention_per_riser": 0.9372519986791303,
+          "mean_contact_mismatch": 0.14326143586367834,
+          "mean_correction_norm": 0.0015969009048895366,
+          "mean_reached_riser": 8.716796875,
+          "mean_return": 8.133650599513203,
+          "mean_slip_signal": 0.0744611669506412,
+          "recovery_takeover_rate": 0.8125
+        },
+        "base_policy_only": true,
+        "candidate_foot_friction": 0.427333,
+        "candidate_index": 1,
+        "candidate_parameter_seed": 51109,
+        "contact_fall_count": 47,
+        "contact_purity_over_all_non_success": 0.573170731707317,
+        "contact_purity_over_falls": 0.573170731707317,
+        "context_file_sha256": "714a0ba8d7a990c476d79ae8a9f29d975dc72b039244d0fbeec068dddec9f5ea",
+        "evaluation_seeds": [
+          132400100,
+          132400101,
+          132400102,
+          132400103
+        ],
+        "failure_type_counts": {
+          "contact_stability": 47,
+          "lateral_heading_drift": 35
+        },
+        "fall_count": 82,
+        "fall_rate": 0.16015625,
+        "non_success_count": 82,
+        "num_episodes": 512,
+        "parameters_sha256": "ddc23c499108d142ae6ca6f718095400c25744d1046983f2439124c3fe9031cc",
+        "pure_contact_context_audit": {
+          "actuator_nominal": true,
+          "command_nominal": true,
+          "disturbance_pulses_disabled": true,
+          "foot_friction": 0.427333,
+          "navigation_nominal": true,
+          "only_changed_physical_axis": "foot_friction",
+          "passed": true,
+          "phase_nominal": true,
+          "sensor_nominal": true,
+          "terrain_nominal": true
+        },
+        "qualification_conditions": {
+          "at_least_100_falls": false,
+          "contact_purity_over_all_non_success_at_least_85_percent": false,
+          "contact_purity_over_falls_at_least_85_percent": false,
+          "success_rate_in_closed_65_75_percent_interval": false
+        },
+        "qualifies": false,
+        "success_count": 430,
+        "success_rate": 0.83984375,
+        "timeout_count": 0
+      },
+      {
+        "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+        "aggregate_telemetry": {
+          "intervention_per_riser": 1.021764180783066,
+          "mean_contact_mismatch": 0.14374605764169246,
+          "mean_correction_norm": 0.001996161304125582,
+          "mean_reached_riser": 8.744140625,
+          "mean_return": 7.98103145416826,
+          "mean_slip_signal": 0.07577528198453365,
+          "recovery_takeover_rate": 0.80859375
+        },
+        "base_policy_only": true,
+        "candidate_foot_friction": 0.414667,
+        "candidate_index": 2,
+        "candidate_parameter_seed": 51110,
+        "contact_fall_count": 48,
+        "contact_purity_over_all_non_success": 0.5925925925925926,
+        "contact_purity_over_falls": 0.5925925925925926,
+        "context_file_sha256": "879c342282f3b4f7c3c23cf9fd0437b6660af007ec19f37070457d0a989b9965",
+        "evaluation_seeds": [
+          132400200,
+          132400201,
+          132400202,
+          132400203
+        ],
+        "failure_type_counts": {
+          "contact_stability": 48,
+          "lateral_heading_drift": 33
+        },
+        "fall_count": 81,
+        "fall_rate": 0.158203125,
+        "non_success_count": 81,
+        "num_episodes": 512,
+        "parameters_sha256": "85ded7737a14c1f698a98d30fa2157aa0b82fc583abb356555c29dae6ba6c939",
+        "pure_contact_context_audit": {
+          "actuator_nominal": true,
+          "command_nominal": true,
+          "disturbance_pulses_disabled": true,
+          "foot_friction": 0.414667,
+          "navigation_nominal": true,
+          "only_changed_physical_axis": "foot_friction",
+          "passed": true,
+          "phase_nominal": true,
+          "sensor_nominal": true,
+          "terrain_nominal": true
+        },
+        "qualification_conditions": {
+          "at_least_100_falls": false,
+          "contact_purity_over_all_non_success_at_least_85_percent": false,
+          "contact_purity_over_falls_at_least_85_percent": false,
+          "success_rate_in_closed_65_75_percent_interval": false
+        },
+        "qualifies": false,
+        "success_count": 431,
+        "success_rate": 0.841796875,
+        "timeout_count": 0
+      },
+      {
+        "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+        "aggregate_telemetry": {
+          "intervention_per_riser": 1.0714231600868516,
+          "mean_contact_mismatch": 0.1447140022792155,
+          "mean_correction_norm": 0.0017468481211070641,
+          "mean_reached_riser": 8.69140625,
+          "mean_return": 8.01792404986918,
+          "mean_slip_signal": 0.07684610581054585,
+          "recovery_takeover_rate": 0.80859375
+        },
+        "base_policy_only": true,
+        "candidate_foot_friction": 0.402,
+        "candidate_index": 3,
+        "candidate_parameter_seed": 51111,
+        "contact_fall_count": 58,
+        "contact_purity_over_all_non_success": 0.6904761904761905,
+        "contact_purity_over_falls": 0.6904761904761905,
+        "context_file_sha256": "ea1e5508b7856961861e8f9e3bbc70c93c1e3e2f0e0f18ae0aee71933558b9a4",
+        "evaluation_seeds": [
+          132400300,
+          132400301,
+          132400302,
+          132400303
+        ],
+        "failure_type_counts": {
+          "contact_stability": 58,
+          "lateral_heading_drift": 26
+        },
+        "fall_count": 84,
+        "fall_rate": 0.1640625,
+        "non_success_count": 84,
+        "num_episodes": 512,
+        "parameters_sha256": "e60322e848a70ce986f3417cb8ef353e4c3b23f0b1aaac00ce4166e7af1b8634",
+        "pure_contact_context_audit": {
+          "actuator_nominal": true,
+          "command_nominal": true,
+          "disturbance_pulses_disabled": true,
+          "foot_friction": 0.402,
+          "navigation_nominal": true,
+          "only_changed_physical_axis": "foot_friction",
+          "passed": true,
+          "phase_nominal": true,
+          "sensor_nominal": true,
+          "terrain_nominal": true
+        },
+        "qualification_conditions": {
+          "at_least_100_falls": false,
+          "contact_purity_over_all_non_success_at_least_85_percent": false,
+          "contact_purity_over_falls_at_least_85_percent": false,
+          "success_rate_in_closed_65_75_percent_interval": false
+        },
+        "qualifies": false,
+        "success_count": 428,
+        "success_rate": 0.8359375,
+        "timeout_count": 0
+      },
+      {
+        "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+        "aggregate_telemetry": {
+          "intervention_per_riser": 1.1565445383748738,
+          "mean_contact_mismatch": 0.14358389773406088,
+          "mean_correction_norm": 0.0020681590548465717,
+          "mean_reached_riser": 8.740234375,
+          "mean_return": 7.904306820593774,
+          "mean_slip_signal": 0.07755523442756385,
+          "recovery_takeover_rate": 0.8125
+        },
+        "base_policy_only": true,
+        "candidate_foot_friction": 0.389333,
+        "candidate_index": 4,
+        "candidate_parameter_seed": 51112,
+        "contact_fall_count": 61,
+        "contact_purity_over_all_non_success": 0.7176470588235294,
+        "contact_purity_over_falls": 0.7176470588235294,
+        "context_file_sha256": "a0c9909a2fa35c17360ea447b841cdd2a69500425c2c8d15b99c26d5dd0edac6",
+        "evaluation_seeds": [
+          132400400,
+          132400401,
+          132400402,
+          132400403
+        ],
+        "failure_type_counts": {
+          "contact_stability": 61,
+          "lateral_heading_drift": 24
+        },
+        "fall_count": 85,
+        "fall_rate": 0.166015625,
+        "non_success_count": 85,
+        "num_episodes": 512,
+        "parameters_sha256": "92d3adec91df3206bf6312973e4caf08a7b2b72209b9c15ba93c7307ade001ac",
+        "pure_contact_context_audit": {
+          "actuator_nominal": true,
+          "command_nominal": true,
+          "disturbance_pulses_disabled": true,
+          "foot_friction": 0.389333,
+          "navigation_nominal": true,
+          "only_changed_physical_axis": "foot_friction",
+          "passed": true,
+          "phase_nominal": true,
+          "sensor_nominal": true,
+          "terrain_nominal": true
+        },
+        "qualification_conditions": {
+          "at_least_100_falls": false,
+          "contact_purity_over_all_non_success_at_least_85_percent": false,
+          "contact_purity_over_falls_at_least_85_percent": false,
+          "success_rate_in_closed_65_75_percent_interval": false
+        },
+        "qualifies": false,
+        "success_count": 427,
+        "success_rate": 0.833984375,
+        "timeout_count": 0
+      },
+      {
+        "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+        "aggregate_telemetry": {
+          "intervention_per_riser": 1.0154839563329006,
+          "mean_contact_mismatch": 0.14485845892340876,
+          "mean_correction_norm": 0.0015034570464540625,
+          "mean_reached_riser": 8.712890625,
+          "mean_return": 7.75547436857596,
+          "mean_slip_signal": 0.0788469628605526,
+          "recovery_takeover_rate": 0.791015625
+        },
+        "base_policy_only": true,
+        "candidate_foot_friction": 0.376667,
+        "candidate_index": 5,
+        "candidate_parameter_seed": 51113,
+        "contact_fall_count": 80,
+        "contact_purity_over_all_non_success": 0.8695652173913043,
+        "contact_purity_over_falls": 0.8695652173913043,
+        "context_file_sha256": "e99af6d55e1c1d878a89eb5d94129297700790e19e33d6107557b344a535ebad",
+        "evaluation_seeds": [
+          132400500,
+          132400501,
+          132400502,
+          132400503
+        ],
+        "failure_type_counts": {
+          "contact_stability": 80,
+          "lateral_heading_drift": 12
+        },
+        "fall_count": 92,
+        "fall_rate": 0.1796875,
+        "non_success_count": 92,
+        "num_episodes": 512,
+        "parameters_sha256": "814fee3a610614bec18cb4d641907c81f02825be1ebd057a4cf0375d972ead4a",
+        "pure_contact_context_audit": {
+          "actuator_nominal": true,
+          "command_nominal": true,
+          "disturbance_pulses_disabled": true,
+          "foot_friction": 0.376667,
+          "navigation_nominal": true,
+          "only_changed_physical_axis": "foot_friction",
+          "passed": true,
+          "phase_nominal": true,
+          "sensor_nominal": true,
+          "terrain_nominal": true
+        },
+        "qualification_conditions": {
+          "at_least_100_falls": false,
+          "contact_purity_over_all_non_success_at_least_85_percent": true,
+          "contact_purity_over_falls_at_least_85_percent": true,
+          "success_rate_in_closed_65_75_percent_interval": false
+        },
+        "qualifies": false,
+        "success_count": 420,
+        "success_rate": 0.8203125,
+        "timeout_count": 0
+      },
+      {
+        "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+        "aggregate_telemetry": {
+          "intervention_per_riser": 1.149471436161548,
+          "mean_contact_mismatch": 0.14627680063131265,
+          "mean_correction_norm": 0.0017064804402380368,
+          "mean_reached_riser": 8.609375,
+          "mean_return": 7.490679130889475,
+          "mean_slip_signal": 0.08140176066808635,
+          "recovery_takeover_rate": 0.787109375
+        },
+        "base_policy_only": true,
+        "candidate_foot_friction": 0.364,
+        "candidate_index": 6,
+        "candidate_parameter_seed": 51114,
+        "contact_fall_count": 84,
+        "contact_purity_over_all_non_success": 0.8316831683168316,
+        "contact_purity_over_falls": 0.8316831683168316,
+        "context_file_sha256": "0412c44fa93ea5fd420821a9812ba5290c952fc191340a37ca50284e18bd6516",
+        "evaluation_seeds": [
+          132400600,
+          132400601,
+          132400602,
+          132400603
+        ],
+        "failure_type_counts": {
+          "contact_stability": 84,
+          "lateral_heading_drift": 17
+        },
+        "fall_count": 101,
+        "fall_rate": 0.197265625,
+        "non_success_count": 101,
+        "num_episodes": 512,
+        "parameters_sha256": "e2ac5a9430c7976b038d30e968d862676d8f30b1af17e9caf5248f38d6c80c29",
+        "pure_contact_context_audit": {
+          "actuator_nominal": true,
+          "command_nominal": true,
+          "disturbance_pulses_disabled": true,
+          "foot_friction": 0.364,
+          "navigation_nominal": true,
+          "only_changed_physical_axis": "foot_friction",
+          "passed": true,
+          "phase_nominal": true,
+          "sensor_nominal": true,
+          "terrain_nominal": true
+        },
+        "qualification_conditions": {
+          "at_least_100_falls": true,
+          "contact_purity_over_all_non_success_at_least_85_percent": false,
+          "contact_purity_over_falls_at_least_85_percent": false,
+          "success_rate_in_closed_65_75_percent_interval": false
+        },
+        "qualifies": false,
+        "success_count": 411,
+        "success_rate": 0.802734375,
+        "timeout_count": 0
+      },
+      {
+        "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+        "aggregate_telemetry": {
+          "intervention_per_riser": 1.3195328168803826,
+          "mean_contact_mismatch": 0.14947281820059288,
+          "mean_correction_norm": 0.002117017831820292,
+          "mean_reached_riser": 8.513671875,
+          "mean_return": 6.826898101717234,
+          "mean_slip_signal": 0.08480922624585219,
+          "recovery_takeover_rate": 0.75390625
+        },
+        "base_policy_only": true,
+        "candidate_foot_friction": 0.351333,
+        "candidate_index": 7,
+        "candidate_parameter_seed": 51115,
+        "contact_fall_count": 106,
+        "contact_purity_over_all_non_success": 0.8833333333333333,
+        "contact_purity_over_falls": 0.8833333333333333,
+        "context_file_sha256": "b3922faa5fce0ad0c8179aa97d6fb43457efdd0e1431c47ddf76d1d5fcd38b57",
+        "evaluation_seeds": [
+          132400700,
+          132400701,
+          132400702,
+          132400703
+        ],
+        "failure_type_counts": {
+          "contact_stability": 106,
+          "lateral_heading_drift": 14
+        },
+        "fall_count": 120,
+        "fall_rate": 0.234375,
+        "non_success_count": 120,
+        "num_episodes": 512,
+        "parameters_sha256": "a87ac2a71f3945c65384e9b78ff9b41c0d0b19f031c7c74ec40fefd47346b35a",
+        "pure_contact_context_audit": {
+          "actuator_nominal": true,
+          "command_nominal": true,
+          "disturbance_pulses_disabled": true,
+          "foot_friction": 0.351333,
+          "navigation_nominal": true,
+          "only_changed_physical_axis": "foot_friction",
+          "passed": true,
+          "phase_nominal": true,
+          "sensor_nominal": true,
+          "terrain_nominal": true
+        },
+        "qualification_conditions": {
+          "at_least_100_falls": true,
+          "contact_purity_over_all_non_success_at_least_85_percent": true,
+          "contact_purity_over_falls_at_least_85_percent": true,
+          "success_rate_in_closed_65_75_percent_interval": false
+        },
+        "qualifies": false,
+        "success_count": 392,
+        "success_rate": 0.765625,
+        "timeout_count": 0
+      },
+      {
+        "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+        "aggregate_telemetry": {
+          "intervention_per_riser": 1.4055354277370498,
+          "mean_contact_mismatch": 0.15054106677416712,
+          "mean_correction_norm": 0.0020944307762601755,
+          "mean_reached_riser": 8.5078125,
+          "mean_return": 6.691651024390012,
+          "mean_slip_signal": 0.08733021929219831,
+          "recovery_takeover_rate": 0.759765625
+        },
+        "base_policy_only": true,
+        "candidate_foot_friction": 0.338667,
+        "candidate_index": 8,
+        "candidate_parameter_seed": 51116,
+        "contact_fall_count": 108,
+        "contact_purity_over_all_non_success": 0.907563025210084,
+        "contact_purity_over_falls": 0.907563025210084,
+        "context_file_sha256": "28e8cdac08012213961123c006e33fe8b58466fdfd661fa98e882016217c6499",
+        "evaluation_seeds": [
+          132400800,
+          132400801,
+          132400802,
+          132400803
+        ],
+        "failure_type_counts": {
+          "contact_stability": 108,
+          "lateral_heading_drift": 11
+        },
+        "fall_count": 119,
+        "fall_rate": 0.232421875,
+        "non_success_count": 119,
+        "num_episodes": 512,
+        "parameters_sha256": "a65eb25a28818edfcf9978c198a302a3bd7997d85345578f2c0937f344b25218",
+        "pure_contact_context_audit": {
+          "actuator_nominal": true,
+          "command_nominal": true,
+          "disturbance_pulses_disabled": true,
+          "foot_friction": 0.338667,
+          "navigation_nominal": true,
+          "only_changed_physical_axis": "foot_friction",
+          "passed": true,
+          "phase_nominal": true,
+          "sensor_nominal": true,
+          "terrain_nominal": true
+        },
+        "qualification_conditions": {
+          "at_least_100_falls": true,
+          "contact_purity_over_all_non_success_at_least_85_percent": true,
+          "contact_purity_over_falls_at_least_85_percent": true,
+          "success_rate_in_closed_65_75_percent_interval": false
+        },
+        "qualifies": false,
+        "success_count": 393,
+        "success_rate": 0.767578125,
+        "timeout_count": 0
+      },
+      {
+        "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+        "aggregate_telemetry": {
+          "intervention_per_riser": 1.71673024854681,
+          "mean_contact_mismatch": 0.1534038879617583,
+          "mean_correction_norm": 0.00257082773261353,
+          "mean_reached_riser": 8.27734375,
+          "mean_return": 5.819963645655662,
+          "mean_slip_signal": 0.09119810379343107,
+          "recovery_takeover_rate": 0.6953125
+        },
+        "base_policy_only": true,
+        "candidate_foot_friction": 0.326,
+        "candidate_index": 9,
+        "candidate_parameter_seed": 51117,
+        "contact_fall_count": 134,
+        "contact_purity_over_all_non_success": 0.881578947368421,
+        "contact_purity_over_falls": 0.881578947368421,
+        "context_file_sha256": "cf602cc9dd269ae0d0b08102f20ecdeae446bbb62a160f4577cb174a7be798c6",
+        "evaluation_seeds": [
+          132400900,
+          132400901,
+          132400902,
+          132400903
+        ],
+        "failure_type_counts": {
+          "contact_stability": 134,
+          "lateral_heading_drift": 18
+        },
+        "fall_count": 152,
+        "fall_rate": 0.296875,
+        "non_success_count": 152,
+        "num_episodes": 512,
+        "parameters_sha256": "5e79a1cff0d8db75bcdf0072ed8592755c946666dce9affd0ac6c11a091a1864",
+        "pure_contact_context_audit": {
+          "actuator_nominal": true,
+          "command_nominal": true,
+          "disturbance_pulses_disabled": true,
+          "foot_friction": 0.326,
+          "navigation_nominal": true,
+          "only_changed_physical_axis": "foot_friction",
+          "passed": true,
+          "phase_nominal": true,
+          "sensor_nominal": true,
+          "terrain_nominal": true
+        },
+        "qualification_conditions": {
+          "at_least_100_falls": true,
+          "contact_purity_over_all_non_success_at_least_85_percent": true,
+          "contact_purity_over_falls_at_least_85_percent": true,
+          "success_rate_in_closed_65_75_percent_interval": true
+        },
+        "qualifies": true,
+        "success_count": 360,
+        "success_rate": 0.703125,
+        "timeout_count": 0
+      }
+    ],
+    "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+    "candidate_foot_frictions": [
+      0.44,
+      0.427333,
+      0.414667,
+      0.402,
+      0.389333,
+      0.376667,
+      0.364,
+      0.351333,
+      0.338667,
+      0.326,
+      0.313333,
+      0.300667,
+      0.288,
+      0.275333,
+      0.262667,
+      0.25
+    ],
+    "candidate_parameter_seeds": [
+      51108,
+      51109,
+      51110,
+      51111,
+      51112,
+      51113,
+      51114,
+      51115,
+      51116,
+      51117,
+      51118,
+      51119,
+      51120,
+      51121,
+      51122,
+      51123
+    ],
+    "episodes_per_candidate": 512,
+    "kind": "base_policy_pure_contact_first_qualifying_v24",
+    "minimum_contact_purity": 0.85,
+    "minimum_fall_count": 100,
+    "precalibration_protocol_git_commit": "d57760d092486b171fc93710af9313e629d277e7",
+    "precalibration_protocol_sha256": "55b8f9a870ac85e975b98cb54ede076da5395e31ed67368458687b462b528fc6",
+    "protocol_id": "safe100-cbf-proximal-contact-completion-v24",
+    "purity_falls_only_also_required": true,
+    "purity_primary_denominator": "all non-success episodes",
+    "selected_candidate_parameter_seed": 51117,
+    "selected_foot_friction": 0.326,
+    "selected_parameters_sha256": "5e79a1cff0d8db75bcdf0072ed8592755c946666dce9affd0ac6c11a091a1864",
+    "selection_rule": "first base-only pure-friction candidate satisfying every frozen gate",
+    "success_rate_bounds_inclusive": [
+      0.65,
+      0.75
+    ]
+  },
+  "calibration_candidate_seed": 51117,
+  "candidate_severity": 0.6,
+  "context_family": "pure_low_foot_friction",
+  "context_id": "C_effect",
+  "family_spec_sha256": "baa18e2d62d36d8c526b1858313318b376fb01464a258342af7330f2f6772d68",
+  "formal_context": false,
+  "kind": "effect_first_development_v22",
+  "nominal_command_delay_range_s": [
+    0.04,
+    0.16
+  ],
+  "parameters_sha256": "5e79a1cff0d8db75bcdf0072ed8592755c946666dce9affd0ac6c11a091a1864",
+  "scenario": {
+    "centerline_heading_gain": 1.4,
+    "centerline_heading_reference_bias": 0.0,
+    "centerline_lateral_gain": 0.8,
+    "centerline_max_lateral_velocity": 0.16,
+    "centerline_max_yaw_velocity": 0.45,
+    "contact_observation_delay_steps": 0,
+    "disturbance_pulses_with_centering": false,
+    "edge_penalty_scale": 0.0,
+    "foot_friction": 0.326,
+    "gait_phase_offset": 0.0,
+    "lateral_command_bias": 0.0,
+    "lateral_pulse_max": 0.08,
+    "lateral_pulse_min": 0.02,
+    "left_response_scale": 1.0,
+    "pulse_duration_max_s": 0.6,
+    "pulse_duration_min_s": 0.2,
+    "pulse_interval_max_s": 7.0,
+    "pulse_interval_min_s": 3.0,
+    "recovery_reward_scale": 0.4,
+    "right_response_scale": 1.0,
+    "stair_half_width": 1.2,
+    "toe_margin": 0.08,
+    "yaw_command_bias": 0.0,
+    "yaw_pulse_max": 0.2,
+    "yaw_pulse_min": 0.05
+  },
+  "schema_version": 2,
+  "specialist_mode": "contact_stability",
+  "target": {
+    "action_bias": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "action_delay_steps": 0,
+    "action_gain": 1.0,
+    "command_delay_s": 0.1,
+    "command_forward_scale": 1.0,
+    "command_low_pass_s": 0.08,
+    "encoder_bias": 0.0,
+    "episode_length_s": 35.0,
+    "num_steps": 9,
+    "rise_profile": [
+      0.13,
+      0.13,
+      0.13,
+      0.13,
+      0.13,
+      0.13,
+      0.13,
+      0.13,
+      0.13
+    ],
+    "tread_profile": [
+      0.35,
+      0.35,
+      0.35,
+      0.35,
+      0.35,
+      0.35,
+      0.35,
+      0.35,
+      0.35
+    ]
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "adapted_policy_evaluations_used": false,
+  "base_policy_only": true,
+  "candidate_count_evaluated": 10,
+  "context_id": "C_effect",
+  "frozen_context": "/home/carla/LZQW/SAFE100/humanoid/artifacts/proximal_v24/contact/calibration/context.json",
+  "frozen_context_file_sha256": "7e827d08ec3f7561a90ea838c9f008308a7d1a5e6d81ae381fa2eb0c3b4ef275",
+  "mode": "contact_stability",
+  "parameters_sha256": "5e79a1cff0d8db75bcdf0072ed8592755c946666dce9affd0ac6c11a091a1864",
+  "precalibration_protocol": {
+    "file": "/home/carla/LZQW/SAFE100/humanoid/worktrees/v23_proximal/results/online/proximal_v24/precalibration_protocol.json",
+    "git_commit": "d57760d092486b171fc93710af9313e629d277e7",
+    "implementation_commit": "f5ef32511d05f63b34c3dae1d0c7ac7208d290fc",
+    "sha256": "55b8f9a870ac85e975b98cb54ede076da5395e31ed67368458687b462b528fc6",
+    "validation": {
+      "adapted_absent": true,
+      "base_checkpoint": true,
+      "base_only": true,
+      "bounds": true,
+      "candidate_frictions": true,
+      "candidate_parameter_seeds": true,
+      "episodes": true,
+      "execution_not_started": true,
+      "first_qualifier": true,
+      "implementation_is_ancestor": true,
+      "minimum_falls": true,
+      "minimum_purity": true,
+      "protocol_id": true,
+      "randomness": true,
+      "status": true
+    }
+  },
+  "protocol_id": "safe100-cbf-proximal-contact-completion-v24",
+  "schema_version": 1,
+  "selected_attempt": {
+    "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+    "aggregate_telemetry": {
+      "intervention_per_riser": 1.71673024854681,
+      "mean_contact_mismatch": 0.1534038879617583,
+      "mean_correction_norm": 0.00257082773261353,
+      "mean_reached_riser": 8.27734375,
+      "mean_return": 5.819963645655662,
+      "mean_slip_signal": 0.09119810379343107,
+      "recovery_takeover_rate": 0.6953125
+    },
+    "base_policy_only": true,
+    "candidate_foot_friction": 0.326,
+    "candidate_index": 9,
+    "candidate_parameter_seed": 51117,
+    "contact_fall_count": 134,
+    "contact_purity_over_all_non_success": 0.881578947368421,
+    "contact_purity_over_falls": 0.881578947368421,
+    "context_file_sha256": "cf602cc9dd269ae0d0b08102f20ecdeae446bbb62a160f4577cb174a7be798c6",
+    "evaluation_seeds": [
+      132400900,
+      132400901,
+      132400902,
+      132400903
+    ],
+    "failure_type_counts": {
+      "contact_stability": 134,
+      "lateral_heading_drift": 18
+    },
+    "fall_count": 152,
+    "fall_rate": 0.296875,
+    "non_success_count": 152,
+    "num_episodes": 512,
+    "parameters_sha256": "5e79a1cff0d8db75bcdf0072ed8592755c946666dce9affd0ac6c11a091a1864",
+    "pure_contact_context_audit": {
+      "actuator_nominal": true,
+      "command_nominal": true,
+      "disturbance_pulses_disabled": true,
+      "foot_friction": 0.326,
+      "navigation_nominal": true,
+      "only_changed_physical_axis": "foot_friction",
+      "passed": true,
+      "phase_nominal": true,
+      "sensor_nominal": true,
+      "terrain_nominal": true
+    },
+    "qualification_conditions": {
+      "at_least_100_falls": true,
+      "contact_purity_over_all_non_success_at_least_85_percent": true,
+      "contact_purity_over_falls_at_least_85_percent": true,
+      "success_rate_in_closed_65_75_percent_interval": true
+    },
+    "qualifies": true,
+    "success_count": 360,
+    "success_rate": 0.703125,
+    "timeout_count": 0
+  },
+  "selected_candidate_parameter_seed": 51117,
+  "selected_foot_friction": 0.326,
+  "status": "first_qualifying_pure_contact_context_frozen"
+}
