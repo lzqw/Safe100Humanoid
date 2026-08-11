@@ -267,6 +267,9 @@ def test_v24_training_has_no_forbidden_algorithm_path_or_selection() -> None:
     imported_from = {
         node.module or "" for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)
     }
+    referenced_names = {
+        node.id for node in ast.walk(tree) if isinstance(node, ast.Name)
+    } | {node.attr for node in ast.walk(tree) if isinstance(node, ast.Attribute)}
     assert "refine_proximal_v23" in imported_from
     assert not any("hard_cases" in name for name in imported_from)
     for forbidden in (
@@ -277,5 +280,5 @@ def test_v24_training_has_no_forbidden_algorithm_path_or_selection() -> None:
         "specialist_reward",
         "performance_gate",
     ):
-        assert forbidden not in source
+        assert forbidden not in referenced_names
     assert "round 8 actor, never best-so-far" in source

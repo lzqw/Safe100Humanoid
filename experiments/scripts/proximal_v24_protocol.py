@@ -312,9 +312,15 @@ def pure_contact_context_audit(
     }
     mismatches: dict[str, Any] = {}
     for name, expected in expected_target.items():
-        if target.get(name) != expected:
+        actual = target.get(name)
+        matches = (
+            list(actual) == expected
+            if isinstance(expected, list) and isinstance(actual, (list, tuple))
+            else actual == expected
+        )
+        if not matches:
             mismatches[f"target.{name}"] = {
-                "actual": target.get(name),
+                "actual": actual,
                 "expected": expected,
             }
     for name, expected in expected_scenario.items():
