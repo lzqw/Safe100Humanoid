@@ -49,6 +49,14 @@ SPECIALIST_BANK_KINDS = (
   SPECIALIST_SUCCESS_POOL_KIND,
   SPECIALIST_SUCCESS_BANK_KIND,
 )
+RESTART_BALANCE_PROFILE_ALL_OBSERVED = "all_observed"
+RESTART_BALANCE_PROFILE_LATERAL_STAGE_SUPPORT_GROWTH = (
+  "lateral_stage_support_growth"
+)
+RESTART_BALANCE_PROFILES = (
+  RESTART_BALANCE_PROFILE_ALL_OBSERVED,
+  RESTART_BALANCE_PROFILE_LATERAL_STAGE_SUPPORT_GROWTH,
+)
 LATERAL_CENTERLINE_WIDTH_FRACTION = 2.0 / 3.0
 LATERAL_HEADING_THRESHOLD_RAD = math.pi / 2.0
 HIGH_CBF_CORRECTION_THRESHOLD = 0.5
@@ -2194,15 +2202,34 @@ def match_v19_success_counterexamples(
   }
 
 
-def _v19_restart_balance_stratum(entry: HardCaseEntry) -> tuple[Any, ...]:
+def _validate_v19_restart_balance_profile(mode: str, profile: str) -> None:
+  if profile not in RESTART_BALANCE_PROFILES:
+    raise ValueError(f"unknown v19 restart balance profile: {profile!r}")
+  if (
+    profile == RESTART_BALANCE_PROFILE_LATERAL_STAGE_SUPPORT_GROWTH
+    and mode != "lateral"
+  ):
+    raise ValueError(
+      "lateral stage/support/growth balance is only valid for lateral banks"
+    )
+
+
+def _v19_restart_balance_stratum(
+  entry: HardCaseEntry,
+  balance_profile: str = RESTART_BALANCE_PROFILE_ALL_OBSERVED,
+) -> tuple[Any, ...]:
+  _validate_v19_restart_balance_profile(entry.specialist_mode, balance_profile)
   if entry.specialist_mode == "lateral":
-    return (
+    full = (
       entry.centerline_sign,
       entry.heading_sign,
       entry.riser_stage,
       entry.support_foot,
       "high" if entry.error_growth_rate >= 0.25 else "low",
     )
+    if balance_profile == RESTART_BALANCE_PROFILE_LATERAL_STAGE_SUPPORT_GROWTH:
+      return full[2:]
+    return full
   if entry.specialist_mode == "contact_stability":
     return (
       entry.touchdown_foot,
@@ -2213,15 +2240,22 @@ def _v19_restart_balance_stratum(entry: HardCaseEntry) -> tuple[Any, ...]:
   raise ValueError("balanced v19 restart sampling requires a v19 specialist")
 
 
-def _v19_restart_marginal_names(mode: str) -> tuple[str, ...]:
+def _v19_restart_marginal_names(
+  mode: str,
+  balance_profile: str = RESTART_BALANCE_PROFILE_ALL_OBSERVED,
+) -> tuple[str, ...]:
+  _validate_v19_restart_balance_profile(mode, balance_profile)
   if mode == "lateral":
-    return (
+    full = (
       "centerline_sign",
       "heading_sign",
       "riser_stage",
       "support_foot",
       "error_growth_bin",
     )
+    if balance_profile == RESTART_BALANCE_PROFILE_LATERAL_STAGE_SUPPORT_GROWTH:
+      return full[2:]
+    return full
   if mode == "contact_stability":
     return (
       "touchdown_foot",
@@ -2455,6 +2489,7 @@ def select_v19_balanced_restart_pairs(
   success_bank: HardCaseStateBank,
   count: int,
   *,
+  balance_profile: str = RESTART_BALANCE_PROFILE_ALL_OBSERVED,
   generator: torch.Generator | None = None,
 ) -> tuple[tuple[int, ...], tuple[int, ...], dict[str, Any]]:
   """Select exact failure/success pairs with balanced observable strata.
@@ -2468,6 +2503,7 @@ def select_v19_balanced_restart_pairs(
   if count < 0:
     raise ValueError("v19 restart-pair count must be non-negative")
   mode = failure_bank.specialist_mode
+  _validate_v19_restart_balance_profile(mode, balance_profile)
   if (
     mode not in ("lateral", "contact_stability")
     or failure_bank.bank_kind != SPECIALIST_FAILURE_BANK_KIND
@@ -2478,6 +2514,7 @@ def select_v19_balanced_restart_pairs(
   if count == 0:
     return (), (), {
       "specialist_mode": mode,
+      "balance_profile": balance_profile,
       "pair_count": 0,
       "exact_match_passed": True,
       "primary_stratum_counts": {},
@@ -2515,9 +2552,9 @@ def select_v19_balanced_restart_pairs(
   balance_groups: dict[tuple[Any, ...], list[tuple[int, int]]] = {}
   for failure_index, success_index in best_success_by_failure.items():
     failure = failure_bank.entries[failure_index]
-    balance_groups.setdefault(_v19_restart_balance_stratum(failure), []).append(
-      (failure_index, success_index)
-    )
+    balance_groups.setdefault(
+      _v19_restart_balance_stratum(failure, balance_profile), []
+    ).append((failure_index, success_index))
   balance_keys = tuple(sorted(balance_groups, key=repr))
   balance_quotas = _balanced_restart_quotas(balance_keys, count)
   heuristic_quotas = _heuristic_balanced_restart_quotas(balance_keys, count)
@@ -2557,29 +2594,43 @@ def select_v19_balanced_restart_pairs(
   secondary_counts: dict[str, int] = {}
   for failure_index in failure_indices:
     failure = failure_bank.entries[failure_index]
-    primary = repr(_v19_restart_balance_stratum(failure))
+    primary = repr(_v19_restart_balance_stratum(failure, balance_profile))
     primary_counts[primary] = primary_counts.get(primary, 0) + 1
     if mode == "contact_stability":
       diagnostic = str(failure.contact_window_side)
       secondary_counts[diagnostic] = secondary_counts.get(diagnostic, 0) + 1
-  marginal_names = _v19_restart_marginal_names(mode)
+  marginal_names = _v19_restart_marginal_names(mode, balance_profile)
   primary_marginal_counts: dict[str, dict[str, int]] = {}
   for field_index, field_name in enumerate(marginal_names):
     values = sorted(
       {
-        _v19_restart_balance_stratum(failure_bank.entries[index])[field_index]
+        _v19_restart_balance_stratum(
+          failure_bank.entries[index], balance_profile
+        )[field_index]
         for index in failure_indices
       },
       key=repr,
     )
     primary_marginal_counts[field_name] = {
       str(value): sum(
-        _v19_restart_balance_stratum(failure_bank.entries[index])[field_index]
+        _v19_restart_balance_stratum(
+          failure_bank.entries[index], balance_profile
+        )[field_index]
         == value
         for index in failure_indices
       )
       for value in values
     }
+  diagnostic_direction_marginal_counts: dict[str, dict[str, int]] = {}
+  if mode == "lateral":
+    for field_name in ("centerline_sign", "heading_sign"):
+      values = [
+        int(getattr(failure_bank.entries[index], field_name))
+        for index in failure_indices
+      ]
+      diagnostic_direction_marginal_counts[field_name] = {
+        str(value): values.count(value) for value in sorted(set(values))
+      }
   exact_match = all(
     success_bank.entries[success_index].matched_failure_index == failure_index
     and _v19_required_match(
@@ -2591,10 +2642,14 @@ def select_v19_balanced_restart_pairs(
     raise RuntimeError("balanced v19 restart sampler broke an exact match")
   return failure_indices, success_indices, {
     "specialist_mode": mode,
+    "balance_profile": balance_profile,
     "pair_count": count,
     "exact_match_passed": exact_match,
     "primary_stratum_counts": dict(sorted(primary_counts.items())),
     "primary_marginal_counts": primary_marginal_counts,
+    "diagnostic_direction_marginal_counts": (
+      diagnostic_direction_marginal_counts
+    ),
     "secondary_stratum_counts": dict(sorted(secondary_counts.items())),
     "quota_solver": quota_solver,
     "maximum_marginal_imbalance": maximum_marginal_imbalance,
@@ -2607,6 +2662,8 @@ def v19_restart_pair_feasibility(
   failure_bank: HardCaseStateBank,
   success_bank: HardCaseStateBank,
   count: int,
+  *,
+  balance_profile: str = RESTART_BALANCE_PROFILE_ALL_OBSERVED,
 ) -> dict[str, Any]:
   """Audit joint marginal feasibility without consuming training randomness."""
   generator = torch.Generator(device="cpu")
@@ -2616,17 +2673,20 @@ def v19_restart_pair_feasibility(
       failure_bank,
       success_bank,
       count,
+      balance_profile=balance_profile,
       generator=generator,
     )
   except RuntimeError as error:
     return {
       "passed": False,
+      "balance_profile": balance_profile,
       "pair_count": count,
       "error": str(error),
       "audit": None,
     }
   return {
     "passed": True,
+    "balance_profile": balance_profile,
     "pair_count": count,
     "error": None,
     "audit": audit,
@@ -2639,12 +2699,15 @@ def finalize_v19_replay_bank_update(
   success_bank: HardCaseStateBank,
   snapshots: tuple[dict[str, Any], dict[str, Any], dict[str, Any]],
   count: int,
+  *,
+  balance_profile: str = RESTART_BALANCE_PROFILE_ALL_OBSERVED,
 ) -> dict[str, Any]:
   """Commit a bank update only when the next balanced replay stays feasible."""
   post_update = v19_restart_pair_feasibility(
     failure_bank,
     success_bank,
     count,
+    balance_profile=balance_profile,
   )
   if post_update["passed"]:
     return {
@@ -2663,6 +2726,7 @@ def finalize_v19_replay_bank_update(
     failure_bank,
     success_bank,
     count,
+    balance_profile=balance_profile,
   )
   if not restored["passed"]:
     raise RuntimeError(
@@ -2717,6 +2781,7 @@ def reset_rollout_with_specialist_banks(
   failure_fraction: float = 0.15,
   success_fraction: float = 0.15,
   matched_pair_sampling: bool = False,
+  restart_balance_profile: str = RESTART_BALANCE_PROFILE_ALL_OBSERVED,
   generator: torch.Generator | None = None,
 ):
   """Create one on-policy 70/15/15 target rollout start mixture."""
@@ -2756,6 +2821,7 @@ def reset_rollout_with_specialist_banks(
         failure_bank,
         success_bank,
         failure_count,
+        balance_profile=restart_balance_profile,
         generator=generator,
       )
     )
@@ -2825,6 +2891,7 @@ def reset_rollout_with_specialist_banks(
     "incompatible_bank_dropped_counts": incompatible_counts,
     "bank_shape_mismatches": shape_mismatches,
     "matched_pair_sampling": matched_pair_sampling,
+    "restart_balance_profile": restart_balance_profile,
     "matched_pair_audit": pair_audit,
   }
 

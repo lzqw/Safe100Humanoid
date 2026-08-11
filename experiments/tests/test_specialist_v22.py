@@ -10,6 +10,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+import torch
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "experiments/scripts"))
@@ -25,6 +26,7 @@ from specialist_v22_protocol import (
   CANDIDATE_SCREEN_EPISODES,
   CONTEXT_ADAPTATION_SEEDS,
   CONTEXT_CALIBRATION_CANDIDATE_SEEDS,
+  CONTEXT_RESTART_BALANCE_PROFILES,
   CONTEXT_REPORT_BOOTSTRAP_SEEDS,
   CONTEXTS,
   DUAL_ROLLOUT_BATCHES,
@@ -34,6 +36,7 @@ from specialist_v22_protocol import (
   NORMAL_FAILURE_SUCCESS_SLOTS,
   REPORT_BOOTSTRAP_SAMPLES,
   ROUNDS,
+  SUPERSEDED_REVISION1_EXECUTION_SEED_SCHEDULE,
   VALIDATION_EPISODES,
   all_v22_random_seeds,
   calibration_evaluation_seed,
@@ -48,6 +51,8 @@ from specialist_v22_protocol import (
   fresh_randomness_report,
   select_best_so_far,
 )
+from refine_deployment_v21 import _bank_invariant_reasons
+from refine_effect_first_v22 import _v22_bank_invariant_reasons
 from online_refine_stairs import _evaluate_state
 from src.tasks.stairs_cbf.config import g1_online_stairs_env_cfg
 from src.tasks.stairs_cbf.deployment_context import (
@@ -60,6 +65,16 @@ from src.tasks.stairs_cbf.deployment_context import (
   generate_v22_specialist_context,
   validate_calibrated_v22_context,
   validate_frozen_deployment_context,
+)
+from src.tasks.stairs_cbf.hard_cases import (
+  RESTART_BALANCE_PROFILE_ALL_OBSERVED,
+  RESTART_BALANCE_PROFILE_LATERAL_STAGE_SUPPORT_GROWTH,
+  SPECIALIST_FAILURE_BANK_KIND,
+  SPECIALIST_SUCCESS_BANK_KIND,
+  SPECIALIST_SUCCESS_POOL_KIND,
+  HardCaseEntry,
+  HardCaseStateBank,
+  v19_restart_pair_feasibility,
 )
 
 
@@ -428,11 +443,120 @@ def test_v22_evaluation_configuration_is_beta_zero_v20_v21_core() -> None:
   assert cfg.num_mini_batches == 4
 
 
+def test_v22_fixed_direction_lateral_bank_keeps_applicable_diversity() -> None:
+  failure_bank = HardCaseStateBank(
+    capacity=32,
+    bank_kind=SPECIALIST_FAILURE_BANK_KIND,
+    source_domain="DQHMED",
+    context_sha256="context",
+    specialist_mode="lateral",
+  )
+  success_pool = HardCaseStateBank(
+    capacity=32,
+    bank_kind=SPECIALIST_SUCCESS_POOL_KIND,
+    source_domain="DQHMED",
+    context_sha256="context",
+    specialist_mode="lateral",
+  )
+  success_bank = HardCaseStateBank(
+    capacity=32,
+    bank_kind=SPECIALIST_SUCCESS_BANK_KIND,
+    source_domain="DQHMED",
+    context_sha256="context",
+    specialist_mode="lateral",
+  )
+  index = 0
+  for stage in ("early", "mid", "late"):
+    for support in (0, 1):
+      for growth in ("low", "high"):
+        common = {
+          "state": {"state": torch.tensor([[float(index)]])},
+          "priority": 1.0 + index,
+          "riser_index": 5,
+          "terrain_type": 0,
+          "specialist_mode": "lateral",
+          "gait_phase": 0.25,
+          "support_foot": support,
+          "delivered_command": (0.4, 0.1, 0.0),
+          "root_velocity": (0.3, 0.0, 0.0),
+          "cbf_active": False,
+          "actor_observation": torch.tensor([float(index)]),
+          "centerline_sign": 1,
+          "heading_sign": -1,
+          "riser_stage": stage,
+          "error_growth_rate": 0.4 if growth == "high" else 0.1,
+        }
+        failure_bank.entries.append(HardCaseEntry(**common, outcome="failure"))
+        success_pool.entries.append(HardCaseEntry(**common, outcome="success"))
+        success_bank.entries.append(
+          HardCaseEntry(
+            **common,
+            outcome="success",
+            matched_failure_index=index,
+            match_distance=0.01,
+            success_pool_index=index,
+          )
+        )
+        index += 1
+
+  inherited = _bank_invariant_reasons(
+    mode="lateral",
+    failure_bank=failure_bank,
+    success_pool=success_pool,
+    success_bank=success_bank,
+    minimum_required=12,
+    require_full_diversity=True,
+  )
+  assert "lateral bank lacks both centerline-error signs" in inherited
+  assert "lateral bank lacks both heading-error signs" in inherited
+  assert _v22_bank_invariant_reasons(
+    mode="lateral",
+    failure_bank=failure_bank,
+    success_pool=success_pool,
+    success_bank=success_bank,
+    minimum_required=12,
+    restart_balance_profile=(
+      RESTART_BALANCE_PROFILE_LATERAL_STAGE_SUPPORT_GROWTH
+    ),
+  ) == []
+  feasibility = v19_restart_pair_feasibility(
+    failure_bank,
+    success_bank,
+    12,
+    balance_profile=RESTART_BALANCE_PROFILE_LATERAL_STAGE_SUPPORT_GROWTH,
+  )
+  assert feasibility["passed"] is True
+  audit = feasibility["audit"]
+  assert audit["primary_marginal_counts"] == {
+    "riser_stage": {"early": 4, "late": 4, "mid": 4},
+    "support_foot": {"0": 6, "1": 6},
+    "error_growth_bin": {"high": 6, "low": 6},
+  }
+  assert audit["diagnostic_direction_marginal_counts"] == {
+    "centerline_sign": {"1": 12},
+    "heading_sign": {"-1": 12},
+  }
+
+
+def test_v22_contact_keeps_the_all_observed_restart_profile() -> None:
+  assert CONTEXT_RESTART_BALANCE_PROFILES == {
+    "L_effect": RESTART_BALANCE_PROFILE_LATERAL_STAGE_SUPPORT_GROWTH,
+    "C_effect": RESTART_BALANCE_PROFILE_ALL_OBSERVED,
+  }
+
+
 def test_v22_expanded_randomness_is_fresh_and_unique_against_history() -> None:
   assert CONTEXT_REPORT_BOOTSTRAP_SEEDS == {
-    "L_effect": {"target": 97_000_000, "D0": 97_000_010},
-    "C_effect": {"target": 97_100_000, "D0": 97_100_010},
+    "L_effect": {"target": 107_000_000, "D0": 107_000_010},
+    "C_effect": {"target": 117_000_000, "D0": 117_000_010},
   }
+  assert CONTEXT_ADAPTATION_SEEDS == {
+    "L_effect": 32_210_001,
+    "C_effect": 42_220_001,
+  }
+  assert SUPERSEDED_REVISION1_EXECUTION_SEED_SCHEDULE["L_effect"][
+    "adaptation"
+  ] == 22_210_001
   seeds = all_v22_random_seeds()
   for context_id, role_seeds in CONTEXT_REPORT_BOOTSTRAP_SEEDS.items():
     assert set(role_seeds.values()) <= seeds
@@ -447,6 +571,9 @@ def test_v22_expanded_randomness_is_fresh_and_unique_against_history() -> None:
   report = fresh_randomness_report(REPO)
   assert report["passed"] is True
   assert report["collisions"] == []
+  assert report["proposed_internal_collisions"] == []
+  assert report["superseded_revision1_execution_collisions"] == []
+  assert report["proposed_seed_occurrence_count"] == len(seeds)
 
 
 def test_v22_training_is_fixed_budget_and_monitor_is_not_a_candidate_gate() -> None:
@@ -509,6 +636,10 @@ def test_v22_contact_freeze_requires_passed_lateral_result() -> None:
   assert '"verified_protocol_chain_depth"' in source
   assert "_verified_supersession_depth" in source
   assert '"base_policy_episode_outcomes_observed": False' in source
+  assert '"superseded_adaptation_boundary"' in source
+  assert '"preflight_stop_evidence"' in source
+  assert '"ppo_updates_observed": 0' in source
+  assert '"successor_uses_fresh_execution_randomness": True' in source
   assert '"context_schema_version": V22_CONTEXT_SCHEMA_VERSION' in source
   calibration_source = (
     REPO / "experiments/scripts/calibrate_effect_first_v22.py"

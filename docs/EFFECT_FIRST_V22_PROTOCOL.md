@@ -94,6 +94,24 @@ Matched-success preservation is fixed to `beta = 0`. v22 adds no KL
 preservation objective, extra critic, risk head, cost critic, macro gate, or
 parallel control branch.
 
+For the fixed-direction `L_effect` context, centerline and heading signs remain
+mandatory exact-match fields between each failure precursor and its replayed
+success. They are recorded as diagnostics, but are not quota-balancing axes:
+requiring both signs would silently turn one signed bias/pulse context into a
+counter-direction context. The lateral replay quota still requires and jointly
+balances early/mid/late riser stage, both support feet, and low/high error
+growth. The contact profile retains every v19/v21 left/right, timing, and
+support-foot diversity requirement.
+
+Revision 1 exposed this distinction during bank discovery and stopped before
+round zero: all 12 discovery rollouts restored the original parameters, no PPO
+update or adapted checkpoint existed, and no final-test or contact outcome was
+observed. That stop is preserved as SHA-bound structural evidence. A successor
+is permitted only through a newly committed prospective protocol and an
+entirely fresh execution seed schedule; it reuses the already frozen base-only
+calibration context without reselection. This is the experiment's single actual
+adaptation, not a poor-outcome rerun.
+
 ## Per-round candidate gate
 
 Each fraction is screened on the same 64 paired target conditions. The finite
@@ -151,6 +169,10 @@ The development gate passes only when:
 
 No poor-outcome rerun is allowed. Only a documented infrastructure retry with
 the identical context, checkpoint, seed, source commit, and protocol is valid.
+The separately documented revision-1 structural preflight stop is not an
+infrastructure retry: its successor changes the inapplicable quota definition,
+retires the complete prior execution schedule, and freezes a new protocol
+before seeing any adapted-policy outcome.
 
 ## Evidence and figures
 
@@ -181,3 +203,10 @@ validation monitor，从所有 D0-safe accepted checkpoints 中选择成功率�
 target pairs 和 256 D0 pairs 比较 base 与 best。正式开发门槛是 target success
 至少 `+3 pp`、target fall 最多 `+1 pp`、D0 success 最多下降 `5 pp`。如果
 lateral 未达到门槛，本 revision 立即保存负结果并停止，不启动 contact。
+
+纯 lateral 场景的 bias/pulse 方向固定，因此横向与航向符号继续作为 failure 与
+matched-success 的严格匹配字段和诊断量，但不强制人为凑出相反方向。回放仍必须
+覆盖并联合平衡 early/mid/late、左右支撑脚和 low/high error growth。revision 1
+在任何 PPO 更新前因旧符号配额停止；该负面证据已保留。后继 revision 使用全新
+执行种子和预先提交的协议，并复用未重选的 base-only 校准场景，所以仍只有一次
+真正的 adaptation。

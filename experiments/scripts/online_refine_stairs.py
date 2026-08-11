@@ -776,6 +776,7 @@ def _collect_and_update_specialist(
   minimum_riser: int,
   protocol_version: int = 17,
   defer_update: bool = False,
+  restart_balance_profile: str = "all_observed",
 ):
   """Collect one specialist rollout; v19 may defer a paired PPO update."""
   from rsl_rl.utils import check_nan
@@ -809,6 +810,8 @@ def _collect_and_update_specialist(
     raise ValueError(f"unsupported specialist mode: {specialist_mode!r}")
   if defer_update and not v19:
     raise ValueError("deferred specialist rollout updates are reserved for v19")
+  if not v19 and restart_balance_profile != "all_observed":
+    raise ValueError("restart balance profiles are reserved for v19")
   if minimum_riser < 1:
     raise ValueError("specialist minimum riser must be positive")
   persistent_slots = bool(failure_fraction or success_fraction)
@@ -832,6 +835,7 @@ def _collect_and_update_specialist(
     failure_fraction=failure_fraction,
     success_fraction=success_fraction,
     matched_pair_sampling=v19,
+    restart_balance_profile=restart_balance_profile,
     generator=specialist_generator,
   )
   device = runner.env.device
@@ -1342,6 +1346,7 @@ def _collect_and_update_specialist(
         success_bank,
         bank_snapshots,
         pair_count,
+        balance_profile=restart_balance_profile,
       )
       matching["bank_update_committed"] = bank_update_transaction["committed"]
     credit_metrics = runner.alg.relabel_pre_intervention_costs()
@@ -1358,6 +1363,7 @@ def _collect_and_update_specialist(
       **start_metrics,
       "specialist_mode": specialist_mode,
       "protocol_version": protocol_version,
+      "restart_balance_profile": restart_balance_profile,
       "bank_update_transaction": bank_update_transaction,
     }
     runner.alg.last_update_metrics.update(rollout_metadata)

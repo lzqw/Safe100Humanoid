@@ -6,6 +6,7 @@ import hashlib
 import json
 import math
 import sys
+from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
@@ -16,8 +17,12 @@ if str(REPO_ROOT) not in sys.path:
 
 from specialist_v21_protocol import configure_v21_policy_evaluation_algorithm
 from src.tasks.stairs_cbf.deployment_context import (
-  V22_CONTEXT_SCHEMA_VERSION,
+  V22_CONTEXT_SCHEMA_VERSION,  # noqa: F401 - public protocol re-export
   V22_CONTEXT_SPECS,
+)
+from src.tasks.stairs_cbf.hard_cases import (
+  RESTART_BALANCE_PROFILE_ALL_OBSERVED,
+  RESTART_BALANCE_PROFILE_LATERAL_STAGE_SUPPORT_GROWTH,
 )
 
 PROTOCOL_ID = "safe100-effect-first-development-v22"
@@ -73,24 +78,48 @@ CONTEXT_CALIBRATION_EVALUATION_SEEDS = {
   "C_effect": 92_100_000,
 }
 CONTEXT_ADAPTATION_SEEDS = {
-  "L_effect": 22_210_001,
-  "C_effect": 22_220_001,
+  "L_effect": 32_210_001,
+  "C_effect": 42_220_001,
 }
 CONTEXT_VALIDATION_SEEDS = {
-  "L_effect": 94_000_000,
-  "C_effect": 94_100_000,
+  "L_effect": 104_000_000,
+  "C_effect": 114_000_000,
 }
 CONTEXT_FINAL_TARGET_SEEDS = {
-  "L_effect": 95_000_000,
-  "C_effect": 95_100_000,
+  "L_effect": 105_000_000,
+  "C_effect": 115_000_000,
 }
 CONTEXT_FINAL_D0_SEEDS = {
-  "L_effect": 96_000_000,
-  "C_effect": 96_100_000,
+  "L_effect": 106_000_000,
+  "C_effect": 116_000_000,
 }
 CONTEXT_REPORT_BOOTSTRAP_SEEDS = {
-  "L_effect": {"target": 97_000_000, "D0": 97_000_010},
-  "C_effect": {"target": 97_100_000, "D0": 97_100_010},
+  "L_effect": {"target": 107_000_000, "D0": 107_000_010},
+  "C_effect": {"target": 117_000_000, "D0": 117_000_010},
+}
+CONTEXT_RESTART_BALANCE_PROFILES = {
+  "L_effect": RESTART_BALANCE_PROFILE_LATERAL_STAGE_SUPPORT_GROWTH,
+  "C_effect": RESTART_BALANCE_PROFILE_ALL_OBSERVED,
+}
+
+# Revision 1 observed no PPO update, but its entire declared execution schedule
+# is retired.  Calibration randomness is deliberately excluded because the
+# already-frozen base-only L_effect context is retained rather than recalibrated.
+SUPERSEDED_REVISION1_EXECUTION_SEED_SCHEDULE = {
+  "L_effect": {
+    "adaptation": 22_210_001,
+    "validation": 94_000_000,
+    "final_target": 95_000_000,
+    "final_d0": 96_000_000,
+    "report_bootstrap": {"target": 97_000_000, "D0": 97_000_010},
+  },
+  "C_effect": {
+    "adaptation": 22_220_001,
+    "validation": 94_100_000,
+    "final_target": 95_100_000,
+    "final_d0": 96_100_000,
+    "report_bootstrap": {"target": 97_100_000, "D0": 97_100_010},
+  },
 }
 
 
@@ -123,6 +152,46 @@ def candidate_confirmation_seed(context_id: str, round_index: int) -> int:
 
 def candidate_d0_seed(context_id: str) -> int:
   return CONTEXT_ADAPTATION_SEEDS[context_id] + 300_000
+
+
+def _expanded_execution_seed_values(
+  schedule: Mapping[str, Any],
+) -> list[int]:
+  adaptation = int(schedule["adaptation"])
+  values = [adaptation]
+  values.extend(
+    adaptation + 500_000 + index
+    for index in range(FAILURE_DISCOVERY_MAX_ROLLOUTS)
+  )
+  values.extend(
+    adaptation + 1_000_000 + 10 * round_index + batch_index
+    for round_index in range(1, ROUNDS + 1)
+    for batch_index in range(DUAL_ROLLOUT_BATCHES)
+  )
+  values.extend(
+    adaptation + 20_000 * round_index
+    for round_index in range(1, ROUNDS + 1)
+  )
+  values.extend(
+    adaptation + 20_000 * round_index + 10_000
+    for round_index in range(1, ROUNDS + 1)
+  )
+  values.append(adaptation + 300_000)
+  values.extend(int(schedule["validation"]) + repeat for repeat in range(2))
+  values.extend(int(schedule["final_target"]) + repeat for repeat in range(4))
+  values.extend(int(schedule["final_d0"]) + repeat for repeat in range(2))
+  values.extend(int(seed) for seed in schedule["report_bootstrap"].values())
+  return values
+
+
+def _current_execution_seed_schedule(context_id: str) -> dict[str, Any]:
+  return {
+    "adaptation": CONTEXT_ADAPTATION_SEEDS[context_id],
+    "validation": CONTEXT_VALIDATION_SEEDS[context_id],
+    "final_target": CONTEXT_FINAL_TARGET_SEEDS[context_id],
+    "final_d0": CONTEXT_FINAL_D0_SEEDS[context_id],
+    "report_bootstrap": CONTEXT_REPORT_BOOTSTRAP_SEEDS[context_id],
+  }
 
 
 def configure_v22_policy_evaluation_algorithm(cfg: Any) -> None:
@@ -242,40 +311,25 @@ def _iter_declared_seeds(value: Any) -> Iterable[int]:
       yield from _iter_declared_seeds(child)
 
 
-def all_v22_random_seeds() -> set[int]:
-  """Expand every explicit and derived seed used by the frozen v22 runner."""
-  seeds: set[int] = set()
+def _all_v22_random_seed_values() -> list[int]:
+  values: list[int] = []
   for context_id in CONTEXTS:
     candidates = CONTEXT_CALIBRATION_CANDIDATE_SEEDS[context_id]
-    seeds.update(candidates)
+    values.extend(candidates)
     for index in range(len(candidates)):
       evaluation_seed = calibration_evaluation_seed(context_id, index)
-      seeds.update(evaluation_seed + repeat for repeat in range(4))
-    adaptation = CONTEXT_ADAPTATION_SEEDS[context_id]
-    seeds.add(adaptation)
-    seeds.update(
-      failure_discovery_seed(context_id, index)
-      for index in range(FAILURE_DISCOVERY_MAX_ROLLOUTS)
+      values.extend(evaluation_seed + repeat for repeat in range(4))
+    values.extend(
+      _expanded_execution_seed_values(
+        _current_execution_seed_schedule(context_id)
+      )
     )
-    seeds.update(
-      dual_rollout_seed(context_id, round_index, batch_index)
-      for round_index in range(1, ROUNDS + 1)
-      for batch_index in range(DUAL_ROLLOUT_BATCHES)
-    )
-    seeds.update(
-      candidate_screen_seed(context_id, round_index)
-      for round_index in range(1, ROUNDS + 1)
-    )
-    seeds.update(
-      candidate_confirmation_seed(context_id, round_index)
-      for round_index in range(1, ROUNDS + 1)
-    )
-    seeds.add(candidate_d0_seed(context_id))
-    seeds.update(CONTEXT_VALIDATION_SEEDS[context_id] + repeat for repeat in range(2))
-    seeds.update(CONTEXT_FINAL_TARGET_SEEDS[context_id] + repeat for repeat in range(4))
-    seeds.update(CONTEXT_FINAL_D0_SEEDS[context_id] + repeat for repeat in range(2))
-    seeds.update(CONTEXT_REPORT_BOOTSTRAP_SEEDS[context_id].values())
-  return seeds
+  return values
+
+
+def all_v22_random_seeds() -> set[int]:
+  """Expand every explicit and derived seed used by the frozen v22 runner."""
+  return set(_all_v22_random_seed_values())
 
 
 def fresh_randomness_report(repo: Path) -> dict[str, Any]:
@@ -299,7 +353,33 @@ def fresh_randomness_report(repo: Path) -> dict[str, Any]:
       )
       historical.update(_iter_declared_seeds(payload))
   proposed = all_v22_random_seeds()
-  collisions = sorted(proposed & historical)
+  proposed_counts = Counter(_all_v22_random_seed_values())
+  internal_collisions = sorted(
+    seed for seed, count in proposed_counts.items() if count > 1
+  )
+  retired_execution = {
+    seed
+    for context_id in CONTEXTS
+    for seed in _expanded_execution_seed_values(
+      SUPERSEDED_REVISION1_EXECUTION_SEED_SCHEDULE[context_id]
+    )
+  }
+  successor_execution = {
+    seed
+    for context_id in CONTEXTS
+    for seed in _expanded_execution_seed_values(
+      _current_execution_seed_schedule(context_id)
+    )
+  }
+  historical_collisions = sorted(proposed & historical)
+  superseded_revision_collisions = sorted(
+    successor_execution & retired_execution
+  )
+  collisions = sorted(
+    set(internal_collisions)
+    | set(historical_collisions)
+    | set(superseded_revision_collisions)
+  )
   return {
     "schema_version": 1,
     "protocol_id": PROTOCOL_ID,
@@ -308,6 +388,15 @@ def fresh_randomness_report(repo: Path) -> dict[str, Any]:
     "historical_json_files_sha256": canonical_sha256({"files": scanned_files}),
     "historical_unique_declared_seed_count": len(historical),
     "proposed_expanded_seed_count": len(proposed),
+    "proposed_seed_occurrence_count": sum(proposed_counts.values()),
+    "proposed_internal_collisions": internal_collisions,
+    "historical_collisions": historical_collisions,
+    "superseded_revision1_declared_execution_seed_count": len(
+      retired_execution
+    ),
+    "superseded_revision1_execution_collisions": (
+      superseded_revision_collisions
+    ),
     "collisions": collisions,
     "passed": not collisions,
   }

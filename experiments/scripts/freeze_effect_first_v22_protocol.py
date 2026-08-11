@@ -6,7 +6,6 @@ import argparse
 import hashlib
 import json
 import subprocess
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +23,7 @@ from specialist_v22_protocol import (
   CONTEXT_CALIBRATION_EVALUATION_SEEDS,
   CONTEXT_FINAL_D0_SEEDS,
   CONTEXT_FINAL_TARGET_SEEDS,
+  CONTEXT_RESTART_BALANCE_PROFILES,
   CONTEXT_REPORT_BOOTSTRAP_SEEDS,
   CONTEXT_VALIDATION_SEEDS,
   CONTEXTS,
@@ -35,7 +35,6 @@ from specialist_v22_protocol import (
   FAILURE_DISCOVERY_MAX_ROLLOUTS,
   FINAL_D0_EPISODES,
   FINAL_TARGET_EPISODES,
-  MODES,
   NORMAL_FAILURE_SUCCESS_SLOTS,
   NUM_ENVS,
   POLICY_METHOD,
@@ -43,6 +42,7 @@ from specialist_v22_protocol import (
   REPORT_BOOTSTRAP_SAMPLES,
   ROLLOUT_STEPS,
   ROUNDS,
+  SUPERSEDED_REVISION1_EXECUTION_SEED_SCHEDULE,
   VALIDATION_EPISODES,
   VALIDATION_MAXIMUM_FALL_DELTA,
   canonical_sha256,
@@ -159,6 +159,8 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--superseded-protocol", type=Path)
   parser.add_argument("--superseded-commit")
   parser.add_argument("--supersession-reason")
+  parser.add_argument("--preflight-stop-evidence", type=Path)
+  parser.add_argument("--preflight-stop-commit")
   parser.add_argument(
     "--superseded-before-any-base-evaluation", action="store_true"
   )
@@ -212,6 +214,15 @@ def _common_payload(repo: Path, args: argparse.Namespace) -> dict[str, Any]:
       "dual_rollout_batches": DUAL_ROLLOUT_BATCHES,
       "normal_failure_success_slots": list(NORMAL_FAILURE_SUCCESS_SLOTS),
       "failure_discovery_max_rollouts": FAILURE_DISCOVERY_MAX_ROLLOUTS,
+      "restart_balance_profiles": CONTEXT_RESTART_BALANCE_PROFILES,
+      "lateral_direction_signs_are_exact_match_diagnostics_not_balance_axes": (
+        True
+      ),
+      "lateral_required_balance_axes": [
+        "riser_stage",
+        "support_foot",
+        "error_growth_bin",
+      ],
       "candidate_fractions": list(CANDIDATE_FRACTIONS),
       "screening_paired_episodes_per_candidate": CANDIDATE_SCREEN_EPISODES,
       "single_fresh_confirmation_paired_episodes": CANDIDATE_CONFIRM_EPISODES,
@@ -400,7 +411,99 @@ def _adaptation(repo: Path, args: argparse.Namespace) -> dict[str, Any]:
     }
   }
   payload["precalibration_protocol"] = precal_binding
-  payload["protocol_revision"] = 1 if args.context_id == "L_effect" else 2
+  supersession_supplied = (
+    args.superseded_protocol is not None,
+    args.superseded_commit is not None,
+    args.supersession_reason is not None,
+    args.preflight_stop_evidence is not None,
+    args.preflight_stop_commit is not None,
+  )
+  if len(set(supersession_supplied)) != 1:
+    raise ValueError(
+      "v22 adaptation supersession requires prior protocol, stop evidence, "
+      "both commits, and a reason together"
+    )
+  successor = args.superseded_protocol is not None
+  if successor:
+    if args.context_id != "L_effect":
+      raise ValueError("only the zero-update lateral preflight may be superseded")
+    assert args.superseded_commit is not None
+    assert args.superseded_protocol is not None
+    assert args.preflight_stop_evidence is not None
+    assert args.preflight_stop_commit is not None
+    prior_path = args.superseded_protocol.resolve()
+    prior = json.loads(prior_path.read_text())
+    prior_binding = _verify_git_blob(repo, prior_path, args.superseded_commit)
+    prior_context = prior.get("sealed_inputs", {}).get("contexts", {}).get(
+      args.context_id, {}
+    )
+    retired_seed = SUPERSEDED_REVISION1_EXECUTION_SEED_SCHEDULE[
+      args.context_id
+    ]["adaptation"]
+    if (
+      prior.get("protocol_id") != PROTOCOL_ID
+      or prior.get("protocol_revision") != 1
+      or prior.get("status")
+      != "prospectively_frozen_before_L_effect_adaptation"
+      or prior.get("adaptation_seeds", {}).get(args.context_id) != retired_seed
+      or prior_context.get("file_sha256") != _sha256(context_path)
+      or prior_context.get("parameters_sha256") != context["parameters_sha256"]
+      or prior.get("sealed_inputs", {}).get("base_policy_checkpoint_sha256")
+      != args.base_checkpoint_sha256
+    ):
+      raise RuntimeError("invalid v22 superseded lateral adaptation protocol")
+    stop_path = args.preflight_stop_evidence.resolve()
+    stop = json.loads(stop_path.read_text())
+    stop_binding = _verify_git_blob(
+      repo, stop_path, args.preflight_stop_commit
+    )
+    if (
+      stop.get("protocol_id") != PROTOCOL_ID
+      or stop.get("context_id") != args.context_id
+      or stop.get("revision") != 1
+      or stop.get("status")
+      != "structural_preflight_stop_before_any_ppo_update"
+      or stop.get("boundary", {}).get("protocol_sha256")
+      != prior_binding["sha256"]
+      or stop.get("boundary", {}).get("evidence_commit")
+      != args.superseded_commit
+      or stop.get("boundary", {}).get("context_file_sha256")
+      != _sha256(context_path)
+      or stop.get("boundary", {}).get("base_policy_checkpoint_sha256")
+      != args.base_checkpoint_sha256
+      or stop.get("stop", {}).get("ppo_update_count") != 0
+      or stop.get("stop", {}).get("adapted_checkpoint_files_created") != 0
+      or stop.get("stop", {}).get("fixed_eight_round_loop_entered") is not False
+      or stop.get("disposition", {}).get("final_test_started") is not False
+      or stop.get("disposition", {}).get(
+        "contact_calibration_or_adaptation_started"
+      )
+      is not False
+    ):
+      raise RuntimeError("invalid v22 zero-update preflight-stop evidence")
+    payload["superseded_adaptation_boundary"] = {
+      "protocol": prior_binding,
+      "preflight_stop_evidence": stop_binding,
+      "reason": args.supersession_reason,
+      "disposition": "preserved_structural_preflight_stop",
+      "precursor_discovery_rollouts_observed": stop.get(
+        "discovery_audit", {}
+      ).get("rollout_count"),
+      "ppo_updates_observed": 0,
+      "adapted_checkpoints_observed": 0,
+      "candidate_or_final_policy_outcomes_observed": False,
+      "calibrated_context_reused_without_reselection": True,
+      "retired_adaptation_seed": retired_seed,
+      "retired_declared_execution_schedule": (
+        SUPERSEDED_REVISION1_EXECUTION_SEED_SCHEDULE[args.context_id]
+      ),
+      "successor_uses_fresh_execution_randomness": True,
+      "historical_v17_v21_results_modified": False,
+    }
+  payload["protocol_revision"] = (
+    3 if successor else 1 if args.context_id == "L_effect" else 2
+  )
+  payload["adaptation_attempt_revision"] = 2 if successor else 1
   payload["status"] = (
     f"prospectively_frozen_before_{args.context_id}_adaptation"
   )
@@ -408,6 +511,8 @@ def _adaptation(repo: Path, args: argparse.Namespace) -> dict[str, Any]:
     "current_context_adaptation_outcomes_seen": False,
     "current_context_final_test_outcomes_seen": False,
     "protocol_must_be_committed_before_adaptation": True,
+    "prior_structural_discovery_outcomes_seen": successor,
+    "prior_ppo_updates_seen": 0 if successor else None,
   }
   payload["conditional_execution"]["lateral_final_gate_passed"] = False
   if args.context_id == "C_effect":

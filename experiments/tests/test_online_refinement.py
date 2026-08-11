@@ -72,6 +72,7 @@ from src.tasks.stairs_cbf.hard_cases import (
   LateFailureCandidate,
   NON_LATERAL_BALANCE_FAILURE_TYPE,
   NON_LATERAL_HIGH_CBF_FAILURE_TYPE,
+  RESTART_BALANCE_PROFILE_LATERAL_STAGE_SUPPORT_GROWTH,
   SPECIALIST_FAILURE_BANK_KIND,
   SPECIALIST_SUCCESS_BANK_KIND,
   SPECIALIST_SUCCESS_POOL_KIND,
@@ -2568,6 +2569,24 @@ def test_v19_infeasible_joint_marginals_trigger_transactional_bank_rollback() ->
   assert failed["error"] == (
     "matched restart strata cannot realize balanced observable marginals"
   )
+  mechanism_aligned = v19_restart_pair_feasibility(
+    failure_bank,
+    success_bank,
+    12,
+    balance_profile=RESTART_BALANCE_PROFILE_LATERAL_STAGE_SUPPORT_GROWTH,
+  )
+  assert mechanism_aligned["passed"] is True
+  assert mechanism_aligned["audit"]["primary_marginal_counts"] == {
+    "riser_stage": {"early": 4, "late": 4, "mid": 4},
+    "support_foot": {"0": 6, "1": 6},
+    "error_growth_bin": {"high": 6, "low": 6},
+  }
+  assert mechanism_aligned["audit"][
+    "diagnostic_direction_marginal_counts"
+  ] == {
+    "centerline_sign": {"-1": 8, "1": 4},
+    "heading_sign": {"-1": 8, "1": 4},
+  }
 
   transaction = finalize_v19_replay_bank_update(
     failure_bank,

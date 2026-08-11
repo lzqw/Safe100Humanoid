@@ -37,6 +37,7 @@ from specialist_v22_protocol import (
   CANDIDATE_FRACTIONS,
   CANDIDATE_SCREEN_EPISODES,
   CONTEXT_ADAPTATION_SEEDS,
+  CONTEXT_RESTART_BALANCE_PROFILES,
   CONTEXT_VALIDATION_SEEDS,
   CONTEXTS,
   DUAL_ROLLOUT_BATCHES,
@@ -189,6 +190,79 @@ def _validate_args(args: argparse.Namespace) -> None:
     raise ValueError(f"v22 training configuration mismatch: {failed}")
 
 
+def _v22_bank_invariant_reasons(
+  *,
+  mode: str,
+  failure_bank,
+  success_pool,
+  success_bank,
+  minimum_required: int,
+  restart_balance_profile: str,
+) -> list[str]:
+  """Require diversity only over causal axes applicable to the context.
+
+  The pure L_effect context has one frozen signed bias/pulse direction.  Its
+  direction signs remain exact failure/success match fields and diagnostics,
+  but forcing counter-direction coverage would manufacture a second context.
+  Stage, support-foot, and growth coverage remain mandatory in both the raw
+  failure bank and its exactly matched subset.  Contact keeps the unchanged
+  v19/v21 full-diversity invariant.
+  """
+  expected_profile = CONTEXT_RESTART_BALANCE_PROFILES[
+    "L_effect" if mode == "lateral" else "C_effect"
+  ]
+  if restart_balance_profile != expected_profile:
+    raise ValueError(
+      "v22 restart balance profile differs from the context mechanism"
+    )
+  if mode != "lateral":
+    return _bank_invariant_reasons(
+      mode=mode,
+      failure_bank=failure_bank,
+      success_pool=success_pool,
+      success_bank=success_bank,
+      minimum_required=minimum_required,
+      require_full_diversity=True,
+    )
+
+  reasons = _bank_invariant_reasons(
+    mode=mode,
+    failure_bank=failure_bank,
+    success_pool=success_pool,
+    success_bank=success_bank,
+    minimum_required=minimum_required,
+    require_full_diversity=False,
+  )
+  failure = failure_bank.audit_metadata()
+  matched_failure_indices = {
+    entry.matched_failure_index
+    for entry in success_bank.entries
+    if entry.matched_failure_index is not None
+    and 0 <= entry.matched_failure_index < len(failure_bank.entries)
+  }
+  matched_failures = [
+    failure_bank.entries[index] for index in sorted(matched_failure_indices)
+  ]
+  if not {"early", "mid", "late"}.issubset(failure["riser_stage_counts"]):
+    reasons.append("lateral bank lacks early/mid/late riser coverage")
+  if set(failure["support_foot_counts"]) != {"0", "1"}:
+    reasons.append("lateral bank lacks both support feet")
+  if not {"low", "high"}.issubset(failure["error_growth_bin_counts"]):
+    reasons.append("lateral bank lacks low/high error-growth coverage")
+  if not {"early", "mid", "late"}.issubset(
+    {entry.riser_stage for entry in matched_failures}
+  ):
+    reasons.append("matched lateral pairs lack early/mid/late riser coverage")
+  if {entry.support_foot for entry in matched_failures} != {0, 1}:
+    reasons.append("matched lateral pairs lack both support feet")
+  if {
+    "high" if entry.error_growth_rate >= 0.25 else "low"
+    for entry in matched_failures
+  } != {"low", "high"}:
+    reasons.append("matched lateral pairs lack low/high error-growth coverage")
+  return reasons
+
+
 def _git_output(repo: Path, *args: str) -> str:
   return subprocess.run(
     ["git", *args], cwd=repo, check=True, capture_output=True, text=True
@@ -248,6 +322,10 @@ def _validate_frozen_protocol(
       "control_or_parallel_comparison_branch"
     )
     is False,
+    "restart_balance_profile": protocol.get("training", {}).get(
+      "restart_balance_profiles", {}
+    ).get(args.context_id)
+    == CONTEXT_RESTART_BALANCE_PROFILES[args.context_id],
   }
   if args.context_id == "C_effect":
     checks["lateral_gate_dependency"] = protocol.get(
@@ -321,6 +399,7 @@ def main() -> None:
   if not checkpoint.is_file():
     raise FileNotFoundError(checkpoint)
   context = load_calibrated_v22_context(context_path)
+  restart_balance_profile = CONTEXT_RESTART_BALANCE_PROFILES[args.context_id]
   frozen_protocol = _validate_frozen_protocol(
     args,
     repo=repo,
@@ -510,6 +589,7 @@ def main() -> None:
       minimum_riser=1,
       protocol_version=19,
       defer_update=True,
+      restart_balance_profile=restart_balance_profile,
     )
     runner.restore_candidate_state(before_discovery)
     metrics.update(
@@ -518,30 +598,38 @@ def main() -> None:
       parameters_restored_after_discovery=True,
     )
     discovery.append(metrics)
-    reasons = _bank_invariant_reasons(
+    reasons = _v22_bank_invariant_reasons(
       mode=args.mode,
       failure_bank=failure_bank,
       success_pool=success_pool,
       success_bank=success_bank,
       minimum_required=12,
-      require_full_diversity=True,
+      restart_balance_profile=restart_balance_profile,
     )
-    joint = v19_restart_pair_feasibility(failure_bank, success_bank, 12)
+    joint = v19_restart_pair_feasibility(
+      failure_bank,
+      success_bank,
+      12,
+      balance_profile=restart_balance_profile,
+    )
     metrics["joint_balance_preflight"] = joint
     if not joint["passed"]:
       reasons.append("matched restart marginals are not jointly feasible")
     if not reasons:
       break
-  bank_reasons = _bank_invariant_reasons(
+  bank_reasons = _v22_bank_invariant_reasons(
     mode=args.mode,
     failure_bank=failure_bank,
     success_pool=success_pool,
     success_bank=success_bank,
     minimum_required=12,
-    require_full_diversity=True,
+    restart_balance_profile=restart_balance_profile,
   )
   joint_balance_preflight = v19_restart_pair_feasibility(
-    failure_bank, success_bank, 12
+    failure_bank,
+    success_bank,
+    12,
+    balance_profile=restart_balance_profile,
   )
   if not joint_balance_preflight["passed"]:
     bank_reasons.append("matched restart marginals are not jointly feasible")
@@ -604,6 +692,7 @@ def main() -> None:
         minimum_riser=1,
         protocol_version=19,
         defer_update=True,
+        restart_balance_profile=restart_balance_profile,
       )
       metrics["rollout_seed"] = rollout_seed
       metrics["dual_batch_index"] = batch_index + 1
@@ -923,7 +1012,12 @@ def main() -> None:
     .max()
   )
   new_column_max_abs = float(final_first_layer[:, legacy_width:].abs().max())
-  final_joint = v19_restart_pair_feasibility(failure_bank, success_bank, 12)
+  final_joint = v19_restart_pair_feasibility(
+    failure_bank,
+    success_bank,
+    12,
+    balance_profile=restart_balance_profile,
+  )
   if not final_joint["passed"]:
     raise RuntimeError("v22 final replay bank lost joint marginal feasibility")
   if len(rounds) != ROUNDS:
@@ -935,6 +1029,7 @@ def main() -> None:
     "method": POLICY_METHOD,
     "context_id": args.context_id,
     "specialist_mode": args.mode,
+    "restart_balance_profile": restart_balance_profile,
     "target_failure_type": V19_SPECIALIST_FAILURE_TYPES[args.mode],
     "seed": args.seed,
     "task": task,
