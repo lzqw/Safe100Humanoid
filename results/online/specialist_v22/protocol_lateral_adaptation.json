@@ -1,0 +1,318 @@
+{
+  "adaptation_seeds": {
+    "C_effect": 22220001,
+    "L_effect": 22210001
+  },
+  "calibration": {
+    "adapted_policy_evaluations_used": false,
+    "base_policy_only": true,
+    "candidate_seeds": {
+      "C_effect": [
+        51108,
+        51109,
+        51110,
+        51111,
+        51112,
+        51113,
+        51114,
+        51115,
+        51116,
+        51117,
+        51118,
+        51119,
+        51120,
+        51121,
+        51122,
+        51123
+      ],
+      "L_effect": [
+        51008,
+        51009,
+        51010,
+        51011,
+        51012,
+        51013,
+        51014,
+        51015,
+        51016,
+        51017,
+        51018,
+        51019,
+        51020,
+        51021,
+        51022,
+        51023
+      ]
+    },
+    "episodes_per_candidate": 512,
+    "eval_batch_size": 128,
+    "evaluation_seed_bases": {
+      "C_effect": 92100000,
+      "L_effect": 92000000
+    },
+    "first_qualifying_candidate_is_frozen": true,
+    "minimum_failure_count": 100,
+    "minimum_target_failure_fraction": 0.85,
+    "success_rate_bounds_inclusive": [
+      0.65,
+      0.75
+    ]
+  },
+  "conditional_execution": {
+    "additional_context_repeats_are_out_of_scope_until_both_modes_pass": true,
+    "contact_calibration_and_adaptation_require_lateral_final_gate": true,
+    "if_lateral_fails_stop_and_preserve_negative_result": true,
+    "lateral_final_gate_passed": false,
+    "lateral_runs_first": true
+  },
+  "context_order": [
+    "L_effect",
+    "C_effect"
+  ],
+  "context_schema_version": 2,
+  "context_specifications": {
+    "C_effect": {
+      "candidate_index_bounds": [
+        8,
+        23
+      ],
+      "candidate_seed_prefix": 511,
+      "direction": -1,
+      "effect_axes": [
+        "foot_friction"
+      ],
+      "family": "pure_low_foot_friction",
+      "mode": "contact_stability",
+      "ranges": {
+        "foot_friction": [
+          0.44,
+          0.25
+        ]
+      }
+    },
+    "L_effect": {
+      "candidate_index_bounds": [
+        8,
+        23
+      ],
+      "candidate_seed_prefix": 510,
+      "direction": 1,
+      "effect_axes": [
+        "lateral_command_bias",
+        "lateral_disturbance_pulse"
+      ],
+      "family": "pure_lateral_bias_and_pulse",
+      "mode": "lateral",
+      "ranges": {
+        "lateral_bias_abs": [
+          0.08,
+          0.2
+        ],
+        "lateral_pulse_max": [
+          0.28,
+          0.55
+        ],
+        "lateral_pulse_min": [
+          0.12,
+          0.25
+        ]
+      }
+    }
+  },
+  "context_specifications_sha256": "7956782ef7053911f3be9849919a96b423fa4f483a34d398a67d1fae13be6d36",
+  "development_gate": {
+    "maximum_target_fall_delta": 0.01,
+    "minimum_d0_success_delta": -0.05,
+    "minimum_target_success_delta": 0.03
+  },
+  "excluded": [
+    "multi-context bootstrap",
+    "off-diagonal evaluation",
+    "macro gate",
+    "control/v22 dual branches",
+    "nonzero matched-success KL"
+  ],
+  "experiment_class": "development/effect-first, not a formal generalization audit",
+  "experiment_unit": "one frozen context, one pi0, one adaptation, one fresh paired test",
+  "figures": [
+    "validation success versus accepted round",
+    "base versus best final success and fall",
+    "repair versus regression",
+    "failure-specific same-rollout telemetry"
+  ],
+  "final_test": {
+    "base_and_best_receive_same_initial_conditions": true,
+    "confidence_interval_is_gate": false,
+    "d0_paired_episodes": 256,
+    "d0_seeds": {
+      "C_effect": 96100000,
+      "L_effect": 96000000
+    },
+    "eval_batch_size": 128,
+    "repair_and_regression_reported": true,
+    "report_only_bootstrap_samples": 2000,
+    "report_only_bootstrap_seeds": {
+      "C_effect": {
+        "D0": 97100010,
+        "target": 97100000
+      },
+      "L_effect": {
+        "D0": 97000010,
+        "target": 97000000
+      }
+    },
+    "target_paired_episodes": 512,
+    "target_seeds": {
+      "C_effect": 95100000,
+      "L_effect": 95000000
+    }
+  },
+  "fresh_evidence_boundary": {
+    "current_context_adaptation_outcomes_seen": false,
+    "current_context_final_test_outcomes_seen": false,
+    "protocol_must_be_committed_before_adaptation": true
+  },
+  "policy_method": "Effect-First Best-So-Far PPO v22",
+  "precalibration_protocol": {
+    "file": "results/online/specialist_v22/protocol_precalibration_final.json",
+    "git_commit": "587eca6d5973c50226098d2b8beb57ca7548e09e",
+    "sha256": "d0f62f0fda96058a43e0add750e67f31136067adb8eba40b22437d9d1399910a"
+  },
+  "protocol_id": "safe100-effect-first-development-v22",
+  "protocol_revision": 1,
+  "randomness_preflight": {
+    "collisions": [],
+    "historical_json_file_count": 206,
+    "historical_json_files_sha256": "b02f177150ec7b7621d4164f32bba9a4d889403c6d12974f4d8b1cfe2cfed3cf",
+    "historical_unique_declared_seed_count": 2355,
+    "historical_versions_scanned": [
+      17,
+      18,
+      19,
+      20,
+      21
+    ],
+    "passed": true,
+    "proposed_expanded_seed_count": 257,
+    "protocol_id": "safe100-effect-first-development-v22",
+    "schema_version": 1
+  },
+  "retry_policy": {
+    "identical_context_seed_commit_checkpoint_required": true,
+    "infrastructure_retry_only": true,
+    "poor_outcome_may_be_rerun": false,
+    "retry_provenance_required": true
+  },
+  "schema_version": 1,
+  "sealed_inputs": {
+    "base_policy_checkpoint_reference": "/home/carla/LZQW/SAFE100/humanoid/artifacts/retention_v13/arm_b_state_retention/accepted_final.pt",
+    "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+    "contexts": {
+      "L_effect": {
+        "file": "results/online/specialist_v22/calibration/L_effect/context.json",
+        "file_sha256": "650a97519168382bf4f7fc45580fa179cb3c51a1f18195f4850c5667d6f0d6a7",
+        "parameters_sha256": "f3d4470ec01c7f55982d93b4be53dcafb13c0d2d82f4c03f34835f84c99cf4ae",
+        "selected_base_success_rate": 0.6875,
+        "selected_calibration_seed": 51011,
+        "selected_failure_count": 160,
+        "selected_fall_count": 160,
+        "selected_target_failure_fraction": 0.925
+      }
+    },
+    "source_creation_parent_commit": "11b3f5bc2c989820e91bc480e091470443a46c61",
+    "source_file_sha256": {
+      "docs/EFFECT_FIRST_V22_PROTOCOL.md": "4279fa71fcc39bda0129b5223e6f18b8abae0a072502b406adcf3db32340b3c2",
+      "experiments/scripts/calibrate_effect_first_v22.py": "796a64c7e91490f8f9b927001a57c5c33e94ef179a89a1aee17f2c1b98830e63",
+      "experiments/scripts/evaluate_online_stairs.py": "9ce82e111681d223fe60d975744ee0afb3c1fd214913089d7f90961b1713a8ec",
+      "experiments/scripts/freeze_effect_first_v22_protocol.py": "a7e2da5346fe20bbb489305408c2ca4208a92b4d21caabe90d5e55d59f0160da",
+      "experiments/scripts/online_refine_stairs.py": "bfe8e49f61291480083c4a089b28e104747a4ae6e83ebb45e3f2fbf756b4b160",
+      "experiments/scripts/plot_effect_first_v22.py": "413e89f8f53fa02b963a7103f8c9355e7fe973ff9489bb9a4387b5c73f67c0dc",
+      "experiments/scripts/refine_deployment_v21.py": "a110ccd63f2085321fcd2f6dea429e678e0b3b85a78dca19b890d8a3f3d2fa97",
+      "experiments/scripts/refine_effect_first_v22.py": "61d9d3af2eda5c738629683539888c2551df3b378f95f2553de51f0026e0e889",
+      "experiments/scripts/run_effect_first_v22.sh": "6132290e512b216fab0dae2260f3ebabeb162123f549f2772c1513fdf2a18f08",
+      "experiments/scripts/specialist_v21_protocol.py": "8d55639660fa3f5932cc77a5c788871d8c095f5a948b791c50cc76075c71cb39",
+      "experiments/scripts/specialist_v22_protocol.py": "b7f0f5c4b2c3c95ce5857542047605ae09d271ce8a8dc90c079bb18e24e02567",
+      "experiments/scripts/test_effect_first_v22.py": "c6fac5a199042df0074ff64d25e48ad84ae43069a13b19a4b0799a18920dda08",
+      "experiments/tests/test_specialist_v22.py": "6aaaf6949c01bf6a163271790241c5abd68ba3fb2268b99fb12de2c903df4e33",
+      "src/tasks/stairs_cbf/actions.py": "e04354c1bb9bfe4f57055a98dde22a1e13a30ff3a7b02af93633bd90001a5514",
+      "src/tasks/stairs_cbf/command.py": "efd9ec3faed1f5aa14aff03802cf3cce4a9d61a8041fffc684e54d152a6a4104",
+      "src/tasks/stairs_cbf/config.py": "22a57df095616e1f19f7cf6f18d7ba173ecef7901bf2a85da2a5faaa11c32f8a",
+      "src/tasks/stairs_cbf/deployment_context.py": "65e5bbe7f4379eb5a114fc9261c818a7e9a12bfa77078379761fdab75020e80d",
+      "src/tasks/stairs_cbf/hard_cases.py": "b20cd15228dcdfcc6ad16955b5177ff4c3c714237b73c9a0e02eb316ab90f430",
+      "src/tasks/stairs_cbf/mdp.py": "631a9fefcf2026521c1c43ecf2dc1851124ce47921a1ddf4191ae7db31475754",
+      "src/tasks/stairs_cbf/online.py": "0b53dd2d58a2bc4745cb523b73853f5af5f172a6406c7d121415ad9ee18aa90a",
+      "src/tasks/velocity/mdp/observations.py": "5e759917b7d3132b4bd7c640eae14d472f01b175f222d6358330ae9a159becd1"
+    },
+    "source_files": [
+      "docs/EFFECT_FIRST_V22_PROTOCOL.md",
+      "src/tasks/velocity/mdp/observations.py",
+      "src/tasks/stairs_cbf/actions.py",
+      "src/tasks/stairs_cbf/command.py",
+      "src/tasks/stairs_cbf/config.py",
+      "src/tasks/stairs_cbf/deployment_context.py",
+      "src/tasks/stairs_cbf/hard_cases.py",
+      "src/tasks/stairs_cbf/mdp.py",
+      "src/tasks/stairs_cbf/online.py",
+      "experiments/scripts/evaluate_online_stairs.py",
+      "experiments/scripts/online_refine_stairs.py",
+      "experiments/scripts/refine_deployment_v21.py",
+      "experiments/scripts/specialist_v21_protocol.py",
+      "experiments/scripts/specialist_v22_protocol.py",
+      "experiments/scripts/calibrate_effect_first_v22.py",
+      "experiments/scripts/refine_effect_first_v22.py",
+      "experiments/scripts/test_effect_first_v22.py",
+      "experiments/scripts/plot_effect_first_v22.py",
+      "experiments/scripts/freeze_effect_first_v22_protocol.py",
+      "experiments/scripts/run_effect_first_v22.sh",
+      "experiments/tests/test_specialist_v22.py"
+    ]
+  },
+  "status": "prospectively_frozen_before_L_effect_adaptation",
+  "training": {
+    "candidate_d0_minimum_success_delta": -0.05,
+    "candidate_d0_paired_episodes": 128,
+    "candidate_fractions": [
+      0.5,
+      1.0,
+      1.5
+    ],
+    "confirmation_ci_or_block_gate": false,
+    "confirmation_maximum_fall_delta": 0.03,
+    "confirmation_success_delta_strictly_positive": true,
+    "control_or_parallel_comparison_branch": false,
+    "dual_rollout_batches": 2,
+    "failure_discovery_max_rollouts": 12,
+    "fixed_round_budget": 8,
+    "matched_success_beta": 0.0,
+    "new_risk_or_cost_head": false,
+    "normal_failure_success_slots": [
+      40,
+      12,
+      12
+    ],
+    "num_envs": 64,
+    "one_actor": true,
+    "one_privileged_critic": true,
+    "ppo_stores_raw_policy_action": true,
+    "rollout_steps_per_environment": 1024,
+    "runtime_cbf": true,
+    "screening_paired_episodes_per_candidate": 64,
+    "single_fresh_confirmation_paired_episodes": 128
+  },
+  "validation_monitor": {
+    "evaluate_pi0_and_every_d0_safe_accepted_checkpoint": true,
+    "excluded_from_ppo_replay_failure_bank_and_candidate_screen": true,
+    "final_deployment_uses_best_so_far_not_last": true,
+    "maximum_fall_increase_from_pi0": 0.02,
+    "paired_conditions": 256,
+    "seeds": {
+      "C_effect": 94100000,
+      "L_effect": 94000000
+    },
+    "selection_primary": "highest target success rate",
+    "tie_breaks": [
+      "lower fall rate",
+      "earlier round"
+    ]
+  }
+}
