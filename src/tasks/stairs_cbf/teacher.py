@@ -16,6 +16,7 @@ from .actions import (
     StairCbfJointPositionAction,
     StairCbfJointPositionActionCfg,
 )
+from .edge_detection import select_active_riser
 from .mdp import online_safety_telemetry
 from .proximal import (
     METHOD_ID as V23_METHOD_ID,
@@ -137,6 +138,7 @@ class SwingUnderResponseCbfAction(StairCbfJointPositionAction):
         return torch.sum(root_x >= edge_x, dim=1)
 
     def process_actions(self, actions: torch.Tensor) -> None:
+        self.toe_riser_kick.zero_()
         selected_foot = self._current_swing_foot()
         dynamic_scale = swing_leg_action_scale(
             selected_foot,
@@ -166,9 +168,30 @@ class SwingUnderResponseCbfAction(StairCbfJointPositionAction):
         self.teacher_reprojection_error[:] = torch.amax(
             torch.abs(reprojected - self.safe_raw_action), dim=-1
         )
-        event, overlap = toe_riser_kick_event(
-            self.h, self.geometric_active, self.toe_riser_overlap
+
+    def record_post_step_toe_riser_kick(self) -> None:
+        """Record the executed transition's exact toe/riser overlap entry."""
+        foot_index = self.selected_foot.clamp_min(0)
+        batch = torch.arange(self.num_envs, device=self.device)
+        foot_pos = self._entity.data.site_pos_w[:, self._site_local_ids]
+        selected_pos = foot_pos[batch, foot_index]
+        terrain = self._env.scene.terrain
+        if terrain is None:
+            raise RuntimeError("v25 kick telemetry requires stair metadata")
+        edge_x = self._edge_x[terrain.terrain_levels, terrain.terrain_types]
+        edge_top_z = self._edge_top_z[terrain.terrain_levels, terrain.terrain_types]
+        _, h, _, edge_active = select_active_riser(
+            selected_pos[:, 0],
+            selected_pos[:, 2],
+            edge_x,
+            edge_top_z,
+            toe_margin=self.cfg.toe_margin,
+            top_clearance=self.cfg.top_clearance,
+            activation_distance=self.cfg.activation_distance,
+            recovery_distance=self.cfg.recovery_distance,
         )
+        active = (self.selected_foot >= 0) & edge_active
+        event, overlap = toe_riser_kick_event(h, active, self.toe_riser_overlap)
         self.toe_riser_kick[:] = event
         self.toe_riser_overlap[:] = overlap
 
@@ -201,6 +224,7 @@ def v25_online_safety_telemetry(
     term = env.action_manager.get_term(action_name)
     if not isinstance(term, SwingUnderResponseCbfAction):
         raise TypeError("v25 telemetry requires SwingUnderResponseCbfAction")
+    term.record_post_step_toe_riser_kick()
     env.extras["v25_teacher_policy_action"] = (
         term.teacher_policy_action.detach().clone()
     )
@@ -403,6 +427,11 @@ class CbfTeacherPPO(CbfProximalPPO):
             teacher_no_fall_gate_count=float(
                 (
                     self.actual_cbf_intervened & diagnostics["no_fall_within_horizon"]
+                ).sum()
+            ),
+            teacher_horizon_observed_count=float(
+                (
+                    self.actual_cbf_intervened & diagnostics["horizon_outcome_observed"]
                 ).sum()
             ),
             teacher_actor_coordinate_correction_mean=float(correction_norm.mean()),

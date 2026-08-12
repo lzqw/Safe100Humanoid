@@ -48,6 +48,8 @@ teacher back through the plant reproduces the CBF-safe action within `1e-6`.
 An intervention is eligible only if the runtime CBF really changed the
 action, the next riser is crossed within `H=50` control steps (1.0 s), and no
 fall occurs in that horizon. Look-ahead never crosses an episode boundary.
+An episode terminal supplies a complete outcome; an unfinished rollout tail
+shorter than `H` is not treated as evidence of survival.
 The correction weight is clipped at one using scale `s_D=0.05`. Teacher
 targets are stop-gradient values. Each minibatch divides the weighted
 Gaussian NLL numerator by its valid teacher-transition count; an empty

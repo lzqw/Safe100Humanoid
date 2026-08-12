@@ -251,6 +251,28 @@ def test_success_label_horizon_is_inclusive_of_exactly_h_transitions() -> None:
     assert not eligible_h3[0, 0]
 
 
+def test_rollout_truncation_is_not_mislabeled_as_survival() -> None:
+    intervened = torch.tensor(((False,), (False,), (True,)))
+    correction = torch.full((3, 1), 0.05)
+    pre = torch.zeros(3, 1, dtype=torch.long)
+    post = torch.tensor(((0,), (0,), (1,)))
+    zeros = torch.zeros(3, 1, dtype=torch.bool)
+    eligible, _, diagnostics = successful_teacher_labels(
+        intervened,
+        correction,
+        pre,
+        post,
+        zeros,
+        zeros,
+        horizon=3,
+        correction_scale=0.05,
+    )
+    assert diagnostics["crossed_within_horizon"][2, 0]
+    assert diagnostics["no_fall_within_horizon"][2, 0]
+    assert not diagnostics["horizon_outcome_observed"][2, 0]
+    assert not eligible[2, 0]
+
+
 def test_teacher_loss_uses_valid_count_and_empty_minibatch_is_exact_zero() -> None:
     mean = torch.tensor(((1.0, 0.0), (2.0, 0.0)), requires_grad=True)
     std = torch.ones_like(mean)

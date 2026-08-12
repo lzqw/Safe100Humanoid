@@ -144,6 +144,7 @@ def successful_teacher_labels(
     dones = dones.bool()
     crossed = torch.zeros_like(intervened)
     no_fall = torch.ones_like(intervened)
+    horizon_observed = torch.zeros_like(intervened)
     time_steps = shape[0]
     for start in range(time_steps):
         alive = torch.ones(shape[1], dtype=torch.bool, device=intervened.device)
@@ -158,14 +159,19 @@ def successful_teacher_labels(
             alive &= ~dones[step]
         crossed[start] = crossed_from_start
         no_fall[start] = no_fall_from_start
+        # A terminal transition supplies a complete episode outcome.  An
+        # otherwise ongoing trajectory must contain all H requested steps;
+        # rollout truncation alone is not evidence of future survival.
+        horizon_observed[start] = (~alive) | (stop - start == horizon)
 
-    eligible = intervened & crossed & no_fall
+    eligible = intervened & crossed & no_fall & horizon_observed
     magnitude_weight = torch.clamp(correction_norm / float(correction_scale), 0.0, 1.0)
     weights = eligible.float() * magnitude_weight
     diagnostics = {
         "intervened": intervened,
         "crossed_within_horizon": crossed,
         "no_fall_within_horizon": no_fall,
+        "horizon_outcome_observed": horizon_observed,
         "magnitude_weight": magnitude_weight,
     }
     return eligible, weights, diagnostics
