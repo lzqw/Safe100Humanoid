@@ -401,7 +401,9 @@ def main() -> None:
         }
         paired_rows.append(row)
     with paired_path.open("w", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(paired_rows[0]))
+        writer = csv.DictWriter(
+            handle, fieldnames=list(paired_rows[0]), lineterminator="\n"
+        )
         writer.writeheader()
         writer.writerows(paired_rows)
 

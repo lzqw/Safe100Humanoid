@@ -369,7 +369,9 @@ def main() -> None:
     args.output_csv.parent.mkdir(parents=True, exist_ok=True)
     temporary = args.output_csv.with_name(f".{args.output_csv.name}.tmp")
     with temporary.open("w", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(completed[0]))
+        writer = csv.DictWriter(
+            handle, fieldnames=list(completed[0]), lineterminator="\n"
+        )
         writer.writeheader()
         writer.writerows(completed)
     temporary.replace(args.output_csv)

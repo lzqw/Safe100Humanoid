@@ -241,6 +241,26 @@ def test_v25_zero_episode_protocol_history_is_contiguous_and_committed() -> None
     )
 
 
+def test_v25_csv_evidence_has_stable_bytes_across_git_commit() -> None:
+    evidence_path = "results/online/proximal_v25/calibration/evidence.csv"
+    attributes = subprocess.run(
+        ["git", "check-attr", "text", "binary", "--", evidence_path],
+        cwd=REPO,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.splitlines()
+    assert f"{evidence_path}: text: unset" in attributes
+    assert f"{evidence_path}: binary: set" in attributes
+    for relative in (
+        "experiments/scripts/evaluate_cbf_teacher_v25.py",
+        "experiments/scripts/calibrate_cbf_teacher_v25.py",
+        "experiments/scripts/refine_cbf_teacher_v25.py",
+        "experiments/scripts/audit_cbf_teacher_v25.py",
+    ):
+        assert 'lineterminator="\\n"' in (REPO / relative).read_text()
+
+
 def test_phase_selective_scale_changes_exactly_three_swing_columns() -> None:
     foot = torch.tensor((0, 1, -1, 0))
     scale = swing_leg_action_scale(

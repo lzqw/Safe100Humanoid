@@ -52,6 +52,17 @@ contract. This is an evidence-only correction: the ordered grid, gates,
 environment, algorithm, checkpoint, and all 105 fresh seeds are unchanged.
 Revisions 1–4 remain immutable zero-episode history.
 
+Revision 5 was also retired before any v25 simulator episode. A complete
+zero-simulator producer-to-verifier rehearsal found that Python's CSV writer
+emitted CRLF records while Git's default text normalization stored LF records.
+The formal freezer intentionally byte-binds committed calibration evidence, so
+that normalization would have rejected authentic evidence immediately after it
+was committed. Revision 6 gives every v25 CSV an explicit LF record terminator
+and marks result CSVs as binary evidence in `.gitattributes`, preventing Git
+from rewriting their bytes. The attribute file is itself part of the frozen
+source boundary. No environment, grid, gate, algorithm, checkpoint, or seed was
+changed; revisions 1–5 remain immutable zero-episode history.
+
 ## Fixed deployment shift
 
 The environment remains the fixed nominal `DQHMED` staircase. Geometry,
