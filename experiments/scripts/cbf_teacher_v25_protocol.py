@@ -13,6 +13,8 @@ from typing import Any
 PROTOCOL_ID = "safe100-success-gated-cbf-teacher-v25"
 EXPERIMENT_NAME = "v25 Swing-Foot Under-Clearance CBF Teacher"
 POLICY_METHOD = "Success-Gated CBF Action Teacher + Moving-KL PPO v25"
+PRECALIBRATION_REVISION = 3
+PRECALIBRATION_FILENAME = "precalibration_protocol_revision3.json"
 TASK_ID = "Unitree-G1-Stairs-Online-DQHMED"
 ENVIRONMENT_VARIANT = "fixed_deployment_play"
 CONTEXT_ID = "swing_underresponse_v25"

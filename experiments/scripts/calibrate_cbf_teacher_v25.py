@@ -19,6 +19,7 @@ from cbf_teacher_v25_protocol import (
     CONTEXT_ID,
     ENVIRONMENT_VARIANT,
     EVAL_BATCH_SIZE,
+    PRECALIBRATION_REVISION,
     PROTOCOL_ID,
     SOURCE_FILES,
     TASK_ID,
@@ -151,14 +152,17 @@ def main() -> None:
     ):
         raise RuntimeError("v25 pre-calibration protocol is not the frozen input")
     if (
-        precalibration.get("revision") != 2
+        precalibration.get("revision") != PRECALIBRATION_REVISION
         or precalibration.get("environment") != fixed_environment_parameters()
         or precalibration.get("supersession", {}).get(
             "superseded_before_any_v25_simulator_episode"
         )
         is not True
     ):
-        raise RuntimeError("v25 revision-2 fixed-environment boundary is missing")
+        raise RuntimeError(
+            f"v25 revision-{PRECALIBRATION_REVISION} fixed-environment boundary "
+            "is missing"
+        )
     implementation = precalibration.get("implementation_boundary", {})
     implementation_commit = str(implementation.get("git_commit", ""))
     if subprocess.run(

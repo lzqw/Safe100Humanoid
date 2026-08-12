@@ -129,17 +129,96 @@ def _write_immutable(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(rendered)
 
 
+def _committed_protocol_chain(
+    repo: Path, commit: str, latest: Path, result_root: Path
+) -> list[dict[str, Any]]:
+    """Validate and return the complete newest-to-oldest supersession chain."""
+    chain = []
+    seen: set[Path] = set()
+    current = latest.resolve()
+    while True:
+        try:
+            relative_to_result = current.relative_to(result_root)
+            relative_to_repo = current.relative_to(repo)
+        except ValueError as error:
+            raise RuntimeError(
+                f"superseded protocol is outside the v25 result root: {current}"
+            ) from error
+        if current in seen:
+            raise RuntimeError("v25 supersession chain contains a cycle")
+        seen.add(current)
+        if not current.is_file():
+            raise FileNotFoundError(current)
+        content = current.read_bytes()
+        committed = subprocess.run(
+            ["git", "show", f"{commit}:{relative_to_repo}"],
+            cwd=repo,
+            check=True,
+            capture_output=True,
+        ).stdout
+        if committed != content:
+            raise RuntimeError(
+                f"superseded v25 protocol is not committed at HEAD: {relative_to_repo}"
+            )
+        payload = json.loads(content)
+        declared_revision = payload.get("revision")
+        legacy_revision_one = (
+            declared_revision is None
+            and relative_to_result == Path("precalibration_protocol.json")
+            and payload.get("supersession") is None
+        )
+        revision = 1 if legacy_revision_one else declared_revision
+        if (
+            payload.get("protocol_id") != PROTOCOL_ID
+            or payload.get("status")
+            != "prospectively_frozen_before_v25_base_only_paired_calibration"
+            or not isinstance(revision, int)
+            or revision < 1
+            or payload.get("prospective_execution", {}).get(
+                "v25_simulator_episode_started"
+            )
+            is not False
+        ):
+            raise RuntimeError(f"invalid zero-episode v25 protocol: {relative_to_repo}")
+        chain.append(
+            {
+                "revision": revision,
+                "file": str(relative_to_repo),
+                "result_relative_file": str(relative_to_result),
+                "sha256": hashlib.sha256(content).hexdigest(),
+                "payload": payload,
+            }
+        )
+        link = payload.get("supersession")
+        if link is None:
+            break
+        next_file = link.get("supersedes_file")
+        next_sha = link.get("supersedes_sha256")
+        if not isinstance(next_file, str) or not isinstance(next_sha, str):
+            raise TypeError("v25 supersession link is incomplete")
+        next_path = (repo / next_file).resolve()
+        if not next_path.is_file() or file_sha256(next_path) != next_sha:
+            raise RuntimeError("v25 supersession link hash does not match its parent")
+        current = next_path
+    revisions = [item["revision"] for item in chain]
+    if revisions != list(range(revisions[0], 0, -1)):
+        raise RuntimeError(f"v25 revision chain is not contiguous: {revisions}")
+    return chain
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo", type=Path, required=True)
     parser.add_argument("--base-checkpoint", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--supersedes", type=Path)
+    parser.add_argument("--supersession-reason")
     args = parser.parse_args()
     repo = args.repo.resolve()
     checkpoint = args.base_checkpoint.resolve()
     output = args.output.resolve()
     supersedes = None if args.supersedes is None else args.supersedes.resolve()
+    supersession_reason = args.supersession_reason
     if not checkpoint.is_file():
         raise FileNotFoundError(checkpoint)
     commit = _git_output(repo, "rev-parse", "HEAD")
@@ -149,52 +228,49 @@ def main() -> None:
         raise RuntimeError("v25 base checkpoint differs from frozen pi0")
     result_root = repo / "results/online/proximal_v25"
     supersession = None
+    revision = 1
     if result_root.exists():
         if supersedes is None or not supersedes.is_file():
             raise RuntimeError(
                 "existing v25 evidence requires an explicit zero-episode protocol "
                 "to supersede"
             )
+        if not supersession_reason or not supersession_reason.strip():
+            raise RuntimeError("a non-empty supersession reason is required")
         relative_supersedes = supersedes.relative_to(repo)
         existing_files = {
             path.relative_to(repo) for path in result_root.rglob("*") if path.is_file()
         }
-        if existing_files != {relative_supersedes}:
+        chain = _committed_protocol_chain(repo, commit, supersedes, result_root)
+        expected_files = {Path(item["file"]) for item in chain}
+        if existing_files != expected_files:
             raise RuntimeError(
-                "unexpected v25 evidence exists before revision-2 pre-calibration freeze: "
+                "unexpected v25 evidence exists before successor pre-calibration freeze: "
                 f"{sorted(map(str, existing_files))}"
             )
-        prior = json.loads(supersedes.read_text())
-        if (
-            prior.get("protocol_id") != PROTOCOL_ID
-            or prior.get("prospective_execution", {}).get(
-                "v25_simulator_episode_started"
-            )
-            is not False
-        ):
-            raise RuntimeError("superseded protocol does not prove zero v25 episodes")
-        committed_prior = subprocess.run(
-            ["git", "show", f"{commit}:{relative_supersedes}"],
-            cwd=repo,
-            check=True,
-            capture_output=True,
-        ).stdout
-        if committed_prior != supersedes.read_bytes():
-            raise RuntimeError("superseded v25 protocol is not committed at HEAD")
+        prior = chain[0]
+        revision = int(prior["revision"]) + 1
         supersession = {
-            "revision": 2,
+            "revision": revision,
+            "supersedes_revision": prior["revision"],
             "supersedes_file": str(relative_supersedes),
-            "supersedes_sha256": file_sha256(supersedes),
+            "supersedes_sha256": prior["sha256"],
             "superseded_before_any_v25_simulator_episode": True,
-            "reason": (
-                "pre-execution audit unified calibration/adaptation/final evaluation "
-                "on the fixed deployment environment, keyed kick debouncing by "
-                "toe/riser identity, and pooled interventions per crossed riser"
-            ),
+            "reason": supersession_reason.strip(),
             "outcomes_observed_before_revision": False,
+            "verified_protocol_history": [
+                {
+                    "revision": item["revision"],
+                    "file": item["file"],
+                    "sha256": item["sha256"],
+                }
+                for item in chain
+            ],
         }
-    elif supersedes is not None:
-        raise RuntimeError("--supersedes was provided but no prior v25 result exists")
+    elif supersedes is not None or supersession_reason is not None:
+        raise RuntimeError(
+            "--supersedes/--supersession-reason were provided but no prior v25 result exists"
+        )
     source_hashes = _verify_committed_sources(repo, commit)
     prior_audit = _prior_immutable_audit(repo, commit)
     randomness = fresh_randomness_report(repo)
@@ -209,7 +285,7 @@ def main() -> None:
         "experiment_name": EXPERIMENT_NAME,
         "policy_method": POLICY_METHOD,
         "status": "prospectively_frozen_before_v25_base_only_paired_calibration",
-        "revision": 2 if supersession is not None else 1,
+        "revision": revision,
         "supersession": supersession,
         "implementation_boundary": {
             "git_commit": commit,

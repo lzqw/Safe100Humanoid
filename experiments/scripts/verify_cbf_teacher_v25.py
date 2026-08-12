@@ -15,8 +15,12 @@ from cbf_teacher_v25_protocol import (
     CALIBRATION_REPEATS,
     EVAL_BATCH_SIZE,
     FINAL_EPISODES,
+    MAX_ACTOR_EPOCHS,
+    MINI_BATCHES,
+    NUM_ENVS,
     POLICY_METHOD,
     PROTOCOL_ID,
+    ROLLOUT_STEPS,
     V23_FINAL_SHA256,
     V23_PROTOCOL_SHA256,
     V23_RESULT_GIT_TREE,
@@ -62,6 +66,186 @@ def _git_output(repo: Path, *args: str) -> str:
     return subprocess.run(
         ["git", *args], cwd=repo, check=True, capture_output=True, text=True
     ).stdout.strip()
+
+
+def reconstructed_fields_match(
+    reconstructed: dict[str, Any], recorded: dict[str, Any]
+) -> bool:
+    """Compare reconstructed fields without rejecting bound metadata fields."""
+    if not isinstance(recorded, dict):
+        return False
+    for key, value in reconstructed.items():
+        candidate = recorded.get(key)
+        if isinstance(value, float):
+            if not isinstance(candidate, (int, float)) or not _close(
+                value, float(candidate)
+            ):
+                return False
+        elif candidate != value:
+            return False
+    return True
+
+
+def updated_metric_is_bounded(
+    rounds: list[dict[str, Any]],
+    key: str,
+    *,
+    minimum: float | None = None,
+    maximum: float | None = None,
+) -> bool:
+    """Require a finite bounded metric on every committed update."""
+    for row in rounds:
+        if not isinstance(row, dict):
+            return False
+        if row.get("status") != "updated":
+            continue
+        metrics = row.get("metrics")
+        if not isinstance(metrics, dict):
+            return False
+        try:
+            value = float(metrics[key])
+        except (KeyError, OverflowError, TypeError, ValueError):
+            return False
+        if not math.isfinite(value):
+            return False
+        if minimum is not None and value < minimum:
+            return False
+        if maximum is not None and value > maximum:
+            return False
+    return True
+
+
+def round_status_accounting_is_valid(rounds: list[dict[str, Any]]) -> bool:
+    """Bind update/rollback metadata without requiring either outcome."""
+    for row in rounds:
+        if not isinstance(row, dict):
+            return False
+        status = row.get("status")
+        reason = row.get("rollback_reason")
+        metrics = row.get("metrics")
+        if not isinstance(metrics, dict):
+            return False
+        if (
+            row.get("round_reference_is_moving_pi_k") is not True
+            or row.get("performance_evaluation_or_gate_used") is not False
+        ):
+            return False
+        if status == "updated":
+            if reason is not None or metrics.get("hard_rollback") is True:
+                return False
+        elif status == "hard_rollback":
+            if not isinstance(reason, str) or not reason.strip():
+                return False
+            if metrics.get("hard_rollback") is not True:
+                return False
+            if metrics.get("hard_rollback_reason") != reason:
+                return False
+            start = row.get("round_start_actor_sha256")
+            end = row.get("round_end_actor_sha256")
+            if not isinstance(start, str) or not start or start != end:
+                return False
+        else:
+            return False
+    return True
+
+
+def round_actor_hash_chain_is_valid(rounds: list[dict[str, Any]]) -> bool:
+    """Require explicit actor hashes and a continuous eight-round chain."""
+    for index, row in enumerate(rounds):
+        if not isinstance(row, dict):
+            return False
+        start = row.get("round_start_actor_sha256")
+        end = row.get("round_end_actor_sha256")
+        if not isinstance(start, str) or not start:
+            return False
+        if not isinstance(end, str) or not end:
+            return False
+        if index and start != rounds[index - 1].get("round_end_actor_sha256"):
+            return False
+    return True
+
+
+def updated_round_kl_is_valid(rounds: list[dict[str, Any]]) -> bool:
+    """Validate every update that occurred; an all-rollback run remains auditable."""
+    for row in rounds:
+        if not isinstance(row, dict):
+            return False
+        if row.get("status") != "updated":
+            continue
+        metrics = row.get("metrics")
+        if not isinstance(metrics, dict):
+            return False
+        try:
+            value = float(metrics["moving_forward_kl"])
+        except (KeyError, OverflowError, TypeError, ValueError):
+            return False
+        if not math.isfinite(value) or value > 0.01:
+            return False
+    return True
+
+
+def teacher_signal_accounting_is_valid(rounds: list[dict[str, Any]]) -> bool:
+    """Validate teacher metrics without requiring an outcome-dependent signal."""
+    for row in rounds:
+        if not isinstance(row, dict):
+            return False
+        if row.get("status") != "updated":
+            continue
+        metrics = row.get("metrics")
+        if not isinstance(metrics, dict):
+            return False
+        try:
+            count = float(metrics["teacher_transition_count"])
+            fraction = float(metrics["teacher_transition_fraction"])
+            loss = float(metrics["teacher_loss"])
+            with_signal = float(metrics["teacher_minibatches_with_signal"])
+            without_signal = float(metrics["teacher_minibatches_without_signal"])
+        except (KeyError, OverflowError, TypeError, ValueError):
+            return False
+        values = (count, fraction, loss, with_signal, without_signal)
+        if not all(math.isfinite(value) for value in values):
+            return False
+        if count < 0.0 or not 0.0 <= fraction <= 1.0:
+            return False
+        if min(loss, with_signal, without_signal) < 0.0:
+            return False
+        if not all(
+            value.is_integer() for value in (count, with_signal, without_signal)
+        ):
+            return False
+        if not _close(fraction, count / (NUM_ENVS * ROLLOUT_STEPS)):
+            return False
+        try:
+            actor_epochs = float(metrics["actor_epochs_completed"])
+            actor_minibatches = float(metrics["actor_minibatches_completed"])
+            samples_seen = float(metrics["teacher_samples_seen_across_epochs"])
+        except (KeyError, OverflowError, TypeError, ValueError):
+            return False
+        if not all(
+            math.isfinite(value)
+            for value in (actor_epochs, actor_minibatches, samples_seen)
+        ):
+            return False
+        if not all(
+            value >= 0.0 and value.is_integer()
+            for value in (actor_epochs, actor_minibatches, samples_seen)
+        ):
+            return False
+        if with_signal + without_signal != actor_minibatches:
+            return False
+        if not 1.0 <= actor_epochs <= MAX_ACTOR_EPOCHS:
+            return False
+        if actor_minibatches != actor_epochs * MINI_BATCHES:
+            return False
+        if samples_seen != count * actor_epochs:
+            return False
+        if count == 0.0 and (
+            not _close(loss, 0.0) or with_signal != 0.0
+        ):
+            return False
+        if count > 0.0 and with_signal <= 0.0:
+            return False
+    return True
 
 
 def main() -> None:
@@ -163,6 +347,7 @@ def main() -> None:
             )
         ),
     )
+    selected_calibration_attempt = context["calibration"]["attempts"][-1]
     source_hashes = protocol.get("implementation_boundary", {}).get("source_files", {})
     source_checks = {
         relative: (repo / relative).is_file()
@@ -205,8 +390,11 @@ def main() -> None:
         == len(set(calibration_identities)),
         "calibration_identities_exact_frozen_schedule": sorted(calibration_identities)
         == expected_calibration_identities,
-        "calibration_gate_reconstructed": reconstructed_calibration_gate
-        == calibration.get("selected_gate"),
+        "calibration_gate_reconstructed": reconstructed_fields_match(
+            reconstructed_calibration_gate, calibration.get("selected_gate", {})
+        ),
+        "calibration_selected_attempt_bound": calibration.get("selected_gate")
+        == selected_calibration_attempt,
         "calibration_paired_csv_bound": protocol.get("calibration_evidence", {})
         .get("paired_episodes", {})
         .get("sha256")
@@ -221,49 +409,43 @@ def main() -> None:
         "round_count_8": len(rounds) == 8,
         "round_numbers_1_to_8": [row.get("round") for row in rounds]
         == list(range(1, 9)),
-        "round_statuses_valid": all(
-            row.get("status") in ("updated", "hard_rollback") for row in rounds
+        "round_status_accounting_valid": round_status_accounting_is_valid(rounds),
+        "round_actor_hash_chain": round_actor_hash_chain_is_valid(rounds),
+        "updated_round_kl_below_ceiling": updated_round_kl_is_valid(rounds),
+        "raw_policy_storage_exact": updated_metric_is_bounded(
+            rounds,
+            "policy_storage_max_abs_error",
+            minimum=0.0,
+            maximum=1.0e-6,
         ),
-        "round_actor_hash_chain": all(
-            rounds[index]["round_start_actor_sha256"]
-            == rounds[index - 1]["round_end_actor_sha256"]
-            for index in range(1, len(rounds))
+        "runtime_action_routing_exact": updated_metric_is_bounded(
+            rounds,
+            "executed_action_routing_max_abs_error",
+            minimum=0.0,
+            maximum=1.0e-5,
         ),
-        "updated_round_kl_below_ceiling": bool(updated)
-        and all(float(row["metrics"]["moving_forward_kl"]) <= 0.01 for row in updated),
-        "hard_rollbacks_restore_actor": all(
-            row["round_start_actor_sha256"] == row["round_end_actor_sha256"]
-            for row in rollbacks
+        "teacher_reprojection_exact": updated_metric_is_bounded(
+            rounds,
+            "teacher_reprojection_max_abs_error",
+            minimum=0.0,
+            maximum=1.0e-6,
         ),
-        "raw_policy_storage_exact": all(
-            float(row["metrics"].get("policy_storage_max_abs_error", 0.0)) <= 1.0e-6
-            for row in rounds
+        "teacher_swing_selection_exact": updated_metric_is_bounded(
+            rounds,
+            "swing_selection_mismatch_count",
+            minimum=0.0,
+            maximum=0.0,
         ),
-        "runtime_action_routing_exact": all(
-            float(row["metrics"].get("executed_action_routing_max_abs_error", 0.0))
-            <= 1.0e-5
-            for row in rounds
-        ),
-        "teacher_reprojection_exact": all(
-            float(row["metrics"].get("teacher_reprojection_max_abs_error", 0.0))
-            <= 1.0e-6
-            for row in rounds
-        ),
-        "teacher_swing_selection_exact": all(
-            float(row["metrics"].get("swing_selection_mismatch_count", 0.0)) == 0.0
-            for row in rounds
-        ),
-        "teacher_signal_observed": sum(
-            float(row["metrics"].get("teacher_transition_count", 0.0))
-            for row in updated
-        )
-        > 0.0,
+        "teacher_signal_accounting_valid": teacher_signal_accounting_is_valid(rounds),
+        "hard_rollback_count_reconstructed": training.get("hard_rollback_count")
+        == len(rollbacks),
         "no_performance_rollback": training.get("performance_rollbacks") == 0,
         "no_performance_selection": training.get("final_policy_rule")
         == "round 8 actor, never best-so-far"
         and training.get("candidate_screen_or_confirmation_count") == 0,
         "final_actor_is_round_8": bool(rounds)
-        and training.get("final_actor_sha256") == rounds[-1]["round_end_actor_sha256"],
+        and training.get("final_actor_sha256")
+        == rounds[-1].get("round_end_actor_sha256"),
         "four_condition_row_count_512": len(rows) == FINAL_EPISODES,
         "four_condition_identities_unique": len(final_identities)
         == len(set(final_identities)),
@@ -356,6 +538,10 @@ def main() -> None:
             "on_success_delta": on_delta,
             "fresh_rescue_count": rescued,
             "fresh_aligned_failure_count": aligned,
+            "teacher_transition_count_total": sum(
+                float(row.get("metrics", {}).get("teacher_transition_count", 0.0))
+                for row in updated
+            ),
             "development_gate": reconstructed_gate,
         },
     }

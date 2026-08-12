@@ -25,6 +25,7 @@ from cbf_teacher_v25_protocol import (
     MINIMUM_OFF_SUCCESS_DELTA,
     MINIMUM_ON_SUCCESS_DELTA,
     POLICY_METHOD,
+    PRECALIBRATION_REVISION,
     PROTOCOL_ID,
     calibration_evaluation_seed,
     calibration_gate,
@@ -173,7 +174,8 @@ def main() -> None:
         "precalibration_id": pre.get("protocol_id") == PROTOCOL_ID,
         "precalibration_status": pre.get("status")
         == "prospectively_frozen_before_v25_base_only_paired_calibration",
-        "precalibration_revision_2": pre.get("revision") == 2
+        "precalibration_revision_3": pre.get("revision")
+        == PRECALIBRATION_REVISION
         and pre.get("supersession", {}).get(
             "superseded_before_any_v25_simulator_episode"
         )

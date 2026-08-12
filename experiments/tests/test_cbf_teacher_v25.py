@@ -40,7 +40,16 @@ from cbf_teacher_v25_protocol import (
     fresh_randomness_report,
     validate_v25_calibrated_context,
 )
+from freeze_cbf_teacher_v25_precalibration import _committed_protocol_chain
 from plot_cbf_teacher_v25 import FIGURE_CATEGORIES
+from verify_cbf_teacher_v25 import (
+    reconstructed_fields_match,
+    round_actor_hash_chain_is_valid,
+    round_status_accounting_is_valid,
+    teacher_signal_accounting_is_valid,
+    updated_metric_is_bounded,
+    updated_round_kl_is_valid,
+)
 
 _TEACHER_MATH_SPEC = importlib.util.spec_from_file_location(
     "v25_teacher_math", REPO / "src/tasks/stairs_cbf/teacher_math.py"
@@ -153,6 +162,34 @@ def test_v23_and_v24_results_remain_byte_and_tree_frozen() -> None:
             text=True,
         ).stdout.strip()
         assert actual == expected
+
+
+def test_v25_zero_episode_protocol_history_is_contiguous_and_committed() -> None:
+    commit = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=REPO,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    result_root = REPO / "results/online/proximal_v25"
+    chain = _committed_protocol_chain(
+        REPO,
+        commit,
+        result_root / "precalibration_protocol_revision2.json",
+        result_root,
+    )
+    assert [item["revision"] for item in chain] == [2, 1]
+    assert [Path(item["file"]).name for item in chain] == [
+        "precalibration_protocol_revision2.json",
+        "precalibration_protocol.json",
+    ]
+    assert chain[-1]["payload"].get("revision") is None
+    assert all(
+        item["payload"]["prospective_execution"]["v25_simulator_episode_started"]
+        is False
+        for item in chain
+    )
 
 
 def test_phase_selective_scale_changes_exactly_three_swing_columns() -> None:
@@ -450,7 +487,133 @@ def test_training_ast_has_no_forbidden_selection_or_bank_path() -> None:
     assert "weighted_gaussian_teacher_loss" in teacher_source
     assert "teacher_distillation_weight * teacher_loss" in teacher_source
     runner_source = (REPO / "experiments/scripts/run_cbf_teacher_v25.sh").read_text()
-    assert "precalibration_protocol_revision2.json" in runner_source
+    assert "precalibration_protocol_revision3.json" in runner_source
+
+
+def test_verifier_compares_reconstructed_gate_fields_not_candidate_metadata() -> None:
+    gate = calibration_gate(
+        off_success_count=256,
+        on_success_count=460,
+        off_toe_riser_failure_count=240,
+        off_failure_count=256,
+        rescued_count=204,
+    )
+    selected_attempt = {
+        "candidate_index": 8,
+        "swing_underresponse_gain": 0.82,
+        "evaluation_seeds": [1, 2, 3, 4],
+        **gate,
+    }
+    assert gate != selected_attempt
+    assert reconstructed_fields_match(gate, selected_attempt)
+    selected_attempt["rescued_count"] += 1
+    assert not reconstructed_fields_match(gate, selected_attempt)
+
+
+def test_verifier_accepts_valid_all_rollback_and_zero_teacher_outcomes() -> None:
+    rollbacks = [
+        {
+            "round": index,
+            "status": "hard_rollback",
+            "rollback_reason": "moving forward KL exceeded hard ceiling",
+            "round_start_actor_sha256": "unchanged-actor",
+            "round_end_actor_sha256": "unchanged-actor",
+            "round_reference_is_moving_pi_k": True,
+            "performance_evaluation_or_gate_used": False,
+            "metrics": {
+                "hard_rollback": True,
+                "hard_rollback_reason": "moving forward KL exceeded hard ceiling",
+            },
+        }
+        for index in range(1, 9)
+    ]
+    assert updated_round_kl_is_valid(rollbacks)
+    assert teacher_signal_accounting_is_valid(rollbacks)
+    assert round_status_accounting_is_valid(rollbacks)
+    assert round_actor_hash_chain_is_valid(rollbacks)
+    assert updated_metric_is_bounded(
+        rollbacks, "policy_storage_max_abs_error", maximum=1.0e-6
+    )
+
+    zero_signal_update = {
+        "round": 1,
+        "status": "updated",
+        "rollback_reason": None,
+        "round_start_actor_sha256": "actor-before",
+        "round_end_actor_sha256": "actor-after",
+        "round_reference_is_moving_pi_k": True,
+        "performance_evaluation_or_gate_used": False,
+        "metrics": {
+            "moving_forward_kl": 0.002,
+            "teacher_transition_count": 0.0,
+            "teacher_transition_fraction": 0.0,
+            "teacher_loss": 0.0,
+            "teacher_minibatches_with_signal": 0,
+            "teacher_minibatches_without_signal": 8,
+            "actor_epochs_completed": 2,
+            "actor_minibatches_completed": 8,
+            "teacher_samples_seen_across_epochs": 0,
+            "policy_storage_max_abs_error": 0.0,
+        },
+    }
+    assert updated_round_kl_is_valid([zero_signal_update])
+    assert teacher_signal_accounting_is_valid([zero_signal_update])
+    assert round_status_accounting_is_valid([zero_signal_update])
+    assert round_actor_hash_chain_is_valid([zero_signal_update])
+    assert updated_metric_is_bounded(
+        [zero_signal_update],
+        "policy_storage_max_abs_error",
+        minimum=0.0,
+        maximum=1.0e-6,
+    )
+
+    corrupt_zero_signal = {
+        **zero_signal_update,
+        "metrics": {**zero_signal_update["metrics"], "teacher_loss": 0.1},
+    }
+    assert not teacher_signal_accounting_is_valid([corrupt_zero_signal])
+    excessive_kl = {
+        **zero_signal_update,
+        "metrics": {**zero_signal_update["metrics"], "moving_forward_kl": 0.02},
+    }
+    assert not updated_round_kl_is_valid([excessive_kl])
+    missing_routing = {
+        **zero_signal_update,
+        "metrics": {
+            key: value
+            for key, value in zero_signal_update["metrics"].items()
+            if key != "policy_storage_max_abs_error"
+        },
+    }
+    assert not updated_metric_is_bounded(
+        [missing_routing], "policy_storage_max_abs_error", maximum=1.0e-6
+    )
+
+    malformed = {
+        **zero_signal_update,
+        "metrics": {
+            **zero_signal_update["metrics"],
+            "moving_forward_kl": "not-a-number",
+            "teacher_transition_count": None,
+        },
+    }
+    assert not updated_round_kl_is_valid([malformed])
+    assert not teacher_signal_accounting_is_valid([malformed])
+
+    missing_actor_hash = {
+        **zero_signal_update,
+        "round_end_actor_sha256": None,
+    }
+    assert not round_actor_hash_chain_is_valid([missing_actor_hash])
+
+    hidden_performance_gate = {
+        **zero_signal_update,
+        "performance_evaluation_or_gate_used": True,
+    }
+    assert not round_status_accounting_is_valid([hidden_performance_gate])
+    assert not updated_metric_is_bounded(
+        [None], "policy_storage_max_abs_error", maximum=1.0e-6
+    )
 
 
 def test_final_audit_has_exact_four_conditions_and_512_pair_rows() -> None:

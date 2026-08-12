@@ -18,6 +18,18 @@ Revision 2 fixes those issues prospectively, preserves revision 1 as immutable
 history, and reuses the original fresh seed schedule because no v25 outcome was
 observed.
 
+Revision 2 was itself retired before any v25 simulator episode. A second
+pre-execution audit found that the terminal verifier compared a reconstructed
+gate-only dictionary against the selected-attempt dictionary that also contains
+candidate metadata, so every qualifying result would have been mislabeled as a
+verification failure. It also treated at least one updated round and at least one
+teacher transition as mandatory evidence, although the frozen method permits
+hard rollback and defines an empty teacher minibatch as exact zero. Revision 3
+fixes only those result-independent verification semantics and adds complete
+per-episode calibration evidence reconstruction before publication. The ordered
+grid, gates, environment, algorithm, and all 105 fresh seeds remain unchanged;
+revision 1 and revision 2 remain immutable zero-episode history.
+
 ## Fixed deployment shift
 
 The environment remains the fixed nominal `DQHMED` staircase. Geometry,
@@ -107,6 +119,13 @@ are post-training reports only and cannot select or alter the policy.
 Interventions per riser is the pooled count ratio over all 512 episodes
 (`total intervention steps / total risers crossed`), not an unweighted mean of
 per-episode ratios.
+
+The final evidence verifier reconstructs every gate field while separately
+binding the selected-attempt metadata. It validates every updated round that
+exists without requiring an update to occur, and validates teacher-signal
+accounting without requiring the environment to produce a positive teacher
+count. Thus a scientifically negative result or eight valid hard rollbacks is
+reported honestly rather than converted into a technical verification failure.
 
 The motivating actuator-mismatch, action-projection aliasing, and CBF-learning
 references are the primary arXiv records:
