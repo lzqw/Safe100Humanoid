@@ -536,6 +536,21 @@ def execution_markers_are_valid(
     )
 
 
+def supersession_revision_field_is_valid(
+    link: dict[str, Any], history_item: dict[str, Any], expected_revision: int
+) -> bool:
+    """Accept the sole legacy revision-1 link that predates this field."""
+    declared = link.get("supersedes_revision")
+    if declared == expected_revision:
+        return True
+    return (
+        expected_revision == 1
+        and declared is None
+        and history_item.get("file")
+        == "results/online/proximal_v25/precalibration_protocol.json"
+    )
+
+
 def precalibration_contract_is_valid(
     repo: Path, path: Path, payload: dict[str, Any]
 ) -> bool:
@@ -559,7 +574,9 @@ def precalibration_contract_is_valid(
         link = current_payload.get("supersession")
         if (
             not isinstance(link, dict)
-            or link.get("supersedes_revision") != expected_revision
+            or not supersession_revision_field_is_valid(
+                link, item, expected_revision
+            )
             or link.get("supersedes_file") != item.get("file")
             or link.get("supersedes_sha256") != item.get("sha256")
             or link.get("superseded_before_any_v25_simulator_episode") is not True

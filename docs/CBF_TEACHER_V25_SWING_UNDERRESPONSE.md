@@ -63,6 +63,15 @@ from rewriting their bytes. The attribute file is itself part of the frozen
 source boundary. No environment, grid, gate, algorithm, checkpoint, or seed was
 changed; revisions 1–5 remain immutable zero-episode history.
 
+Revision 6 was likewise retired before any v25 simulator episode. The same
+zero-simulator rehearsal then reached the terminal verifier and exposed one
+legacy-history incompatibility: revision 2's link to the original unnumbered
+revision-1 protocol predates the `supersedes_revision` field, while the verifier
+required that newer field on every link. Revision 7 accepts the missing field
+only for that exact hash-bound legacy revision-1 path; all newer links still
+require the explicit revision number. The experiment design and all 105 seeds
+remain unchanged, and revisions 1–6 remain immutable zero-episode history.
+
 ## Fixed deployment shift
 
 The environment remains the fixed nominal `DQHMED` staircase. Geometry,

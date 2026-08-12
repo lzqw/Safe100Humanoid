@@ -54,6 +54,7 @@ from verify_cbf_teacher_v25 import (
     rollback_reasons_are_protocol_allowed,
     round_actor_hash_chain_is_valid,
     round_status_accounting_is_valid,
+    supersession_revision_field_is_valid,
     teacher_signal_accounting_is_valid,
     training_execution_contract_is_valid,
     updated_metric_is_bounded,
@@ -259,6 +260,20 @@ def test_v25_csv_evidence_has_stable_bytes_across_git_commit() -> None:
         "experiments/scripts/audit_cbf_teacher_v25.py",
     ):
         assert 'lineterminator="\\n"' in (REPO / relative).read_text()
+
+
+def test_verifier_accepts_only_the_legacy_revision_one_missing_field() -> None:
+    legacy = {
+        "file": "results/online/proximal_v25/precalibration_protocol.json"
+    }
+    assert supersession_revision_field_is_valid({}, legacy, 1)
+    assert supersession_revision_field_is_valid(
+        {"supersedes_revision": 2}, {"file": "revision2.json"}, 2
+    )
+    assert not supersession_revision_field_is_valid({}, legacy, 2)
+    assert not supersession_revision_field_is_valid(
+        {}, {"file": "results/online/proximal_v25/other.json"}, 1
+    )
 
 
 def test_phase_selective_scale_changes_exactly_three_swing_columns() -> None:
