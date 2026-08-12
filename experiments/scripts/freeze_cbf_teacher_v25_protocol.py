@@ -142,8 +142,8 @@ def main() -> None:
         if not path.is_file():
             raise FileNotFoundError(path)
     commit = _git_output(repo, "rev-parse", "HEAD")
-    if _git_output(repo, "status", "--porcelain", "--untracked-files=no"):
-        raise RuntimeError("tracked worktree must be clean before formal v25 freeze")
+    if _git_output(repo, "status", "--porcelain"):
+        raise RuntimeError("worktree must be clean before formal v25 freeze")
     if file_sha256(checkpoint) != BASE_CHECKPOINT_SHA256:
         raise RuntimeError("formal v25 checkpoint differs from frozen pi0")
     if (formal_output_dir / "formal_execution_started.json").exists():

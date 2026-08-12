@@ -482,6 +482,8 @@ def main() -> None:
     checkpoint = args.base_checkpoint.resolve()
     context_path = args.context.resolve()
     output_dir = args.output_dir.resolve()
+    if _git_output(repo, "status", "--porcelain"):
+        raise RuntimeError("v25 adaptation requires a clean committed worktree")
     if not checkpoint.is_file() or not context_path.is_file():
         raise FileNotFoundError("base checkpoint or v25 context does not exist")
     if file_sha256(checkpoint) != BASE_CHECKPOINT_SHA256:

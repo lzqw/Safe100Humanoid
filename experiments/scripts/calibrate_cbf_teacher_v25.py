@@ -132,6 +132,13 @@ def main() -> None:
     checkpoint = args.base_checkpoint.resolve()
     precalibration_path = args.precalibration_protocol.resolve()
     output_dir = args.output_dir.resolve()
+    if subprocess.run(
+        ["git", "status", "--porcelain"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+    ).stdout:
+        raise RuntimeError("v25 calibration requires a clean committed worktree")
     if not checkpoint.is_file() or not precalibration_path.is_file():
         raise FileNotFoundError("base checkpoint or pre-calibration protocol missing")
     if file_sha256(checkpoint) != BASE_CHECKPOINT_SHA256:

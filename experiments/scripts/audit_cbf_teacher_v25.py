@@ -218,6 +218,13 @@ def main() -> None:
     context_path = args.context.resolve()
     protocol_path = args.protocol.resolve()
     output_dir = args.output_dir.resolve()
+    if subprocess.run(
+        ["git", "status", "--porcelain"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+    ).stdout:
+        raise RuntimeError("v25 final audit requires a clean committed worktree")
     for path in (
         base_checkpoint,
         final_checkpoint,

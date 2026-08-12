@@ -7,6 +7,7 @@ import csv
 import hashlib
 import json
 import random
+import subprocess
 import sys
 from dataclasses import asdict
 from pathlib import Path
@@ -35,11 +36,22 @@ def _parse_args() -> argparse.Namespace:
 
 def _initial_state_signature(obs, base_env, action_term, command_term) -> str:
     signature = hashlib.sha256()
+    terrain = base_env.scene.terrain
+    if terrain is None:
+        raise RuntimeError("v25 initial-state signature requires stair terrain")
     tensors = (
         obs["actor"],
+        base_env.scene.env_origins,
         base_env.scene["robot"].data.root_link_pos_w,
         base_env.scene["robot"].data.root_link_quat_w,
+        base_env.scene["robot"].data.root_link_lin_vel_w,
+        base_env.scene["robot"].data.root_link_ang_vel_w,
         base_env.scene["robot"].data.joint_pos,
+        base_env.scene["robot"].data.joint_vel,
+        terrain.terrain_levels,
+        terrain.terrain_types,
+        action_term._edge_x[terrain.terrain_levels, terrain.terrain_types],
+        action_term._edge_top_z[terrain.terrain_levels, terrain.terrain_types],
         base_env.command_manager.get_command("twist"),
         getattr(
             command_term,
@@ -87,6 +99,13 @@ def main() -> None:
     checkpoint = args.checkpoint.resolve()
     if not checkpoint.is_file():
         raise FileNotFoundError(checkpoint)
+    if subprocess.run(
+        ["git", "status", "--porcelain"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+    ).stdout:
+        raise RuntimeError("v25 evaluation requires a clean committed worktree")
     runtime_filter = args.runtime_filter == "on"
     random.seed(args.seed)
     np.random.seed(args.seed)

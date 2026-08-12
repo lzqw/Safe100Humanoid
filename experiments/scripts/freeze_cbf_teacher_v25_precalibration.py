@@ -143,8 +143,8 @@ def main() -> None:
     if not checkpoint.is_file():
         raise FileNotFoundError(checkpoint)
     commit = _git_output(repo, "rev-parse", "HEAD")
-    if _git_output(repo, "status", "--porcelain", "--untracked-files=no"):
-        raise RuntimeError("tracked worktree must be clean before freezing v25")
+    if _git_output(repo, "status", "--porcelain"):
+        raise RuntimeError("worktree must be clean before freezing v25")
     if file_sha256(checkpoint) != BASE_CHECKPOINT_SHA256:
         raise RuntimeError("v25 base checkpoint differs from frozen pi0")
     result_root = repo / "results/online/proximal_v25"
