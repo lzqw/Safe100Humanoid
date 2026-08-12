@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
 import json
 import subprocess
@@ -73,6 +74,7 @@ def main() -> None:
     parser.add_argument("--precalibration-protocol", type=Path, required=True)
     parser.add_argument("--context", type=Path, required=True)
     parser.add_argument("--calibration-summary", type=Path, required=True)
+    parser.add_argument("--calibration-paired-csv", type=Path, required=True)
     parser.add_argument("--formal-output-dir", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
@@ -81,9 +83,10 @@ def main() -> None:
     pre_path = args.precalibration_protocol.resolve()
     context_path = args.context.resolve()
     calibration_path = args.calibration_summary.resolve()
+    paired_path = args.calibration_paired_csv.resolve()
     formal_output_dir = args.formal_output_dir.resolve()
     output = args.output.resolve()
-    for path in (checkpoint, pre_path, context_path, calibration_path):
+    for path in (checkpoint, pre_path, context_path, calibration_path, paired_path):
         if not path.is_file():
             raise FileNotFoundError(path)
     commit = _git_output(repo, "rev-parse", "HEAD")
@@ -100,9 +103,12 @@ def main() -> None:
     pre_ref = _committed_file(repo, pre_path, commit)
     context_ref = _committed_file(repo, context_path, commit)
     calibration_ref = _committed_file(repo, calibration_path, commit)
+    paired_ref = _committed_file(repo, paired_path, commit)
     pre = json.loads(pre_path.read_text())
     context = validate_v25_calibrated_context(json.loads(context_path.read_text()))
     calibration = json.loads(calibration_path.read_text())
+    with paired_path.open(newline="") as handle:
+        paired_rows = list(csv.DictReader(handle))
     selected = context["calibration"]["attempts"][-1]
     pre_source_hashes = pre.get("implementation_boundary", {}).get("source_files", {})
     calibration_checks = {
@@ -129,6 +135,9 @@ def main() -> None:
             "precalibration_protocol_sha256"
         )
         == file_sha256(pre_path),
+        "paired_row_count_512": len(paired_rows) == 512,
+        "paired_csv": calibration.get("selected_paired_csv_sha256")
+        == file_sha256(paired_path),
     }
     if not all(calibration_checks.values()):
         raise RuntimeError(f"formal v25 calibration mismatch: {calibration_checks}")
@@ -151,6 +160,7 @@ def main() -> None:
             "precalibration_protocol": pre_ref,
             "calibrated_context": context_ref,
             "calibration_summary": calibration_ref,
+            "calibration_paired_episodes": paired_ref,
             "all_sources_and_selected_shift_committed_before_adaptation": True,
         },
         "prior_results_immutable": prior_audit,
@@ -174,7 +184,11 @@ def main() -> None:
             "base_policy_only_first_qualifier": True,
             "adapted_outcomes_used_for_selection": False,
         },
-        "calibration_evidence": {**calibration_ref, "checks": calibration_checks},
+        "calibration_evidence": {
+            **calibration_ref,
+            "paired_episodes": paired_ref,
+            "checks": calibration_checks,
+        },
         "training": formal_algorithm_parameters(),
         "learning_semantics": {
             "single_actor": True,

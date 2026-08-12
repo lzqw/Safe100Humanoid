@@ -435,3 +435,15 @@ def test_final_audit_has_exact_four_conditions_and_512_pair_rows() -> None:
         "four_condition_performance",
         "internalization_and_cbf_dependence",
     )
+
+
+def test_formal_freeze_binds_calibration_paired_episode_evidence() -> None:
+    source = (
+        REPO / "experiments/scripts/freeze_cbf_teacher_v25_protocol.py"
+    ).read_text()
+    assert "--calibration-paired-csv" in source
+    assert '"paired_row_count_512"' in source
+    assert '"calibration_paired_episodes"' in source
+    verifier = (REPO / "experiments/scripts/verify_cbf_teacher_v25.py").read_text()
+    assert "--calibration-paired-csv" in verifier
+    assert '"calibration_paired_csv_bound"' in verifier

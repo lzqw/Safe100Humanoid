@@ -34,6 +34,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--protocol", type=Path, required=True)
     parser.add_argument("--context", type=Path, required=True)
     parser.add_argument("--calibration-summary", type=Path, required=True)
+    parser.add_argument("--calibration-paired-csv", type=Path, required=True)
     parser.add_argument("--training-summary", type=Path, required=True)
     parser.add_argument("--final-test", type=Path, required=True)
     parser.add_argument("--paired-csv", type=Path, required=True)
@@ -65,6 +66,7 @@ def main() -> None:
         args.protocol,
         args.context,
         args.calibration_summary,
+        args.calibration_paired_csv,
         args.training_summary,
         args.final_test,
         args.paired_csv,
@@ -75,6 +77,8 @@ def main() -> None:
     protocol = json.loads(args.protocol.read_text())
     context = validate_v25_calibrated_context(json.loads(args.context.read_text()))
     calibration = json.loads(args.calibration_summary.read_text())
+    with args.calibration_paired_csv.open(newline="") as handle:
+        calibration_rows = list(csv.DictReader(handle))
     training = json.loads(args.training_summary.read_text())
     final = json.loads(args.final_test.read_text())
     with args.paired_csv.open(newline="") as handle:
@@ -153,6 +157,12 @@ def main() -> None:
         == context["shift"]["selected_candidate_index"] + 1,
         "calibration_qualifies": calibration.get("selected_gate", {}).get("qualifies")
         is True,
+        "calibration_paired_rows_512": len(calibration_rows) == 512,
+        "calibration_paired_csv_bound": protocol.get("calibration_evidence", {})
+        .get("paired_episodes", {})
+        .get("sha256")
+        == file_sha256(args.calibration_paired_csv)
+        == calibration.get("selected_paired_csv_sha256"),
         "algorithm_exact": protocol.get("training")
         == training.get("training")
         == formal_algorithm_parameters(),
@@ -272,6 +282,9 @@ def main() -> None:
             "protocol.json": file_sha256(args.protocol),
             "context.json": file_sha256(args.context),
             "calibration_summary.json": file_sha256(args.calibration_summary),
+            "calibration_selected_paired_episodes.csv": file_sha256(
+                args.calibration_paired_csv
+            ),
             "training_summary.json": file_sha256(args.training_summary),
             "final_test.json": file_sha256(args.final_test),
             "paired_episode_metrics.csv": file_sha256(args.paired_csv),
