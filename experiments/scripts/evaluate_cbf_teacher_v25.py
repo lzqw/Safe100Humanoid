@@ -14,7 +14,8 @@ from typing import Any
 
 import numpy as np
 import torch
-from proximal_v23_io import actor_state_sha256
+from cbf_teacher_v25_protocol import ENVIRONMENT_VARIANT, TASK_ID
+from proximal_v23_io import actor_state_sha256, file_sha256
 
 
 def _parse_args() -> argparse.Namespace:
@@ -105,7 +106,7 @@ def main() -> None:
         configure_v25_swing_underresponse,
     )
 
-    task = "Unitree-G1-Stairs-Online-DQHMED"
+    task = TASK_ID
     env_cfg = load_env_cfg(task, play=True)
     shift_metadata = configure_v25_swing_underresponse(
         env_cfg, gain=args.gain, runtime_filter=runtime_filter
@@ -274,9 +275,14 @@ def main() -> None:
         aligned_failure_count = sum(
             (not row["success"]) and row["toe_riser_kick"] for row in completed
         )
+        total_reached_risers = sum(row["max_riser"] for row in completed)
+        total_interventions = sum(row["intervention_count"] for row in completed)
+        total_would_intervene = sum(row["would_intervene_count"] for row in completed)
         summary = {
             "schema_version": 1,
             "task": task,
+            "environment_variant": ENVIRONMENT_VARIANT,
+            "checkpoint_sha256": file_sha256(checkpoint),
             "seed": args.seed,
             "num_envs": args.num_envs,
             "num_episodes": len(completed),
@@ -305,14 +311,13 @@ def main() -> None:
             "mean_return": sum(row["return"] for row in completed) / len(completed),
             "mean_reached_riser": sum(row["max_riser"] for row in completed)
             / len(completed),
-            "intervention_per_riser": sum(
-                row["intervention_per_riser"] for row in completed
-            )
-            / len(completed),
-            "would_intervene_per_riser": sum(
-                row["would_intervene_per_riser"] for row in completed
-            )
-            / len(completed),
+            "total_reached_risers": total_reached_risers,
+            "total_intervention_count": total_interventions,
+            "total_would_intervene_count": total_would_intervene,
+            "intervention_per_riser": total_interventions
+            / max(1, total_reached_risers),
+            "would_intervene_per_riser": total_would_intervene
+            / max(1, total_reached_risers),
             "mean_correction_norm": sum(
                 row["mean_correction_norm"] for row in completed
             )

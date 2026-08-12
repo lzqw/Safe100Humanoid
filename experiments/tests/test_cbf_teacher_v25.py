@@ -23,6 +23,7 @@ from cbf_teacher_v25_protocol import (
     CALIBRATION_REPEATS,
     CONTEXT_FAMILY,
     CONTEXT_ID,
+    ENVIRONMENT_VARIANT,
     FINAL_EPISODES,
     V23_FINAL_SHA256,
     V23_PROTOCOL_SHA256,
@@ -72,6 +73,11 @@ def _qualifying_context(index: int = 2) -> dict:
         ],
         "stance_leg_gain": 1.0,
         "other_joint_gain": 1.0,
+        "environment_variant": ENVIRONMENT_VARIANT,
+        "actor_observation_corruption": "disabled",
+        "encoder_bias": "absent",
+        "curriculum": "disabled",
+        "fresh_initial_state_reset_events": ["reset_base", "reset_robot_joints"],
     }
     attempts = [
         {
@@ -103,6 +109,14 @@ def _qualifying_context(index: int = 2) -> dict:
             "controller": "nominal",
             "observation_interface": "original_405D",
             "cbf_geometry": "exact_generated_riser_metadata",
+            "environment_variant": ENVIRONMENT_VARIANT,
+            "actor_observation_corruption": "disabled",
+            "encoder_bias": "absent",
+            "curriculum": "disabled",
+            "fresh_initial_state_reset_events": [
+                "reset_base",
+                "reset_robot_joints",
+            ],
         },
         "calibration": {
             "base_policy_only": True,
@@ -297,14 +311,16 @@ def test_teacher_loss_uses_valid_count_and_empty_minibatch_is_exact_zero() -> No
 
 
 def test_kick_events_are_debounced_entries_into_exact_halfspace() -> None:
-    previous = torch.tensor((False, True, False))
-    event, overlap = toe_riser_kick_event(
-        torch.tensor((-0.01, -0.02, 0.01)),
-        torch.tensor((True, True, True)),
-        previous,
+    previous_identity = torch.tensor((-1, 3, 7, 8))
+    event, overlap, next_identity = toe_riser_kick_event(
+        torch.tensor((-0.01, -0.02, 0.01, -0.03)),
+        torch.tensor((True, True, True, True)),
+        torch.tensor((3, 3, 7, 9)),
+        previous_identity,
     )
-    assert event.tolist() == [True, False, False]
-    assert overlap.tolist() == [True, True, False]
+    assert event.tolist() == [True, False, False, True]
+    assert overlap.tolist() == [True, True, False, True]
+    assert next_identity.tolist() == [3, 3, -1, 9]
 
 
 def test_calibration_grid_and_gate_have_exact_inclusive_boundaries() -> None:
@@ -387,6 +403,16 @@ def test_development_gate_exactly_matches_requested_outcomes() -> None:
     )
     assert not failed["passed"]
     assert not failed["used_for_training_selection_or_rollback"]
+    zero_base = development_gate(
+        off_success_delta=0.05,
+        on_success_delta=0.0,
+        base_off_kick_rate=0.5,
+        final_off_kick_rate=0.49,
+        base_on_intervention_per_riser=0.0,
+        final_on_intervention_per_riser=0.0,
+    )
+    assert not zero_base["passed"]
+    assert zero_base["intervention_per_riser_relative_reduction"] == 0.0
 
 
 def test_v25_randomness_is_fresh_and_semantic_arm_pairing_is_explicit() -> None:
@@ -418,10 +444,13 @@ def test_training_ast_has_no_forbidden_selection_or_bank_path() -> None:
     ):
         assert forbidden not in names
     assert "round 8 actor, never best-so-far" in source
+    assert "load_env_cfg(TASK_ID, play=True)" in source
     teacher_source = (REPO / "src/tasks/stairs_cbf/teacher.py").read_text()
     assert "self.storage.actions.flatten(0, 1)" in teacher_source
     assert "weighted_gaussian_teacher_loss" in teacher_source
     assert "teacher_distillation_weight * teacher_loss" in teacher_source
+    runner_source = (REPO / "experiments/scripts/run_cbf_teacher_v25.sh").read_text()
+    assert "precalibration_protocol_revision2.json" in runner_source
 
 
 def test_final_audit_has_exact_four_conditions_and_512_pair_rows() -> None:
@@ -447,3 +476,14 @@ def test_formal_freeze_binds_calibration_paired_episode_evidence() -> None:
     verifier = (REPO / "experiments/scripts/verify_cbf_teacher_v25.py").read_text()
     assert "--calibration-paired-csv" in verifier
     assert '"calibration_paired_csv_bound"' in verifier
+    assert '"calibration_gate_reconstructed"' in verifier
+
+
+def test_evaluation_pools_interventions_over_all_crossed_risers() -> None:
+    evaluator = (REPO / "experiments/scripts/evaluate_cbf_teacher_v25.py").read_text()
+    audit = (REPO / "experiments/scripts/audit_cbf_teacher_v25.py").read_text()
+    verifier = (REPO / "experiments/scripts/verify_cbf_teacher_v25.py").read_text()
+    assert '"total_intervention_count": total_interventions' in evaluator
+    assert "max(1, total_reached_risers)" in evaluator
+    assert 'aggregate["total_intervention_count"]' in audit
+    assert 'int(row[f"{condition}_intervention_count"])' in verifier

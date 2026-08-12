@@ -13,6 +13,8 @@ from typing import Any
 from cbf_teacher_v25_protocol import (
     ADAPTATION_SEED,
     BASE_CHECKPOINT_SHA256,
+    CALIBRATION_EPISODES,
+    CALIBRATION_REPEATS,
     CONTEXT_FAMILY,
     CONTEXT_ID,
     EVAL_BATCH_SIZE,
@@ -24,6 +26,9 @@ from cbf_teacher_v25_protocol import (
     MINIMUM_ON_SUCCESS_DELTA,
     POLICY_METHOD,
     PROTOCOL_ID,
+    calibration_evaluation_seed,
+    calibration_gate,
+    fixed_environment_parameters,
     formal_algorithm_parameters,
     fresh_randomness_report,
     validate_v25_calibrated_context,
@@ -33,6 +38,53 @@ from freeze_cbf_teacher_v25_precalibration import (
     _verify_committed_sources,
 )
 from proximal_v23_io import file_sha256
+
+
+def _bool(value: str) -> bool:
+    normalized = value.lower()
+    if normalized not in ("true", "false"):
+        raise ValueError(f"invalid calibration CSV boolean: {value!r}")
+    return normalized == "true"
+
+
+def _reconstruct_calibration_gate(
+    paired_rows: list[dict[str, str]], *, candidate_index: int
+) -> tuple[dict[str, Any], dict[str, bool]]:
+    identities = [
+        (int(row["evaluation_seed"]), int(row["environment_id"])) for row in paired_rows
+    ]
+    expected_seeds = [
+        calibration_evaluation_seed(candidate_index, repeat)
+        for repeat in range(CALIBRATION_REPEATS)
+    ]
+    expected_identities = [
+        (seed, environment_id)
+        for seed in expected_seeds
+        for environment_id in range(EVAL_BATCH_SIZE)
+    ]
+    off_success = [_bool(row["off_success"]) for row in paired_rows]
+    on_success = [_bool(row["on_success"]) for row in paired_rows]
+    off_kick = [_bool(row["off_toe_riser_kick"]) for row in paired_rows]
+    off_failure_count = sum(not value for value in off_success)
+    reconstructed = calibration_gate(
+        off_success_count=sum(off_success),
+        on_success_count=sum(on_success),
+        off_toe_riser_failure_count=sum(
+            (not success) and kick
+            for success, kick in zip(off_success, off_kick, strict=True)
+        ),
+        off_failure_count=off_failure_count,
+        rescued_count=sum(
+            (not off) and on for off, on in zip(off_success, on_success, strict=True)
+        ),
+        paired_count=CALIBRATION_EPISODES,
+    )
+    identity_checks = {
+        "paired_identities_unique": len(identities) == len(set(identities)),
+        "paired_identities_exact_frozen_schedule": sorted(identities)
+        == expected_identities,
+    }
+    return reconstructed, identity_checks
 
 
 def _git_output(repo: Path, *args: str) -> str:
@@ -110,11 +162,23 @@ def main() -> None:
     with paired_path.open(newline="") as handle:
         paired_rows = list(csv.DictReader(handle))
     selected = context["calibration"]["attempts"][-1]
+    reconstructed_gate, calibration_identity_checks = _reconstruct_calibration_gate(
+        paired_rows, candidate_index=int(selected["candidate_index"])
+    )
+    selected_gate_fields_match = all(
+        selected.get(key) == value for key, value in reconstructed_gate.items()
+    )
     pre_source_hashes = pre.get("implementation_boundary", {}).get("source_files", {})
     calibration_checks = {
         "precalibration_id": pre.get("protocol_id") == PROTOCOL_ID,
         "precalibration_status": pre.get("status")
         == "prospectively_frozen_before_v25_base_only_paired_calibration",
+        "precalibration_revision_2": pre.get("revision") == 2
+        and pre.get("supersession", {}).get(
+            "superseded_before_any_v25_simulator_episode"
+        )
+        is True,
+        "fixed_environment": pre.get("environment") == fixed_environment_parameters(),
         "implementation_unchanged_since_precalibration": pre_source_hashes
         == source_hashes,
         "base_only": calibration.get("base_policy_only") is True,
@@ -138,6 +202,9 @@ def main() -> None:
         "paired_row_count_512": len(paired_rows) == 512,
         "paired_csv": calibration.get("selected_paired_csv_sha256")
         == file_sha256(paired_path),
+        "paired_gate_reconstructed": selected_gate_fields_match
+        and calibration.get("selected_gate") == selected,
+        **calibration_identity_checks,
     }
     if not all(calibration_checks.values()):
         raise RuntimeError(f"formal v25 calibration mismatch: {calibration_checks}")
@@ -168,6 +235,7 @@ def main() -> None:
             "reference": str(checkpoint),
             "sha256": file_sha256(checkpoint),
         },
+        "environment": fixed_environment_parameters(),
         "context": {
             "context_id": CONTEXT_ID,
             "family": CONTEXT_FAMILY,

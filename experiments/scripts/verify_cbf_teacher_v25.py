@@ -12,6 +12,8 @@ from typing import Any
 
 from cbf_teacher_v25_protocol import (
     BASE_CHECKPOINT_SHA256,
+    CALIBRATION_REPEATS,
+    EVAL_BATCH_SIZE,
     FINAL_EPISODES,
     POLICY_METHOD,
     PROTOCOL_ID,
@@ -21,7 +23,10 @@ from cbf_teacher_v25_protocol import (
     V24_FINAL_SHA256,
     V24_PROTOCOL_SHA256,
     V24_RESULT_GIT_TREE,
+    calibration_evaluation_seed,
+    calibration_gate,
     development_gate,
+    fixed_environment_parameters,
     formal_algorithm_parameters,
     validate_v25_calibrated_context,
 )
@@ -97,9 +102,11 @@ def main() -> None:
         condition_kick[condition] = sum(
             _bool(row[f"{condition}_toe_riser_kick"]) for row in rows
         ) / max(1, len(rows))
-        condition_interventions[condition] = sum(
-            float(row[f"{condition}_intervention_per_riser"]) for row in rows
-        ) / max(1, len(rows))
+        total_risers = sum(int(row[f"{condition}_max_riser"]) for row in rows)
+        total_interventions = sum(
+            int(row[f"{condition}_intervention_count"]) for row in rows
+        )
+        condition_interventions[condition] = total_interventions / max(1, total_risers)
     off_delta = condition_success["pi8_off"] - condition_success["pi0_off"]
     on_delta = condition_success["pi8_on"] - condition_success["pi0_on"]
     reconstructed_gate = development_gate(
@@ -110,6 +117,9 @@ def main() -> None:
         base_on_intervention_per_riser=condition_interventions["pi0_on"],
         final_on_intervention_per_riser=condition_interventions["pi8_on"],
     )
+    final_identities = [
+        (int(row["evaluation_seed"]), int(row["environment_id"])) for row in rows
+    ]
     base_off_failures = [not _bool(row["pi0_off_success"]) for row in rows]
     base_on_success = [_bool(row["pi0_on_success"]) for row in rows]
     rescued = sum(
@@ -119,6 +129,39 @@ def main() -> None:
     aligned = sum(
         failure and _bool(row["pi0_off_toe_riser_kick"])
         for failure, row in zip(base_off_failures, rows, strict=True)
+    )
+    selected_index = int(calibration["selected_candidate_index"])
+    calibration_identities = [
+        (int(row["evaluation_seed"]), int(row["environment_id"]))
+        for row in calibration_rows
+    ]
+    expected_calibration_identities = [
+        (calibration_evaluation_seed(selected_index, repeat), environment_id)
+        for repeat in range(CALIBRATION_REPEATS)
+        for environment_id in range(EVAL_BATCH_SIZE)
+    ]
+    calibration_off_success = [_bool(row["off_success"]) for row in calibration_rows]
+    calibration_on_success = [_bool(row["on_success"]) for row in calibration_rows]
+    calibration_off_kick = [
+        _bool(row["off_toe_riser_kick"]) for row in calibration_rows
+    ]
+    calibration_failure_count = sum(not value for value in calibration_off_success)
+    reconstructed_calibration_gate = calibration_gate(
+        off_success_count=sum(calibration_off_success),
+        on_success_count=sum(calibration_on_success),
+        off_toe_riser_failure_count=sum(
+            (not success) and kick
+            for success, kick in zip(
+                calibration_off_success, calibration_off_kick, strict=True
+            )
+        ),
+        off_failure_count=calibration_failure_count,
+        rescued_count=sum(
+            (not off) and on
+            for off, on in zip(
+                calibration_off_success, calibration_on_success, strict=True
+            )
+        ),
     )
     source_hashes = protocol.get("implementation_boundary", {}).get("source_files", {})
     source_checks = {
@@ -158,6 +201,12 @@ def main() -> None:
         "calibration_qualifies": calibration.get("selected_gate", {}).get("qualifies")
         is True,
         "calibration_paired_rows_512": len(calibration_rows) == 512,
+        "calibration_identities_unique": len(calibration_identities)
+        == len(set(calibration_identities)),
+        "calibration_identities_exact_frozen_schedule": sorted(calibration_identities)
+        == expected_calibration_identities,
+        "calibration_gate_reconstructed": reconstructed_calibration_gate
+        == calibration.get("selected_gate"),
         "calibration_paired_csv_bound": protocol.get("calibration_evidence", {})
         .get("paired_episodes", {})
         .get("sha256")
@@ -166,6 +215,9 @@ def main() -> None:
         "algorithm_exact": protocol.get("training")
         == training.get("training")
         == formal_algorithm_parameters(),
+        "fixed_environment_exact": protocol.get("environment")
+        == training.get("environment")
+        == fixed_environment_parameters(),
         "round_count_8": len(rounds) == 8,
         "round_numbers_1_to_8": [row.get("round") for row in rounds]
         == list(range(1, 9)),
@@ -213,6 +265,8 @@ def main() -> None:
         "final_actor_is_round_8": bool(rounds)
         and training.get("final_actor_sha256") == rounds[-1]["round_end_actor_sha256"],
         "four_condition_row_count_512": len(rows) == FINAL_EPISODES,
+        "four_condition_identities_unique": len(final_identities)
+        == len(set(final_identities)),
         "same_initial_conditions": final.get("paired_evaluation", {}).get(
             "same_initial_conditions_all_four_arms"
         )

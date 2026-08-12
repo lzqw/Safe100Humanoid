@@ -13,12 +13,14 @@ from typing import Any
 
 from cbf_teacher_v25_protocol import (
     BASE_CHECKPOINT_SHA256,
+    ENVIRONMENT_VARIANT,
     EVAL_BATCH_SIZE,
     FINAL_EPISODES,
     FINAL_REPEATS,
     POLICY_METHOD,
     PROTOCOL_ID,
     SOURCE_FILES,
+    TASK_ID,
     development_gate,
     final_evaluation_seed,
     paired_repair_regression_counts,
@@ -40,8 +42,6 @@ METRICS = (
     "mean_kick_count",
     "mean_return",
     "mean_reached_riser",
-    "intervention_per_riser",
-    "would_intervene_per_riser",
     "mean_correction_norm",
 )
 
@@ -97,8 +97,13 @@ def _evaluate(
             candidate = json.loads(output_json.read_text())
             if (
                 candidate.get("seed") == seed
+                and candidate.get("task") == TASK_ID
+                and candidate.get("environment_variant") == ENVIRONMENT_VARIANT
+                and candidate.get("num_envs") == EVAL_BATCH_SIZE
                 and candidate.get("num_episodes") == EVAL_BATCH_SIZE
                 and candidate.get("runtime_filter") == (filter_mode == "on")
+                and candidate.get("swing_underresponse_gain") == gain
+                and candidate.get("checkpoint_sha256") == file_sha256(checkpoint)
             ):
                 summary = candidate
         if summary is None:
@@ -178,6 +183,21 @@ def _evaluate(
             if len(values) > 1
             else 0.0
         )
+    aggregate["total_reached_risers"] = sum(
+        int(summary["total_reached_risers"]) for summary in summaries
+    )
+    aggregate["total_intervention_count"] = sum(
+        int(summary["total_intervention_count"]) for summary in summaries
+    )
+    aggregate["total_would_intervene_count"] = sum(
+        int(summary["total_would_intervene_count"]) for summary in summaries
+    )
+    aggregate["intervention_per_riser"] = aggregate["total_intervention_count"] / max(
+        1, aggregate["total_reached_risers"]
+    )
+    aggregate["would_intervene_per_riser"] = aggregate[
+        "total_would_intervene_count"
+    ] / max(1, aggregate["total_reached_risers"])
     aggregate["success_count"] = sum(_bool(row["success"]) for row in rows)
     aggregate["failure_count"] = len(rows) - aggregate["success_count"]
     aggregate["toe_riser_failure_count"] = sum(
@@ -290,6 +310,11 @@ def main() -> None:
     ]
     if any(value != identities[0] for value in identities[1:]):
         raise RuntimeError("v25 four-condition episode identities differ")
+    if (
+        len(identities[0]) != FINAL_EPISODES
+        or len(set(identities[0])) != FINAL_EPISODES
+    ):
+        raise RuntimeError("v25 final episode identities are incomplete or duplicated")
 
     paired_rows = []
     for index in range(FINAL_EPISODES):
@@ -310,7 +335,9 @@ def main() -> None:
                 "toe_riser_kick_count",
                 "return",
                 "max_riser",
+                "intervention_count",
                 "intervention_per_riser",
+                "would_intervene_count",
                 "would_intervene_per_riser",
                 "mean_correction_norm",
             ):

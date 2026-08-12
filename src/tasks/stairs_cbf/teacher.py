@@ -42,6 +42,46 @@ SWING_JOINT_SUFFIXES = (
     "knee_joint",
     "ankle_pitch_joint",
 )
+V25_FIXED_RESET_EVENTS = frozenset(("reset_base", "reset_robot_joints"))
+
+
+def audit_v25_fixed_deployment_config(env_cfg) -> dict[str, Any]:
+    """Reject any environment variance beyond fresh initial-state sampling.
+
+    Calibration, adaptation, and final evaluation must use the registered
+    fixed-deployment (``play``) configuration.  Reset pose/joint sampling is
+    retained to provide paired fresh initial conditions, while curricula,
+    actor corruption, encoder bias, physical randomization, and pushes are
+    forbidden.
+    """
+    actor_group = env_cfg.observations.get("actor")
+    event_names = frozenset(env_cfg.events)
+    checks = {
+        "registered_environment_variant": "fixed_deployment_play",
+        "actor_observation_corruption_disabled": (
+            actor_group is not None
+            and getattr(actor_group, "enable_corruption", None) is False
+        ),
+        "curriculum_disabled": not bool(env_cfg.curriculum),
+        "reset_events_exact": event_names == V25_FIXED_RESET_EVENTS,
+        "encoder_bias_absent": "encoder_bias" not in event_names,
+        "push_randomization_absent": "push_robot" not in event_names,
+        "friction_randomization_absent": "foot_friction" not in event_names,
+        "base_com_randomization_absent": "base_com" not in event_names,
+        "retained_fresh_initial_state_events": sorted(event_names),
+    }
+    failed = [
+        name
+        for name, value in checks.items()
+        if name != "registered_environment_variant"
+        and name != "retained_fresh_initial_state_events"
+        and value is not True
+    ]
+    if failed:
+        raise RuntimeError(
+            "v25 requires the fixed deployment/play environment: " + ", ".join(failed)
+        )
+    return checks
 
 
 @dataclass(kw_only=True)
@@ -93,6 +133,9 @@ class SwingUnderResponseCbfAction(StairCbfJointPositionAction):
             self.num_envs, dtype=torch.bool, device=self.device
         )
         self.toe_riser_overlap = torch.zeros_like(self.toe_riser_kick)
+        self.toe_riser_overlap_identity = torch.full(
+            (self.num_envs,), -1, dtype=torch.long, device=self.device
+        )
 
     def _resolve_swing_joint_indices(self, side: str) -> tuple[int, int, int]:
         expected = tuple(f"{side}_{suffix}" for suffix in SWING_JOINT_SUFFIXES)
@@ -180,7 +223,7 @@ class SwingUnderResponseCbfAction(StairCbfJointPositionAction):
             raise RuntimeError("v25 kick telemetry requires stair metadata")
         edge_x = self._edge_x[terrain.terrain_levels, terrain.terrain_types]
         edge_top_z = self._edge_top_z[terrain.terrain_levels, terrain.terrain_types]
-        _, h, _, edge_active = select_active_riser(
+        riser_index, h, _, edge_active = select_active_riser(
             selected_pos[:, 0],
             selected_pos[:, 2],
             edge_x,
@@ -191,9 +234,16 @@ class SwingUnderResponseCbfAction(StairCbfJointPositionAction):
             recovery_distance=self.cfg.recovery_distance,
         )
         active = (self.selected_foot >= 0) & edge_active
-        event, overlap = toe_riser_kick_event(h, active, self.toe_riser_overlap)
+        pair_identity = foot_index * edge_x.shape[-1] + riser_index
+        event, overlap, overlap_identity = toe_riser_kick_event(
+            h,
+            active,
+            pair_identity,
+            self.toe_riser_overlap_identity,
+        )
         self.toe_riser_kick[:] = event
         self.toe_riser_overlap[:] = overlap
+        self.toe_riser_overlap_identity[:] = overlap_identity
 
     def reset(self, env_ids: torch.Tensor | slice | None = None) -> None:
         super().reset(env_ids)
@@ -210,6 +260,7 @@ class SwingUnderResponseCbfAction(StairCbfJointPositionAction):
         self.swing_selection_matches[env_ids] = True
         self.toe_riser_kick[env_ids] = False
         self.toe_riser_overlap[env_ids] = False
+        self.toe_riser_overlap_identity[env_ids] = -1
 
 
 def v25_online_safety_telemetry(
@@ -248,6 +299,7 @@ def configure_v25_swing_underresponse(
     runtime_filter: bool,
 ) -> dict[str, Any]:
     """Install the one-axis fixed v25 shift without changing observations."""
+    fixed_deployment = audit_v25_fixed_deployment_config(env_cfg)
     original = env_cfg.actions["joint_pos"]
     if not isinstance(original, StairCbfJointPositionActionCfg):
         raise TypeError("v25 requires the historical stair CBF action config")
@@ -287,6 +339,7 @@ def configure_v25_swing_underresponse(
         "controller_changed": False,
         "actor_observation_fields_added": 0,
         "cbf_geometry_exact": True,
+        "fixed_deployment_environment": fixed_deployment,
     }
 
 

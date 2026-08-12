@@ -36,9 +36,11 @@ from cbf_teacher_v25_protocol import (
     ROUNDS,
     SOURCE_FILES,
     TARGET_KL,
+    TASK_ID,
     TEACHER_CORRECTION_SCALE,
     TEACHER_DISTILLATION_WEIGHT,
     TEACHER_SUCCESS_HORIZON,
+    fixed_environment_parameters,
     formal_algorithm_parameters,
     validate_v25_calibrated_context,
 )
@@ -111,6 +113,7 @@ def _validate_frozen_protocol(
         "context_parameters": protocol.get("context", {}).get("parameters_sha256")
         == context["parameters_sha256"],
         "algorithm": protocol.get("training") == formal_algorithm_parameters(),
+        "environment": protocol.get("environment") == fixed_environment_parameters(),
         "execution_not_started_at_freeze": protocol.get(
             "prospective_execution", {}
         ).get("adapted_policy_outcomes_observed")
@@ -546,13 +549,16 @@ def main() -> None:
     )
 
     gain = float(context["shift"]["swing_underresponse_gain"])
-    env_cfg = load_env_cfg("Unitree-G1-Stairs-Online-DQHMED")
+    # Use the same fixed deployment variant as calibration and final audit.
+    # The ordinary training config retains encoder noise/corruption and would
+    # silently introduce a second shift beyond the selected actuator gain.
+    env_cfg = load_env_cfg(TASK_ID, play=True)
     shift_metadata = configure_v25_swing_underresponse(
         env_cfg, gain=gain, runtime_filter=True
     )
     env_cfg.scene.num_envs = args.num_envs
     env_cfg.seed = args.seed
-    agent_cfg = load_rl_cfg("Unitree-G1-Stairs-Online-DQHMED")
+    agent_cfg = load_rl_cfg(TASK_ID)
     agent_cfg.seed = args.seed
     agent_cfg.num_steps_per_env = args.rollout_steps
     _configure_algorithm(agent_cfg)
@@ -663,6 +669,7 @@ def main() -> None:
             },
             "adaptation_seed": args.seed,
             "training": formal_algorithm_parameters(),
+            "environment": fixed_environment_parameters(),
             "warm_start": warm_start,
             "structural_audit": structural_audit,
             "initial_actor_sha256": initial_actor_sha,

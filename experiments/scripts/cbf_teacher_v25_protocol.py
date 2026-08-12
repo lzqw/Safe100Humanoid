@@ -13,6 +13,8 @@ from typing import Any
 PROTOCOL_ID = "safe100-success-gated-cbf-teacher-v25"
 EXPERIMENT_NAME = "v25 Swing-Foot Under-Clearance CBF Teacher"
 POLICY_METHOD = "Success-Gated CBF Action Teacher + Moving-KL PPO v25"
+TASK_ID = "Unitree-G1-Stairs-Online-DQHMED"
+ENVIRONMENT_VARIANT = "fixed_deployment_play"
 CONTEXT_ID = "swing_underresponse_v25"
 CONTEXT_FAMILY = "fixed_phase_selective_swing_leg_underresponse"
 BASE_CHECKPOINT_SHA256 = (
@@ -92,6 +94,22 @@ SOURCE_FILES = (
     "experiments/tests/test_cbf_teacher_v25.py",
     "docs/CBF_TEACHER_V25_SWING_UNDERRESPONSE.md",
 )
+
+
+def fixed_environment_parameters() -> dict[str, Any]:
+    """Return the single environment variant shared by every v25 phase."""
+    return {
+        "task_id": TASK_ID,
+        "registered_variant": ENVIRONMENT_VARIANT,
+        "actor_observation_corruption": "disabled",
+        "encoder_bias": "absent",
+        "curriculum": "disabled",
+        "fresh_initial_state_reset_events": ["reset_base", "reset_robot_joints"],
+        "geometry": "nominal_fixed_DQHMED",
+        "friction": "nominal",
+        "command": "nominal",
+        "controller": "nominal",
+    }
 
 
 def canonical_sha256(value: Mapping[str, Any]) -> str:
@@ -321,11 +339,12 @@ def development_gate(
         raise ValueError("v25 development metrics must be finite")
     if min(values[2:]) < 0.0:
         raise ValueError("v25 rates must be non-negative")
+    base_has_interventions = base_on_intervention_per_riser > 0.0
     intervention_reduction = (
         (base_on_intervention_per_riser - final_on_intervention_per_riser)
         / base_on_intervention_per_riser
-        if base_on_intervention_per_riser > 0.0
-        else float("-inf")
+        if base_has_interventions
+        else 0.0
     )
     conditions = {
         "off_success_delta_at_least_five_pp": (
@@ -336,12 +355,15 @@ def development_gate(
             final_off_kick_rate < base_off_kick_rate
         ),
         "shield_interventions_per_riser_decrease_at_least_20pct": (
-            intervention_reduction >= MINIMUM_INTERVENTION_REDUCTION
-            or math.isclose(
-                intervention_reduction,
-                MINIMUM_INTERVENTION_REDUCTION,
-                rel_tol=0.0,
-                abs_tol=1.0e-12,
+            base_has_interventions
+            and (
+                intervention_reduction >= MINIMUM_INTERVENTION_REDUCTION
+                or math.isclose(
+                    intervention_reduction,
+                    MINIMUM_INTERVENTION_REDUCTION,
+                    rel_tol=0.0,
+                    abs_tol=1.0e-12,
+                )
             )
         ),
     }
@@ -402,6 +424,11 @@ def validate_v25_calibrated_context(context: Mapping[str, Any]) -> dict[str, Any
         "controller": "nominal",
         "observation_interface": "original_405D",
         "cbf_geometry": "exact_generated_riser_metadata",
+        "environment_variant": ENVIRONMENT_VARIANT,
+        "actor_observation_corruption": "disabled",
+        "encoder_bias": "absent",
+        "curriculum": "disabled",
+        "fresh_initial_state_reset_events": ["reset_base", "reset_robot_joints"],
     }
     for key, expected in required_shift.items():
         if shift.get(key) != expected:
@@ -443,6 +470,11 @@ def validate_v25_calibrated_context(context: Mapping[str, Any]) -> dict[str, Any
         "affected_joint_suffixes": required_shift["affected_joint_suffixes"],
         "stance_leg_gain": 1.0,
         "other_joint_gain": 1.0,
+        "environment_variant": ENVIRONMENT_VARIANT,
+        "actor_observation_corruption": "disabled",
+        "encoder_bias": "absent",
+        "curriculum": "disabled",
+        "fresh_initial_state_reset_events": ["reset_base", "reset_robot_joints"],
     }
     if payload.get("parameters_sha256") != canonical_sha256(parameters):
         raise ValueError("v25 context parameter hash mismatch")

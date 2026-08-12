@@ -17,12 +17,15 @@ from cbf_teacher_v25_protocol import (
     CALIBRATION_REPEATS,
     CONTEXT_FAMILY,
     CONTEXT_ID,
+    ENVIRONMENT_VARIANT,
     EVAL_BATCH_SIZE,
     PROTOCOL_ID,
     SOURCE_FILES,
+    TASK_ID,
     calibration_evaluation_seed,
     calibration_gate,
     canonical_sha256,
+    fixed_environment_parameters,
 )
 from proximal_v23_io import file_sha256
 
@@ -71,9 +74,13 @@ def _run_arm(
         candidate = json.loads(output_json.read_text())
         if (
             candidate.get("seed") == seed
+            and candidate.get("task") == TASK_ID
+            and candidate.get("environment_variant") == ENVIRONMENT_VARIANT
+            and candidate.get("num_envs") == EVAL_BATCH_SIZE
             and candidate.get("num_episodes") == EVAL_BATCH_SIZE
             and candidate.get("runtime_filter") == (runtime_filter == "on")
             and candidate.get("swing_underresponse_gain") == gain
+            and candidate.get("checkpoint_sha256") == file_sha256(checkpoint)
         ):
             summary = candidate
     if summary is None:
@@ -136,6 +143,15 @@ def main() -> None:
         != "prospectively_frozen_before_v25_base_only_paired_calibration"
     ):
         raise RuntimeError("v25 pre-calibration protocol is not the frozen input")
+    if (
+        precalibration.get("revision") != 2
+        or precalibration.get("environment") != fixed_environment_parameters()
+        or precalibration.get("supersession", {}).get(
+            "superseded_before_any_v25_simulator_episode"
+        )
+        is not True
+    ):
+        raise RuntimeError("v25 revision-2 fixed-environment boundary is missing")
     implementation = precalibration.get("implementation_boundary", {})
     implementation_commit = str(implementation.get("git_commit", ""))
     if subprocess.run(
@@ -302,6 +318,11 @@ def main() -> None:
         ],
         "stance_leg_gain": 1.0,
         "other_joint_gain": 1.0,
+        "environment_variant": ENVIRONMENT_VARIANT,
+        "actor_observation_corruption": "disabled",
+        "encoder_bias": "absent",
+        "curriculum": "disabled",
+        "fresh_initial_state_reset_events": ["reset_base", "reset_robot_joints"],
     }
     context = {
         "schema_version": 1,
@@ -321,6 +342,13 @@ def main() -> None:
             "controller": "nominal",
             "observation_interface": "original_405D",
             "cbf_geometry": "exact_generated_riser_metadata",
+            "environment_variant": parameters["environment_variant"],
+            "actor_observation_corruption": parameters["actor_observation_corruption"],
+            "encoder_bias": parameters["encoder_bias"],
+            "curriculum": parameters["curriculum"],
+            "fresh_initial_state_reset_events": parameters[
+                "fresh_initial_state_reset_events"
+            ],
         },
         "calibration": {
             "kind": "base_policy_paired_cbf_rescue_first_qualifier_v25",
@@ -349,6 +377,8 @@ def main() -> None:
             "on_failure_type": on["failure_type"],
             "off_max_riser": off["max_riser"],
             "on_max_riser": on["max_riser"],
+            "off_would_intervene_count": off["would_intervene_count"],
+            "on_intervention_count": on["intervention_count"],
             "off_would_intervene_per_riser": off["would_intervene_per_riser"],
             "on_intervention_per_riser": on["intervention_per_riser"],
         }

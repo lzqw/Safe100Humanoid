@@ -10,6 +10,14 @@ v25 是 v23 lateral 和 v24 contact 已冻结负结果之后的独立实验；�
 不重算、也不重新解释前两项结果。它只检验一条因果链：**CBF 保护 + CBF 教学 +
 PPO 优化任务**。
 
+Revision 1 was retired before any v25 simulator episode. A pre-execution audit
+found that its adaptation entrypoint loaded the ordinary noisy training variant
+while calibration and final evaluation loaded the fixed deployment variant. It
+also identified toe/riser identity and pooled intervention-rate audit gaps.
+Revision 2 fixes those issues prospectively, preserves revision 1 as immutable
+history, and reuses the original fresh seed schedule because no v25 outcome was
+observed.
+
 ## Fixed deployment shift
 
 The environment remains the fixed nominal `DQHMED` staircase. Geometry,
@@ -17,6 +25,12 @@ friction, command, centerline controller, reward, actor observations, and CBF
 riser metadata remain unchanged. The only deployment mismatch is a fixed
 under-response gain on hip pitch, knee, and ankle pitch of the currently
 swinging leg. The stance leg and every other action dimension retain gain 1.
+All three phases load the same registered fixed-deployment (`play`) variant:
+actor observation corruption, encoder bias, curriculum, physical
+randomization, and pushes are disabled. Only the nominal reset pose/joint
+events remain, providing the fresh paired initial conditions. This prevents
+adaptation from silently adding a second observation-noise shift that is absent
+from calibration and final evaluation.
 
 The ordered candidate grid is `0.98, 0.96, ..., 0.50`. Before any adaptation,
 the base policy is evaluated on 512 paired conditions with CBF off and on for
@@ -28,9 +42,11 @@ frozen:
 - CBF-off success between 40% and 65%;
 - CBF-on success between 80% and 95%.
 
-A toe/riser kick is the debounced entry of the selected swing toe into the
-exact CBF unsafe half-space (`h <= 0`). This is an exact geometry-derived
-clearance violation proxy rather than a generic balance classifier.
+A toe/riser kick is the debounced entry of a selected swing-toe/riser pair into
+the exact CBF unsafe half-space (`h <= 0`). Debouncing is keyed by both foot and
+riser, so a direct switch to another toe or riser remains a new event. This is
+an exact geometry-derived clearance violation proxy rather than a generic
+balance classifier.
 
 ## Action and teacher dataflow
 
@@ -88,6 +104,9 @@ success requires at least +5 percentage points in unshielded success,
 nonnegative shielded success change, a strict unshielded kick-rate reduction,
 and at least a 20% reduction in shielded interventions per riser. These gates
 are post-training reports only and cannot select or alter the policy.
+Interventions per riser is the pooled count ratio over all 512 episodes
+(`total intervention steps / total risers crossed`), not an unweighted mean of
+per-episode ratios.
 
 The motivating actuator-mismatch, action-projection aliasing, and CBF-learning
 references are the primary arXiv records:

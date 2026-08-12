@@ -34,6 +34,7 @@ from cbf_teacher_v25_protocol import (
     V24_PROTOCOL_SHA256,
     V24_RESULT_GIT_TREE,
     calibration_evaluation_seed,
+    fixed_environment_parameters,
     formal_algorithm_parameters,
     fresh_randomness_report,
 )
@@ -133,10 +134,12 @@ def main() -> None:
     parser.add_argument("--repo", type=Path, required=True)
     parser.add_argument("--base-checkpoint", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--supersedes", type=Path)
     args = parser.parse_args()
     repo = args.repo.resolve()
     checkpoint = args.base_checkpoint.resolve()
     output = args.output.resolve()
+    supersedes = None if args.supersedes is None else args.supersedes.resolve()
     if not checkpoint.is_file():
         raise FileNotFoundError(checkpoint)
     commit = _git_output(repo, "rev-parse", "HEAD")
@@ -145,8 +148,53 @@ def main() -> None:
     if file_sha256(checkpoint) != BASE_CHECKPOINT_SHA256:
         raise RuntimeError("v25 base checkpoint differs from frozen pi0")
     result_root = repo / "results/online/proximal_v25"
+    supersession = None
     if result_root.exists():
-        raise RuntimeError("v25 result path exists before pre-calibration freeze")
+        if supersedes is None or not supersedes.is_file():
+            raise RuntimeError(
+                "existing v25 evidence requires an explicit zero-episode protocol "
+                "to supersede"
+            )
+        relative_supersedes = supersedes.relative_to(repo)
+        existing_files = {
+            path.relative_to(repo) for path in result_root.rglob("*") if path.is_file()
+        }
+        if existing_files != {relative_supersedes}:
+            raise RuntimeError(
+                "unexpected v25 evidence exists before revision-2 pre-calibration freeze: "
+                f"{sorted(map(str, existing_files))}"
+            )
+        prior = json.loads(supersedes.read_text())
+        if (
+            prior.get("protocol_id") != PROTOCOL_ID
+            or prior.get("prospective_execution", {}).get(
+                "v25_simulator_episode_started"
+            )
+            is not False
+        ):
+            raise RuntimeError("superseded protocol does not prove zero v25 episodes")
+        committed_prior = subprocess.run(
+            ["git", "show", f"{commit}:{relative_supersedes}"],
+            cwd=repo,
+            check=True,
+            capture_output=True,
+        ).stdout
+        if committed_prior != supersedes.read_bytes():
+            raise RuntimeError("superseded v25 protocol is not committed at HEAD")
+        supersession = {
+            "revision": 2,
+            "supersedes_file": str(relative_supersedes),
+            "supersedes_sha256": file_sha256(supersedes),
+            "superseded_before_any_v25_simulator_episode": True,
+            "reason": (
+                "pre-execution audit unified calibration/adaptation/final evaluation "
+                "on the fixed deployment environment, keyed kick debouncing by "
+                "toe/riser identity, and pooled interventions per crossed riser"
+            ),
+            "outcomes_observed_before_revision": False,
+        }
+    elif supersedes is not None:
+        raise RuntimeError("--supersedes was provided but no prior v25 result exists")
     source_hashes = _verify_committed_sources(repo, commit)
     prior_audit = _prior_immutable_audit(repo, commit)
     randomness = fresh_randomness_report(repo)
@@ -161,6 +209,8 @@ def main() -> None:
         "experiment_name": EXPERIMENT_NAME,
         "policy_method": POLICY_METHOD,
         "status": "prospectively_frozen_before_v25_base_only_paired_calibration",
+        "revision": 2 if supersession is not None else 1,
+        "supersession": supersession,
         "implementation_boundary": {
             "git_commit": commit,
             "source_files": source_hashes,
@@ -171,6 +221,7 @@ def main() -> None:
             "reference": str(checkpoint),
             "sha256": file_sha256(checkpoint),
         },
+        "environment": fixed_environment_parameters(),
         "shift_family": {
             "context_id": CONTEXT_ID,
             "family": CONTEXT_FAMILY,

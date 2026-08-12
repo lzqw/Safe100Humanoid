@@ -220,11 +220,31 @@ def weighted_gaussian_teacher_loss(
 def toe_riser_kick_event(
     h: torch.Tensor,
     geometric_active: torch.Tensor,
-    previous_overlap: torch.Tensor,
-) -> tuple[torch.Tensor, torch.Tensor]:
-    """Debounce entries into the exact CBF toe/riser unsafe half-space."""
-    if not (h.shape == geometric_active.shape == previous_overlap.shape) or h.ndim != 1:
+    current_identity: torch.Tensor,
+    previous_identity: torch.Tensor,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Debounce entries into the exact unsafe half-space per toe/riser pair.
+
+    A single overlap bit is insufficient when the selected swing foot or active
+    riser changes without an intervening safe sample.  Encoding both identities
+    prevents that transition from suppressing a real event on the new pair.
+    ``-1`` is reserved for no active overlap.
+    """
+    tensors = (h, geometric_active, current_identity, previous_identity)
+    if h.ndim != 1 or any(tensor.shape != h.shape for tensor in tensors):
         raise ValueError("toe-riser event tensors must share [N] shape")
+    if (
+        current_identity.dtype.is_floating_point
+        or previous_identity.dtype.is_floating_point
+    ):
+        raise ValueError("toe-riser identities must be integer tensors")
+    if bool((current_identity < 0).any()):
+        raise ValueError("active toe-riser identities must be non-negative")
     overlap = geometric_active.bool() & torch.isfinite(h) & (h <= 0.0)
-    event = overlap & ~previous_overlap.bool()
-    return event, overlap
+    event = overlap & (current_identity != previous_identity)
+    next_identity = torch.where(
+        overlap,
+        current_identity,
+        torch.full_like(current_identity, -1),
+    )
+    return event, overlap, next_identity
