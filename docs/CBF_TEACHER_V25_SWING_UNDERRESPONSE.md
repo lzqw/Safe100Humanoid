@@ -1,0 +1,95 @@
+# v25 Swing-Foot Under-Clearance — Prospective Protocol
+
+v25 is an independent successor to the frozen v23 lateral and v24 contact
+negative results. It does not modify, rerun, recompute, or reinterpret either
+result. The experiment tests the causal chain **CBF protects + CBF teaches +
+PPO optimizes the task** in one shift deliberately aligned with the existing
+toe/riser CBF.
+
+v25 是 v23 lateral 和 v24 contact 已冻结负结果之后的独立实验；不修改、不重跑、
+不重算、也不重新解释前两项结果。它只检验一条因果链：**CBF 保护 + CBF 教学 +
+PPO 优化任务**。
+
+## Fixed deployment shift
+
+The environment remains the fixed nominal `DQHMED` staircase. Geometry,
+friction, command, centerline controller, reward, actor observations, and CBF
+riser metadata remain unchanged. The only deployment mismatch is a fixed
+under-response gain on hip pitch, knee, and ankle pitch of the currently
+swinging leg. The stance leg and every other action dimension retain gain 1.
+
+The ordered candidate grid is `0.98, 0.96, ..., 0.50`. Before any adaptation,
+the base policy is evaluated on 512 paired conditions with CBF off and on for
+each severity. The first candidate satisfying all four inclusive gates is
+frozen:
+
+- toe/riser alignment coverage among CBF-off failures at least 80%;
+- paired CBF rescue among CBF-off failures at least 60%;
+- CBF-off success between 40% and 65%;
+- CBF-on success between 80% and 95%.
+
+A toe/riser kick is the debounced entry of the selected swing toe into the
+exact CBF unsafe half-space (`h <= 0`). This is an exact geometry-derived
+clearance violation proxy rather than a generic balance classifier.
+
+## Action and teacher dataflow
+
+The actor samples `a_policy`; PPO stores that raw action and its behavior log
+probability. The fixed hidden plant map is applied before the runtime CBF, and
+the environment executes the projected plant-side action. PPO never replaces
+its ratio action with the filtered action.
+
+Because the existing safe raw action is expressed after the hidden plant
+gain, v25 inverts the plant transform before constructing the actor teacher.
+Direct imitation of the post-plant value would apply the under-response twice.
+Every transition therefore audits that forwarding the actor-coordinate
+teacher back through the plant reproduces the CBF-safe action within `1e-6`.
+
+An intervention is eligible only if the runtime CBF really changed the
+action, the next riser is crossed within `H=50` control steps (1.0 s), and no
+fall occurs in that horizon. Look-ahead never crosses an episode boundary.
+The correction weight is clipped at one using scale `s_D=0.05`. Teacher
+targets are stop-gradient values. Each minibatch divides the weighted
+Gaussian NLL numerator by its valid teacher-transition count; an empty
+teacher minibatch contributes exact zero.
+
+The actor objective is:
+
+`-L_clip + 0.5 KL(pi_theta || pi_k) + 0.1 L_CBF-teacher`.
+
+## Fixed adaptation
+
+The formal run uses one original 405-D actor, one original 838-D privileged
+critic, runtime CBF, raw-action PPO, a round-start moving reference, 8 rounds,
+64 environments, and 1024 control steps per environment and round. Round 8 is
+the final policy regardless of performance. Only corruption (non-finite
+state, KL above 0.01, or action/teacher dataflow failure) permits a
+transactional rollback.
+
+The experiment excludes failure banks, state restarts, candidate line search,
+performance gates, best-checkpoint selection, new observations, multiple
+adaptation seeds, randomized per-riser geometry, and hidden episode-varying
+shift variables.
+
+## Four-condition final audit
+
+The same 512 fresh initial conditions are evaluated under:
+
+1. `pi0`, CBF off;
+2. `pi0`, CBF on;
+3. `pi8`, CBF on;
+4. `pi8`, CBF off.
+
+The primary outcomes are shielded success change, unshielded internalization
+change, toe/riser kick change, and CBF interventions per riser. Development
+success requires at least +5 percentage points in unshielded success,
+nonnegative shielded success change, a strict unshielded kick-rate reduction,
+and at least a 20% reduction in shielded interventions per riser. These gates
+are post-training reports only and cannot select or alter the policy.
+
+The motivating actuator-mismatch, action-projection aliasing, and CBF-learning
+references are the primary arXiv records:
+
+- <https://arxiv.org/abs/2504.06585>
+- <https://arxiv.org/abs/2509.12833>
+- <https://arxiv.org/abs/2510.14959>
