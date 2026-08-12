@@ -257,6 +257,11 @@ def main() -> None:
         on_rows.sort(key=identity)
         if [identity(row) for row in off_rows] != [identity(row) for row in on_rows]:
             raise RuntimeError("v25 paired calibration identities differ")
+        actor_hashes = {
+            summary["actor_state_sha256"] for summary in (*off_summaries, *on_summaries)
+        }
+        if len(actor_hashes) != 1:
+            raise RuntimeError("v25 calibration changed pi0 between paired batches")
         off_success = [_bool(row["success"]) for row in off_rows]
         on_success = [_bool(row["success"]) for row in on_rows]
         off_kick = [_bool(row["toe_riser_kick"]) for row in off_rows]
@@ -285,6 +290,7 @@ def main() -> None:
                 calibration_evaluation_seed(candidate_index, repeat)
                 for repeat in range(CALIBRATION_REPEATS)
             ],
+            "actor_state_sha256": actor_hashes.pop(),
             "off_initial_state_signatures": [
                 summary["initial_state_signature"] for summary in off_summaries
             ],
@@ -409,6 +415,7 @@ def main() -> None:
         "ordered_light_to_severe": True,
         "selected_candidate_index": selected["candidate_index"],
         "selected_swing_underresponse_gain": selected["swing_underresponse_gain"],
+        "selected_actor_state_sha256": selected["actor_state_sha256"],
         "selected_gate": selected,
         "parameters_sha256": context["parameters_sha256"],
         "frozen_context_file_sha256": file_sha256(context_path),

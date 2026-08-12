@@ -25,6 +25,8 @@ from cbf_teacher_v25_protocol import (
     CONTEXT_ID,
     ENVIRONMENT_VARIANT,
     FINAL_EPISODES,
+    FINAL_REPEATS,
+    PRECALIBRATION_REVISION,
     V23_FINAL_SHA256,
     V23_PROTOCOL_SHA256,
     V23_RESULT_GIT_TREE,
@@ -36,6 +38,7 @@ from cbf_teacher_v25_protocol import (
     calibration_gate,
     canonical_sha256,
     development_gate,
+    final_evaluation_seed,
     formal_algorithm_parameters,
     fresh_randomness_report,
     validate_v25_calibrated_context,
@@ -43,11 +46,17 @@ from cbf_teacher_v25_protocol import (
 from freeze_cbf_teacher_v25_precalibration import _committed_protocol_chain
 from plot_cbf_teacher_v25 import FIGURE_CATEGORIES
 from verify_cbf_teacher_v25 import (
+    exact_final_identity_schedule,
+    execution_markers_are_valid,
+    protocol_input_bindings_are_valid,
     reconstructed_fields_match,
+    rollback_reasons_are_protocol_allowed,
     round_actor_hash_chain_is_valid,
     round_status_accounting_is_valid,
     teacher_signal_accounting_is_valid,
+    training_execution_contract_is_valid,
     updated_metric_is_bounded,
+    updated_round_dataflow_is_valid,
     updated_round_kl_is_valid,
 )
 
@@ -88,18 +97,47 @@ def _qualifying_context(index: int = 2) -> dict:
         "curriculum": "disabled",
         "fresh_initial_state_reset_events": ["reset_base", "reset_robot_joints"],
     }
-    attempts = [
-        {
-            "candidate_index": candidate,
-            "swing_underresponse_gain": CALIBRATION_GAINS[candidate],
-            "qualifies": candidate == index,
-            "evaluation_seeds": [
-                calibration_evaluation_seed(candidate, repeat)
-                for repeat in range(CALIBRATION_REPEATS)
-            ],
-        }
-        for candidate in range(index + 1)
-    ]
+    attempts = []
+    for candidate in range(index + 1):
+        gate = (
+            calibration_gate(
+                off_success_count=256,
+                on_success_count=460,
+                off_toe_riser_failure_count=240,
+                off_failure_count=256,
+                rescued_count=204,
+            )
+            if candidate == index
+            else calibration_gate(
+                off_success_count=400,
+                on_success_count=480,
+                off_toe_riser_failure_count=100,
+                off_failure_count=112,
+                rescued_count=80,
+            )
+        )
+        attempts.append(
+            {
+                "candidate_index": candidate,
+                "swing_underresponse_gain": CALIBRATION_GAINS[candidate],
+                "base_policy_only": True,
+                "adapted_policy_evaluations_used": False,
+                "evaluation_seeds": [
+                    calibration_evaluation_seed(candidate, repeat)
+                    for repeat in range(CALIBRATION_REPEATS)
+                ],
+                "actor_state_sha256": "a" * 64,
+                "off_initial_state_signatures": [
+                    f"candidate-{candidate}-repeat-{repeat}"
+                    for repeat in range(CALIBRATION_REPEATS)
+                ],
+                "on_initial_state_signatures": [
+                    f"candidate-{candidate}-repeat-{repeat}"
+                    for repeat in range(CALIBRATION_REPEATS)
+                ],
+                **gate,
+            }
+        )
     return {
         "schema_version": 1,
         "context_id": CONTEXT_ID,
@@ -173,17 +211,27 @@ def test_v25_zero_episode_protocol_history_is_contiguous_and_committed() -> None
         text=True,
     ).stdout.strip()
     result_root = REPO / "results/online/proximal_v25"
+    current = (
+        result_root / f"precalibration_protocol_revision{PRECALIBRATION_REVISION}.json"
+    )
+    latest = (
+        current
+        if current.is_file()
+        else result_root
+        / f"precalibration_protocol_revision{PRECALIBRATION_REVISION - 1}.json"
+    )
     chain = _committed_protocol_chain(
         REPO,
         commit,
-        result_root / "precalibration_protocol_revision2.json",
+        latest,
         result_root,
     )
-    assert [item["revision"] for item in chain] == [2, 1]
-    assert [Path(item["file"]).name for item in chain] == [
-        "precalibration_protocol_revision2.json",
-        "precalibration_protocol.json",
-    ]
+    newest = (
+        PRECALIBRATION_REVISION if current.is_file() else PRECALIBRATION_REVISION - 1
+    )
+    assert [item["revision"] for item in chain] == list(range(newest, 0, -1))
+    assert Path(chain[0]["file"]).name == latest.name
+    assert Path(chain[-1]["file"]).name == "precalibration_protocol.json"
     assert chain[-1]["payload"].get("revision") is None
     assert all(
         item["payload"]["prospective_execution"]["v25_simulator_episode_started"]
@@ -397,7 +445,14 @@ def test_calibrated_context_is_pure_and_first_qualifier() -> None:
         == context["parameters_sha256"]
     )
     not_first = _qualifying_context()
-    not_first["calibration"]["attempts"][0]["qualifies"] = True
+    first_gate = calibration_gate(
+        off_success_count=256,
+        on_success_count=460,
+        off_toe_riser_failure_count=240,
+        off_failure_count=256,
+        rescued_count=204,
+    )
+    not_first["calibration"]["attempts"][0].update(first_gate)
     with pytest.raises(ValueError, match="first qualifier"):
         validate_v25_calibrated_context(not_first)
     adapted = _qualifying_context()
@@ -487,7 +542,7 @@ def test_training_ast_has_no_forbidden_selection_or_bank_path() -> None:
     assert "weighted_gaussian_teacher_loss" in teacher_source
     assert "teacher_distillation_weight * teacher_loss" in teacher_source
     runner_source = (REPO / "experiments/scripts/run_cbf_teacher_v25.sh").read_text()
-    assert "precalibration_protocol_revision3.json" in runner_source
+    assert "precalibration_protocol_revision4.json" in runner_source
 
 
 def test_verifier_compares_reconstructed_gate_fields_not_candidate_metadata() -> None:
@@ -516,8 +571,8 @@ def test_verifier_accepts_valid_all_rollback_and_zero_teacher_outcomes() -> None
             "round": index,
             "status": "hard_rollback",
             "rollback_reason": "moving forward KL exceeded hard ceiling",
-            "round_start_actor_sha256": "unchanged-actor",
-            "round_end_actor_sha256": "unchanged-actor",
+            "round_start_actor_sha256": "a" * 64,
+            "round_end_actor_sha256": "a" * 64,
             "round_reference_is_moving_pi_k": True,
             "performance_evaluation_or_gate_used": False,
             "metrics": {
@@ -530,6 +585,7 @@ def test_verifier_accepts_valid_all_rollback_and_zero_teacher_outcomes() -> None
     assert updated_round_kl_is_valid(rollbacks)
     assert teacher_signal_accounting_is_valid(rollbacks)
     assert round_status_accounting_is_valid(rollbacks)
+    assert rollback_reasons_are_protocol_allowed(rollbacks)
     assert round_actor_hash_chain_is_valid(rollbacks)
     assert updated_metric_is_bounded(
         rollbacks, "policy_storage_max_abs_error", maximum=1.0e-6
@@ -539,8 +595,8 @@ def test_verifier_accepts_valid_all_rollback_and_zero_teacher_outcomes() -> None
         "round": 1,
         "status": "updated",
         "rollback_reason": None,
-        "round_start_actor_sha256": "actor-before",
-        "round_end_actor_sha256": "actor-after",
+        "round_start_actor_sha256": "a" * 64,
+        "round_end_actor_sha256": "b" * 64,
         "round_reference_is_moving_pi_k": True,
         "performance_evaluation_or_gate_used": False,
         "metrics": {
@@ -559,6 +615,7 @@ def test_verifier_accepts_valid_all_rollback_and_zero_teacher_outcomes() -> None
     assert updated_round_kl_is_valid([zero_signal_update])
     assert teacher_signal_accounting_is_valid([zero_signal_update])
     assert round_status_accounting_is_valid([zero_signal_update])
+    assert rollback_reasons_are_protocol_allowed([zero_signal_update])
     assert round_actor_hash_chain_is_valid([zero_signal_update])
     assert updated_metric_is_bounded(
         [zero_signal_update],
@@ -614,6 +671,249 @@ def test_verifier_accepts_valid_all_rollback_and_zero_teacher_outcomes() -> None
     assert not updated_metric_is_bounded(
         [None], "policy_storage_max_abs_error", maximum=1.0e-6
     )
+
+
+def test_verifier_rejects_tampered_final_identity_schedule() -> None:
+    rows = [
+        {
+            "pair_index": str(index),
+            "evaluation_seed": str(final_evaluation_seed(index // 128)),
+            "environment_id": str(index % 128),
+        }
+        for index in range(FINAL_EPISODES)
+    ]
+    assert FINAL_REPEATS == 4
+    assert exact_final_identity_schedule(rows)
+    rows[0]["evaluation_seed"] = "999999999"
+    assert not exact_final_identity_schedule(rows)
+    rows[0]["evaluation_seed"] = str(final_evaluation_seed(0))
+    rows[0]["pair_index"] = "1"
+    assert not exact_final_identity_schedule(rows)
+
+
+def test_verifier_binds_every_formal_protocol_input_hash() -> None:
+    digest = "a" * 64
+    protocol = {
+        "implementation_boundary": {
+            "precalibration_protocol": {"sha256": digest},
+            "calibrated_context": {"sha256": digest},
+            "calibration_execution_started": {"sha256": digest},
+            "calibration_summary": {"sha256": digest},
+            "calibration_attempts": {"sha256": digest},
+            "calibration_paired_episodes": {"sha256": digest},
+            "calibration_all_evaluated_paired_episodes": {"sha256": digest},
+            "calibration_evidence_verification": {"sha256": digest},
+        },
+        "calibration_evidence": {
+            "sha256": digest,
+            "execution_started": {"sha256": digest},
+            "attempts": {"sha256": digest},
+            "paired_episodes": {"sha256": digest},
+            "all_evaluated_paired_episodes": {"sha256": digest},
+            "independent_reconstruction": {"sha256": digest},
+        },
+    }
+    kwargs = {
+        "precalibration_sha256": digest,
+        "context_sha256": digest,
+        "calibration_started_sha256": digest,
+        "calibration_summary_sha256": digest,
+        "calibration_attempts_sha256": digest,
+        "calibration_paired_sha256": digest,
+        "calibration_all_paired_sha256": digest,
+        "calibration_verification_sha256": digest,
+    }
+    assert protocol_input_bindings_are_valid(protocol, **kwargs)
+    protocol["implementation_boundary"]["calibration_summary"]["sha256"] = "b" * 64
+    assert not protocol_input_bindings_are_valid(protocol, **kwargs)
+
+
+def test_verifier_binds_execution_markers_and_rejects_hidden_repeats() -> None:
+    digest = "a" * 64
+    commit = "b" * 40
+    protocol = {"implementation_boundary": {"git_commit": commit}}
+    reference = {
+        "file": "protocol.json",
+        "sha256": digest,
+        "implementation_commit": commit,
+        "validation": {"protocol_id": True},
+    }
+    kwargs = {
+        "protocol": protocol,
+        "precalibration": {
+            "revision": PRECALIBRATION_REVISION,
+            "prospective_execution": {"v25_simulator_episode_started": False},
+        },
+        "calibration_started": {
+            "protocol_id": "safe100-success-gated-cbf-teacher-v25",
+            "precalibration_protocol_sha256": digest,
+            "base_policy_only": True,
+            "adapted_policy_evaluations_used": False,
+            "ordered_first_qualifier_rule": True,
+        },
+        "training_started": {
+            "protocol": reference,
+            "adapted_policy_outcomes_observed": False,
+            "fresh_adaptation_count": 1,
+        },
+        "training_completed": {
+            "protocol": reference,
+            "adapted_policy_outcomes_observed": True,
+            "fresh_adaptation_count": 1,
+            "final_actor_sha256": digest,
+            "training_summary_sha256": digest,
+        },
+        "final_started": {
+            "protocol_id": "safe100-success-gated-cbf-teacher-v25",
+            "protocol_sha256": digest,
+            "training_summary_sha256": digest,
+            "base_checkpoint_sha256": digest,
+            "final_checkpoint_sha256": digest,
+            "condition_order": ["pi0_off", "pi0_on", "pi8_on", "pi8_off"],
+            "fresh_condition_count": FINAL_EPISODES,
+        },
+        "protocol_sha256": digest,
+        "precalibration_sha256": digest,
+        "training_sha256": digest,
+        "base_checkpoint_sha256": digest,
+        "final_checkpoint_sha256": digest,
+        "final_actor_sha256": digest,
+    }
+    assert execution_markers_are_valid(**kwargs)
+    kwargs["training_started"] = {
+        **kwargs["training_started"],
+        "fresh_adaptation_count": 2,
+    }
+    assert not execution_markers_are_valid(**kwargs)
+
+
+def test_verifier_rejects_tampered_exclusion_counts() -> None:
+    context = _qualifying_context()
+    algorithm = formal_algorithm_parameters()
+    audit = {
+        "algorithm_class": True,
+        "action_config_class": True,
+        "actor_observation_dim": 405,
+        "critic_observation_dim": 838,
+        "actor_observation_groups": ["actor"],
+        "critic_observation_groups": ["actor", "critic", "online_privileged"],
+        "deployable_failure_group_absent": True,
+        "one_actor": True,
+        "one_privileged_critic": True,
+        "auxiliary_critics_absent": True,
+        "specialist_reward_absent": True,
+        "runtime_filter": True,
+        "phase_selective_shift": True,
+        "actor_critic_optimizers_disjoint": True,
+        "log_std_trainable_parameter_count": 0,
+        "actor_learning_rate": algorithm["actor_learning_rate"],
+        "critic_learning_rate": algorithm["critic_learning_rate"],
+        "ppo_clip": algorithm["ppo_clip"],
+        "maximum_actor_epochs": algorithm["maximum_actor_epochs"],
+        "critic_epochs": algorithm["critic_epochs"],
+        "mini_batches": algorithm["mini_batches"],
+        "moving_kl_beta": algorithm["moving_kl_beta"],
+        "target_kl": algorithm["target_kl"],
+        "hard_kl_ceiling": algorithm["hard_kl_ceiling"],
+        "teacher_distillation_weight": algorithm["teacher_distillation_weight"],
+        "teacher_success_horizon": algorithm["teacher_success_horizon_steps"],
+        "teacher_correction_scale": algorithm["teacher_correction_scale"],
+    }
+    validation = {
+        key: True
+        for key in (
+            "protocol_id",
+            "method",
+            "implementation_is_ancestor",
+            "randomness_preflight",
+            "base_checkpoint",
+            "context_file",
+            "context_parameters",
+            "algorithm",
+            "environment",
+            "execution_not_started_at_freeze",
+            "all_bound_sources_unchanged",
+            "protocol_committed_at_head",
+            "context_committed_at_head",
+        )
+    }
+    rounds = [{"round_start_actor_sha256": "a" * 64}]
+    protocol = {"implementation_boundary": {"git_commit": "c" * 40}}
+    training = {
+        "schema_version": 1,
+        "protocol_id": "safe100-success-gated-cbf-teacher-v25",
+        "smoke": False,
+        "adaptation_seed": ADAPTATION_SEED,
+        "adaptation_seed_count": 1,
+        "state_restart_count": 0,
+        "failure_or_success_bank_count": 0,
+        "context": {
+            "selected_candidate_index": context["shift"]["selected_candidate_index"],
+            "swing_underresponse_gain": context["shift"]["swing_underresponse_gain"],
+            "base_policy_only_first_qualifier": True,
+            "reused_without_reselection": True,
+            "metadata": {
+                "shift": "fixed_phase_selective_swing_leg_underresponse",
+                "swing_underresponse_gain": context["shift"][
+                    "swing_underresponse_gain"
+                ],
+                "affected_joints_per_swing_leg": [
+                    "hip_pitch_joint",
+                    "knee_joint",
+                    "ankle_pitch_joint",
+                ],
+                "stance_leg_scale": 1.0,
+                "all_other_action_scales": 1.0,
+                "runtime_filter": True,
+                "terrain_geometry_changed": False,
+                "friction_changed": False,
+                "command_changed": False,
+                "controller_changed": False,
+                "actor_observation_fields_added": 0,
+                "cbf_geometry_exact": True,
+                "fixed_deployment_environment": True,
+            },
+        },
+        "warm_start": {
+            "actor_observation_dim": 405,
+            "critic_observation_dim": 838,
+            "actor_layout": "exact-original-interface",
+            "critic_layout": "exact-original-privileged-interface",
+            "source_optimizer_discarded": True,
+            "source_auxiliary_heads_ignored": True,
+        },
+        "initial_actor_sha256": "a" * 64,
+        "protocol": {
+            "sha256": "d" * 64,
+            "implementation_commit": "c" * 40,
+            "validation": validation,
+        },
+        "structural_audit": audit,
+    }
+    assert training_execution_contract_is_valid(training, protocol, context, rounds)
+    training["state_restart_count"] = 1
+    assert not training_execution_contract_is_valid(training, protocol, context, rounds)
+
+
+def test_verifier_binds_updated_behavior_gaussian_metrics() -> None:
+    metrics = {
+        "behavior_reference_distribution_param_max_abs_error": 0.0,
+        "behavior_current_distribution_param_max_abs_error": 0.0,
+        "behavior_reference_log_prob_max_abs_error": 0.0,
+        "behavior_current_log_prob_max_abs_error": 0.0,
+        "moving_kl_beta": 0.5,
+        "target_kl": 0.003,
+        "hard_kl_ceiling": 0.01,
+        "teacher_distillation_weight": 0.1,
+        "teacher_success_horizon": 50,
+        "teacher_correction_scale": 0.05,
+        "freeze_log_std": True,
+        "round_reference_index": 1,
+    }
+    rounds = [{"round": 1, "status": "updated", "metrics": metrics}]
+    assert updated_round_dataflow_is_valid(rounds)
+    rounds[0]["metrics"]["behavior_current_log_prob_max_abs_error"] = 0.01
+    assert not updated_round_dataflow_is_valid(rounds)
 
 
 def test_final_audit_has_exact_four_conditions_and_512_pair_rows() -> None:

@@ -126,8 +126,12 @@ def main() -> None:
     parser.add_argument("--base-checkpoint", type=Path, required=True)
     parser.add_argument("--precalibration-protocol", type=Path, required=True)
     parser.add_argument("--context", type=Path, required=True)
+    parser.add_argument("--calibration-started", type=Path, required=True)
     parser.add_argument("--calibration-summary", type=Path, required=True)
+    parser.add_argument("--calibration-attempts", type=Path, required=True)
     parser.add_argument("--calibration-paired-csv", type=Path, required=True)
+    parser.add_argument("--calibration-all-paired-csv", type=Path, required=True)
+    parser.add_argument("--calibration-evidence-verification", type=Path, required=True)
     parser.add_argument("--formal-output-dir", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
@@ -135,11 +139,25 @@ def main() -> None:
     checkpoint = args.base_checkpoint.resolve()
     pre_path = args.precalibration_protocol.resolve()
     context_path = args.context.resolve()
+    calibration_started_path = args.calibration_started.resolve()
     calibration_path = args.calibration_summary.resolve()
+    attempts_path = args.calibration_attempts.resolve()
     paired_path = args.calibration_paired_csv.resolve()
+    all_paired_path = args.calibration_all_paired_csv.resolve()
+    calibration_verification_path = args.calibration_evidence_verification.resolve()
     formal_output_dir = args.formal_output_dir.resolve()
     output = args.output.resolve()
-    for path in (checkpoint, pre_path, context_path, calibration_path, paired_path):
+    for path in (
+        checkpoint,
+        pre_path,
+        context_path,
+        calibration_started_path,
+        calibration_path,
+        attempts_path,
+        paired_path,
+        all_paired_path,
+        calibration_verification_path,
+    ):
         if not path.is_file():
             raise FileNotFoundError(path)
     commit = _git_output(repo, "rev-parse", "HEAD")
@@ -155,13 +173,24 @@ def main() -> None:
     source_hashes = _verify_committed_sources(repo, commit)
     pre_ref = _committed_file(repo, pre_path, commit)
     context_ref = _committed_file(repo, context_path, commit)
+    calibration_started_ref = _committed_file(repo, calibration_started_path, commit)
     calibration_ref = _committed_file(repo, calibration_path, commit)
+    attempts_ref = _committed_file(repo, attempts_path, commit)
     paired_ref = _committed_file(repo, paired_path, commit)
+    all_paired_ref = _committed_file(repo, all_paired_path, commit)
+    calibration_verification_ref = _committed_file(
+        repo, calibration_verification_path, commit
+    )
     pre = json.loads(pre_path.read_text())
     context = validate_v25_calibrated_context(json.loads(context_path.read_text()))
+    calibration_started = json.loads(calibration_started_path.read_text())
     calibration = json.loads(calibration_path.read_text())
+    attempts = json.loads(attempts_path.read_text())
+    calibration_verification = json.loads(calibration_verification_path.read_text())
     with paired_path.open(newline="") as handle:
         paired_rows = list(csv.DictReader(handle))
+    with all_paired_path.open(newline="") as handle:
+        all_paired_rows = list(csv.DictReader(handle))
     selected = context["calibration"]["attempts"][-1]
     reconstructed_gate, calibration_identity_checks = _reconstruct_calibration_gate(
         paired_rows, candidate_index=int(selected["candidate_index"])
@@ -174,7 +203,7 @@ def main() -> None:
         "precalibration_id": pre.get("protocol_id") == PROTOCOL_ID,
         "precalibration_status": pre.get("status")
         == "prospectively_frozen_before_v25_base_only_paired_calibration",
-        "precalibration_revision_3": pre.get("revision")
+        f"precalibration_revision_{PRECALIBRATION_REVISION}": pre.get("revision")
         == PRECALIBRATION_REVISION
         and pre.get("supersession", {}).get(
             "superseded_before_any_v25_simulator_episode"
@@ -201,11 +230,34 @@ def main() -> None:
             "precalibration_protocol_sha256"
         )
         == file_sha256(pre_path),
+        "calibration_started_marker": calibration_started
+        == {
+            "protocol_id": PROTOCOL_ID,
+            "precalibration_protocol_sha256": file_sha256(pre_path),
+            "base_policy_only": True,
+            "adapted_policy_evaluations_used": False,
+            "ordered_first_qualifier_rule": True,
+        },
+        "attempts_file": attempts
+        == calibration.get("attempts")
+        == context["calibration"]["attempts"],
         "paired_row_count_512": len(paired_rows) == 512,
         "paired_csv": calibration.get("selected_paired_csv_sha256")
         == file_sha256(paired_path),
         "paired_gate_reconstructed": selected_gate_fields_match
         and calibration.get("selected_gate") == selected,
+        "all_evaluated_pair_count": len(all_paired_rows)
+        == len(attempts) * CALIBRATION_EPISODES,
+        "all_evidence_reconstruction_passed": calibration_verification.get("passed")
+        is True
+        and calibration_verification.get("protocol_id") == PROTOCOL_ID
+        and calibration_verification.get("calibration_status")
+        == calibration.get("status")
+        and calibration_verification.get("candidate_count_evaluated") == len(attempts)
+        and calibration_verification.get("all_evaluated_paired_episode_count")
+        == len(all_paired_rows)
+        and calibration_verification.get("all_evaluated_paired_csv", {}).get("sha256")
+        == file_sha256(all_paired_path),
         **calibration_identity_checks,
     }
     if not all(calibration_checks.values()):
@@ -228,8 +280,12 @@ def main() -> None:
             "source_files": source_hashes,
             "precalibration_protocol": pre_ref,
             "calibrated_context": context_ref,
+            "calibration_execution_started": calibration_started_ref,
             "calibration_summary": calibration_ref,
+            "calibration_attempts": attempts_ref,
             "calibration_paired_episodes": paired_ref,
+            "calibration_all_evaluated_paired_episodes": all_paired_ref,
+            "calibration_evidence_verification": calibration_verification_ref,
             "all_sources_and_selected_shift_committed_before_adaptation": True,
         },
         "prior_results_immutable": prior_audit,
@@ -246,6 +302,7 @@ def main() -> None:
             "parameters_sha256": context["parameters_sha256"],
             "selected_candidate_index": selected["candidate_index"],
             "selected_swing_underresponse_gain": selected["swing_underresponse_gain"],
+            "base_actor_state_sha256": selected["actor_state_sha256"],
             "calibration_evaluation_seeds": selected["evaluation_seeds"],
             "base_off_success_rate": selected["off_success_rate"],
             "base_on_success_rate": selected["on_success_rate"],
@@ -256,7 +313,11 @@ def main() -> None:
         },
         "calibration_evidence": {
             **calibration_ref,
+            "execution_started": calibration_started_ref,
+            "attempts": attempts_ref,
             "paired_episodes": paired_ref,
+            "all_evaluated_paired_episodes": all_paired_ref,
+            "independent_reconstruction": calibration_verification_ref,
             "checks": calibration_checks,
         },
         "training": formal_algorithm_parameters(),

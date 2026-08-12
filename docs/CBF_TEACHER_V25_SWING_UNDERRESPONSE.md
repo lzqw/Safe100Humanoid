@@ -30,6 +30,18 @@ per-episode calibration evidence reconstruction before publication. The ordered
 grid, gates, environment, algorithm, and all 105 fresh seeds remain unchanged;
 revision 1 and revision 2 remain immutable zero-episode history.
 
+Revision 3 was also retired before any v25 simulator episode. A synthetic
+end-to-end package audit showed that the terminal verifier accepted tampering
+of the frozen final identity schedule, single-adaptation/exclusion counts, and
+several evidence hash bindings. Revision 4 closes those prospective audit gaps:
+it binds both external checkpoints, every calibration marker and compact
+candidate-evidence file, the training start/completion markers, all four final
+condition contracts, the exact ordered 512-identity schedule, and the complete
+derived result table. The audit still accepts scientifically valid negative
+outcomes, including eight hard rollbacks or zero eligible teacher transitions.
+No simulator episode was run under revisions 1–3, so the grid, gates,
+environment, algorithm, and all 105 fresh seeds remain unchanged.
+
 ## Fixed deployment shift
 
 The environment remains the fixed nominal `DQHMED` staircase. Geometry,
@@ -126,6 +138,10 @@ exists without requiring an update to occur, and validates teacher-signal
 accounting without requiring the environment to produce a positive teacher
 count. Thus a scientifically negative result or eight valid hard rollbacks is
 reported honestly rather than converted into a technical verification failure.
+It additionally byte-binds the complete prospective chain, every calibration
+candidate, execution boundary markers, pi0/pi8 checkpoint actors, exact final
+identity order, condition metadata, paired repair/regression counts, and all
+reported primary deltas.
 
 The motivating actuator-mismatch, action-projection aliasing, and CBF-learning
 references are the primary arXiv records:

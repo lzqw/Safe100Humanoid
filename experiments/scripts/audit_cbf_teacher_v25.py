@@ -159,6 +159,18 @@ def _evaluate(
             summary["initial_state_signature"] for summary in summaries
         ],
         "actor_state_sha256": summaries[0]["actor_state_sha256"],
+        "checkpoint_sha256": summaries[0]["checkpoint_sha256"],
+        "deterministic_policy_mean": all(
+            summary.get("deterministic_policy_mean") is True for summary in summaries
+        ),
+        "one_initial_episode_per_env": all(
+            summary.get("one_initial_episode_per_env") is True for summary in summaries
+        ),
+        "original_observation_interface": all(
+            summary.get("original_observation_interface") is True
+            for summary in summaries
+        ),
+        "actor_observation_dim": summaries[0]["actor_observation_dim"],
         "teacher_reprojection_max_abs_error": max(
             float(summary["teacher_reprojection_max_abs_error"])
             for summary in summaries
@@ -172,6 +184,14 @@ def _evaluate(
         for summary in summaries
     ):
         raise RuntimeError(f"v25 condition {condition} changed actors between batches")
+    if any(
+        summary["checkpoint_sha256"] != aggregate["checkpoint_sha256"]
+        or summary["actor_observation_dim"] != aggregate["actor_observation_dim"]
+        for summary in summaries
+    ):
+        raise RuntimeError(
+            f"v25 condition {condition} changed checkpoint or actor interface"
+        )
     for metric in METRICS:
         values = [float(summary[metric]) for summary in summaries]
         aggregate[metric] = sum(values) / len(values)
@@ -200,6 +220,9 @@ def _evaluate(
     ] / max(1, aggregate["total_reached_risers"])
     aggregate["success_count"] = sum(_bool(row["success"]) for row in rows)
     aggregate["failure_count"] = len(rows) - aggregate["success_count"]
+    aggregate["fall_count"] = sum(_bool(row["fell"]) for row in rows)
+    aggregate["timeout_count"] = sum(_bool(row["timed_out"]) for row in rows)
+    aggregate["kick_episode_count"] = sum(_bool(row["toe_riser_kick"]) for row in rows)
     aggregate["toe_riser_failure_count"] = sum(
         (not _bool(row["success"])) and _bool(row["toe_riser_kick"]) for row in rows
     )

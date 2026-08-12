@@ -13,8 +13,8 @@ from typing import Any
 PROTOCOL_ID = "safe100-success-gated-cbf-teacher-v25"
 EXPERIMENT_NAME = "v25 Swing-Foot Under-Clearance CBF Teacher"
 POLICY_METHOD = "Success-Gated CBF Action Teacher + Moving-KL PPO v25"
-PRECALIBRATION_REVISION = 3
-PRECALIBRATION_FILENAME = "precalibration_protocol_revision3.json"
+PRECALIBRATION_REVISION = 4
+PRECALIBRATION_FILENAME = "precalibration_protocol_revision4.json"
 TASK_ID = "Unitree-G1-Stairs-Online-DQHMED"
 ENVIRONMENT_VARIANT = "fixed_deployment_play"
 CONTEXT_ID = "swing_underresponse_v25"
@@ -472,6 +472,79 @@ def validate_v25_calibrated_context(context: Mapping[str, Any]) -> dict[str, Any
         range(index + 1)
     ):
         raise ValueError("v25 calibration attempts are not ordered")
+    gate_keys = set(
+        calibration_gate(
+            off_success_count=0,
+            on_success_count=0,
+            off_toe_riser_failure_count=0,
+            off_failure_count=CALIBRATION_EPISODES,
+            rescued_count=0,
+        )
+    )
+    for candidate_index, attempt in enumerate(attempts):
+        if not isinstance(attempt, dict):
+            raise TypeError("v25 calibration attempt must be an object")
+        if not math.isclose(
+            float(attempt.get("swing_underresponse_gain", math.nan)),
+            CALIBRATION_GAINS[candidate_index],
+            rel_tol=0.0,
+            abs_tol=1.0e-12,
+        ):
+            raise ValueError("v25 calibration attempt gain differs from frozen grid")
+        expected_seeds = [
+            calibration_evaluation_seed(candidate_index, repeat)
+            for repeat in range(CALIBRATION_REPEATS)
+        ]
+        if attempt.get("evaluation_seeds") != expected_seeds:
+            raise ValueError(
+                "v25 calibration attempt seeds differ from frozen schedule"
+            )
+        if (
+            attempt.get("base_policy_only") is not True
+            or attempt.get("adapted_policy_evaluations_used") is not False
+        ):
+            raise ValueError("v25 calibration attempt is not base-policy only")
+        actor_hash = attempt.get("actor_state_sha256")
+        if (
+            not isinstance(actor_hash, str)
+            or len(actor_hash) != 64
+            or any(character not in "0123456789abcdef" for character in actor_hash)
+        ):
+            raise ValueError("v25 calibration attempt actor hash is missing")
+        off_signatures = attempt.get("off_initial_state_signatures")
+        on_signatures = attempt.get("on_initial_state_signatures")
+        if (
+            not isinstance(off_signatures, list)
+            or len(off_signatures) != CALIBRATION_REPEATS
+            or off_signatures != on_signatures
+            or any(not isinstance(value, str) or not value for value in off_signatures)
+        ):
+            raise ValueError("v25 calibration paired initial-state signatures differ")
+        try:
+            reconstructed_gate = calibration_gate(
+                off_success_count=attempt["off_success_count"],
+                on_success_count=attempt["on_success_count"],
+                off_toe_riser_failure_count=attempt["off_toe_riser_failure_count"],
+                off_failure_count=attempt["off_failure_count"],
+                rescued_count=attempt["rescued_count"],
+                paired_count=attempt["paired_count"],
+            )
+        except (KeyError, TypeError, ValueError) as error:
+            raise ValueError("v25 calibration attempt gate is incomplete") from error
+        if not gate_keys.issubset(attempt):
+            raise ValueError("v25 calibration attempt gate fields are incomplete")
+        for key, value in reconstructed_gate.items():
+            recorded = attempt[key]
+            if isinstance(value, float):
+                matches = isinstance(recorded, (int, float)) and math.isclose(
+                    value, float(recorded), rel_tol=0.0, abs_tol=1.0e-12
+                )
+            else:
+                matches = recorded == value
+            if not matches:
+                raise ValueError("v25 calibration attempt gate does not reconstruct")
+    if len({attempt["actor_state_sha256"] for attempt in attempts}) != 1:
+        raise ValueError("v25 calibration actor changed across candidates")
     if any(bool(attempt.get("qualifies")) for attempt in attempts[:-1]):
         raise ValueError("v25 selected candidate is not the first qualifier")
     if not bool(attempts[-1].get("qualifies")):
