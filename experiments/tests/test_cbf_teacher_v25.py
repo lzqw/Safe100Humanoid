@@ -39,6 +39,7 @@ from cbf_teacher_v25_protocol import (
     canonical_sha256,
     development_gate,
     final_evaluation_seed,
+    fixed_deployment_audit_contract,
     formal_algorithm_parameters,
     fresh_randomness_report,
     validate_v25_calibrated_context,
@@ -542,7 +543,10 @@ def test_training_ast_has_no_forbidden_selection_or_bank_path() -> None:
     assert "weighted_gaussian_teacher_loss" in teacher_source
     assert "teacher_distillation_weight * teacher_loss" in teacher_source
     runner_source = (REPO / "experiments/scripts/run_cbf_teacher_v25.sh").read_text()
-    assert "precalibration_protocol_revision4.json" in runner_source
+    assert (
+        f"precalibration_protocol_revision{PRECALIBRATION_REVISION}.json"
+        in runner_source
+    )
 
 
 def test_verifier_compares_reconstructed_gate_fields_not_candidate_metadata() -> None:
@@ -871,7 +875,7 @@ def test_verifier_rejects_tampered_exclusion_counts() -> None:
                 "controller_changed": False,
                 "actor_observation_fields_added": 0,
                 "cbf_geometry_exact": True,
-                "fixed_deployment_environment": True,
+                "fixed_deployment_environment": fixed_deployment_audit_contract(),
             },
         },
         "warm_start": {
@@ -891,6 +895,15 @@ def test_verifier_rejects_tampered_exclusion_counts() -> None:
         "structural_audit": audit,
     }
     assert training_execution_contract_is_valid(training, protocol, context, rounds)
+    training["context"]["metadata"]["fixed_deployment_environment"][
+        "curriculum_disabled"
+    ] = False
+    assert not training_execution_contract_is_valid(
+        training, protocol, context, rounds
+    )
+    training["context"]["metadata"]["fixed_deployment_environment"] = (
+        fixed_deployment_audit_contract()
+    )
     training["state_restart_count"] = 1
     assert not training_execution_contract_is_valid(training, protocol, context, rounds)
 

@@ -50,6 +50,7 @@ from cbf_teacher_v25_protocol import (
     calibration_gate,
     development_gate,
     final_evaluation_seed,
+    fixed_deployment_audit_contract,
     fixed_environment_parameters,
     formal_algorithm_parameters,
     paired_repair_regression_counts,
@@ -1005,7 +1006,7 @@ def training_execution_contract_is_valid(
         == 0
         and context_record.get("metadata", {}).get("cbf_geometry_exact") is True
         and context_record.get("metadata", {}).get("fixed_deployment_environment")
-        is True
+        == fixed_deployment_audit_contract()
         and all(
             context_record.get("metadata", {}).get(key) is False
             for key in (

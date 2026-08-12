@@ -6,7 +6,7 @@ PYTHON=${PYTHON:?set PYTHON to the MJLab Python interpreter}
 BASE_CHECKPOINT=${BASE_CHECKPOINT:?set BASE_CHECKPOINT to frozen pi0}
 DEVICE=${DEVICE:-cuda:0}
 RESULT_ROOT="$REPO/results/online/proximal_v25"
-PRECALIBRATION_PROTOCOL=${PRECALIBRATION_PROTOCOL:-$RESULT_ROOT/precalibration_protocol_revision4.json}
+PRECALIBRATION_PROTOCOL=${PRECALIBRATION_PROTOCOL:-$RESULT_ROOT/precalibration_protocol_revision5.json}
 EXTERNAL_ROOT=${EXTERNAL_ROOT:?set EXTERNAL_ROOT outside the Git repository}
 
 case "${1:-}" in

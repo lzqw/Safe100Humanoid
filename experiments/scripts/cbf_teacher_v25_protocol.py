@@ -13,8 +13,8 @@ from typing import Any
 PROTOCOL_ID = "safe100-success-gated-cbf-teacher-v25"
 EXPERIMENT_NAME = "v25 Swing-Foot Under-Clearance CBF Teacher"
 POLICY_METHOD = "Success-Gated CBF Action Teacher + Moving-KL PPO v25"
-PRECALIBRATION_REVISION = 4
-PRECALIBRATION_FILENAME = "precalibration_protocol_revision4.json"
+PRECALIBRATION_REVISION = 5
+PRECALIBRATION_FILENAME = "precalibration_protocol_revision5.json"
 TASK_ID = "Unitree-G1-Stairs-Online-DQHMED"
 ENVIRONMENT_VARIANT = "fixed_deployment_play"
 CONTEXT_ID = "swing_underresponse_v25"
@@ -126,6 +126,24 @@ def fixed_environment_parameters() -> dict[str, Any]:
         "friction": "nominal",
         "command": "nominal",
         "controller": "nominal",
+    }
+
+
+def fixed_deployment_audit_contract() -> dict[str, Any]:
+    """Return the exact runtime audit emitted by the fixed play environment."""
+    return {
+        "registered_environment_variant": ENVIRONMENT_VARIANT,
+        "actor_observation_corruption_disabled": True,
+        "curriculum_disabled": True,
+        "reset_events_exact": True,
+        "encoder_bias_absent": True,
+        "push_randomization_absent": True,
+        "friction_randomization_absent": True,
+        "base_com_randomization_absent": True,
+        "retained_fresh_initial_state_events": [
+            "reset_base",
+            "reset_robot_joints",
+        ],
     }
 
 

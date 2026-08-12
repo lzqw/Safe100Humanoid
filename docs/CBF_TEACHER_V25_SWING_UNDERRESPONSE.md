@@ -42,6 +42,16 @@ outcomes, including eight hard rollbacks or zero eligible teacher transitions.
 No simulator episode was run under revisions 1–3, so the grid, gates,
 environment, algorithm, and all 105 fresh seeds remain unchanged.
 
+Revision 4 was likewise retired before any v25 simulator episode. A complete
+producer-versus-verifier contract audit found that training records the full
+fixed-deployment runtime audit object, while the terminal verifier incorrectly
+expected the same field to be the scalar boolean `true`. That mismatch would
+have mislabeled every otherwise valid terminal package as a verification
+failure. Revision 5 makes the exact runtime audit object a shared verification
+contract. This is an evidence-only correction: the ordered grid, gates,
+environment, algorithm, checkpoint, and all 105 fresh seeds are unchanged.
+Revisions 1–4 remain immutable zero-episode history.
+
 ## Fixed deployment shift
 
 The environment remains the fixed nominal `DQHMED` staircase. Geometry,
