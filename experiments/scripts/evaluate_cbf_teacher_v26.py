@@ -15,7 +15,7 @@ from typing import Any
 
 import numpy as np
 import torch
-from cbf_teacher_v25_protocol import ENVIRONMENT_VARIANT, TASK_ID
+from cbf_teacher_v26_protocol import ENVIRONMENT_VARIANT, TASK_ID
 from proximal_v23_io import actor_state_sha256, file_sha256
 
 
