@@ -1,0 +1,7 @@
+{
+  "adapted_policy_evaluations_used": false,
+  "base_policy_only": true,
+  "ordered_first_qualifier_rule": true,
+  "precalibration_protocol_sha256": "dff2610f8758bbfb6cae0417a38b7cebb4973c48d54628c51761872f38cb5cc2",
+  "protocol_id": "safe100-success-gated-cbf-teacher-v26"
+}

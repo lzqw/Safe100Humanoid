@@ -1,0 +1,65 @@
+{
+  "attempts": [
+    {
+      "alignment_coverage": 1.0,
+      "clearance_barrier_slope": 0.5,
+      "development_only": true,
+      "evaluation_seed": 146261000,
+      "excluded_from_formal_v26": true,
+      "off_success_rate": 0.65625,
+      "on_success_rate": 0.75,
+      "paired_count": 64,
+      "regressed_count": 13,
+      "rescued_count": 19,
+      "riser_height_m": 0.18,
+      "shield_rescue_rate": 0.8636363636363636
+    },
+    {
+      "alignment_coverage": 1.0,
+      "clearance_barrier_slope": 0.65,
+      "development_only": true,
+      "evaluation_seed": 146261000,
+      "excluded_from_formal_v26": true,
+      "off_success_rate": 0.65625,
+      "on_success_rate": 0.703125,
+      "paired_count": 64,
+      "regressed_count": 10,
+      "rescued_count": 13,
+      "riser_height_m": 0.18,
+      "shield_rescue_rate": 0.5909090909090909
+    },
+    {
+      "alignment_coverage": 1.0,
+      "clearance_barrier_slope": 0.8,
+      "development_only": true,
+      "evaluation_seed": 146261000,
+      "excluded_from_formal_v26": true,
+      "off_success_rate": 0.65625,
+      "on_success_rate": 0.84375,
+      "paired_count": 64,
+      "regressed_count": 6,
+      "rescued_count": 18,
+      "riser_height_m": 0.18,
+      "shield_rescue_rate": 0.8181818181818182
+    },
+    {
+      "alignment_coverage": 1.0,
+      "clearance_barrier_slope": 1.0,
+      "development_only": true,
+      "evaluation_seed": 146261000,
+      "excluded_from_formal_v26": true,
+      "off_success_rate": 0.65625,
+      "on_success_rate": 0.78125,
+      "paired_count": 64,
+      "regressed_count": 7,
+      "rescued_count": 15,
+      "riser_height_m": 0.18,
+      "shield_rescue_rate": 0.6818181818181818
+    }
+  ],
+  "development_only": true,
+  "excluded_from_formal_v26": true,
+  "schema_version": 1,
+  "shared_off_arm": true,
+  "status": "complete"
+}

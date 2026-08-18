@@ -1,0 +1,83 @@
+{
+  "all_candidate_gates_reconstructed": true,
+  "all_off_on_initial_state_signatures_match": true,
+  "all_paired_csv": {
+    "path": "all_evaluated_paired_episodes.csv",
+    "sha256": "f6208ef6b9582be000833e1af047c8c3e957ce149426bbd6d4bd42816c90d288"
+  },
+  "arm_episode_count": 5632,
+  "candidate_count": 11,
+  "candidates": [
+    {
+      "candidate_index": 0,
+      "gate_matches_summary": true,
+      "paired_count": 256,
+      "riser_height_m": 0.17
+    },
+    {
+      "candidate_index": 1,
+      "gate_matches_summary": true,
+      "paired_count": 256,
+      "riser_height_m": 0.172
+    },
+    {
+      "candidate_index": 2,
+      "gate_matches_summary": true,
+      "paired_count": 256,
+      "riser_height_m": 0.174
+    },
+    {
+      "candidate_index": 3,
+      "gate_matches_summary": true,
+      "paired_count": 256,
+      "riser_height_m": 0.176
+    },
+    {
+      "candidate_index": 4,
+      "gate_matches_summary": true,
+      "paired_count": 256,
+      "riser_height_m": 0.178
+    },
+    {
+      "candidate_index": 5,
+      "gate_matches_summary": true,
+      "paired_count": 256,
+      "riser_height_m": 0.18
+    },
+    {
+      "candidate_index": 6,
+      "gate_matches_summary": true,
+      "paired_count": 256,
+      "riser_height_m": 0.182
+    },
+    {
+      "candidate_index": 7,
+      "gate_matches_summary": true,
+      "paired_count": 256,
+      "riser_height_m": 0.184
+    },
+    {
+      "candidate_index": 8,
+      "gate_matches_summary": true,
+      "paired_count": 256,
+      "riser_height_m": 0.186
+    },
+    {
+      "candidate_index": 9,
+      "gate_matches_summary": true,
+      "paired_count": 256,
+      "riser_height_m": 0.188
+    },
+    {
+      "candidate_index": 10,
+      "gate_matches_summary": true,
+      "paired_count": 256,
+      "riser_height_m": 0.19
+    }
+  ],
+  "paired_episode_count": 2816,
+  "passed": true,
+  "protocol_id": "safe100-success-gated-cbf-teacher-v26",
+  "schema_version": 1,
+  "status": "no_candidate_qualified"
+}

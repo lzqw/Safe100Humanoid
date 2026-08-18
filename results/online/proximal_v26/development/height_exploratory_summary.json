@@ -1,0 +1,86 @@
+{
+  "attempts": [
+    {
+      "alignment_coverage": 1.0,
+      "development_only": true,
+      "evaluation_seed": 146260000,
+      "excluded_from_formal_v26": true,
+      "formal_gate_on_exploratory_sample": false,
+      "off_success_rate": 0.890625,
+      "on_success_rate": 0.921875,
+      "paired_count": 64,
+      "regressed_count": 4,
+      "rescued_count": 6,
+      "riser_height_m": 0.14,
+      "shield_rescue_rate": 0.8571428571428571
+    },
+    {
+      "alignment_coverage": 1.0,
+      "development_only": true,
+      "evaluation_seed": 146260001,
+      "excluded_from_formal_v26": true,
+      "formal_gate_on_exploratory_sample": false,
+      "off_success_rate": 0.890625,
+      "on_success_rate": 0.875,
+      "paired_count": 64,
+      "regressed_count": 8,
+      "rescued_count": 7,
+      "riser_height_m": 0.15,
+      "shield_rescue_rate": 1.0
+    },
+    {
+      "alignment_coverage": 0.9230769230769231,
+      "development_only": true,
+      "evaluation_seed": 146260002,
+      "excluded_from_formal_v26": true,
+      "formal_gate_on_exploratory_sample": false,
+      "off_success_rate": 0.796875,
+      "on_success_rate": 0.90625,
+      "paired_count": 64,
+      "regressed_count": 6,
+      "rescued_count": 13,
+      "riser_height_m": 0.16,
+      "shield_rescue_rate": 1.0
+    },
+    {
+      "alignment_coverage": 0.8571428571428571,
+      "development_only": true,
+      "evaluation_seed": 146260003,
+      "excluded_from_formal_v26": true,
+      "formal_gate_on_exploratory_sample": false,
+      "off_success_rate": 0.78125,
+      "on_success_rate": 0.671875,
+      "paired_count": 64,
+      "regressed_count": 14,
+      "rescued_count": 7,
+      "riser_height_m": 0.17,
+      "shield_rescue_rate": 0.5
+    },
+    {
+      "alignment_coverage": 0.8695652173913043,
+      "development_only": true,
+      "evaluation_seed": 146260004,
+      "excluded_from_formal_v26": true,
+      "formal_gate_on_exploratory_sample": false,
+      "off_success_rate": 0.640625,
+      "on_success_rate": 0.6875,
+      "paired_count": 64,
+      "regressed_count": 13,
+      "rescued_count": 16,
+      "riser_height_m": 0.18,
+      "shield_rescue_rate": 0.6956521739130435
+    }
+  ],
+  "development_only": true,
+  "excluded_from_formal_v26": true,
+  "heights_m": [
+    0.14,
+    0.15,
+    0.16,
+    0.17,
+    0.18
+  ],
+  "paired_episodes_per_height": 64,
+  "schema_version": 1,
+  "status": "complete"
+}
