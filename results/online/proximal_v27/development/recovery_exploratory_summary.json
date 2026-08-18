@@ -1,0 +1,83 @@
+{
+  "candidates": [
+    {
+      "alignment_coverage": 0.8888888888888888,
+      "formal_gate_on_development_sample": true,
+      "off_success_rate": 0.578125,
+      "on_success_rate": 0.8125,
+      "recovery_distance_m": 0.02,
+      "regressed_count": 6,
+      "rescued_count": 21,
+      "shield_rescue_rate": 0.7777777777777778,
+      "success_delta": 0.234375
+    },
+    {
+      "alignment_coverage": 0.8888888888888888,
+      "formal_gate_on_development_sample": false,
+      "off_success_rate": 0.578125,
+      "on_success_rate": 0.703125,
+      "recovery_distance_m": 0.05,
+      "regressed_count": 12,
+      "rescued_count": 20,
+      "shield_rescue_rate": 0.7407407407407407,
+      "success_delta": 0.125
+    },
+    {
+      "alignment_coverage": 0.8888888888888888,
+      "formal_gate_on_development_sample": false,
+      "off_success_rate": 0.578125,
+      "on_success_rate": 0.71875,
+      "recovery_distance_m": 0.08,
+      "regressed_count": 11,
+      "rescued_count": 20,
+      "shield_rescue_rate": 0.7407407407407407,
+      "success_delta": 0.140625
+    },
+    {
+      "alignment_coverage": 0.8888888888888888,
+      "formal_gate_on_development_sample": false,
+      "off_success_rate": 0.578125,
+      "on_success_rate": 0.671875,
+      "recovery_distance_m": 0.12,
+      "regressed_count": 11,
+      "rescued_count": 17,
+      "shield_rescue_rate": 0.6296296296296297,
+      "success_delta": 0.09375
+    },
+    {
+      "alignment_coverage": 0.8888888888888888,
+      "formal_gate_on_development_sample": false,
+      "off_success_rate": 0.578125,
+      "on_success_rate": 0.71875,
+      "recovery_distance_m": 0.15,
+      "regressed_count": 10,
+      "rescued_count": 19,
+      "shield_rescue_rate": 0.7037037037037037,
+      "success_delta": 0.140625
+    }
+  ],
+  "clearance_barrier_slope": 0.8,
+  "development_only": true,
+  "elapsed_seconds": {
+    "off": 36.575973587998305,
+    "recovery_0.020": 41.21777768800166,
+    "recovery_0.050": 35.77072804300042,
+    "recovery_0.080": 35.84564445599972,
+    "recovery_0.120": 34.65279670400196,
+    "recovery_0.150": 37.60536769100145
+  },
+  "excluded_from_v26_formal_evidence": true,
+  "paired_episodes_per_candidate": 64,
+  "purpose": "select one recovery distance prospectively for v27",
+  "recovery_distances_m": [
+    0.02,
+    0.05,
+    0.08,
+    0.12,
+    0.15
+  ],
+  "riser_height_m": 0.18,
+  "schema_version": 1,
+  "seed": 150270018,
+  "total_elapsed_seconds": 221.6682881700035
+}
