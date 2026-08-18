@@ -1,0 +1,78 @@
+{
+  "candidates": [
+    {
+      "alignment_coverage": 0.9130434782608695,
+      "filter_alpha": 4.0,
+      "formal_gate_on_development_sample": false,
+      "intervention_per_riser": 6.115830115830116,
+      "mean_correction_norm": 0.032043025832823306,
+      "off_success_rate": 0.640625,
+      "on_success_rate": 0.65625,
+      "regressed_count": 26,
+      "rescued_count": 28,
+      "shield_rescue_rate": 0.6086956521739131,
+      "success_delta": 0.015625
+    },
+    {
+      "alignment_coverage": 0.9130434782608695,
+      "filter_alpha": 6.0,
+      "formal_gate_on_development_sample": false,
+      "intervention_per_riser": 6.2317429406037,
+      "mean_correction_norm": 0.032443949130294795,
+      "off_success_rate": 0.640625,
+      "on_success_rate": 0.7421875,
+      "regressed_count": 22,
+      "rescued_count": 35,
+      "shield_rescue_rate": 0.7608695652173914,
+      "success_delta": 0.1015625
+    },
+    {
+      "alignment_coverage": 0.9130434782608695,
+      "filter_alpha": 8.0,
+      "formal_gate_on_development_sample": false,
+      "intervention_per_riser": 5.93790546802595,
+      "mean_correction_norm": 0.030577047969227854,
+      "off_success_rate": 0.640625,
+      "on_success_rate": 0.7421875,
+      "regressed_count": 21,
+      "rescued_count": 34,
+      "shield_rescue_rate": 0.7391304347826086,
+      "success_delta": 0.1015625
+    },
+    {
+      "alignment_coverage": 0.9130434782608695,
+      "filter_alpha": 10.0,
+      "formal_gate_on_development_sample": false,
+      "intervention_per_riser": 6.106641721234799,
+      "mean_correction_norm": 0.030986609340320877,
+      "off_success_rate": 0.640625,
+      "on_success_rate": 0.78125,
+      "regressed_count": 16,
+      "rescued_count": 34,
+      "shield_rescue_rate": 0.7391304347826086,
+      "success_delta": 0.140625
+    }
+  ],
+  "clearance_barrier_slope": 0.8,
+  "development_only": true,
+  "elapsed_seconds": {
+    "alpha_10.0": 35.10285745799774,
+    "alpha_4.0": 37.643542779998825,
+    "alpha_6.0": 37.4331098190014,
+    "alpha_8.0": 34.682629265003925,
+    "off": 36.67727629399815
+  },
+  "filter_alphas": [
+    4.0,
+    6.0,
+    8.0,
+    10.0
+  ],
+  "paired_episodes_per_candidate": 128,
+  "purpose": "select one smoother filter alpha prospectively for v28",
+  "recovery_distance_m": 0.15,
+  "riser_height_m": 0.18,
+  "schema_version": 1,
+  "seed": 154280018,
+  "total_elapsed_seconds": 181.53941561600004
+}
