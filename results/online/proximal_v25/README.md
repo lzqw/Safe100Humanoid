@@ -50,3 +50,15 @@ Evidence:
 - [zero-episode resource-guard migration receipt](orchestration/v25_revision7_guard2_migration_receipt.json)
 - [Guardian terminal release receipt](orchestration/guardian_terminal_release_revision7.json) (`guardian_completed=false`)
 - [compact-package hashes](SHA256SUMS)
+
+
+## Runtime resource provenance (revision 8)
+
+After the original exclusive-GPU guards terminated before any v25 episode, the
+formal run was launched with the user-authorized resource-only revision 8. It
+allows unrelated GPU workloads while requiring at least 3,500 MiB free before
+each new GPU phase. The frozen gain grid, thresholds, identities, seeds,
+algorithm, environment, and final-policy rule were unchanged.
+
+- [revision-8 parallel orchestrator](orchestration/v25_complete_after_calibration_revision8_parallel.sh)
+- [hash-bound parallel resource receipt](orchestration/v25_revision8_parallel_resource_receipt.json)

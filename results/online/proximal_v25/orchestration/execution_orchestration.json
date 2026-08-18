@@ -1,48 +1,61 @@
 {
+  "active_resource_policy": {
+    "foreign_gpu_workloads_allowed": true,
+    "gpu_headroom_sample_count_before_each_new_phase": 1,
+    "minimum_free_gpu_memory_mib_at_phase_start": 3500
+  },
   "files": [
     {
-      "file": "orchestration/v25_wait_and_calibrate_revision7.sh",
-      "sha256": "4564f8ab15e9812b51e60e7e174e766b5dfee7e35cf7d4d74ab8769db7391a98"
+      "file": "orchestration/guardian_terminal_release_revision7.json",
+      "sha256": "4ada999c2dd0f3b741f1a539d968042246c29093c76333d697c4cd97eb2f578c"
     },
     {
       "file": "orchestration/v25_complete_after_calibration_revision7.sh",
       "sha256": "b73ad4f2bd702d063b815b1efed41afd8f7de49d7658a9ebcd7b0dfcf2532ffc"
     },
     {
-      "file": "orchestration/v25_completion_supervisor_revision7.sh",
-      "sha256": "f9a70f5a4b10805f952fe674fb03f6bccdf3cf9858d25c82860b9029fcc4647d"
-    },
-    {
-      "file": "orchestration/v25_supervisor_watchdog_revision7.sh",
-      "sha256": "c21aeceffb183e2354a4f5a6c09be0dc9ee8d7a7ab7147d8ec1bae9d3e5f2bb6"
-    },
-    {
-      "file": "orchestration/v25_wait_and_calibrate_revision7_guard2.sh",
-      "sha256": "e9ad3b03c63a6d0ce79b8b18167ef5e656f3bb7e58fd5d515dab98db34267c77"
-    },
-    {
       "file": "orchestration/v25_complete_after_calibration_revision7_guard2.sh",
       "sha256": "ef2e38d7a59c9a187916ae59f6a84b83aa6422f1b4f659c183920dd8b8351c60"
+    },
+    {
+      "file": "orchestration/v25_complete_after_calibration_revision8_parallel.sh",
+      "sha256": "0dde71f9f3d646bc7698477e015ebeced83d56552883bad4ce3cc2ee5e67f00e"
+    },
+    {
+      "file": "orchestration/v25_completion_supervisor_revision7.sh",
+      "sha256": "f9a70f5a4b10805f952fe674fb03f6bccdf3cf9858d25c82860b9029fcc4647d"
     },
     {
       "file": "orchestration/v25_completion_supervisor_revision7_guard2.sh",
       "sha256": "caba2ee00ef7316eece41b5654bb73ad8df701ae7500ff2672905c94f51e6075"
     },
     {
-      "file": "orchestration/v25_supervisor_watchdog_revision7_guard2.sh",
-      "sha256": "ce77dccd610661529ceed7ba9153809ed2ccf6ab40e3446c2f1a6720e1be1814"
-    },
-    {
       "file": "orchestration/v25_revision7_guard2_migration_receipt.json",
       "sha256": "4b2f47aa55548abf1b6f096b6d759d80a5ed34e726f3e442c2deeb7ed85056ce"
     },
     {
-      "file": "orchestration/guardian_terminal_release_revision7.json",
-      "sha256": "4ada999c2dd0f3b741f1a539d968042246c29093c76333d697c4cd97eb2f578c"
+      "file": "orchestration/v25_revision8_parallel_resource_receipt.json",
+      "sha256": "aa81e05000e357200f6c4578fabe5f524abe487c6015641e2af948e23cd5dc25"
+    },
+    {
+      "file": "orchestration/v25_supervisor_watchdog_revision7.sh",
+      "sha256": "c21aeceffb183e2354a4f5a6c09be0dc9ee8d7a7ab7147d8ec1bae9d3e5f2bb6"
+    },
+    {
+      "file": "orchestration/v25_supervisor_watchdog_revision7_guard2.sh",
+      "sha256": "ce77dccd610661529ceed7ba9153809ed2ccf6ab40e3446c2f1a6720e1be1814"
+    },
+    {
+      "file": "orchestration/v25_wait_and_calibrate_revision7.sh",
+      "sha256": "4564f8ab15e9812b51e60e7e174e766b5dfee7e35cf7d4d74ab8769db7391a98"
+    },
+    {
+      "file": "orchestration/v25_wait_and_calibrate_revision7_guard2.sh",
+      "sha256": "e9ad3b03c63a6d0ce79b8b18167ef5e656f3bb7e58fd5d515dab98db34267c77"
     }
   ],
   "frozen_initial_git_commit": "1ac36e9c4483b9ca43428f2ced270609cf8c8bc2",
-  "orchestration_revision": "revision7_guard2",
+  "orchestration_revision": "revision8_parallel_resource_only",
   "precalibration_protocol_sha256": "9786e15582989ab37a62561a9272fd5ae6eeafba26fad27bda8f931df7067167",
   "precalibration_revision": 7,
   "role": "post-freeze execution orchestration only; not part of the bound algorithm or environment",
@@ -51,8 +64,8 @@
     "all_cvci_back_run_recovery_finalize_schedulers_must_exit": true,
     "final_audit_batch_has_atomic_start_and_completion_ledgers": true,
     "final_audit_can_resume_only_hash_bound_reconstructed_complete_arms": true,
-    "five_clean_gpu_samples_before_each_new_gpu_phase": true,
-    "foreign_gpu_scheduler_must_exit_before_each_new_gpu_phase": true,
+    "five_clean_gpu_samples_before_each_new_gpu_phase": false,
+    "foreign_gpu_scheduler_must_exit_before_each_new_gpu_phase": false,
     "formal_adaptation_seed_never_automatically_restarted": true,
     "guard2_migration_occurred_before_any_v25_simulator_episode": true,
     "guardian_completed_or_hash_bound_terminal_release_required_before_any_gpu_phase": true,
@@ -60,11 +73,15 @@
     "guardian_terminal_release_receipt_sha256_is_runtime_pinned": true,
     "guardian_terminal_release_requires_five_60s_unchanged_evidence_samples": true,
     "guardianflow_gpu_restart_controllers_must_exit": true,
-    "idle_gpu_memory_ceiling_mib": 2048,
+    "idle_gpu_memory_ceiling_mib": null,
     "interrupted_calibration_seed_never_automatically_reused": true,
     "never_force_push": true,
+    "parallel_foreign_gpu_workloads_allowed": true,
+    "parallel_gpu_headroom_sample_count": 1,
+    "parallel_minimum_free_gpu_memory_mib": 3500,
     "remote_branch_tip_verified_after_each_push": true,
     "supervisor_restarted_only_before_terminal_or_partial_adaptation_state": true
   },
-  "schema_version": 1
+  "schema_version": 1,
+  "scientific_protocol_changed": false
 }

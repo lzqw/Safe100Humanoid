@@ -1,0 +1,23 @@
+{
+  "authorization": "user requested running v25 concurrently to reduce wall time",
+  "created_at": "2026-08-18T20:48:45+08:00",
+  "launch_snapshot": {
+    "gpu_memory_free_mib": 3586,
+    "gpu_memory_used_mib": 12479
+  },
+  "orchestration_revision": "revision8_parallel_resource_only",
+  "parallel_resource_policy": {
+    "clean_sample_count": 1,
+    "foreign_gpu_workloads_allowed": true,
+    "minimum_free_gpu_memory_mib_at_phase_start": 3500
+  },
+  "provenance": {
+    "base_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+    "frozen_git_head": "1ac36e9c4483b9ca43428f2ced270609cf8c8bc2",
+    "original_revision7_guard2_script_sha256": "ef2e38d7a59c9a187916ae59f6a84b83aa6422f1b4f659c183920dd8b8351c60",
+    "parallel_orchestrator_sha256": "0dde71f9f3d646bc7698477e015ebeced83d56552883bad4ce3cc2ee5e67f00e",
+    "precalibration_protocol_sha256": "9786e15582989ab37a62561a9272fd5ae6eeafba26fad27bda8f931df7067167"
+  },
+  "schema_version": 1,
+  "scientific_protocol_changed": false
+}
