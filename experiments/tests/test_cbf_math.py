@@ -6,6 +6,7 @@ from src.tasks.stairs_cbf.cbf_math import (
   dual_cbf_reward,
   next_riser,
   project_halfspace,
+  sloped_toe_clearance_constraint,
   stair_barrier,
 )
 from src.tasks.stairs_cbf.edge_detection import (
@@ -46,6 +47,25 @@ def test_stair_geometry_sign_and_next_edge():
   assert valid.all()
   h = stair_barrier(foot_x, edge_x, toe_margin=0.08)
   assert h[0] > 0 and h[1] < 0
+
+
+def test_sloped_clearance_constraint_couples_lift_and_forward_motion():
+  horizontal = torch.tensor([0.20, 0.00])
+  foot_z = torch.tensor([0.10, 0.18])
+  top_z = torch.tensor([0.18, 0.18])
+  jac_x = torch.tensor([[1.0, 0.0], [1.0, 0.0]])
+  jac_z = torch.tensor([[0.0, 1.0], [0.0, 1.0]])
+  barrier, normal = sloped_toe_clearance_constraint(
+    horizontal,
+    foot_z,
+    top_z,
+    jac_x,
+    jac_z,
+    top_clearance=0.02,
+    slope=0.5,
+  )
+  assert torch.allclose(barrier, torch.tensor([0.0, -0.02]))
+  assert torch.allclose(normal, torch.tensor([[-0.5, 1.0], [-0.5, 1.0]]))
 
 
 def test_riser_extraction_and_selection():

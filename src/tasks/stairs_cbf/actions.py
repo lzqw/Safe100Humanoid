@@ -13,7 +13,7 @@ from mjlab.envs.mdp.actions import JointPositionAction, JointPositionActionCfg
 from mjlab.sensor import ContactSensor
 from mjlab.utils.lab_api.string import resolve_matching_names_values
 
-from .cbf_math import project_halfspace
+from .cbf_math import project_halfspace, sloped_toe_clearance_constraint
 from .edge_detection import (
   riser_edges_from_metadata,
   riser_edges_from_tread_patches,
@@ -37,6 +37,7 @@ class StairCbfJointPositionActionCfg(JointPositionActionCfg):
   activation_distance: float = 0.30
   toe_margin: float = 0.08
   top_clearance: float = 0.025
+  clearance_barrier_slope: float = 0.0
   recovery_distance: float = 0.15
   patch_name: str = "stair_targets"
   riser_patch_name: str = "stair_risers"
@@ -196,6 +197,8 @@ class StairCbfJointPositionAction(JointPositionAction):
     )
     if cfg.safety_history_length < 1 or cfg.safety_prediction_steps < 1:
       raise ValueError("CBF safety history and prediction horizon must be positive")
+    if not 0.0 <= cfg.clearance_barrier_slope <= 2.0:
+      raise ValueError("clearance barrier slope must lie in [0, 2]")
     self.barrier_derivative = torch.zeros(shape, device=self.device)
     self.predicted_h = torch.ones(shape, device=self.device)
     self.h_history = torch.ones(
@@ -203,7 +206,7 @@ class StairCbfJointPositionAction(JointPositionAction):
     )
     self.correction_history = torch.zeros_like(self.h_history)
 
-  def _foot_jacobians(self, foot_pos: torch.Tensor) -> torch.Tensor:
+  def _foot_xz_jacobians(self, foot_pos: torch.Tensor) -> torch.Tensor:
     jacobians = []
     with wp.ScopedDevice(self._env.sim.wp_device):
       for foot in range(2):
@@ -216,8 +219,20 @@ class StairCbfJointPositionAction(JointPositionAction):
           self._points_wp[foot],
           self._bodies_wp[foot],
         )
-        jacobians.append(self._jacp_torch[foot][:, 0, self._joint_dof_ids])
+        jacobians.append(
+          torch.stack(
+            (
+              self._jacp_torch[foot][:, 0, self._joint_dof_ids],
+              self._jacp_torch[foot][:, 2, self._joint_dof_ids],
+            ),
+            dim=1,
+          )
+        )
     return torch.stack(jacobians, dim=1)
+
+  def _foot_jacobians(self, foot_pos: torch.Tensor) -> torch.Tensor:
+    """Return the historical x-axis Jacobian used by the default CBF."""
+    return self._foot_xz_jacobians(foot_pos)[:, :, 0]
 
   def process_actions(self, actions: torch.Tensor) -> None:
     previous_h = self.h.clone()
@@ -245,7 +260,9 @@ class StairCbfJointPositionAction(JointPositionAction):
     q = self._entity.data.joint_pos[:, self._target_ids]
     qdot_nominal = (nominal_target - q) / self._env.step_dt
     foot_pos = self._entity.data.site_pos_w[:, self._site_local_ids]
-    jac_x = self._foot_jacobians(foot_pos)
+    jac_xz = self._foot_xz_jacobians(foot_pos)
+    jac_x = jac_xz[:, :, 0]
+    jac_z = jac_xz[:, :, 1]
 
     found = self._contact_sensor.data.found
     if found is None:
@@ -278,13 +295,14 @@ class StairCbfJointPositionAction(JointPositionAction):
     self.selected_foot[:] = torch.where(has_swing, foot_index, -1)
     batch = torch.arange(self.num_envs, device=self.device)
     selected_pos = foot_pos[batch, foot_index]
-    selected_jac = jac_x[batch, foot_index]
+    selected_jac_x = jac_x[batch, foot_index]
+    selected_jac_z = jac_z[batch, foot_index]
 
     terrain = self._env.scene.terrain
     assert terrain is not None
     edge_x = self._edge_x[terrain.terrain_levels, terrain.terrain_types]
     edge_top_z = self._edge_top_z[terrain.terrain_levels, terrain.terrain_types]
-    _, h, selected_top_z, edge_active = select_active_riser(
+    _, horizontal_h, selected_top_z, edge_active = select_active_riser(
       selected_pos[:, 0],
       selected_pos[:, 2],
       edge_x,
@@ -298,7 +316,19 @@ class StairCbfJointPositionAction(JointPositionAction):
       has_swing
       & edge_active
     )
-    normal = -selected_jac
+    if self.cfg.clearance_barrier_slope > 0.0:
+      h, normal = sloped_toe_clearance_constraint(
+        horizontal_h,
+        selected_pos[:, 2],
+        selected_top_z,
+        selected_jac_x,
+        selected_jac_z,
+        top_clearance=self.cfg.top_clearance,
+        slope=self.cfg.clearance_barrier_slope,
+      )
+    else:
+      h = horizontal_h
+      normal = -selected_jac_x
     rhs = -self.cfg.alpha * h
     projected_qdot, psi_nominal, psi_projected = project_halfspace(
       qdot_nominal, normal, rhs, active=active

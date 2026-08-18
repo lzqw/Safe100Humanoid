@@ -58,6 +58,36 @@ def stair_barrier(
   return edge_x - (foot_x + toe_margin)
 
 
+def sloped_toe_clearance_constraint(
+  horizontal_margin: torch.Tensor,
+  foot_z: torch.Tensor,
+  edge_top_z: torch.Tensor,
+  jac_x: torch.Tensor,
+  jac_z: torch.Tensor,
+  *,
+  top_clearance: float,
+  slope: float,
+) -> tuple[torch.Tensor, torch.Tensor]:
+  """Return a task-compatible toe/riser barrier and its joint-space normal.
+
+  The safe boundary is a ramp in the x-z plane.  Far from the riser, the toe
+  may remain low; at the riser plane it must clear ``edge_top_z`` plus the
+  fixed margin.  Its derivative couples vertical lift and forward motion:
+
+  ``h_dot = (J_z - slope * J_x) q_dot``.
+  """
+  if horizontal_margin.shape != foot_z.shape or foot_z.shape != edge_top_z.shape:
+    raise ValueError("sloped-clearance margins must share shape [N]")
+  if jac_x.shape != jac_z.shape or jac_x.shape[:-1] != foot_z.shape:
+    raise ValueError("sloped-clearance Jacobians must share shape [N, A]")
+  if not 0.0 < float(slope) <= 2.0:
+    raise ValueError("sloped-clearance slope must lie in (0, 2]")
+  vertical_margin = foot_z - edge_top_z - float(top_clearance)
+  barrier = vertical_margin + float(slope) * horizontal_margin
+  normal = jac_z - float(slope) * jac_x
+  return barrier, normal
+
+
 def next_riser(
   foot_x: torch.Tensor,
   origin_x: torch.Tensor,

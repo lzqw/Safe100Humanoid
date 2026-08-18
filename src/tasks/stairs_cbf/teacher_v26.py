@@ -79,11 +79,15 @@ def configure_v26_higher_riser(
     *,
     riser_height_m: float,
     runtime_filter: bool,
+    clearance_barrier_slope: float = 0.0,
 ) -> dict[str, Any]:
     """Install one fixed higher-riser deployment without changing observations."""
     height = float(riser_height_m)
     if not math.isfinite(height) or not 0.13 < height <= 0.20:
         raise ValueError("v26 riser height must lie in (0.13, 0.20] m")
+    slope = float(clearance_barrier_slope)
+    if not math.isfinite(slope) or not 0.0 <= slope <= 2.0:
+        raise ValueError("v26 clearance barrier slope must lie in [0, 2]")
     fixed_deployment = audit_v25_fixed_deployment_config(env_cfg)
 
     terrain = env_cfg.scene.terrain
@@ -110,6 +114,7 @@ def configure_v26_higher_riser(
     kwargs.update(
         enabled=bool(runtime_filter),
         step_height=height,
+        clearance_barrier_slope=slope,
         deployment_action_gain=1.0,
         deployment_action_scale=None,
         deployment_action_bias=None,
@@ -129,6 +134,10 @@ def configure_v26_higher_riser(
         "shift": "fixed_uniform_higher_riser",
         "riser_height_m": height,
         "baseline_riser_height_m": 0.13,
+        "clearance_barrier_slope": slope,
+        "clearance_barrier": (
+            "sloped_xz" if slope > 0.0 else "historical_horizontal_only"
+        ),
         "runtime_filter": bool(runtime_filter),
         "terrain_geometry_changed": True,
         "friction_changed": False,

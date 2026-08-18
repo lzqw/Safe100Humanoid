@@ -24,6 +24,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--repo", type=Path, required=True)
     parser.add_argument("--checkpoint", type=Path, required=True)
     parser.add_argument("--riser-height", type=float, required=True)
+    parser.add_argument("--clearance-slope", type=float, default=0.0)
     parser.add_argument("--runtime-filter", choices=("on", "off"), required=True)
     parser.add_argument("--num-envs", type=int, required=True)
     parser.add_argument("--num-episodes", type=int, required=True)
@@ -131,6 +132,7 @@ def main() -> None:
         env_cfg,
         riser_height_m=args.riser_height,
         runtime_filter=runtime_filter,
+        clearance_barrier_slope=args.clearance_slope,
     )
     env_cfg.scene.num_envs = args.num_envs
     env_cfg.seed = args.seed
@@ -309,6 +311,7 @@ def main() -> None:
             "num_episodes": len(completed),
             "runtime_filter": runtime_filter,
             "riser_height_m": args.riser_height,
+            "clearance_barrier_slope": args.clearance_slope,
             "deterministic_policy_mean": True,
             "one_initial_episode_per_env": True,
             "original_observation_interface": True,
