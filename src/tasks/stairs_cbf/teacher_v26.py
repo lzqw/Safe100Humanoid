@@ -80,6 +80,7 @@ def configure_v26_higher_riser(
     riser_height_m: float,
     runtime_filter: bool,
     clearance_barrier_slope: float = 0.0,
+    recovery_distance_m: float = 0.15,
 ) -> dict[str, Any]:
     """Install one fixed higher-riser deployment without changing observations."""
     height = float(riser_height_m)
@@ -88,6 +89,9 @@ def configure_v26_higher_riser(
     slope = float(clearance_barrier_slope)
     if not math.isfinite(slope) or not 0.0 <= slope <= 2.0:
         raise ValueError("v26 clearance barrier slope must lie in [0, 2]")
+    recovery_distance = float(recovery_distance_m)
+    if not math.isfinite(recovery_distance) or not 0.0 <= recovery_distance <= 0.30:
+        raise ValueError("v26 recovery distance must lie in [0, 0.30] m")
     fixed_deployment = audit_v25_fixed_deployment_config(env_cfg)
 
     terrain = env_cfg.scene.terrain
@@ -115,6 +119,7 @@ def configure_v26_higher_riser(
         enabled=bool(runtime_filter),
         step_height=height,
         clearance_barrier_slope=slope,
+        recovery_distance=recovery_distance,
         deployment_action_gain=1.0,
         deployment_action_scale=None,
         deployment_action_bias=None,
@@ -135,6 +140,7 @@ def configure_v26_higher_riser(
         "riser_height_m": height,
         "baseline_riser_height_m": 0.13,
         "clearance_barrier_slope": slope,
+        "recovery_distance_m": recovery_distance,
         "clearance_barrier": (
             "sloped_xz" if slope > 0.0 else "historical_horizontal_only"
         ),
