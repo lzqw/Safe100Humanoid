@@ -1,0 +1,6 @@
+{
+  "base_policy_only": true,
+  "precalibration_protocol_sha256": "60c178174a03e109e11cd93fa62e0e34a19112abb6090e6334b7a2b461fc19c3",
+  "protocol_id": "safe100-success-gated-cbf-teacher-v27",
+  "single_fixed_candidate": true
+}

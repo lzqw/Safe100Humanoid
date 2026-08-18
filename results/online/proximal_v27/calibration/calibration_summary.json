@@ -1,0 +1,46 @@
+{
+  "adapted_policy_evaluations_used": false,
+  "attempt": {
+    "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+    "alignment_coverage": 0.6464646464646465,
+    "candidate_index": 0,
+    "clearance_barrier_slope": 0.8,
+    "conditions": {
+      "alignment_coverage_at_least_80pct": false,
+      "off_success_in_40_to_65pct": true,
+      "on_success_in_80_to_95pct": false,
+      "shield_rescue_rate_at_least_60pct": true
+    },
+    "evaluation_seeds": [
+      151270000,
+      151270001
+    ],
+    "off_failure_count": 99,
+    "off_initial_state_signatures": [
+      "6ad71fd17b3733534e9f5129da2f3c70eb66e7ef5117fcfd25f808e3ad7087f8",
+      "555992fb634cbd51ea26c6b19a482036e858e2127dfc9d476405e813a8d94d0f"
+    ],
+    "off_success_count": 157,
+    "off_success_rate": 0.61328125,
+    "off_toe_riser_failure_count": 64,
+    "on_initial_state_signatures": [
+      "6ad71fd17b3733534e9f5129da2f3c70eb66e7ef5117fcfd25f808e3ad7087f8",
+      "555992fb634cbd51ea26c6b19a482036e858e2127dfc9d476405e813a8d94d0f"
+    ],
+    "on_success_count": 189,
+    "on_success_rate": 0.73828125,
+    "paired_count": 256,
+    "qualifies": false,
+    "recovery_distance_m": 0.02,
+    "regressed_count": 40,
+    "rescued_count": 72,
+    "riser_height_m": 0.18,
+    "shield_rescue_rate": 0.7272727272727273
+  },
+  "base_policy_only": true,
+  "precalibration_protocol_sha256": "60c178174a03e109e11cd93fa62e0e34a19112abb6090e6334b7a2b461fc19c3",
+  "protocol_id": "safe100-success-gated-cbf-teacher-v27",
+  "schema_version": 1,
+  "single_fixed_candidate": true,
+  "status": "did_not_qualify"
+}
