@@ -1,0 +1,363 @@
+{
+  "checkpoints": {
+    "pi0_actor_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+    "pi0_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+    "pi8_actor_sha256": "7afed309902a323a43b47005c01529c84160944bb8cea2c45d000b38b18cc099",
+    "pi8_sha256": "f6dcd79d71450c8069d7a2c75f281872660e37043818be124e39768571b7a735"
+  },
+  "conditions": {
+    "D0_13cm": {
+      "pi0_on": {
+        "actor_observation_dim": 405,
+        "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+        "checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+        "condition": "pi0_on",
+        "deterministic_policy_mean": true,
+        "domain": "D0_13cm",
+        "fall_count": 19,
+        "fall_rate": 0.07421875,
+        "initial_state_signatures": [
+          "390f42a279652c5b82cf1ec056ddf9eba1dd2cb9b1ad08d2073b78c76a004c4b"
+        ],
+        "intervention_per_riser": 3.0649692712906056,
+        "kick_episode_count": 256,
+        "kick_rate": 1.0,
+        "mean_correction_norm": 0.0095853765764989,
+        "mean_counterfactual_correction_norm": 0.0095853765764989,
+        "mean_reached_riser": 8.8984375,
+        "mean_return": 6.457188400439918,
+        "num_episodes": 256,
+        "original_actor_observation_interface": true,
+        "runtime_filter": true,
+        "seeds": [
+          161290000
+        ],
+        "success_count": 237,
+        "success_rate": 0.92578125,
+        "swing_selection_mismatch_count": 0,
+        "teacher_reprojection_max_abs_error": 0.0,
+        "total_intervention_count": 6982,
+        "total_reached_risers": 2278
+      },
+      "pi8_on": {
+        "actor_observation_dim": 405,
+        "actor_state_sha256": "7afed309902a323a43b47005c01529c84160944bb8cea2c45d000b38b18cc099",
+        "checkpoint_sha256": "f6dcd79d71450c8069d7a2c75f281872660e37043818be124e39768571b7a735",
+        "condition": "pi8_on",
+        "deterministic_policy_mean": true,
+        "domain": "D0_13cm",
+        "fall_count": 21,
+        "fall_rate": 0.08203125,
+        "initial_state_signatures": [
+          "390f42a279652c5b82cf1ec056ddf9eba1dd2cb9b1ad08d2073b78c76a004c4b"
+        ],
+        "intervention_per_riser": 3.041942604856512,
+        "kick_episode_count": 256,
+        "kick_rate": 1.0,
+        "mean_correction_norm": 0.009043206530253183,
+        "mean_counterfactual_correction_norm": 0.009043206530253183,
+        "mean_reached_riser": 8.84765625,
+        "mean_return": 6.541798049584031,
+        "num_episodes": 256,
+        "original_actor_observation_interface": true,
+        "runtime_filter": true,
+        "seeds": [
+          161290000
+        ],
+        "success_count": 235,
+        "success_rate": 0.91796875,
+        "swing_selection_mismatch_count": 0,
+        "teacher_reprojection_max_abs_error": 0.0,
+        "total_intervention_count": 6890,
+        "total_reached_risers": 2265
+      }
+    },
+    "target_18cm": {
+      "pi0_off": {
+        "actor_observation_dim": 405,
+        "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+        "checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+        "condition": "pi0_off",
+        "deterministic_policy_mean": true,
+        "domain": "target_18cm",
+        "fall_count": 199,
+        "fall_rate": 0.388671875,
+        "initial_state_signatures": [
+          "6937a1690d79750adca638d3465e8ea07df643b709ae51a026d57292dc414040",
+          "27d420de8a3c8d811b164a2fe298196f5f1d0dd6fabceb0fa16903d2b4880b5f"
+        ],
+        "intervention_per_riser": 0.0,
+        "kick_episode_count": 498,
+        "kick_rate": 0.97265625,
+        "mean_correction_norm": 6.309480849227496e-08,
+        "mean_counterfactual_correction_norm": 0.027090413982107087,
+        "mean_reached_riser": 7.845703125,
+        "mean_return": -5.318564769346267,
+        "num_episodes": 512,
+        "original_actor_observation_interface": true,
+        "runtime_filter": false,
+        "seeds": [
+          160290000,
+          160290001
+        ],
+        "success_count": 313,
+        "success_rate": 0.611328125,
+        "swing_selection_mismatch_count": 0,
+        "teacher_reprojection_max_abs_error": 0.0,
+        "total_intervention_count": 0,
+        "total_reached_risers": 4017
+      },
+      "pi0_on": {
+        "actor_observation_dim": 405,
+        "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+        "checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+        "condition": "pi0_on",
+        "deterministic_policy_mean": true,
+        "domain": "target_18cm",
+        "fall_count": 138,
+        "fall_rate": 0.26953125,
+        "initial_state_signatures": [
+          "6937a1690d79750adca638d3465e8ea07df643b709ae51a026d57292dc414040",
+          "27d420de8a3c8d811b164a2fe298196f5f1d0dd6fabceb0fa16903d2b4880b5f"
+        ],
+        "intervention_per_riser": 6.217126128323981,
+        "kick_episode_count": 510,
+        "kick_rate": 0.99609375,
+        "mean_correction_norm": 0.03358113967813141,
+        "mean_counterfactual_correction_norm": 0.03358113967813141,
+        "mean_reached_riser": 8.005859375,
+        "mean_return": -5.601119541097432,
+        "num_episodes": 512,
+        "original_actor_observation_interface": true,
+        "runtime_filter": true,
+        "seeds": [
+          160290000,
+          160290001
+        ],
+        "success_count": 374,
+        "success_rate": 0.73046875,
+        "swing_selection_mismatch_count": 0,
+        "teacher_reprojection_max_abs_error": 0.0,
+        "total_intervention_count": 25484,
+        "total_reached_risers": 4099
+      },
+      "pi8_off": {
+        "actor_observation_dim": 405,
+        "actor_state_sha256": "7afed309902a323a43b47005c01529c84160944bb8cea2c45d000b38b18cc099",
+        "checkpoint_sha256": "f6dcd79d71450c8069d7a2c75f281872660e37043818be124e39768571b7a735",
+        "condition": "pi8_off",
+        "deterministic_policy_mean": true,
+        "domain": "target_18cm",
+        "fall_count": 207,
+        "fall_rate": 0.404296875,
+        "initial_state_signatures": [
+          "6937a1690d79750adca638d3465e8ea07df643b709ae51a026d57292dc414040",
+          "27d420de8a3c8d811b164a2fe298196f5f1d0dd6fabceb0fa16903d2b4880b5f"
+        ],
+        "intervention_per_riser": 0.0,
+        "kick_episode_count": 496,
+        "kick_rate": 0.96875,
+        "mean_correction_norm": 6.320324957669168e-08,
+        "mean_counterfactual_correction_norm": 0.027605900038976342,
+        "mean_reached_riser": 7.802734375,
+        "mean_return": -5.492587311659008,
+        "num_episodes": 512,
+        "original_actor_observation_interface": true,
+        "runtime_filter": false,
+        "seeds": [
+          160290000,
+          160290001
+        ],
+        "success_count": 305,
+        "success_rate": 0.595703125,
+        "swing_selection_mismatch_count": 0,
+        "teacher_reprojection_max_abs_error": 0.0,
+        "total_intervention_count": 0,
+        "total_reached_risers": 3995
+      },
+      "pi8_on": {
+        "actor_observation_dim": 405,
+        "actor_state_sha256": "7afed309902a323a43b47005c01529c84160944bb8cea2c45d000b38b18cc099",
+        "checkpoint_sha256": "f6dcd79d71450c8069d7a2c75f281872660e37043818be124e39768571b7a735",
+        "condition": "pi8_on",
+        "deterministic_policy_mean": true,
+        "domain": "target_18cm",
+        "fall_count": 158,
+        "fall_rate": 0.30859375,
+        "initial_state_signatures": [
+          "6937a1690d79750adca638d3465e8ea07df643b709ae51a026d57292dc414040",
+          "27d420de8a3c8d811b164a2fe298196f5f1d0dd6fabceb0fa16903d2b4880b5f"
+        ],
+        "intervention_per_riser": 6.326799007444169,
+        "kick_episode_count": 507,
+        "kick_rate": 0.990234375,
+        "mean_correction_norm": 0.03344505599633325,
+        "mean_counterfactual_correction_norm": 0.03344505599633325,
+        "mean_reached_riser": 7.87109375,
+        "mean_return": -5.970381200779229,
+        "num_episodes": 512,
+        "original_actor_observation_interface": true,
+        "runtime_filter": true,
+        "seeds": [
+          160290000,
+          160290001
+        ],
+        "success_count": 354,
+        "success_rate": 0.69140625,
+        "swing_selection_mismatch_count": 0,
+        "teacher_reprojection_max_abs_error": 0.0,
+        "total_intervention_count": 25497,
+        "total_reached_risers": 4030
+      }
+    }
+  },
+  "config_sha256": "83fee13fc84485df0f541901836e66eee530645a0acbfc05cdb9eb5f4815aeda",
+  "evaluation": {
+    "D0_paired_identities": 256,
+    "condition_order": [
+      "pi0_off",
+      "pi0_on",
+      "pi8_on",
+      "pi8_off"
+    ],
+    "deterministic_mean_action": true,
+    "eval_batch_size": 256,
+    "gpu_jobs_sequential": true,
+    "same_D0_identities_pi0_pi8": true,
+    "same_target_identities_all_four_conditions": true,
+    "target_paired_identities": 512
+  },
+  "final_policy_rule": "unconditional round 8 actor",
+  "followup_decision": "stop_without_no_teacher_control",
+  "internalization_metric_count_improved": 2,
+  "internalization_metrics": {
+    "off_kick_rate_decreased": true,
+    "off_success_improved": false,
+    "on_intervention_per_riser_decreased": false,
+    "policy_safe_gap_decreased": true
+  },
+  "interpretation": "mixed_or_insufficient_effect",
+  "interpretation_conditions": {
+    "clearly_effective": false,
+    "confidence_intervals_are_not_gates": true,
+    "ineffective": false,
+    "partially_effective": false
+  },
+  "paired_95_intervals": {
+    "D0_on_fall_delta": {
+      "bootstrap_samples": 20000,
+      "bootstrap_seed": 162290009,
+      "paired_bootstrap_95_ci": [
+        -0.03125,
+        0.05078125
+      ],
+      "paired_count": 256,
+      "point_estimate": 0.0078125,
+      "used_as_training_or_conclusion_gate": false
+    },
+    "D0_on_success_delta": {
+      "bootstrap_samples": 20000,
+      "bootstrap_seed": 162290006,
+      "paired_bootstrap_95_ci": [
+        -0.046875,
+        0.03125
+      ],
+      "paired_count": 256,
+      "point_estimate": -0.0078125,
+      "used_as_training_or_conclusion_gate": false
+    },
+    "target_off_fall_delta": {
+      "bootstrap_samples": 20000,
+      "bootstrap_seed": 162290008,
+      "paired_bootstrap_95_ci": [
+        -0.02734375,
+        0.056640625
+      ],
+      "paired_count": 512,
+      "point_estimate": 0.015625,
+      "used_as_training_or_conclusion_gate": false
+    },
+    "target_off_kick_rate_delta": {
+      "bootstrap_samples": 20000,
+      "bootstrap_seed": 162290003,
+      "paired_bootstrap_95_ci": [
+        -0.013671875,
+        0.005859375
+      ],
+      "paired_count": 512,
+      "point_estimate": -0.00390625,
+      "used_as_training_or_conclusion_gate": false
+    },
+    "target_off_success_delta": {
+      "bootstrap_samples": 20000,
+      "bootstrap_seed": 162290002,
+      "paired_bootstrap_95_ci": [
+        -0.056640625,
+        0.025390625
+      ],
+      "paired_count": 512,
+      "point_estimate": -0.015625,
+      "used_as_training_or_conclusion_gate": false
+    },
+    "target_on_fall_delta": {
+      "bootstrap_samples": 20000,
+      "bootstrap_seed": 162290007,
+      "paired_bootstrap_95_ci": [
+        0.00390625,
+        0.07421875
+      ],
+      "paired_count": 512,
+      "point_estimate": 0.0390625,
+      "used_as_training_or_conclusion_gate": false
+    },
+    "target_on_intervention_per_riser_delta": {
+      "bootstrap_samples": 20000,
+      "bootstrap_seed": 162290004,
+      "paired_bootstrap_95_ci": [
+        -0.017812461247519874,
+        0.6867435903397816
+      ],
+      "paired_count": 512,
+      "point_estimate": 0.32561848958333334,
+      "used_as_training_or_conclusion_gate": false
+    },
+    "target_on_policy_safe_gap_delta": {
+      "bootstrap_samples": 20000,
+      "bootstrap_seed": 162290005,
+      "paired_bootstrap_95_ci": [
+        -0.002499237625279002,
+        0.0019330433988237355
+      ],
+      "paired_count": 512,
+      "point_estimate": -0.00013608368179815152,
+      "used_as_training_or_conclusion_gate": false
+    },
+    "target_on_success_delta": {
+      "bootstrap_samples": 20000,
+      "bootstrap_seed": 162290001,
+      "paired_bootstrap_95_ci": [
+        -0.07421875,
+        -0.00390625
+      ],
+      "paired_count": 512,
+      "point_estimate": -0.0390625,
+      "used_as_training_or_conclusion_gate": false
+    }
+  },
+  "paired_episode_metrics_sha256": "5725e496cbd6def87691c658095c6a224a4f382102e2a5da958d66eebc79ee86",
+  "policy_method": "Raw-Action PPO + Moving-KL + Local-Success CBF Teacher",
+  "primary_outcomes": {
+    "D0_on_fall_delta": 0.0078125,
+    "D0_on_success_delta": -0.0078125,
+    "target_off_fall_delta": 0.015625,
+    "target_off_kick_rate_delta": -0.00390625,
+    "target_off_success_delta": -0.015625,
+    "target_on_fall_delta": 0.0390625,
+    "target_on_intervention_per_riser_delta": 0.32561848958333334,
+    "target_on_policy_safe_gap_delta": -0.00013608368179815152,
+    "target_on_success_delta": -0.0390625
+  },
+  "protocol_id": "safe100-cbf-teacher-proximal-online-v29",
+  "schema_version": 1,
+  "training_summary_sha256": "015daa21057857e8804be2417e19c914ddea69a810fc1a900ce1a7e7c3020390"
+}
