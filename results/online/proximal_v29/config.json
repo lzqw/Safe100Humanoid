@@ -81,16 +81,16 @@
   },
   "implementation_boundary": {
     "all_sources_committed_before_smoke": true,
-    "git_commit": "356f22866f138df02af93bed09f1720eece06584",
+    "git_commit": "d92feec71d93119a8fe942a41e176b50076d4c7e",
     "source_files": {
       "experiments/scripts/audit_cbf_teacher_v29.py": "169963066f0062b86c92f382d24bc54cfdb6f701445f34728aeb3e519c925f09",
       "experiments/scripts/cbf_teacher_v29_protocol.py": "ab3427e7291726b5ad21ec7d6696d0317d2b5194b54e253f325ca93459158687",
       "experiments/scripts/evaluate_cbf_teacher_v26.py": "231667835051f39f9eaef4bb21a87130c328fc06c71f55bb9e1bfe71f809506e",
       "experiments/scripts/evaluate_cbf_teacher_v29.py": "fece3cd2295dc154ce6df8aa5b9f40d8f10416995b2badc2317fae74791bdcd2",
-      "experiments/scripts/freeze_cbf_teacher_v29.py": "4f69ac49ffb40e8b1dd8c2ed1a9bc4ccec3383cde0eecf502a519ec3b1df6b3a",
+      "experiments/scripts/freeze_cbf_teacher_v29.py": "69fddf3e54385ca5c8d5fd11c6ecba1fa3e25377f36f951908df01e4d571d561",
       "experiments/scripts/package_cbf_teacher_v29.py": "2199682325cc068ba5a9618fe53c33934f56ec685b3683c380d9c791f2c380dd",
       "experiments/scripts/proximal_v23_io.py": "04077ac25965163cde89f3d2ec0ff27ea822c686acc19562bc3c90990fd61052",
-      "experiments/scripts/refine_cbf_teacher_v29.py": "373483597fa8d5cdd25eda978f3d36a106a0a7cdcfcf960454acda8a55b7efbc",
+      "experiments/scripts/refine_cbf_teacher_v29.py": "512e6286b2016c5d58e433dcb6c1b5c73e225b1656f1fc2fa2b4aadc051de3c0",
       "experiments/scripts/run_cbf_teacher_v29.sh": "dc360aa0fbdac9eda527c42b4a4342c0fbcd9217037777e814c299caddabe9a8",
       "experiments/tests/test_cbf_teacher_v29.py": "87219d377d4c7f2a677b874eb12ac866fe1190c5e0e1acea1f453b89e73ab65f",
       "src/tasks/stairs_cbf/actions.py": "83151afb1f9aa8b38c8985a3885c084b6e988716acee36ac0324cbb4985d0c6d",
@@ -100,7 +100,7 @@
       "src/tasks/stairs_cbf/mdp.py": "631a9fefcf2026521c1c43ecf2dc1851124ce47921a1ddf4191ae7db31475754",
       "src/tasks/stairs_cbf/online.py": "0b53dd2d58a2bc4745cb523b73853f5af5f172a6406c7d121415ad9ee18aa90a",
       "src/tasks/stairs_cbf/proximal.py": "d879fc138dc3bebe26d913182519b0280884e30ed7f529be2bdd9e259b8c4838",
-      "src/tasks/stairs_cbf/teacher.py": "e858e5f6a09e050e0d95d604ef20995dbf2f1e63799ecbc49ed8c7bdfae520ff",
+      "src/tasks/stairs_cbf/teacher.py": "c5b04c3497875e6ae313b65eaa856bdbe2ae1b2871339a212ad4acb1a7fbae68",
       "src/tasks/stairs_cbf/teacher_math.py": "ec5761fd06211c0b49c4bca3399f4a7f6679ac5e57d59da15445976b2442a0d8",
       "src/tasks/stairs_cbf/teacher_v26.py": "b8097e4292dda1038c98dcc3eda0e7d4fceb390adf7756618f3bd3c59e08a2f4",
       "src/tasks/stairs_cbf/teacher_v29.py": "5cc23a3f5d44245904ecba90f17058e317c57e38ac1c526012bcaa60ca1c16d9",
@@ -121,6 +121,15 @@
     "teacher_target_stop_gradient": true
   },
   "policy_method": "Raw-Action PPO + Moving-KL + Local-Success CBF Teacher",
+  "prior_functional_smoke": {
+    "attempt_count": 1,
+    "completed_episode_count": 0,
+    "formal_adaptation_started": false,
+    "log_sha256": "7bf46fff27ff4bb5b699a938b43a83b7f00c83704ecf5345b00450b335b978df",
+    "moving_forward_kl": 0.11568695306777954,
+    "status": "hard_rollback_before_critic_update",
+    "task_performance_used_for_revision": false
+  },
   "prior_results_immutable": {
     "git_trees": {
       "v25": "8d4384adb934c6155eb5b9a2429fcf3187950381",
@@ -141,9 +150,11 @@
     "adaptation_started": false,
     "final_evaluation_started": false,
     "outcomes_observed": false,
+    "previous_smoke_attempt_count": 1,
     "smoke_started": false
   },
   "protocol_id": "safe100-cbf-teacher-proximal-online-v29",
+  "revision": 2,
   "rollback": {
     "allowed_reasons": [
       "non-finite value",
@@ -161,7 +172,13 @@
     "steps": 128,
     "updates": 1
   },
-  "status": "fixed_before_v29_smoke_and_adaptation",
+  "status": "fixed_before_v29_replacement_smoke_and_adaptation",
+  "supersession": {
+    "formal_hyperparameters_changed": false,
+    "reason": "complete and report both actor and critic backward paths in the small functional smoke while retaining formal hard-KL rollback",
+    "supersedes_file": "results/online/proximal_v29/config.json",
+    "supersedes_sha256": "038580322ec710afe82e976b3e1f220ed458aaa6c9ab1473e1138bab7b7ab3e5"
+  },
   "training": {
     "actor_learning_rate": 5e-06,
     "critic_epochs": 2,
