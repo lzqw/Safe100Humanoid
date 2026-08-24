@@ -352,6 +352,10 @@ def main() -> None:
                 row["mean_correction_norm"] for row in completed
             )
             / len(completed),
+            "mean_counterfactual_correction_norm": sum(
+                row["mean_counterfactual_correction_norm"] for row in completed
+            )
+            / len(completed),
             "teacher_reprojection_max_abs_error": max(
                 row["teacher_reprojection_max_abs_error"] for row in completed
             ),

@@ -429,6 +429,38 @@ class CbfTeacherPPO(CbfProximalPPO):
                 self.toe_riser_overlaps[step].copy_(overlap)
         super().process_env_step(obs, rewards, dones, extras)
 
+    def _compute_teacher_labels(
+        self, correction_norm: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor, dict[str, torch.Tensor]]:
+        """Historical v25/v26 label hook; v29 overrides it vectorially."""
+        return successful_teacher_labels(
+            self.actual_cbf_intervened,
+            correction_norm,
+            self.teacher_pre_step_stair_indices,
+            self.stair_indices,
+            self.fall_events,
+            self.storage.dones.squeeze(-1),
+            horizon=self.teacher_success_horizon,
+            correction_scale=self.teacher_correction_scale,
+        )
+
+    def _compute_teacher_loss(
+        self,
+        policy_mean: torch.Tensor,
+        policy_std: torch.Tensor,
+        teacher_action: torch.Tensor,
+        eligible: torch.Tensor,
+        weights: torch.Tensor,
+    ) -> torch.Tensor:
+        """Historical valid-count normalization retained for v25/v26."""
+        return weighted_gaussian_teacher_loss(
+            policy_mean,
+            policy_std,
+            teacher_action,
+            eligible,
+            weights,
+        )
+
     def relabel_teacher_transitions(self) -> dict[str, float]:
         """Run the frozen action audit, then apply the delayed success gate."""
         metrics = super().relabel_pre_intervention_costs()
@@ -452,16 +484,7 @@ class CbfTeacherPPO(CbfProximalPPO):
             self.teacher_policy_actions - self.policy_actions, dim=-1
         )
         self.teacher_correction_norm.copy_(correction_norm)
-        eligible, weights, diagnostics = successful_teacher_labels(
-            self.actual_cbf_intervened,
-            correction_norm,
-            self.teacher_pre_step_stair_indices,
-            self.stair_indices,
-            self.fall_events,
-            self.storage.dones.squeeze(-1),
-            horizon=self.teacher_success_horizon,
-            correction_scale=self.teacher_correction_scale,
-        )
+        eligible, weights, diagnostics = self._compute_teacher_labels(correction_norm)
         self.teacher_eligible.copy_(eligible)
         self.teacher_weights.copy_(weights)
         self.teacher_label_diagnostics = diagnostics
@@ -592,7 +615,7 @@ class CbfTeacherPPO(CbfProximalPPO):
                     tuple(value[indices].detach() for value in reference_params),
                 ).mean()
                 batch_teacher_eligible = teacher_eligible[indices]
-                teacher_loss = weighted_gaussian_teacher_loss(
+                teacher_loss = self._compute_teacher_loss(
                     current_params[0],
                     current_params[1],
                     teacher_actions[indices],

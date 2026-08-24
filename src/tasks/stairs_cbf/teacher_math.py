@@ -217,6 +217,148 @@ def weighted_gaussian_teacher_loss(
     return (weights * negative_log_likelihood).sum() / valid_count
 
 
+def vectorized_successful_teacher_labels_v29(
+    intervened: torch.Tensor,
+    correction_norm: torch.Tensor,
+    pre_step_stair_index: torch.Tensor,
+    post_step_stair_index: torch.Tensor,
+    episode_id: torch.Tensor,
+    fell: torch.Tensor,
+    recovery_takeover: torch.Tensor,
+    emergency_termination: torch.Tensor,
+    dones: torch.Tensor,
+    *,
+    horizon: int,
+    correction_scale: float,
+) -> tuple[torch.Tensor, torch.Tensor, dict[str, torch.Tensor]]:
+    """Compute v29 local-success labels with at most ``horizon`` GPU loops.
+
+    Each loop operates on full ``[time, env]`` slices for one future offset;
+    there is no Python loop over transitions or environments.  Episode ids
+    prevent auto-reset data from supplying crossing or survival evidence.
+    A rollout-tail transition is observed only when all requested future steps
+    are present or its own episode terminates inside the available window.
+    """
+    tensors = (
+        intervened,
+        correction_norm,
+        pre_step_stair_index,
+        post_step_stair_index,
+        episode_id,
+        fell,
+        recovery_takeover,
+        emergency_termination,
+        dones,
+    )
+    shape = intervened.shape
+    if intervened.ndim != 2 or any(tensor.shape != shape for tensor in tensors):
+        raise ValueError("v29 teacher label inputs must share [T, N] shape")
+    if episode_id.dtype.is_floating_point:
+        raise ValueError("v29 episode ids must be integer tensors")
+    if horizon < 1:
+        raise ValueError("v29 teacher success horizon must be positive")
+    if not 0.0 < float(correction_scale):
+        raise ValueError("v29 teacher correction scale must be positive")
+    if not bool(torch.isfinite(correction_norm).all()):
+        raise RuntimeError("v29 teacher correction norm contains non-finite values")
+    if bool((correction_norm < 0.0).any()):
+        raise ValueError("v29 teacher correction norm must be non-negative")
+
+    intervened = intervened.bool()
+    fell = fell.bool()
+    recovery_takeover = recovery_takeover.bool()
+    emergency_termination = emergency_termination.bool()
+    dones = dones.bool()
+    crossed = torch.zeros_like(intervened)
+    fall_within_horizon = torch.zeros_like(intervened)
+    recovery_within_horizon = torch.zeros_like(intervened)
+    emergency_within_horizon = torch.zeros_like(intervened)
+    terminal_observed = torch.zeros_like(intervened)
+    time_steps = shape[0]
+
+    # At most H vectorized operations over all valid [time, env] pairs.
+    for offset in range(min(horizon, time_steps)):
+        count = time_steps - offset
+        source = slice(0, count)
+        future = slice(offset, time_steps)
+        same_episode = episode_id[future] == episode_id[source]
+        crossed[source] |= same_episode & (
+            post_step_stair_index[future] > pre_step_stair_index[source]
+        )
+        fall_within_horizon[source] |= same_episode & fell[future]
+        recovery_within_horizon[source] |= same_episode & recovery_takeover[future]
+        emergency_within_horizon[source] |= (
+            same_episode & emergency_termination[future]
+        )
+        terminal_observed[source] |= same_episode & dones[future]
+
+    full_horizon = (
+        torch.arange(time_steps, device=intervened.device) + horizon <= time_steps
+    ).unsqueeze(1)
+    horizon_observed = full_horizon | terminal_observed
+    unsafe_within_horizon = (
+        fall_within_horizon | recovery_within_horizon | emergency_within_horizon
+    )
+    no_unsafe_termination = ~unsafe_within_horizon
+    eligible = intervened & crossed & no_unsafe_termination & horizon_observed
+    magnitude_weight = torch.clamp(
+        correction_norm / float(correction_scale), 0.0, 1.0
+    )
+    weights = eligible.float() * magnitude_weight
+    diagnostics = {
+        "intervened": intervened,
+        "crossed_within_horizon": crossed,
+        "no_fall_within_horizon": ~fall_within_horizon,
+        "no_recovery_takeover_within_horizon": ~recovery_within_horizon,
+        "no_emergency_termination_within_horizon": ~emergency_within_horizon,
+        "no_unsafe_termination_within_horizon": no_unsafe_termination,
+        "horizon_outcome_observed": horizon_observed,
+        "terminal_observed_within_horizon": terminal_observed,
+        "magnitude_weight": magnitude_weight,
+    }
+    return eligible, weights, diagnostics
+
+
+def weighted_gaussian_teacher_loss_v29(
+    policy_mean: torch.Tensor,
+    policy_std: torch.Tensor,
+    teacher_action: torch.Tensor,
+    eligible: torch.Tensor,
+    weights: torch.Tensor,
+    *,
+    epsilon: float = 1.0e-8,
+) -> torch.Tensor:
+    """Return the v29 weighted Gaussian NLL normalized by ``sum(weights)``."""
+    if not (policy_mean.shape == policy_std.shape == teacher_action.shape):
+        raise ValueError("v29 teacher Gaussian tensors must have equal [B, A] shape")
+    if policy_mean.ndim != 2:
+        raise ValueError("v29 teacher Gaussian tensors must have shape [B, A]")
+    if eligible.shape != policy_mean.shape[:-1] or weights.shape != eligible.shape:
+        raise ValueError("v29 teacher masks and weights must have shape [B]")
+    if not 0.0 < float(epsilon):
+        raise ValueError("v29 teacher epsilon must be positive")
+    if not bool(
+        torch.isfinite(policy_mean).all()
+        and torch.isfinite(policy_std).all()
+        and torch.isfinite(teacher_action).all()
+        and torch.isfinite(weights).all()
+    ):
+        raise RuntimeError("v29 teacher objective contains non-finite values")
+    if bool((policy_std <= 0.0).any() or (weights < 0.0).any()):
+        raise ValueError(
+            "v29 teacher standard deviations/weights must be positive/non-negative"
+        )
+    effective_weights = weights * eligible.bool().to(weights.dtype)
+    weight_sum = effective_weights.sum()
+    if not bool(weight_sum > 0.0):
+        return policy_mean.sum() * 0.0
+    standardized = (policy_mean - teacher_action.detach()) / policy_std.detach()
+    negative_log_likelihood = 0.5 * standardized.square().sum(dim=-1)
+    return (effective_weights * negative_log_likelihood).sum() / (
+        weight_sum + float(epsilon)
+    )
+
+
 def toe_riser_kick_event(
     h: torch.Tensor,
     geometric_active: torch.Tensor,

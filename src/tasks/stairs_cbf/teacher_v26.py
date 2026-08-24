@@ -85,8 +85,8 @@ def configure_v26_higher_riser(
 ) -> dict[str, Any]:
     """Install one fixed higher-riser deployment without changing observations."""
     height = float(riser_height_m)
-    if not math.isfinite(height) or not 0.13 < height <= 0.20:
-        raise ValueError("v26 riser height must lie in (0.13, 0.20] m")
+    if not math.isfinite(height) or not 0.13 <= height <= 0.20:
+        raise ValueError("fixed riser height must lie in [0.13, 0.20] m")
     slope = float(clearance_barrier_slope)
     if not math.isfinite(slope) or not 0.0 <= slope <= 2.0:
         raise ValueError("v26 clearance barrier slope must lie in [0, 2]")
