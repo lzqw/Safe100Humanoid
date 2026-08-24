@@ -368,6 +368,11 @@ class CbfTeacherPPO(CbfProximalPPO):
         self.teacher_distillation_weight = float(teacher_distillation_weight)
         self.teacher_success_horizon = int(teacher_success_horizon)
         self.teacher_correction_scale = float(teacher_correction_scale)
+        # A functional smoke uses a much smaller batch than formal training.
+        # It may observe (and report) the hard-KL condition after an optimizer
+        # step so that the critic backward path can also be exercised. Formal
+        # execution never enables this flag and retains immediate rollback.
+        self.functional_smoke_mode = False
         if not math.isclose(
             self.teacher_distillation_weight, 0.1, rel_tol=0.0, abs_tol=1.0e-12
         ):
@@ -588,6 +593,7 @@ class CbfTeacherPPO(CbfProximalPPO):
         teacher_samples_seen = 0
         epoch_moving_kl: list[float] = []
         target_kl_early_stopped = False
+        functional_smoke_hard_kl_observed = False
         batch_size = actions.shape[0]
         if batch_size % self.num_mini_batches:
             raise RuntimeError("v25 rollout must divide exactly into four minibatches")
@@ -666,14 +672,23 @@ class CbfTeacherPPO(CbfProximalPPO):
             epoch_kl = epoch_metrics["moving_forward_kl"]
             epoch_moving_kl.append(epoch_kl)
             if epoch_kl > self.hard_kl_ceiling:
-                raise ProximalHardRollback(
-                    "moving forward KL exceeded hard ceiling",
-                    {
-                        "moving_forward_kl": epoch_kl,
-                        "hard_kl_ceiling": self.hard_kl_ceiling,
-                        "actor_epochs_completed": actor_epochs_completed,
-                    },
-                )
+                if not self.functional_smoke_mode:
+                    raise ProximalHardRollback(
+                        "moving forward KL exceeded hard ceiling",
+                        {
+                            "moving_forward_kl": epoch_kl,
+                            "hard_kl_ceiling": self.hard_kl_ceiling,
+                            "actor_epochs_completed": actor_epochs_completed,
+                            "actor_minibatches_completed": actor_updates,
+                            "teacher_loss": teacher_loss_total / actor_updates,
+                            "actor_gradient_norm_pre_clip_max": (
+                                actor_gradient_norm_max
+                            ),
+                        },
+                    )
+                functional_smoke_hard_kl_observed = True
+                target_kl_early_stopped = True
+                break
             if epoch_kl > float(self.desired_kl):
                 target_kl_early_stopped = epoch + 1 < self.num_learning_epochs
                 break
@@ -720,10 +735,16 @@ class CbfTeacherPPO(CbfProximalPPO):
         final_policy = self._whole_batch_policy_metrics(
             observations, actions, old_log_prob, reference_params
         )
-        if final_policy["moving_forward_kl"] > self.hard_kl_ceiling:
+        if (
+            final_policy["moving_forward_kl"] > self.hard_kl_ceiling
+            and not self.functional_smoke_mode
+        ):
             raise ProximalHardRollback(
                 "moving forward KL exceeded hard ceiling after value fit", final_policy
             )
+        functional_smoke_hard_kl_observed |= (
+            final_policy["moving_forward_kl"] > self.hard_kl_ceiling
+        )
         self._raise_if_corrupt("complete v25 update")
 
         rollout_metrics = dict(self.last_update_metrics)
@@ -748,6 +769,10 @@ class CbfTeacherPPO(CbfProximalPPO):
             "actor_minibatches_completed": actor_updates,
             "critic_minibatches_completed": critic_updates,
             "target_kl_early_stopped": target_kl_early_stopped,
+            "functional_smoke_mode": self.functional_smoke_mode,
+            "functional_smoke_hard_kl_observed": (
+                functional_smoke_hard_kl_observed
+            ),
             "epoch_moving_forward_kl": epoch_moving_kl,
             "actor_gradient_norm_pre_clip_max": actor_gradient_norm_max,
             "critic_gradient_norm_pre_clip_max": critic_gradient_norm_max,

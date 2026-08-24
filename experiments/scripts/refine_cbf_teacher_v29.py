@@ -98,7 +98,10 @@ def _validate_config(repo: Path, config_path: Path, checkpoint: Path) -> dict[st
     checks = {
         "protocol_id": config.get("protocol_id") == PROTOCOL_ID,
         "status": config.get("status")
-        == "fixed_before_v29_smoke_and_adaptation",
+        in (
+            "fixed_before_v29_smoke_and_adaptation",
+            "fixed_before_v29_replacement_smoke_and_adaptation",
+        ),
         "implementation_is_ancestor": ancestor,
         "config_committed_at_head": committed == config_path.read_bytes(),
         "base_checkpoint": config.get("base_checkpoint_sha256")
@@ -212,6 +215,9 @@ def _algorithm_audit(runner, env_cfg, shift: dict[str, Any]) -> dict[str, Any]:
         "minibatches": int(alg.num_mini_batches),
         "moving_kl_beta": float(alg.moving_kl_beta),
         "teacher_weight": float(alg.teacher_distillation_weight),
+        "formal_hard_kl_rollback_enabled": not bool(
+            alg.functional_smoke_mode
+        ),
     }
     expected = {
         "v29_algorithm": True,
@@ -242,6 +248,7 @@ def _algorithm_audit(runner, env_cfg, shift: dict[str, Any]) -> dict[str, Any]:
         "minibatches": MINI_BATCHES,
         "moving_kl_beta": MOVING_KL_BETA,
         "teacher_weight": TEACHER_WEIGHT,
+        "formal_hard_kl_rollback_enabled": True,
     }
     mismatches = {
         key: {"actual": checks[key], "expected": value}
@@ -457,7 +464,9 @@ def _collect_one_round(runner) -> dict[str, Any]:
         update = runner.alg.update()
     except RuntimeError as error:
         if isinstance(error, ProximalHardRollback):
-            raise ProximalHardRollback(error.reason, {**rollout, **error.metrics})
+            raise ProximalHardRollback(
+                error.reason, {**rollout, **action_metrics, **error.metrics}
+            )
         message = str(error)
         if "behavior" in message or "a_policy" in message:
             raise ProximalHardRollback(
@@ -588,6 +597,7 @@ def main() -> None:
             str(checkpoint), map_location=args.device
         )
         initial_actor_hash = actor_state_sha256(actor_state(runner.alg.actor))
+        runner.alg.functional_smoke_mode = args.smoke
         if not args.smoke:
             torch.save(
                 {
@@ -612,6 +622,10 @@ def main() -> None:
             rollback_reason = None
             try:
                 metrics = _collect_one_round(runner)
+                if args.smoke:
+                    runner.restore_proximal_state(transaction)
+                    status = "functional_smoke_update_restored"
+                    metrics["functional_smoke_update_restored"] = True
             except ProximalHardRollback as rollback:
                 runner.restore_proximal_state(transaction)
                 runner.alg.storage.clear()

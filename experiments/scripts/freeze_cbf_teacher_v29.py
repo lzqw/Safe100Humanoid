@@ -80,10 +80,20 @@ def main() -> None:
     parser.add_argument("--repo", type=Path, required=True)
     parser.add_argument("--base-checkpoint", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--supersedes", type=Path)
+    parser.add_argument("--failed-smoke-log", type=Path)
+    parser.add_argument("--external-root", type=Path)
     args = parser.parse_args()
     repo = args.repo.resolve()
     checkpoint = args.base_checkpoint.resolve()
     output = args.output.resolve()
+    supersedes = None if args.supersedes is None else args.supersedes.resolve()
+    failed_smoke_log = (
+        None if args.failed_smoke_log is None else args.failed_smoke_log.resolve()
+    )
+    external_root = (
+        None if args.external_root is None else args.external_root.resolve()
+    )
     if not checkpoint.is_file():
         raise FileNotFoundError(checkpoint)
     if output.exists():
@@ -95,12 +105,53 @@ def main() -> None:
     commit = _git(repo, "rev-parse", "HEAD")
     sources = _committed_source_hashes(repo, commit)
     historical = _historical_result_boundary(repo, commit)
+    revision = 1
+    status = "fixed_before_v29_smoke_and_adaptation"
+    supersession = None
+    prior_smoke = None
+    if supersedes is not None:
+        if failed_smoke_log is None or external_root is None:
+            raise ValueError(
+                "a v29 replacement freeze requires failed-smoke log and external root"
+            )
+        if not supersedes.is_file() or not failed_smoke_log.is_file():
+            raise FileNotFoundError("v29 superseded config or failed smoke log")
+        previous = json.loads(supersedes.read_text())
+        if previous.get("protocol_id") != PROTOCOL_ID:
+            raise RuntimeError("v29 superseded config has a wrong protocol id")
+        if (external_root / "training/formal_execution_started.json").exists():
+            raise RuntimeError("cannot revise v29 after formal adaptation started")
+        revision = int(previous.get("revision", 1)) + 1
+        if revision != 2:
+            raise RuntimeError("v29 permits only the one functional-smoke revision")
+        status = "fixed_before_v29_replacement_smoke_and_adaptation"
+        supersession = {
+            "supersedes_file": str(supersedes.relative_to(repo)),
+            "supersedes_sha256": file_sha256(supersedes),
+            "reason": (
+                "complete and report both actor and critic backward paths in the "
+                "small functional smoke while retaining formal hard-KL rollback"
+            ),
+            "formal_hyperparameters_changed": False,
+        }
+        prior_smoke = {
+            "attempt_count": 1,
+            "log_sha256": file_sha256(failed_smoke_log),
+            "status": "hard_rollback_before_critic_update",
+            "moving_forward_kl": 0.11568695306777954,
+            "completed_episode_count": 0,
+            "formal_adaptation_started": False,
+            "task_performance_used_for_revision": False,
+        }
     payload = {
         "schema_version": 1,
+        "revision": revision,
         "protocol_id": PROTOCOL_ID,
         "experiment_name": EXPERIMENT_NAME,
         "policy_method": POLICY_METHOD,
-        "status": "fixed_before_v29_smoke_and_adaptation",
+        "status": status,
+        "supersession": supersession,
+        "prior_functional_smoke": prior_smoke,
         "implementation_boundary": {
             "git_commit": commit,
             "source_files": sources,
@@ -189,6 +240,7 @@ def main() -> None:
         },
         "prospective_execution": {
             "smoke_started": False,
+            "previous_smoke_attempt_count": 0 if prior_smoke is None else 1,
             "adaptation_started": False,
             "final_evaluation_started": False,
             "outcomes_observed": False,
