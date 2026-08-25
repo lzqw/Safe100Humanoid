@@ -1,0 +1,103 @@
+{
+  "conditions": {
+    "Mixed_on": {
+      "actor_deterministic_state_sha256": "db0e557547583290de2122a95deae0496438c87a374c3059f422c0857cb9af39",
+      "actor_state_sha256": "ef0d6a3c495753caaec9b44eaa306b859d4a259441de48e47c77f7984e0f5c22",
+      "checkpoint_sha256": "3dae0f9cafdb522c5208380cafb0fc7a4fc4ff202619f7ea6f8d66412250ec47",
+      "condition": "mixed_Mixed_on",
+      "context": "D0",
+      "counterfactual_would_intervene_fraction": 0.053467061699613065,
+      "fall_count": 26,
+      "fall_rate": 0.1015625,
+      "global_minimum_nominal_barrier_margin": -76.50853729248047,
+      "initial_state_signatures": [
+        "0b625325196f7108070821739b3f922ce2a837e720b14f371b515951372e441f"
+      ],
+      "intervention_steps_per_riser": 2.9277482269503547,
+      "kick_episode_count": 256,
+      "kick_episode_rate": 1.0,
+      "mean_completion_time_s": 9.651093750000001,
+      "mean_correction_norm": 0.009006203782273382,
+      "mean_counterfactual_correction_norm": 0.009006203782273382,
+      "mean_episode_minimum_nominal_barrier_margin": -14.688927130773664,
+      "mean_reached_riser": 8.8125,
+      "mean_return": 6.078309053555131,
+      "mean_success_completion_time_s": 9.862521739130436,
+      "nominal_barrier_violation_steps_per_riser": 2.925531914893617,
+      "num_episodes": 256,
+      "runtime_filter": true,
+      "seeds": [
+        193440000
+      ],
+      "success_count": 230,
+      "success_rate": 0.8984375,
+      "swing_selection_mismatch_count": 0,
+      "teacher_reprojection_max_abs_error": 0.0,
+      "toe_riser_kick_events_per_riser": 0.9321808510638298,
+      "total_reached_risers": 2256,
+      "total_steps": 123534,
+      "unsafe_overlap_steps_per_riser": 1.0230496453900708,
+      "v32_protocol_id": "safe100-cbf-protected-continual-refinement-v32",
+      "v32_protocol_sha256": "37a843c6c14cc623ea4d898013e127a8ad830be8446d7ddf8e1cc70328ba1a15"
+    },
+    "base_on": {
+      "actor_deterministic_state_sha256": "5f5b8cf07464e89f7a47c6b296a36d8f957ed4cd74621224ff8a3e933d72490f",
+      "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+      "checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+      "condition": "mixed_base_on",
+      "context": "D0",
+      "counterfactual_would_intervene_fraction": 0.05446664907356316,
+      "fall_count": 22,
+      "fall_rate": 0.0859375,
+      "global_minimum_nominal_barrier_margin": -49.12034225463867,
+      "initial_state_signatures": [
+        "0b625325196f7108070821739b3f922ce2a837e720b14f371b515951372e441f"
+      ],
+      "intervention_steps_per_riser": 3.0004405286343614,
+      "kick_episode_count": 256,
+      "kick_episode_rate": 1.0,
+      "mean_completion_time_s": 9.769453125,
+      "mean_correction_norm": 0.00866791749397313,
+      "mean_counterfactual_correction_norm": 0.00866791749397313,
+      "mean_episode_minimum_nominal_barrier_margin": -13.826576536521316,
+      "mean_reached_riser": 8.8671875,
+      "mean_return": 6.5339500000700355,
+      "mean_success_completion_time_s": 9.957350427350427,
+      "nominal_barrier_violation_steps_per_riser": 2.9991189427312777,
+      "num_episodes": 256,
+      "runtime_filter": true,
+      "seeds": [
+        193440000
+      ],
+      "success_count": 234,
+      "success_rate": 0.9140625,
+      "swing_selection_mismatch_count": 0,
+      "teacher_reprojection_max_abs_error": 0.0,
+      "toe_riser_kick_events_per_riser": 0.9440528634361234,
+      "total_reached_risers": 2270,
+      "total_steps": 125049,
+      "unsafe_overlap_steps_per_riser": 1.045374449339207,
+      "v32_protocol_id": "safe100-cbf-protected-continual-refinement-v32",
+      "v32_protocol_sha256": "37a843c6c14cc623ea4d898013e127a8ad830be8446d7ddf8e1cc70328ba1a15"
+    }
+  },
+  "effect": {
+    "paired_success_95_CI": {
+      "bootstrap_samples": 2000,
+      "bootstrap_seed": 195410500,
+      "field": "success",
+      "paired_bootstrap_95_ci": [
+        -0.06640625,
+        0.03515625
+      ],
+      "paired_count": 256,
+      "point_estimate": -0.015625,
+      "used_as_selection_or_stopping_gate": false
+    },
+    "repairs_and_regressions": {
+      "regressions": 22,
+      "repairs": 18
+    },
+    "success_delta_vs_base": -0.015625
+  }
+}
