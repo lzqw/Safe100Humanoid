@@ -1,0 +1,53 @@
+{
+  "A0_excluded": true,
+  "KL_used": false,
+  "arm": "A2",
+  "configuration": {
+    "name": "residual_eta_025_all_interventions",
+    "teacher_eta": 0.25,
+    "teacher_gate": "all_interventions",
+    "teacher_loss": "weighted_smooth_l1_per_action_mean",
+    "teacher_mode": "residual",
+    "teacher_weight": 1.0
+  },
+  "intermediate_checkpoint_used": false,
+  "protocol_id": "safe100-cbf-teacher-overnight-v30",
+  "rule_applied_in_order": [
+    "maximum round-8 target CBF-on success",
+    "maximum round-8 target CBF-off success",
+    "minimum round-8 target interventions per riser"
+  ],
+  "selected_metrics": {
+    "D0_base_on_success": 0.9609375,
+    "D0_on_gain_over_base": -0.0703125,
+    "D0_round8_on_success": 0.890625,
+    "arm": "A2",
+    "final_checkpoint_sha256": "77b5cfa634a5b6d8c31ef8ff75d0273f35965ad3925febd86091bf2707bd4ef4",
+    "moving_KL_round8": 0.0006594512378796935,
+    "target_base_off_success": 0.6328125,
+    "target_base_on_success": 0.76171875,
+    "target_off_gain_over_base": 0.02734375,
+    "target_on_gain_over_base": 0.02734375,
+    "target_regressions_vs_base_on": 41,
+    "target_repairs_vs_base_on": 48,
+    "target_round8_off_fall": 0.33984375,
+    "target_round8_off_kick_events_per_riser": 0.7041769041769042,
+    "target_round8_off_mean_correction_norm": 0.02575030840497372,
+    "target_round8_off_minimum_nominal_barrier_margin": -17.880392394959927,
+    "target_round8_off_nominal_violation_steps_per_riser": 6.343980343980344,
+    "target_round8_off_success": 0.66015625,
+    "target_round8_off_unsafe_overlap_steps_per_riser": 0.8093366093366093,
+    "target_round8_off_would_intervene_fraction": 0.11791854790897068,
+    "target_round8_on_completion_time_s": 8.7296875,
+    "target_round8_on_fall": 0.2109375,
+    "target_round8_on_intervention_steps_per_riser": 6.049074074074074,
+    "target_round8_on_mean_riser": 8.4375,
+    "target_round8_on_return": -4.781869665719569,
+    "target_round8_on_success": 0.7890625,
+    "teacher_eta": 0.25,
+    "teacher_gate": "all_interventions",
+    "teacher_mode": "residual",
+    "teacher_name": "residual_eta_025_all_interventions",
+    "teacher_weight": 1.0
+  }
+}

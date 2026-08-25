@@ -1,0 +1,7 @@
+context,arm,method,planned_rounds,rounds_completed,training_status,audit_status,target_cbf_on_success,target_cbf_off_success,D0_cbf_on_success,failure_type,error
+F1,A0,control,8,8,complete,complete,0.75390625,0.630859375,0.890625,,
+F1,A2,teacher,8,8,complete,complete,0.7265625,0.65625,0.92578125,,
+F2,A0,control,8,8,complete,not_run,,,,,
+F2,A2,teacher,8,4,failed_during_round_5_update,not_run,,,,RuntimeError,stored behavior log probability is inconsistent with a_policy: 0.0005512237548828125
+F3,A0,control,8,0,failed_before_rollout,not_run,,,,ValueError,"could not broadcast input array from shape (12,3) into shape (10,3)"
+F3,A2,teacher,8,0,failed_before_rollout,not_run,,,,ValueError,"could not broadcast input array from shape (12,3) into shape (10,3)"

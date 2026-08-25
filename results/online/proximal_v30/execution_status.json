@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "protocol_id": "safe100-cbf-teacher-overnight-v30",
+  "protocol_sha256": "25a33f90cc2c3e6cf59805fef302d79666687552bc3424ef9969f60bc4f3e965",
+  "source_commit": "567a9fe2f43618904b98b6f8783ca60b886abd62",
+  "published_at": "2026-08-25T10:23:19+08:00",
+  "complete": false,
+  "status": "formal_matrix_incomplete",
+  "smoke": {
+    "passed": true,
+    "attempts": 1
+  },
+  "development": {
+    "complete": true,
+    "arms_completed": 6,
+    "arms_planned": 6,
+    "rounds_completed": 48,
+    "rounds_planned": 48,
+    "selected_teacher_arm": "A2"
+  },
+  "formal": {
+    "complete": false,
+    "training_runs_completed": 3,
+    "training_runs_planned": 6,
+    "training_rounds_completed": 28,
+    "training_rounds_planned": 48,
+    "contexts_with_complete_audit": [
+      "F1"
+    ],
+    "contexts_planned": [
+      "F1",
+      "F2",
+      "F3"
+    ],
+    "result_driven_reruns": 0,
+    "source_or_threshold_changes_after_formal_start": 0
+  },
+  "monitor": {
+    "complete": false,
+    "status": "not_run",
+    "reason": "The predeclared monitor requires all formal training to complete."
+  },
+  "paper_value_assessment": {
+    "available": false,
+    "reason": "F2 and F3 lack complete teacher/control formal results; the predeclared three-context criteria cannot be evaluated."
+  }
+}

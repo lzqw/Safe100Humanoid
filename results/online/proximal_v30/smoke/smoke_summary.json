@@ -1,0 +1,458 @@
+{
+  "arm": "A5",
+  "arm_configuration": {
+    "name": "residual_eta_050_local_success_50",
+    "teacher_eta": 0.5,
+    "teacher_gate": "local_success_50",
+    "teacher_loss": "weighted_smooth_l1_per_action_mean",
+    "teacher_mode": "residual",
+    "teacher_weight": 1.0
+  },
+  "base_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "checks": {
+    "actor_backward_and_steps_complete": true,
+    "all_six_arm_configurations_instantiate": true,
+    "critic_backward_and_steps_complete": true,
+    "full_nll_and_residual_huber_finite": true,
+    "kl_not_a_gate": true,
+    "no_nan_or_inf": true,
+    "one_actor_epoch": true,
+    "one_critic_epoch": true,
+    "raw_policy_action_stored": true,
+    "safe_action_executed": true,
+    "teacher_tensor_shape": true,
+    "teacher_transform_exact": true
+  },
+  "common_training": {
+    "actor_epochs_exact": 2,
+    "actor_learning_rate": 5e-06,
+    "critic_epochs": 2,
+    "critic_learning_rate": 0.0001,
+    "entropy_coefficient": 0.0,
+    "freeze_log_std": true,
+    "gae_lambda": 0.95,
+    "gamma": 0.99,
+    "hard_kl_rollback": false,
+    "maximum_gradient_norm": 0.5,
+    "maximum_std": 0.25,
+    "minibatches": 4,
+    "minimum_std": 0.05,
+    "moving_kl_beta": 0.5,
+    "num_envs": 64,
+    "online_rounds": 8,
+    "performance_selection_or_rollback": false,
+    "ppo_clip": 0.05,
+    "rollout_steps_per_round": 1024,
+    "save_round_checkpoints": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "std_scale_from_base": 0.35,
+    "target_kl_early_stopping": false
+  },
+  "context": "DEV",
+  "elapsed_seconds": 3.3419715820346028,
+  "environment": {
+    "all_non_riser_factors": "nominal",
+    "clearance_barrier_slope": 0.8,
+    "context": "DEV",
+    "exponential_cbf_alpha": 10.0,
+    "name": "development_uniform_18cm",
+    "observation_interface": "original_405D_actor_838D_critic",
+    "plant_action_transform": "identity",
+    "post_edge_recovery_window_m": 0.15,
+    "riser_height_m": 0.18,
+    "riser_profile_m": null,
+    "runtime_cbf_during_training": "always_on",
+    "task_id": "Unitree-G1-Stairs-Online-DQHMED"
+  },
+  "final_actor_sha256": "7583c0d26cf5ab7e67d1e373f5b25089bdb4ad1f6d9a12e9532dbefc8c557c67",
+  "final_checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/proximal_v30/smoke/round_01.pt",
+  "final_checkpoint_sha256": "e90a8dd8b3db961602ff31bb8c5f258c8a0c9707ad1ddaa535088d4f73df0261",
+  "final_policy_rule": "unconditional round 1 actor",
+  "git_commit": "8477e93945f6e6d027776428a417a58b5d3aac53",
+  "initial_actor_sha256": "7afed309902a323a43b47005c01529c84160944bb8cea2c45d000b38b18cc099",
+  "kl_rollback_count": 0,
+  "kl_stop_count": 0,
+  "passed": true,
+  "performance_selection_count": 0,
+  "phase": "smoke",
+  "policy_method": "Raw-Action PPO + Soft Moving-KL + Corrective Teacher",
+  "protocol": {
+    "checks": {
+      "arm_matches": true,
+      "base_checkpoint": true,
+      "common_training": true,
+      "context_matches": true,
+      "protocol_committed": true,
+      "protocol_id": true,
+      "smoke_arm": true,
+      "smoke_context": true,
+      "source_commit_is_ancestor": true,
+      "source_hashes": true,
+      "source_set": true,
+      "status": true
+    },
+    "path": "/home/carla/LZQW/SAFE100/humanoid/worktrees/v23_proximal/results/online/proximal_v30/protocol.json",
+    "sha256": "3bc0a75b4b50584213ddd4c54a1ecb6bbd6c60613e9d0ec2c759c908ce318beb"
+  },
+  "protocol_id": "safe100-cbf-teacher-overnight-v30",
+  "rounds": [
+    {
+      "elapsed_seconds": 2.3058509250404313,
+      "kl_gate_used": false,
+      "metrics": {
+        "action_std_mean": 0.05000000447034836,
+        "actor_epochs_completed": 1,
+        "actor_gradient_clipped_fraction": 1.0,
+        "actor_gradient_norm_pre_clip_max": 120.13018035888672,
+        "actor_loss": 0.04429151117801666,
+        "actor_minibatches_completed": 4,
+        "behavior_approx_kl": 0.011119037866592407,
+        "behavior_approx_kl_nonnegative": 0.01833367720246315,
+        "behavior_current_distribution_param_max_abs_error": 1.430511474609375e-06,
+        "behavior_current_log_prob_max_abs_error": 8.106231689453125e-05,
+        "behavior_reference_distribution_param_max_abs_error": 1.430511474609375e-06,
+        "behavior_reference_log_prob_max_abs_error": 8.106231689453125e-05,
+        "cbf_correction_mean": 0.0227019265294075,
+        "cbf_credit_correction_mean": 0.0227019265294075,
+        "cbf_credit_event_fraction": 0.1181640625,
+        "cbf_credit_is_counterfactual": 0.0,
+        "cbf_intervention_count": 121,
+        "cbf_intervention_fraction": 0.1181640625,
+        "cbf_intervention_per_riser": 8.642857551574707,
+        "clip_fraction": 0.73828125,
+        "completed_episode_count": 0.0,
+        "completed_episode_fall_rate": 0.0,
+        "counterfactual_safe_action_fraction": 0.1181640625,
+        "critic_epochs_completed": 1,
+        "critic_gradient_norm_pre_clip_max": 9.30659008026123,
+        "critic_minibatches_completed": 4,
+        "emergency_termination_count": 0.0,
+        "entropy": -18.921525955200195,
+        "episode_identity_transition_max_abs_error": 0.0,
+        "epoch_moving_forward_kl": [
+          0.017110221087932587
+        ],
+        "executed_action_change_fraction": 0.1181640625,
+        "executed_action_routing_max_abs_error": 0.0,
+        "fall_event_count": 0.0,
+        "fall_event_fraction": 0.0,
+        "freeze_log_std": true,
+        "hard_kl_rollback_enabled": false,
+        "intervention_cost_mean": 0.0,
+        "intervention_cost_per_riser": 0.0,
+        "mean_cbf_correction_norm": 0.4547247886657715,
+        "mean_kl": 0.017110221087932587,
+        "mean_policy_to_target_distance_after_update": 0.21708720922470093,
+        "mean_policy_to_target_distance_before_update": 0.2146216183900833,
+        "mean_policy_to_teacher_action_distance": 0.4547247886657715,
+        "mean_residual_target_norm": 0.2146216183900833,
+        "mean_weighted_policy_to_teacher_action_distance": 0.4292432367801666,
+        "minibatch_diagnostics": [
+          {
+            "action_mean_shift": 0.006689966190606356,
+            "actor_gradient_norm_pre_clip": 120.13018035888672,
+            "behavior_approximate_kl": 0.006118876859545708,
+            "clip_fraction": 0.67578125,
+            "epoch": 1,
+            "minibatch": 1,
+            "moving_forward_kl": 0.010468661785125732
+          },
+          {
+            "action_mean_shift": 0.0074732424691319466,
+            "actor_gradient_norm_pre_clip": 81.45266723632812,
+            "behavior_approximate_kl": 0.02596898004412651,
+            "clip_fraction": 0.7109375,
+            "epoch": 1,
+            "minibatch": 2,
+            "moving_forward_kl": 0.012565052136778831
+          },
+          {
+            "action_mean_shift": 0.007950637489557266,
+            "actor_gradient_norm_pre_clip": 78.44409942626953,
+            "behavior_approximate_kl": 0.016071844846010208,
+            "clip_fraction": 0.7421875,
+            "epoch": 1,
+            "minibatch": 3,
+            "moving_forward_kl": 0.014112945646047592
+          },
+          {
+            "action_mean_shift": 0.008722268044948578,
+            "actor_gradient_norm_pre_clip": 88.92713928222656,
+            "behavior_approximate_kl": -0.012612894177436829,
+            "clip_fraction": 0.72265625,
+            "epoch": 1,
+            "minibatch": 4,
+            "moving_forward_kl": 0.01659177802503109
+          }
+        ],
+        "moving_forward_kl": 0.017110221087932587,
+        "moving_forward_kl_loss": 0.009336970280855894,
+        "moving_kl_beta": 0.5,
+        "per_action_teacher_error_after_update": [
+          0.029397008940577507,
+          0.014801150187849998,
+          0.007077092304825783,
+          0.05139121785759926,
+          0.003984885290265083,
+          0.0022167761344462633,
+          0.10058151185512543,
+          0.02606460079550743,
+          0.01827523671090603,
+          0.11744336783885956,
+          0.012460587546229362,
+          0.0026010458823293447
+        ],
+        "per_action_teacher_error_before_update": [
+          0.027938835322856903,
+          0.013786551542580128,
+          0.004973519593477249,
+          0.049664054065942764,
+          0.002889474621042609,
+          0.0005695457803085446,
+          0.09891950339078903,
+          0.02604690007865429,
+          0.01774095743894577,
+          0.11453291773796082,
+          0.01173650287091732,
+          0.0017756095621734858
+        ],
+        "performance_gate_used": false,
+        "policy_storage_max_abs_error": 0.0,
+        "policy_to_nominal_clip_fraction": 0.0,
+        "pre_intervention_cost_max": 3.6892800331115723,
+        "pre_intervention_cost_mean": 0.49969619512557983,
+        "recovery_takeover_termination_count": 0.0,
+        "reference_behavior_mean_max_abs_error": 0.0,
+        "riser_crossing_count": 14.0,
+        "rollout_episode_count": 0,
+        "rollout_fall_count": 0,
+        "rollout_fall_rate": 0.0,
+        "rollout_mean_reached_riser": null,
+        "rollout_mean_return": null,
+        "rollout_mean_reward_per_transition": 0.0044069422874599695,
+        "rollout_success_count": 0,
+        "rollout_success_rate": 0.0,
+        "rollout_timeout_count": 0,
+        "round_reference_index": 1,
+        "runtime_filter_enabled_fraction": 1.0,
+        "smoke_all_arm_configurations_instantiated": [
+          [
+            "full_action",
+            "local_success_50",
+            1.0,
+            0.1
+          ],
+          [
+            "none",
+            "none",
+            0.0,
+            0.0
+          ],
+          [
+            "residual",
+            "all_interventions",
+            0.25,
+            1.0
+          ],
+          [
+            "residual",
+            "all_interventions",
+            0.5,
+            1.0
+          ],
+          [
+            "residual",
+            "all_interventions",
+            1.0,
+            1.0
+          ],
+          [
+            "residual",
+            "local_success_50",
+            0.5,
+            1.0
+          ]
+        ],
+        "smoke_all_arm_teacher_losses": {
+          "A0": 0.0,
+          "A1": 49.99118423461914,
+          "A2": 0.009975496679544449,
+          "A3": 0.02479855716228485,
+          "A4": 0.05621769279241562,
+          "A5": 0.022604716941714287
+        },
+        "stored_episode_identity_count": 1.0,
+        "surrogate": 0.016749831847846508,
+        "swing_selection_mismatch_count": 0.0,
+        "target_kl_early_stopping_enabled": false,
+        "task_reward_excludes_fixed_safety_shaping": 0.0,
+        "teacher_actor_coordinate_correction_mean": 0.053732335567474365,
+        "teacher_crossed_gate_count": 114.0,
+        "teacher_distillation_weight": 1.0,
+        "teacher_eligible_count": 66.0,
+        "teacher_eligible_fraction_among_interventions": 0.5454545454545454,
+        "teacher_eta": 0.5,
+        "teacher_fraction_among_interventions": 0.5454545021057129,
+        "teacher_gate_mode": "local_success_50",
+        "teacher_horizon_observed_count": 68.0,
+        "teacher_huber_loss_mean": 0.02287319442257285,
+        "teacher_label_vectorized_horizon_loops": 50.0,
+        "teacher_loss": 0.02287319442257285,
+        "teacher_loss_weight_normalization_epsilon": 1e-08,
+        "teacher_minibatches_with_signal": 4,
+        "teacher_minibatches_without_signal": 0,
+        "teacher_mode": "residual",
+        "teacher_no_fall_gate_count": 121.0,
+        "teacher_reprojection_max_abs_error": 0.0,
+        "teacher_smooth_l1_beta": 0.05,
+        "teacher_target_shape": [
+          128,
+          8,
+          12
+        ],
+        "teacher_target_stop_gradient": true,
+        "teacher_tensor_shapes": {
+          "correction_vector": [
+            128,
+            8,
+            12
+          ],
+          "done": [
+            128,
+            8,
+            1
+          ],
+          "episode": [
+            128,
+            8
+          ],
+          "fall": [
+            128,
+            8
+          ],
+          "intervention": [
+            128,
+            8
+          ],
+          "raw_sampled_action": [
+            128,
+            8,
+            12
+          ],
+          "riser": [
+            128,
+            8
+          ],
+          "round_reference_mean": [
+            128,
+            8,
+            12
+          ],
+          "safe_sampled_action": [
+            128,
+            8,
+            12
+          ]
+        },
+        "teacher_transition_count": 66.0,
+        "teacher_transition_fraction": 0.064453125,
+        "teacher_weight_mean_over_valid": 0.9855084419250488,
+        "teacher_weight_sum": 65.0435562133789,
+        "teacher_weighted_count": 65.0435562133789,
+        "toe_riser_kick_event_count": 12.0,
+        "toe_riser_overlap_fraction": 0.0126953125,
+        "value": 0.10116110183298588,
+        "whole_batch_advantage_mean": 2.2351741790771484e-08,
+        "whole_batch_advantage_std": 0.9999999403953552
+      },
+      "performance_gate_used": false,
+      "round": 1,
+      "round_end_actor_sha256": "7583c0d26cf5ab7e67d1e373f5b25089bdb4ad1f6d9a12e9532dbefc8c557c67",
+      "round_reference_is_exact_pi_k": true,
+      "round_start_actor_sha256": "7afed309902a323a43b47005c01529c84160944bb8cea2c45d000b38b18cc099",
+      "status": "updated"
+    }
+  ],
+  "rounds_completed": 1,
+  "saved_checkpoint_rounds": [
+    0,
+    1
+  ],
+  "schema_version": 1,
+  "seed": 158290001,
+  "structural_audit": {
+    "actor_epochs": 1,
+    "actor_groups": [
+      "actor"
+    ],
+    "actor_observation_dim": 405,
+    "all_six_arm_configurations": 6,
+    "auxiliary_modules_absent": true,
+    "cbf_action": true,
+    "critic_epochs": 1,
+    "critic_groups": [
+      "actor",
+      "critic",
+      "online_privileged"
+    ],
+    "critic_observation_dim": 838,
+    "hard_kl_rollback_enabled": false,
+    "log_std_trainable_parameters": 0,
+    "minibatches": 4,
+    "plant_identity": true,
+    "reward_terms": [
+      "action_rate_l2",
+      "angular_momentum",
+      "body_ang_vel",
+      "body_orientation_l2",
+      "cbf_dual",
+      "dont_wait",
+      "fall_termination",
+      "foot_clearance",
+      "foot_gait",
+      "foot_slip",
+      "is_terminated",
+      "joint_acc_l2",
+      "joint_pos_limits",
+      "online_safety_telemetry",
+      "pose",
+      "riser_crossing",
+      "self_collisions",
+      "soft_landing",
+      "stair_progress",
+      "stand_still",
+      "swing_foot_force",
+      "top_completion",
+      "track_angular_velocity",
+      "track_linear_velocity"
+    ],
+    "runtime_cbf": true,
+    "single_actor": 1,
+    "single_critic": 1,
+    "target_kl_early_stopping_enabled": false,
+    "termination_terms": [
+      "fell_over",
+      "reached_top",
+      "time_out"
+    ],
+    "v30_algorithm": true
+  },
+  "warm_start": {
+    "actor_layout": "exact-original-interface",
+    "actor_observation_dim": 405,
+    "critic_layout": "exact-original-privileged-interface",
+    "critic_observation_dim": 838,
+    "source_auxiliary_heads_ignored": true,
+    "source_iteration": 3,
+    "source_optimizer_discarded": true
+  }
+}

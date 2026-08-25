@@ -1,0 +1,25 @@
+{
+  "protocol_id": "safe100-cbf-teacher-overnight-v30",
+  "context": "F2",
+  "complete": false,
+  "training": {
+    "A0": {
+      "status": "complete",
+      "rounds_completed": 8,
+      "final_checkpoint_sha256": "2c74550b362e17ec10fbce5f7dff2bbaeb7cf4ad15f67a3e132a9c6efb57e892",
+      "training_summary_sha256": "ce7d76eca13ec42631e2b9c6897d12f23ac35a0643d9526bdb153b44883d228e"
+    },
+    "A2": {
+      "status": "failed_during_round_5_update",
+      "rounds_completed": 4,
+      "error_type": "RuntimeError",
+      "error": "stored behavior log probability is inconsistent with a_policy: 0.0005512237548828125",
+      "frozen_absolute_tolerance": 0.0005
+    }
+  },
+  "audit": {
+    "status": "not_run",
+    "reason": "A2 has no unconditional round-8 checkpoint."
+  },
+  "protocol_integrity_action": "Stopped this arm, did not change the frozen tolerance, and did not retry."
+}

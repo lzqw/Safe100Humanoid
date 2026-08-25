@@ -1,0 +1,26 @@
+{
+  "protocol_id": "safe100-cbf-teacher-overnight-v30",
+  "context": "F1",
+  "complete": true,
+  "training": {
+    "A0": {
+      "status": "complete",
+      "rounds_completed": 8,
+      "final_checkpoint_sha256": "73a21d58f01b8267202870ff7a2d31630740b72bce3d7dc0de0ec1e418c13e2f",
+      "training_summary_sha256": "26d11e91c3d2a0ddb3644f3dc9cde010397cde23c097c75c5faa1ec80d9d2945"
+    },
+    "A2": {
+      "status": "complete",
+      "rounds_completed": 8,
+      "final_checkpoint_sha256": "8af2019f66f347b9bacc5067b8146fda8ec319ac82beac63fe75e932d713999d",
+      "training_summary_sha256": "a432640de164296a7553608394bc275670e91dc5c65f58f2931097401bc45390"
+    }
+  },
+  "audit": {
+    "status": "complete",
+    "evaluation_batches": 15,
+    "target_episodes": 3072,
+    "D0_episodes": 768,
+    "paired_bootstrap_samples_per_delta": 2000
+  }
+}
