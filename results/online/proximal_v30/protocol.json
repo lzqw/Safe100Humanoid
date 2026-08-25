@@ -202,6 +202,11 @@
       "teacher_weight": 1.0
     }
   },
+  "development_binding": {
+    "audit": "/home/carla/LZQW/SAFE100/humanoid/artifacts/proximal_v30/development_audit/arm_summary.json",
+    "selected_arm": "A2",
+    "sha256": "71262c7a4a356d848933dba39f6a79d9b5942ac7ed1f35881c739a283649745e"
+  },
   "evaluation_batching": {
     "fallback_changes_only_batching_not_identity": true,
     "memory_only_fallback": 128,
@@ -219,6 +224,12 @@
     "post_edge_recovery_window_m": 0.15
   },
   "formal": {
+    "D0_conditions": [
+      "base_on",
+      "control_on",
+      "teacher_on"
+    ],
+    "D0_episodes_per_context": 256,
     "D0_seed_bases": {
       "F1": 176301000,
       "F2": 176302000,
@@ -229,13 +240,63 @@
       "F2": 174302001,
       "F3": 174303001
     },
+    "bootstrap_samples_max": 2000,
+    "bootstrap_seed_base": 178300000,
+    "checkpoint_monitor": {
+      "context": "F1",
+      "episodes": 128,
+      "filter_modes": [
+        "on",
+        "off"
+      ],
+      "methods": [
+        "control",
+        "teacher"
+      ],
+      "read_only_after_all_training": true,
+      "rounds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "seed": 177301000,
+      "selection_gate": false
+    },
+    "conditions": [
+      "base_off",
+      "base_on",
+      "control_on",
+      "control_off",
+      "teacher_on",
+      "teacher_off"
+    ],
     "contexts": [
       "F1",
       "F2",
       "F3"
     ],
-    "selected_teacher": null,
-    "selection_not_yet_observed": true,
+    "final_audit_cannot_select_or_modify_policy": true,
+    "paired_CI_not_a_gate": true,
+    "selected_teacher": {
+      "arm": "A2",
+      "configuration": {
+        "name": "residual_eta_025_all_interventions",
+        "teacher_eta": 0.25,
+        "teacher_gate": "all_interventions",
+        "teacher_loss": "weighted_smooth_l1_per_action_mean",
+        "teacher_mode": "residual",
+        "teacher_weight": 1.0
+      },
+      "development_source": "/home/carla/LZQW/SAFE100/humanoid/artifacts/proximal_v30/development_audit/arm_summary.json",
+      "selection_record_sha256": "71262c7a4a356d848933dba39f6a79d9b5942ac7ed1f35881c739a283649745e"
+    },
+    "target_episodes_per_context": 512,
     "target_seed_bases": {
       "F1": 175301000,
       "F2": 175302000,
@@ -274,10 +335,11 @@
     ]
   },
   "prospective_execution": {
-    "development_outcomes_observed": false,
-    "development_started": false,
+    "development_outcomes_observed": true,
+    "development_started": true,
+    "formal_outcomes_observed": false,
     "formal_started": false,
-    "smoke_started": false
+    "smoke_started": true
   },
   "protocol_id": "safe100-cbf-teacher-overnight-v30",
   "schema_version": 1,
@@ -324,7 +386,7 @@
       "src/tasks/stairs_cbf/terrain.py": "f24dcfc9fb2d364c42e1b872a787dd940d4abee1656d2e9a840c19828075bcf8"
     }
   },
-  "status": "frozen_before_v30_development",
+  "status": "frozen_before_v30_formal",
   "stopping": {
     "allowed_reasons": [
       "NaN or Inf",
