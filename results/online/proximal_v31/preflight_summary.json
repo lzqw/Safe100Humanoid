@@ -1,0 +1,66 @@
+{
+  "aggregation_recovered_without_simulator_rerun": true,
+  "aggregation_recovery_sha256": "ab32d6d560b3e452b4dc0b5d8d23eeafbe8960a17378fa83d85f69ba69284ab9",
+  "attempts": 1,
+  "case_summaries": {
+    "F1_A0": {
+      "arm": "A0",
+      "behavior_log_prob_max_abs_error": 8.296966552734375e-05,
+      "context": "F1",
+      "num_risers": 9,
+      "rounds_completed": 1,
+      "seed": 181300101,
+      "stair_target_patch_slots": 10,
+      "summary_sha256": "2842ec3fc070720347235052ba578c11a4cd80e8f980d351a63ecc72d9692901",
+      "teacher_loss": 0.0
+    },
+    "F2_A1": {
+      "arm": "A1",
+      "behavior_log_prob_max_abs_error": 7.05718994140625e-05,
+      "context": "F2",
+      "num_risers": 9,
+      "rounds_completed": 1,
+      "seed": 181300102,
+      "stair_target_patch_slots": 10,
+      "summary_sha256": "823280f7cd331f1e0ef95667ea4c8e204d664d2e3fe764134a46206ab0b11a8c",
+      "teacher_loss": 49.897226333618164
+    },
+    "F3_A2": {
+      "arm": "A2",
+      "behavior_log_prob_max_abs_error": 6.866455078125e-05,
+      "context": "F3",
+      "num_risers": 11,
+      "rounds_completed": 1,
+      "seed": 181300103,
+      "stair_target_patch_slots": 12,
+      "summary_sha256": "c3e2ae7d1aa40b18660c12f9a58a4b403a3ff9b5cfd23e225a6dad4c227e4480",
+      "teacher_loss": 0.013422674732282758
+    }
+  },
+  "checks": {
+    "A1_A2_teacher_loss_finite": true,
+    "actor_and_critic_update": true,
+    "all_contexts_construct_reset_step": true,
+    "all_methods_update": true,
+    "distribution_parameter_tolerance_remains_strict": true,
+    "exactly_three_cases": true,
+    "implemented_log_prob_atol_is_1e_3": true,
+    "legal_7_5e_4_reduction_error_continues": true,
+    "no_nan_or_inf": true,
+    "patch_counts_F1_F2_F3": true,
+    "raw_action_storage": true,
+    "real_1_2e_3_log_prob_error_rejected": true,
+    "safe_action_execution": true
+  },
+  "complete": true,
+  "elapsed_seconds": 6.599157353048213,
+  "formal_ready": true,
+  "orchestrator_completed_normally": false,
+  "original_failure_sha256": "ba97ab9ee0d92c860bd94df276632493c8a60d01b515ffc2e0c5c6ac1ece61c0",
+  "passed": true,
+  "protocol_id": "safe100-cbf-teacher-formal-matrix-v31",
+  "protocol_sha256": "36dfd735e9bb1254c9abdd0784898e4c73796177dc1f5c6d555c04e71cc34ed5",
+  "schema_version": 1,
+  "simulator_case_attempts": 3,
+  "simulator_cases_rerun": false
+}
