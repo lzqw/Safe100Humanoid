@@ -174,6 +174,7 @@ SOURCE_FILES = (
     "experiments/scripts/package_cbf_teacher_v31.py",
     "experiments/scripts/run_cbf_teacher_v31.sh",
     "experiments/tests/test_cbf_teacher_v31.py",
+    "experiments/tests/test_online_refinement.py",
 )
 
 

@@ -1827,7 +1827,10 @@ def test_behavior_log_prob_tolerance_accepts_float32_reduction_noise() -> None:
   error = validate_behavior_log_prob(stored, recomputed)
   assert 2.0e-4 < error < 5.0e-4
 
-  invalid = stored + torch.tensor([6.0e-4, 0.0])
+  legal_v31_reduction_noise = stored + torch.tensor([7.5e-4, 0.0])
+  assert validate_behavior_log_prob(stored, legal_v31_reduction_noise) < 1.0e-3
+
+  invalid = stored + torch.tensor([1.2e-3, 0.0])
   try:
     validate_behavior_log_prob(stored, invalid)
   except RuntimeError as exc:
