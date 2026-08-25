@@ -1,0 +1,359 @@
+{
+  "base_checkpoint": {
+    "reference": "/home/carla/LZQW/SAFE100/humanoid/artifacts/retention_v13/arm_b_state_retention/accepted_final.pt",
+    "sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8"
+  },
+  "common_training": {
+    "actor_epochs_exact": 2,
+    "actor_learning_rate": 5e-06,
+    "critic_epochs": 2,
+    "critic_learning_rate": 0.0001,
+    "entropy_coefficient": 0.0,
+    "freeze_log_std": true,
+    "gae_lambda": 0.95,
+    "gamma": 0.99,
+    "hard_kl_rollback": false,
+    "maximum_gradient_norm": 0.5,
+    "maximum_std": 0.25,
+    "minibatches": 4,
+    "minimum_std": 0.05,
+    "moving_kl_beta": 0.5,
+    "num_envs": 64,
+    "online_rounds": 8,
+    "performance_selection_or_rollback": false,
+    "ppo_clip": 0.05,
+    "rollout_steps_per_round": 1024,
+    "save_round_checkpoints": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "std_scale_from_base": 0.35,
+    "target_kl_early_stopping": false
+  },
+  "contexts": {
+    "D0": {
+      "all_non_riser_factors": "nominal",
+      "clearance_barrier_slope": 0.8,
+      "context": "D0",
+      "exponential_cbf_alpha": 10.0,
+      "name": "nominal_uniform_13cm",
+      "num_risers": 9,
+      "observation_interface": "original_405D_actor_838D_critic",
+      "plant_action_transform": "identity",
+      "post_edge_recovery_window_m": 0.15,
+      "riser_height_m": 0.13,
+      "riser_profile_m": null,
+      "runtime_cbf_during_training": "always_on",
+      "stair_target_patch_slots": 10,
+      "task_id": "Unitree-G1-Stairs-Online-DQHMED"
+    },
+    "F1": {
+      "all_non_riser_factors": "nominal",
+      "clearance_barrier_slope": 0.8,
+      "context": "F1",
+      "exponential_cbf_alpha": 10.0,
+      "name": "main_uniform_18cm",
+      "num_risers": 9,
+      "observation_interface": "original_405D_actor_838D_critic",
+      "plant_action_transform": "identity",
+      "post_edge_recovery_window_m": 0.15,
+      "riser_height_m": 0.18,
+      "riser_profile_m": null,
+      "runtime_cbf_during_training": "always_on",
+      "stair_target_patch_slots": 10,
+      "task_id": "Unitree-G1-Stairs-Online-DQHMED"
+    },
+    "F2": {
+      "all_non_riser_factors": "nominal",
+      "clearance_barrier_slope": 0.8,
+      "context": "F2",
+      "exponential_cbf_alpha": 10.0,
+      "name": "hard_uniform_18_4cm",
+      "num_risers": 9,
+      "observation_interface": "original_405D_actor_838D_critic",
+      "plant_action_transform": "identity",
+      "post_edge_recovery_window_m": 0.15,
+      "riser_height_m": 0.184,
+      "riser_profile_m": null,
+      "runtime_cbf_during_training": "always_on",
+      "stair_target_patch_slots": 10,
+      "task_id": "Unitree-G1-Stairs-Online-DQHMED"
+    },
+    "F3": {
+      "all_non_riser_factors": "nominal",
+      "clearance_barrier_slope": 0.8,
+      "context": "F3",
+      "exponential_cbf_alpha": 10.0,
+      "name": "nonuniform_11_riser_profile",
+      "num_risers": 11,
+      "observation_interface": "original_405D_actor_838D_critic",
+      "plant_action_transform": "identity",
+      "post_edge_recovery_window_m": 0.15,
+      "riser_height_m": null,
+      "riser_profile_m": [
+        0.176,
+        0.18,
+        0.184,
+        0.18,
+        0.178,
+        0.182,
+        0.18,
+        0.184,
+        0.178,
+        0.182,
+        0.18
+      ],
+      "runtime_cbf_during_training": "always_on",
+      "stair_target_patch_slots": 12,
+      "task_id": "Unitree-G1-Stairs-Online-DQHMED"
+    }
+  },
+  "evaluation_batching": {
+    "fallback_changes_only_batching_not_identity": true,
+    "memory_only_fallback": 128,
+    "preferred": 256
+  },
+  "final_policy": {
+    "candidate_best_or_performance_selection": false,
+    "unconditional_round_8": true
+  },
+  "fixed_cbf": {
+    "clearance_barrier_slope": 0.8,
+    "exponential_cbf_alpha": 10.0,
+    "parameter_or_checkpoint_sweep": false,
+    "post_edge_recovery_window_m": 0.15
+  },
+  "formal": {
+    "D0_conditions": [
+      "base_on",
+      "A0_on",
+      "A1_on",
+      "A2_on"
+    ],
+    "D0_episodes_per_condition": 256,
+    "D0_seed_bases": {
+      "F1": 183310000,
+      "F2": 183320000,
+      "F3": 183330000
+    },
+    "adaptation_seeds": {
+      "F1": 181310001,
+      "F2": 181320001,
+      "F3": 181330001
+    },
+    "bootstrap_samples_max": 2000,
+    "bootstrap_seed_base": 185310000,
+    "checkpoint_monitor": {
+      "context": "F1",
+      "episodes": 128,
+      "filter_modes": [
+        "on",
+        "off"
+      ],
+      "methods": [
+        "A0",
+        "A1",
+        "A2"
+      ],
+      "read_only_after_all_training_and_audit": true,
+      "rounds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "seed": 184310000,
+      "selection_gate": false
+    },
+    "conditions": [
+      "base_off",
+      "base_on",
+      "A0_off",
+      "A0_on",
+      "A1_off",
+      "A1_on",
+      "A2_off",
+      "A2_on"
+    ],
+    "contexts": [
+      "F1",
+      "F2",
+      "F3"
+    ],
+    "execution_order": [
+      "F1-A0",
+      "F1-A1",
+      "F1-A2",
+      "F2-A0",
+      "F2-A1",
+      "F2-A2",
+      "F3-A0",
+      "F3-A1",
+      "F3-A2"
+    ],
+    "final_audit_cannot_select_or_modify_policy": true,
+    "infrastructure_resume_from_latest_complete_round": true,
+    "methods": [
+      "A0",
+      "A1",
+      "A2"
+    ],
+    "one_adaptation_per_context_method": true,
+    "paired_CI_not_a_gate": true,
+    "result_driven_rerun": false,
+    "target_episodes_per_condition": 512,
+    "target_seed_bases": {
+      "F1": 182310000,
+      "F2": 182320000,
+      "F3": 182330000
+    }
+  },
+  "methods": {
+    "A0": {
+      "name": "no_teacher_control",
+      "teacher_eta": 0.0,
+      "teacher_gate": "none",
+      "teacher_loss": "none",
+      "teacher_mode": "none",
+      "teacher_weight": 0.0
+    },
+    "A1": {
+      "name": "full_action_local_success_50",
+      "teacher_eta": 1.0,
+      "teacher_gate": "local_success_50",
+      "teacher_loss": "frozen_std_gaussian_nll",
+      "teacher_mode": "full_action",
+      "teacher_weight": 0.1
+    },
+    "A2": {
+      "name": "residual_eta_025_all_interventions",
+      "teacher_eta": 0.25,
+      "teacher_gate": "all_interventions",
+      "teacher_loss": "weighted_smooth_l1_per_action_mean",
+      "teacher_mode": "residual",
+      "teacher_weight": 1.0
+    }
+  },
+  "policy_method": "Raw-Action PPO + Soft Moving-KL + Fixed CBF Teachers",
+  "preflight": {
+    "actor_epochs": 1,
+    "all_contexts_constructed": true,
+    "all_methods_updated": true,
+    "attempt_limit": 1,
+    "cases": [
+      {
+        "arm": "A0",
+        "context": "F1",
+        "seed": 181300101
+      },
+      {
+        "arm": "A1",
+        "context": "F2",
+        "seed": 181300102
+      },
+      {
+        "arm": "A2",
+        "context": "F3",
+        "seed": 181300103
+      }
+    ],
+    "critic_epochs": 1,
+    "formal_starts_immediately_after_pass": true,
+    "num_envs": 8,
+    "steps": 128
+  },
+  "prior_results_immutable": {
+    "git_trees": {
+      "v25": "8d4384adb934c6155eb5b9a2429fcf3187950381",
+      "v26": "011f4302b83d1dafe424aa4f7f1954bbb8860764",
+      "v27": "368144c8ef7426590bf20eb82de7fcca419feb04",
+      "v28": "bae47e710bcf1441b1ed7617244a1378a457db78",
+      "v29": "f214aad649fdc9404750bcbcd2fea7dfc1ceecd0",
+      "v30": "2f08b591a1cc7a8bb230d113d1766310b41bf0f3"
+    },
+    "rerun_recomputed_or_reinterpreted": false,
+    "v30_interpretation": "immutable incomplete formal result",
+    "versions": [
+      "v25",
+      "v26",
+      "v27",
+      "v28",
+      "v29",
+      "v30"
+    ]
+  },
+  "prospective_execution": {
+    "formal_outcomes_observed": false,
+    "formal_started": false,
+    "preflight_started": false
+  },
+  "protocol_id": "safe100-cbf-teacher-formal-matrix-v31",
+  "schema_version": 1,
+  "source_boundary": {
+    "all_sources_committed_before_execution": true,
+    "git_commit": "b1cd615c827cbb0ee47d2429dd9cf86d5f1a0a85",
+    "source_files": {
+      "experiments/scripts/audit_cbf_teacher_v31_formal.py": "db8be7b0ede76935a044930a550c0f2d47ae6f78167726d3084778b4ac6143e3",
+      "experiments/scripts/cbf_teacher_v31_eval_io.py": "9c2059e603d18f2753fbce2d46520192610e9c0754e48f05137a197468157c71",
+      "experiments/scripts/cbf_teacher_v31_protocol.py": "98f7843d32964bd8695a472135cd638b419e41ba215da052d0b9f4c6a670a895",
+      "experiments/scripts/evaluate_cbf_teacher_v31.py": "c4745378a4b23c774aca7bef5e8df364d60aa533d6aba9596b4f77f47a5068e2",
+      "experiments/scripts/freeze_cbf_teacher_v31.py": "c087c1fb5711e0a13bb88c1165f7c179db7fc0e63cf9d63dab07cecd233f9b4c",
+      "experiments/scripts/monitor_cbf_teacher_v31.py": "f16bb8eec51f6a42c5ea05297af7480733ea1072a0a97aa53913fddfd94973a2",
+      "experiments/scripts/package_cbf_teacher_v31.py": "5583ad60a35d6870b627ab1919d71f871d77d54ad93828a73b1cb41f63b9f08d",
+      "experiments/scripts/preflight_cbf_teacher_v31.py": "b7954037cccf02d6d0804862c2ab2a324af140fa8283a186088c532760de81fe",
+      "experiments/scripts/proximal_v23_io.py": "04077ac25965163cde89f3d2ec0ff27ea822c686acc19562bc3c90990fd61052",
+      "experiments/scripts/refine_cbf_teacher_v31.py": "118504465e067cf60ffb48ff08be089025b14fa804a809dd0351d08efab7944e",
+      "experiments/scripts/run_cbf_teacher_v31.sh": "51b29a1ba48158a433cf7f55180874395ad1b69dfc52ce31a85638085760f967",
+      "experiments/tests/test_cbf_teacher_v31.py": "0c50062d2c58380d7e576ae2a51652190a0bf8d6e4a4a61112052c8df208ac55",
+      "experiments/tests/test_online_refinement.py": "40bfe9464005d1f43d144211c231dc656b7048675da1789a68bb41455138f42f",
+      "src/tasks/stairs_cbf/actions.py": "83151afb1f9aa8b38c8985a3885c084b6e988716acee36ac0324cbb4985d0c6d",
+      "src/tasks/stairs_cbf/cbf_math.py": "6a931cbbcd80e6af518857ece6a5fb755285a18f35636da7977ea836943a31da",
+      "src/tasks/stairs_cbf/config.py": "22a57df095616e1f19f7cf6f18d7ba173ecef7901bf2a85da2a5faaa11c32f8a",
+      "src/tasks/stairs_cbf/edge_detection.py": "302735da8506bd7d40bb7745e76fa280496775520329bf1bd059732e8746b662",
+      "src/tasks/stairs_cbf/environment_v31.py": "5ad2932ee99f3f3568dac35b9d7359e6a43389e94b39fecf353d69a8a2c97559",
+      "src/tasks/stairs_cbf/mdp.py": "631a9fefcf2026521c1c43ecf2dc1851124ce47921a1ddf4191ae7db31475754",
+      "src/tasks/stairs_cbf/online.py": "1c8afc56d200e5cd4c38964d35c82a632e897537fc0c81db6b0ada0d9486314f",
+      "src/tasks/stairs_cbf/proximal.py": "d879fc138dc3bebe26d913182519b0280884e30ed7f529be2bdd9e259b8c4838",
+      "src/tasks/stairs_cbf/teacher.py": "c5b04c3497875e6ae313b65eaa856bdbe2ae1b2871339a212ad4acb1a7fbae68",
+      "src/tasks/stairs_cbf/teacher_math.py": "ec5761fd06211c0b49c4bca3399f4a7f6679ac5e57d59da15445976b2442a0d8",
+      "src/tasks/stairs_cbf/teacher_v26.py": "b8097e4292dda1038c98dcc3eda0e7d4fceb390adf7756618f3bd3c59e08a2f4",
+      "src/tasks/stairs_cbf/teacher_v29.py": "5cc23a3f5d44245904ecba90f17058e317c57e38ac1c526012bcaa60ca1c16d9",
+      "src/tasks/stairs_cbf/teacher_v30.py": "caba7a3c52b106ce01364fc08e28dbe8e576d43fdd9025db8b41a1a81ce6997e",
+      "src/tasks/stairs_cbf/teacher_v30_math.py": "bdf339ae51698a39e56aaa3cf1d7158fa7197c650388ae5897cffb73a7037a4b",
+      "src/tasks/stairs_cbf/terrain.py": "f24dcfc9fb2d364c42e1b872a787dd940d4abee1656d2e9a840c19828075bcf8"
+    }
+  },
+  "status": "frozen_before_v31_preflight_and_formal",
+  "stopping": {
+    "allowed_reasons": [
+      "NaN or Inf",
+      "real raw/safe action or behavior-distribution routing error",
+      "teacher transform error",
+      "optimizer corruption"
+    ],
+    "hard_KL_rollback": false,
+    "performance_rollback": false,
+    "target_KL_early_stop": false
+  },
+  "v31_engineering_fixes": {
+    "F3_risers": 11,
+    "F3_target_patches_including_top_platform": 12,
+    "behavior_distribution_parameter_atol_retained": 2e-05,
+    "behavior_log_probability_float32_reduction_atol": 0.001,
+    "executed_safe_action_audit_retained": true,
+    "raw_action_bitwise_audit_retained": true,
+    "stair_target_patch_slots": "number_of_risers + 1"
+  }
+}
