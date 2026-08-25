@@ -1,0 +1,785 @@
+{
+  "A2_configuration_unchanged": {
+    "name": "residual_eta_025_all_interventions",
+    "teacher_eta": 0.25,
+    "teacher_gate": "all_interventions",
+    "teacher_loss": "weighted_smooth_l1_per_action_mean",
+    "teacher_mode": "residual",
+    "teacher_weight": 1.0
+  },
+  "algorithm": {
+    "actor_epochs_exact": 2,
+    "behavior_log_prob_atol": 0.001,
+    "best_checkpoint_selection": false,
+    "candidate_line_search": false,
+    "critic_epochs": 2,
+    "entropy_coefficient": 0.0,
+    "final_policy": "unconditional round 24",
+    "freeze_log_std": true,
+    "gae_lambda": 0.95,
+    "gamma": 0.99,
+    "hard_kl_rollback": false,
+    "maximum_gradient_norm": 0.5,
+    "maximum_std": 0.25,
+    "minibatches": 4,
+    "minimum_std": 0.05,
+    "moving_kl_beta": 0.5,
+    "num_envs": 64,
+    "performance_gate": false,
+    "ppo_clip": 0.05,
+    "rollout_steps_per_round": 1024,
+    "smooth_l1_beta": 0.05,
+    "std_scale_from_base": 0.35,
+    "target_kl_early_stopping": false,
+    "teacher": {
+      "name": "residual_eta_025_all_interventions",
+      "teacher_eta": 0.25,
+      "teacher_gate": "all_interventions",
+      "teacher_loss": "weighted_smooth_l1_per_action_mean",
+      "teacher_mode": "residual",
+      "teacher_weight": 1.0
+    },
+    "teacher_correction_scale": 0.05,
+    "teacher_epsilon": 1e-08,
+    "teacher_horizon": 50
+  },
+  "base_checkpoint": {
+    "bytes": 22281406,
+    "logical_role": "common pi0 and mixed-policy initialization",
+    "sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8"
+  },
+  "contexts": {
+    "D0": {
+      "all_non_riser_factors": "nominal",
+      "clearance_barrier_slope": 0.8,
+      "context": "D0",
+      "exponential_cbf_alpha": 10.0,
+      "name": "nominal_uniform_13cm",
+      "num_risers": 9,
+      "observation_interface": "original_405D_actor_838D_critic",
+      "plant_action_transform": "identity",
+      "post_edge_recovery_window_m": 0.15,
+      "riser_height_m": 0.13,
+      "riser_profile_m": null,
+      "runtime_cbf_during_training": "always_on",
+      "stair_target_patch_slots": 10,
+      "task_id": "Unitree-G1-Stairs-Online-DQHMED"
+    },
+    "F1": {
+      "all_non_riser_factors": "nominal",
+      "clearance_barrier_slope": 0.8,
+      "context": "F1",
+      "exponential_cbf_alpha": 10.0,
+      "name": "main_uniform_18cm",
+      "num_risers": 9,
+      "observation_interface": "original_405D_actor_838D_critic",
+      "plant_action_transform": "identity",
+      "post_edge_recovery_window_m": 0.15,
+      "riser_height_m": 0.18,
+      "riser_profile_m": null,
+      "runtime_cbf_during_training": "always_on",
+      "stair_target_patch_slots": 10,
+      "task_id": "Unitree-G1-Stairs-Online-DQHMED"
+    },
+    "F2": {
+      "all_non_riser_factors": "nominal",
+      "clearance_barrier_slope": 0.8,
+      "context": "F2",
+      "exponential_cbf_alpha": 10.0,
+      "name": "hard_uniform_18_4cm",
+      "num_risers": 9,
+      "observation_interface": "original_405D_actor_838D_critic",
+      "plant_action_transform": "identity",
+      "post_edge_recovery_window_m": 0.15,
+      "riser_height_m": 0.184,
+      "riser_profile_m": null,
+      "runtime_cbf_during_training": "always_on",
+      "stair_target_patch_slots": 10,
+      "task_id": "Unitree-G1-Stairs-Online-DQHMED"
+    },
+    "F3": {
+      "all_non_riser_factors": "nominal",
+      "clearance_barrier_slope": 0.8,
+      "context": "F3",
+      "exponential_cbf_alpha": 10.0,
+      "name": "nonuniform_11_riser_profile",
+      "num_risers": 11,
+      "observation_interface": "original_405D_actor_838D_critic",
+      "plant_action_transform": "identity",
+      "post_edge_recovery_window_m": 0.15,
+      "riser_height_m": null,
+      "riser_profile_m": [
+        0.176,
+        0.18,
+        0.184,
+        0.18,
+        0.178,
+        0.182,
+        0.18,
+        0.184,
+        0.178,
+        0.182,
+        0.18
+      ],
+      "runtime_cbf_during_training": "always_on",
+      "stair_target_patch_slots": 12,
+      "task_id": "Unitree-G1-Stairs-Online-DQHMED"
+    }
+  },
+  "formal_evaluation": {
+    "D0_episodes_per_condition": 256,
+    "bootstrap_samples": 2000,
+    "bootstrap_seed_base": 195410000,
+    "continuation_D0_mode": "on",
+    "continuation_D0_seed_bases": {
+      "F1": 193410000,
+      "F2": 193420000,
+      "F3": 193430000
+    },
+    "mixed_D0_seed_base": 193440000,
+    "no_checkpoint_selection": true,
+    "no_pass_fail_gate": true,
+    "target_episodes_per_condition": 512,
+    "target_modes": [
+      "on",
+      "off"
+    ],
+    "target_seed_bases": {
+      "F1": 192410000,
+      "F2": 192420000,
+      "F3": 192430000
+    }
+  },
+  "formal_runs": [
+    {
+      "additional_rounds": 16,
+      "context": "F1",
+      "final_round": 24,
+      "kind": "continuation",
+      "schedule": "LongConstant",
+      "seed": 191410001,
+      "source_checkpoint_sha256": "65ebc05a007fda98076b4c671028cf3ce2026db0fc0da5ac6c056c207363967f",
+      "start_round": 8
+    },
+    {
+      "additional_rounds": 16,
+      "context": "F1",
+      "final_round": 24,
+      "kind": "continuation",
+      "schedule": "LongDecay",
+      "seed": 191410002,
+      "source_checkpoint_sha256": "65ebc05a007fda98076b4c671028cf3ce2026db0fc0da5ac6c056c207363967f",
+      "start_round": 8
+    },
+    {
+      "additional_rounds": 16,
+      "context": "F2",
+      "final_round": 24,
+      "kind": "continuation",
+      "schedule": "LongConstant",
+      "seed": 191420001,
+      "source_checkpoint_sha256": "00ed5967ebebe8f60832c53030f586e8a4fb39b9ad8ee3df70acdf00ba20abdb",
+      "start_round": 8
+    },
+    {
+      "additional_rounds": 16,
+      "context": "F2",
+      "final_round": 24,
+      "kind": "continuation",
+      "schedule": "LongDecay",
+      "seed": 191420002,
+      "source_checkpoint_sha256": "00ed5967ebebe8f60832c53030f586e8a4fb39b9ad8ee3df70acdf00ba20abdb",
+      "start_round": 8
+    },
+    {
+      "additional_rounds": 16,
+      "context": "F3",
+      "final_round": 24,
+      "kind": "continuation",
+      "schedule": "LongConstant",
+      "seed": 191430001,
+      "source_checkpoint_sha256": "8fc5134f0bf083c09e259f61acb72ea85427fc3053335d665e0992bf6ed06e64",
+      "start_round": 8
+    },
+    {
+      "additional_rounds": 16,
+      "context": "F3",
+      "final_round": 24,
+      "kind": "continuation",
+      "schedule": "LongDecay",
+      "seed": 191430002,
+      "source_checkpoint_sha256": "8fc5134f0bf083c09e259f61acb72ea85427fc3053335d665e0992bf6ed06e64",
+      "start_round": 8
+    },
+    {
+      "additional_rounds": 24,
+      "context": "mixed",
+      "final_round": 24,
+      "kind": "mixed",
+      "schedule": "LongDecay",
+      "seed": 191440001,
+      "source_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+      "start_round": 0
+    }
+  ],
+  "learning_rate_schedules": {
+    "continuation": {
+      "LongConstant": [
+        {
+          "actor_learning_rate": 5e-06,
+          "critic_learning_rate": 0.0001,
+          "round": 9
+        },
+        {
+          "actor_learning_rate": 5e-06,
+          "critic_learning_rate": 0.0001,
+          "round": 10
+        },
+        {
+          "actor_learning_rate": 5e-06,
+          "critic_learning_rate": 0.0001,
+          "round": 11
+        },
+        {
+          "actor_learning_rate": 5e-06,
+          "critic_learning_rate": 0.0001,
+          "round": 12
+        },
+        {
+          "actor_learning_rate": 5e-06,
+          "critic_learning_rate": 0.0001,
+          "round": 13
+        },
+        {
+          "actor_learning_rate": 5e-06,
+          "critic_learning_rate": 0.0001,
+          "round": 14
+        },
+        {
+          "actor_learning_rate": 5e-06,
+          "critic_learning_rate": 0.0001,
+          "round": 15
+        },
+        {
+          "actor_learning_rate": 5e-06,
+          "critic_learning_rate": 0.0001,
+          "round": 16
+        },
+        {
+          "actor_learning_rate": 5e-06,
+          "critic_learning_rate": 0.0001,
+          "round": 17
+        },
+        {
+          "actor_learning_rate": 5e-06,
+          "critic_learning_rate": 0.0001,
+          "round": 18
+        },
+        {
+          "actor_learning_rate": 5e-06,
+          "critic_learning_rate": 0.0001,
+          "round": 19
+        },
+        {
+          "actor_learning_rate": 5e-06,
+          "critic_learning_rate": 0.0001,
+          "round": 20
+        },
+        {
+          "actor_learning_rate": 5e-06,
+          "critic_learning_rate": 0.0001,
+          "round": 21
+        },
+        {
+          "actor_learning_rate": 5e-06,
+          "critic_learning_rate": 0.0001,
+          "round": 22
+        },
+        {
+          "actor_learning_rate": 5e-06,
+          "critic_learning_rate": 0.0001,
+          "round": 23
+        },
+        {
+          "actor_learning_rate": 5e-06,
+          "critic_learning_rate": 0.0001,
+          "round": 24
+        }
+      ],
+      "LongDecay": [
+        {
+          "actor_learning_rate": 5e-06,
+          "critic_learning_rate": 0.0001,
+          "round": 9
+        },
+        {
+          "actor_learning_rate": 5e-06,
+          "critic_learning_rate": 0.0001,
+          "round": 10
+        },
+        {
+          "actor_learning_rate": 5e-06,
+          "critic_learning_rate": 0.0001,
+          "round": 11
+        },
+        {
+          "actor_learning_rate": 5e-06,
+          "critic_learning_rate": 0.0001,
+          "round": 12
+        },
+        {
+          "actor_learning_rate": 5e-06,
+          "critic_learning_rate": 0.0001,
+          "round": 13
+        },
+        {
+          "actor_learning_rate": 5e-06,
+          "critic_learning_rate": 0.0001,
+          "round": 14
+        },
+        {
+          "actor_learning_rate": 5e-06,
+          "critic_learning_rate": 0.0001,
+          "round": 15
+        },
+        {
+          "actor_learning_rate": 5e-06,
+          "critic_learning_rate": 0.0001,
+          "round": 16
+        },
+        {
+          "actor_learning_rate": 2.5e-06,
+          "critic_learning_rate": 5e-05,
+          "round": 17
+        },
+        {
+          "actor_learning_rate": 2.5e-06,
+          "critic_learning_rate": 5e-05,
+          "round": 18
+        },
+        {
+          "actor_learning_rate": 2.5e-06,
+          "critic_learning_rate": 5e-05,
+          "round": 19
+        },
+        {
+          "actor_learning_rate": 2.5e-06,
+          "critic_learning_rate": 5e-05,
+          "round": 20
+        },
+        {
+          "actor_learning_rate": 1e-06,
+          "critic_learning_rate": 2.5e-05,
+          "round": 21
+        },
+        {
+          "actor_learning_rate": 1e-06,
+          "critic_learning_rate": 2.5e-05,
+          "round": 22
+        },
+        {
+          "actor_learning_rate": 1e-06,
+          "critic_learning_rate": 2.5e-05,
+          "round": 23
+        },
+        {
+          "actor_learning_rate": 1e-06,
+          "critic_learning_rate": 2.5e-05,
+          "round": 24
+        }
+      ]
+    },
+    "mixed": [
+      {
+        "actor_learning_rate": 5e-06,
+        "critic_learning_rate": 0.0001,
+        "round": 1
+      },
+      {
+        "actor_learning_rate": 5e-06,
+        "critic_learning_rate": 0.0001,
+        "round": 2
+      },
+      {
+        "actor_learning_rate": 5e-06,
+        "critic_learning_rate": 0.0001,
+        "round": 3
+      },
+      {
+        "actor_learning_rate": 5e-06,
+        "critic_learning_rate": 0.0001,
+        "round": 4
+      },
+      {
+        "actor_learning_rate": 5e-06,
+        "critic_learning_rate": 0.0001,
+        "round": 5
+      },
+      {
+        "actor_learning_rate": 5e-06,
+        "critic_learning_rate": 0.0001,
+        "round": 6
+      },
+      {
+        "actor_learning_rate": 5e-06,
+        "critic_learning_rate": 0.0001,
+        "round": 7
+      },
+      {
+        "actor_learning_rate": 5e-06,
+        "critic_learning_rate": 0.0001,
+        "round": 8
+      },
+      {
+        "actor_learning_rate": 5e-06,
+        "critic_learning_rate": 0.0001,
+        "round": 9
+      },
+      {
+        "actor_learning_rate": 5e-06,
+        "critic_learning_rate": 0.0001,
+        "round": 10
+      },
+      {
+        "actor_learning_rate": 5e-06,
+        "critic_learning_rate": 0.0001,
+        "round": 11
+      },
+      {
+        "actor_learning_rate": 5e-06,
+        "critic_learning_rate": 0.0001,
+        "round": 12
+      },
+      {
+        "actor_learning_rate": 2.5e-06,
+        "critic_learning_rate": 5e-05,
+        "round": 13
+      },
+      {
+        "actor_learning_rate": 2.5e-06,
+        "critic_learning_rate": 5e-05,
+        "round": 14
+      },
+      {
+        "actor_learning_rate": 2.5e-06,
+        "critic_learning_rate": 5e-05,
+        "round": 15
+      },
+      {
+        "actor_learning_rate": 2.5e-06,
+        "critic_learning_rate": 5e-05,
+        "round": 16
+      },
+      {
+        "actor_learning_rate": 2.5e-06,
+        "critic_learning_rate": 5e-05,
+        "round": 17
+      },
+      {
+        "actor_learning_rate": 2.5e-06,
+        "critic_learning_rate": 5e-05,
+        "round": 18
+      },
+      {
+        "actor_learning_rate": 1e-06,
+        "critic_learning_rate": 2.5e-05,
+        "round": 19
+      },
+      {
+        "actor_learning_rate": 1e-06,
+        "critic_learning_rate": 2.5e-05,
+        "round": 20
+      },
+      {
+        "actor_learning_rate": 1e-06,
+        "critic_learning_rate": 2.5e-05,
+        "round": 21
+      },
+      {
+        "actor_learning_rate": 1e-06,
+        "critic_learning_rate": 2.5e-05,
+        "round": 22
+      },
+      {
+        "actor_learning_rate": 1e-06,
+        "critic_learning_rate": 2.5e-05,
+        "round": 23
+      },
+      {
+        "actor_learning_rate": 1e-06,
+        "critic_learning_rate": 2.5e-05,
+        "round": 24
+      }
+    ]
+  },
+  "mixed_context": {
+    "episode_context_fixed": true,
+    "exposed_envs_per_round": 64,
+    "round_assignments": {
+      "1": {
+        "F1": 22,
+        "F2": 21,
+        "F3": 21
+      },
+      "10": {
+        "F1": 22,
+        "F2": 21,
+        "F3": 21
+      },
+      "11": {
+        "F1": 21,
+        "F2": 22,
+        "F3": 21
+      },
+      "12": {
+        "F1": 21,
+        "F2": 21,
+        "F3": 22
+      },
+      "13": {
+        "F1": 22,
+        "F2": 21,
+        "F3": 21
+      },
+      "14": {
+        "F1": 21,
+        "F2": 22,
+        "F3": 21
+      },
+      "15": {
+        "F1": 21,
+        "F2": 21,
+        "F3": 22
+      },
+      "16": {
+        "F1": 22,
+        "F2": 21,
+        "F3": 21
+      },
+      "17": {
+        "F1": 21,
+        "F2": 22,
+        "F3": 21
+      },
+      "18": {
+        "F1": 21,
+        "F2": 21,
+        "F3": 22
+      },
+      "19": {
+        "F1": 22,
+        "F2": 21,
+        "F3": 21
+      },
+      "2": {
+        "F1": 21,
+        "F2": 22,
+        "F3": 21
+      },
+      "20": {
+        "F1": 21,
+        "F2": 22,
+        "F3": 21
+      },
+      "21": {
+        "F1": 21,
+        "F2": 21,
+        "F3": 22
+      },
+      "22": {
+        "F1": 22,
+        "F2": 21,
+        "F3": 21
+      },
+      "23": {
+        "F1": 21,
+        "F2": 22,
+        "F3": 21
+      },
+      "24": {
+        "F1": 21,
+        "F2": 21,
+        "F3": 22
+      },
+      "3": {
+        "F1": 21,
+        "F2": 21,
+        "F3": 22
+      },
+      "4": {
+        "F1": 22,
+        "F2": 21,
+        "F3": 21
+      },
+      "5": {
+        "F1": 21,
+        "F2": 22,
+        "F3": 21
+      },
+      "6": {
+        "F1": 21,
+        "F2": 21,
+        "F3": 22
+      },
+      "7": {
+        "F1": 22,
+        "F2": 21,
+        "F3": 21
+      },
+      "8": {
+        "F1": 21,
+        "F2": 22,
+        "F3": 21
+      },
+      "9": {
+        "F1": 21,
+        "F2": 21,
+        "F3": 22
+      }
+    },
+    "three_round_env_totals": {
+      "F1": 64,
+      "F2": 64,
+      "F3": 64
+    },
+    "twenty_four_round_env_totals": {
+      "F1": 512,
+      "F2": 512,
+      "F3": 512
+    },
+    "underlying_envs_per_context": 22
+  },
+  "monitor": {
+    "deterministic_policy_mean": true,
+    "rounds": [
+      8,
+      16,
+      24
+    ],
+    "runtime_CBF": "on",
+    "seed_bases": {
+      "F1": 194410000,
+      "F2": 194420000,
+      "F3": 194430000
+    },
+    "target_episodes": 128,
+    "used_for_selection_stopping_or_training": false
+  },
+  "objective": "Measure whether three-times online interaction improves v31 A2 and whether learning-rate decay reduces late-round drift.",
+  "policy_method": "v31 A2 Raw-Action PPO + Soft Moving-KL + CBF Correction",
+  "preflight": {
+    "cases": [
+      {
+        "context": "F1",
+        "kind": "continuation",
+        "schedule": "LongDecay",
+        "seed": 191400101
+      },
+      {
+        "context": "mixed",
+        "kind": "mixed",
+        "schedule": "LongDecay",
+        "seed": 191400102
+      }
+    ],
+    "functional_only_not_performance_evidence": true,
+    "simulator_case_rerun_after_pass": false
+  },
+  "prior_results_immutable": {
+    "git_trees": {
+      "v25": "8d4384adb934c6155eb5b9a2429fcf3187950381",
+      "v26": "011f4302b83d1dafe424aa4f7f1954bbb8860764",
+      "v27": "368144c8ef7426590bf20eb82de7fcca419feb04",
+      "v28": "bae47e710bcf1441b1ed7617244a1378a457db78",
+      "v29": "f214aad649fdc9404750bcbcd2fea7dfc1ceecd0",
+      "v30": "2f08b591a1cc7a8bb230d113d1766310b41bf0f3",
+      "v31": "91559ba9fa85ead4412ba9708597b5a5329c7c36"
+    },
+    "v31_result_recomputed_or_modified": false,
+    "versions": [
+      "v25",
+      "v26",
+      "v27",
+      "v28",
+      "v29",
+      "v30",
+      "v31"
+    ]
+  },
+  "protocol_id": "safe100-cbf-protected-continual-refinement-v32",
+  "schema_version": 1,
+  "source_boundary": {
+    "git_commit": "6e2257f8cc109a3cee6bf563ac8014bf8a3fc926",
+    "source_files": {
+      "experiments/scripts/audit_cbf_teacher_v32_formal.py": "760e24cbf1eb668ad3949ebb76964d654881e7c0b9237e626d62de0e8d39b97c",
+      "experiments/scripts/cbf_teacher_v31_eval_io.py": "9c2059e603d18f2753fbce2d46520192610e9c0754e48f05137a197468157c71",
+      "experiments/scripts/cbf_teacher_v31_protocol.py": "98f7843d32964bd8695a472135cd638b419e41ba215da052d0b9f4c6a670a895",
+      "experiments/scripts/cbf_teacher_v32_eval_io.py": "8c3dc201a6b12321bec347cec74f0f8c6cb0995d9a5b38e4d44951b632df2634",
+      "experiments/scripts/cbf_teacher_v32_protocol.py": "65191476cf5c7168b8349582c39452cef5430ed0824034c74afa9b4312ceb3c0",
+      "experiments/scripts/evaluate_cbf_teacher_v31.py": "c4745378a4b23c774aca7bef5e8df364d60aa533d6aba9596b4f77f47a5068e2",
+      "experiments/scripts/evaluate_cbf_teacher_v32.py": "a39641c50d5095c4a65bb6f8b0faf203cc6e38d11cca11d68fde174e1f13e4fd",
+      "experiments/scripts/freeze_cbf_teacher_v32.py": "967a2b40191ce0247cbd62a375f314f5aa29532db6014b4226385224d1a26c14",
+      "experiments/scripts/mixed_vec_env_v32.py": "db99d03e2b0cf8db7ad9c05195cdb80c978ae632d3e4bd95fdb4730fbfeecad4",
+      "experiments/scripts/monitor_cbf_teacher_v32.py": "f311f5efcd493440606e863c8b73b90c7a0fb3b302aa98fa430ee8740f6eb6c5",
+      "experiments/scripts/package_cbf_teacher_v32.py": "ebeb761f10443880bd2c1945ff9654fc6444b2025a7ac6471f5687500611eec3",
+      "experiments/scripts/preflight_cbf_teacher_v32.py": "ad684fc745818c2434180b18138bc08ebf6d0d0ebd5af2a743e53c38b8e67fde",
+      "experiments/scripts/proximal_v23_io.py": "04077ac25965163cde89f3d2ec0ff27ea822c686acc19562bc3c90990fd61052",
+      "experiments/scripts/refine_cbf_teacher_v31.py": "118504465e067cf60ffb48ff08be089025b14fa804a809dd0351d08efab7944e",
+      "experiments/scripts/refine_cbf_teacher_v32.py": "f3f7aa5817e1c33e798d6553b558a19ac0cc2273c3e73624dfe53123c444b72d",
+      "experiments/scripts/run_cbf_teacher_v32.sh": "a0312bc56a724c00a4ad274966d051a95dfb8ef66c0f9a4debe88c856f909847",
+      "experiments/tests/test_cbf_teacher_v32.py": "e7afbbecf7414caf4b270f7c446753739e9f1503beb29ec33ad6c731086ff2d3",
+      "src/tasks/stairs_cbf/actions.py": "83151afb1f9aa8b38c8985a3885c084b6e988716acee36ac0324cbb4985d0c6d",
+      "src/tasks/stairs_cbf/cbf_math.py": "6a931cbbcd80e6af518857ece6a5fb755285a18f35636da7977ea836943a31da",
+      "src/tasks/stairs_cbf/config.py": "22a57df095616e1f19f7cf6f18d7ba173ecef7901bf2a85da2a5faaa11c32f8a",
+      "src/tasks/stairs_cbf/edge_detection.py": "302735da8506bd7d40bb7745e76fa280496775520329bf1bd059732e8746b662",
+      "src/tasks/stairs_cbf/environment_v31.py": "5ad2932ee99f3f3568dac35b9d7359e6a43389e94b39fecf353d69a8a2c97559",
+      "src/tasks/stairs_cbf/mdp.py": "631a9fefcf2026521c1c43ecf2dc1851124ce47921a1ddf4191ae7db31475754",
+      "src/tasks/stairs_cbf/online.py": "1c8afc56d200e5cd4c38964d35c82a632e897537fc0c81db6b0ada0d9486314f",
+      "src/tasks/stairs_cbf/proximal.py": "d879fc138dc3bebe26d913182519b0280884e30ed7f529be2bdd9e259b8c4838",
+      "src/tasks/stairs_cbf/teacher.py": "c5b04c3497875e6ae313b65eaa856bdbe2ae1b2871339a212ad4acb1a7fbae68",
+      "src/tasks/stairs_cbf/teacher_math.py": "ec5761fd06211c0b49c4bca3399f4a7f6679ac5e57d59da15445976b2442a0d8",
+      "src/tasks/stairs_cbf/teacher_v26.py": "b8097e4292dda1038c98dcc3eda0e7d4fceb390adf7756618f3bd3c59e08a2f4",
+      "src/tasks/stairs_cbf/teacher_v29.py": "5cc23a3f5d44245904ecba90f17058e317c57e38ac1c526012bcaa60ca1c16d9",
+      "src/tasks/stairs_cbf/teacher_v30.py": "caba7a3c52b106ce01364fc08e28dbe8e576d43fdd9025db8b41a1a81ce6997e",
+      "src/tasks/stairs_cbf/teacher_v30_math.py": "bdf339ae51698a39e56aaa3cf1d7158fa7197c650388ae5897cffb73a7037a4b",
+      "src/tasks/stairs_cbf/terrain.py": "f24dcfc9fb2d364c42e1b872a787dd940d4abee1656d2e9a840c19828075bcf8"
+    }
+  },
+  "status": "frozen_before_v32_preflight_and_formal",
+  "stop_reasons": {
+    "allowed": [
+      "NaN_or_Inf",
+      "optimizer_state_corruption",
+      "raw_action_storage_error",
+      "safe_action_execution_routing_error",
+      "simulator_crash",
+      "infrastructure_interruption"
+    ],
+    "performance_or_KL_stop_forbidden": true
+  },
+  "v31_reference": {
+    "A2_round8_inputs": {
+      "F1": {
+        "bytes": 13166897,
+        "logical_external_path": "F1/A2/round_08.pt",
+        "sha256": "65ebc05a007fda98076b4c671028cf3ce2026db0fc0da5ac6c056c207363967f",
+        "v31_policy": "A2 unconditional round 8"
+      },
+      "F2": {
+        "bytes": 13166897,
+        "logical_external_path": "F2/A2/round_08.pt",
+        "sha256": "00ed5967ebebe8f60832c53030f586e8a4fb39b9ad8ee3df70acdf00ba20abdb",
+        "v31_policy": "A2 unconditional round 8"
+      },
+      "F3": {
+        "bytes": 13166897,
+        "logical_external_path": "F3/A2/round_08.pt",
+        "sha256": "8fc5134f0bf083c09e259f61acb72ea85427fc3053335d665e0992bf6ed06e64",
+        "v31_policy": "A2 unconditional round 8"
+      }
+    },
+    "external_manifest_sha256": "90063481ca63c3535b0fdaa30b5aa2b70a76fddc3a7b4cfaea698c3e4b080384",
+    "highest_mean_CBF_on_method": "A2",
+    "result_sha256": "50db30f2b2c4cc5e9245ecd8e4e2b2140bb0d0083317182706eb61bad5045417"
+  }
+}
