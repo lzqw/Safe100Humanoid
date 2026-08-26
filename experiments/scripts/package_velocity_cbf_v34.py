@@ -15,7 +15,12 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 from proximal_v23_io import file_sha256
-from velocity_cbf_v34_protocol import FORMAL_CONTEXTS, PARAMETER_RANGES, PROTOCOL_ID
+from velocity_cbf_v34_protocol import (
+    CURRENT_CBF_MODE,
+    FORMAL_CONTEXTS,
+    PARAMETER_RANGES,
+    PROTOCOL_ID,
+)
 
 
 def _json(path: Path) -> dict[str, Any]:
@@ -105,13 +110,21 @@ def _search_figure(
     _save(fig, path)
 
 
-def _success_by_context(final: dict[str, Any], path: Path) -> None:
+def _success_by_context(final: dict[str, Any], selected_mode: str, path: Path) -> None:
     conditions = (
         "v31_A2_current",
         "v31_A2_optimized",
         "trained_A2_optimized",
     )
-    labels = ("v31 A2 + current", "v31 A2 + optimized", "new A2 + optimized")
+    labels = (
+        (
+            "v31 A2 + current",
+            "v31 A2 + selected (current repeat)",
+            "new A2 + selected",
+        )
+        if selected_mode == CURRENT_CBF_MODE
+        else ("v31 A2 + current", "v31 A2 + optimized", "new A2 + optimized")
+    )
     x = np.arange(len(FORMAL_CONTEXTS))
     width = 0.25
     fig, axis = plt.subplots(figsize=(9.2, 4.8))
@@ -135,7 +148,7 @@ def _success_by_context(final: dict[str, Any], path: Path) -> None:
     _save(fig, path)
 
 
-def _current_optimized(final: dict[str, Any], path: Path) -> None:
+def _current_optimized(final: dict[str, Any], selected_mode: str, path: Path) -> None:
     means = final["three_context_target_means"]
     conditions = (
         "base_current",
@@ -144,10 +157,19 @@ def _current_optimized(final: dict[str, Any], path: Path) -> None:
         "trained_A2_optimized",
     )
     labels = (
-        "base\ncurrent",
-        "v31 A2\ncurrent",
-        "v31 A2\noptimized",
-        "new A2\noptimized",
+        (
+            "base\ncurrent",
+            "v31 A2\ncurrent",
+            "v31 A2\nselected repeat",
+            "new A2\nselected current",
+        )
+        if selected_mode == CURRENT_CBF_MODE
+        else (
+            "base\ncurrent",
+            "v31 A2\ncurrent",
+            "v31 A2\noptimized",
+            "new A2\noptimized",
+        )
     )
     values = [means[condition]["success_rate"] for condition in conditions]
     fig, axis = plt.subplots(figsize=(8.2, 4.8))
@@ -232,6 +254,28 @@ def _readme(
     )
     achieved = "是" if headline["development_target_met"] else "否"
     achieved_en = "yes" if headline["development_target_met"] else "no"
+    selected_is_control = selected.get("mode") == CURRENT_CBF_MODE
+    direct_zh = (
+        f"自动选择退化为 current control，因此表中的 v31 A2 + selected 条件不是新 CBF；"
+        f"其独立重复成功率为 {_percent(headline['direct_optimized_mean_success'])}，"
+        f"与基线相差 {headline['direct_minus_v31_current_pp']:+.2f} pp，只能视为 GPU 仿真运行波动，"
+        "不能解释为 CBF 改进。"
+        if selected_is_control
+        else f"直接替换 optimized CBF 的平均成功率为 "
+        f"{_percent(headline['direct_optimized_mean_success'])}（相对基线 "
+        f"{headline['direct_minus_v31_current_pp']:+.2f} pp）。"
+    )
+    direct_en = (
+        f"The outcome-only selector fell back to the current control. The v31 A2 + "
+        f"selected row is therefore an independent repeat of the same method "
+        f"({_percent(headline['direct_optimized_mean_success'])}, "
+        f"{headline['direct_minus_v31_current_pp']:+.2f} pp versus the baseline run), "
+        "which is run-to-run GPU simulation variation rather than a CBF gain."
+        if selected_is_control
+        else f"Direct replacement reaches "
+        f"{_percent(headline['direct_optimized_mean_success'])} "
+        f"({headline['direct_minus_v31_current_pp']:+.2f} pp versus baseline)."
+    )
     return f"""# v34 Outcome-Optimized Task-Metric Velocity CBF
 
 ## 中文摘要
@@ -244,7 +288,7 @@ v33 的伪加速度 HOCBF 与现有“关节位置目标 → 速度级安全投�
 |---|---:|---:|---:|---:|
 {table}
 
-最终 held-out 主结果：new A2 + optimized CBF 为 **{_percent(headline["trained_optimized_mean_success"])}**，v31 A2 + current CBF 基线为 **{_percent(headline["v31_current_mean_success"])}**，差值 **{headline["trained_minus_v31_current_pp"]:+.2f} pp**。达到预设 +3 pp 开发目标：**{achieved}**。直接替换 optimized CBF 的平均成功率为 {_percent(headline["direct_optimized_mean_success"])}（相对基线 {headline["direct_minus_v31_current_pp"]:+.2f} pp）。无论正负，以上均为参数冻结后只运行一次的最终测试结果。
+最终 held-out 主结果：new A2 + selected CBF 为 **{_percent(headline["trained_optimized_mean_success"])}**，v31 A2 + current CBF 基线为 **{_percent(headline["v31_current_mean_success"])}**，差值 **{headline["trained_minus_v31_current_pp"]:+.2f} pp**。达到预设 +3 pp 开发目标：**{achieved}**。{direct_zh} 无论正负，以上均为参数冻结后只运行一次的最终测试结果。
 
 | D0 条件（F1/F2/F3 来源策略平均） | success |
 |---|---:|
@@ -260,7 +304,7 @@ v33's pseudo-acceleration HOCBF was mismatched to the existing joint-position-ta
 
 The frozen automated search evaluated 60 candidates, refined the top 8, trained the top 2 in all three contexts with the unchanged eight-round v31 A2 procedure, and selected one global parameter set solely by trained development success. Final identities were created only after that selection was committed, and the held-out audit ran once.
 
-New A2 + optimized CBF reaches **{_percent(headline["trained_optimized_mean_success"])}** mean held-out CBF-on success versus **{_percent(headline["v31_current_mean_success"])}** for v31 A2 + current CBF, a **{headline["trained_minus_v31_current_pp"]:+.2f} pp** change. The +3 pp development target was met: **{achieved_en}**. Direct replacement reaches {_percent(headline["direct_optimized_mean_success"])}. See the aggregate JSON for all paired target/D0, CBF-off, safety, correction, and compute-time metrics.
+New A2 + selected CBF reaches **{_percent(headline["trained_optimized_mean_success"])}** mean held-out CBF-on success versus **{_percent(headline["v31_current_mean_success"])}** for v31 A2 + current CBF, a **{headline["trained_minus_v31_current_pp"]:+.2f} pp** change. The +3 pp development target was met: **{achieved_en}**. {direct_en} See the aggregate JSON for all paired target/D0, CBF-off, safety, correction, and compute-time metrics.
 
 Source boundary: `{config["source_boundary"]["git_commit"]}`. `SHA256SUMS` binds every published aggregate and figure; raw episode traces and checkpoints remain in the external artifact directory.
 """
@@ -343,8 +387,12 @@ def main() -> None:
     _search_figure(
         stage1, stage2, selected["candidate"], figures / "search_progress.png"
     )
-    _success_by_context(final, figures / "success_by_context.png")
-    _current_optimized(final, figures / "current_vs_optimized_cbf.png")
+    _success_by_context(
+        final, str(selected["mode"]), figures / "success_by_context.png"
+    )
+    _current_optimized(
+        final, str(selected["mode"]), figures / "current_vs_optimized_cbf.png"
+    )
     _safety_metrics(final, figures / "safety_metrics.png")
     selection = _json(args.selection_root.resolve() / "development_selection.json")
     completed = _json(args.final_root.resolve() / "execution_completed.json")
