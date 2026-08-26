@@ -161,6 +161,7 @@ def main() -> None:
     from src.tasks.stairs_cbf.environment_v31 import configure_v31_context
     from src.tasks.stairs_cbf.teacher_v30 import CbfTeacherV30Runner
     from src.tasks.stairs_cbf.velocity_cbf_action import (
+        InstrumentedCurrentVelocityCbfActionCfg,
         TaskMetricVelocityCbfActionCfg,
         configure_v34_cbf,
     )
@@ -177,9 +178,9 @@ def main() -> None:
     )
     cbf = configure_v34_cbf(
         env_cfg,
-        mode=OPTIMIZED_CBF_MODE,
+        mode=str(candidate["mode"]),
         runtime_filter=True,
-        parameters=parameters,
+        parameters=parameters if candidate["mode"] == OPTIMIZED_CBF_MODE else None,
         measure_compute_time=False,
     )
     env_cfg.scene.num_envs = 64
@@ -197,9 +198,14 @@ def main() -> None:
         action_cfg = env_cfg.actions["joint_pos"]
         structural = {
             "action": type(action_cfg).__name__,
-            "task_metric_velocity_action": isinstance(
-                action_cfg, TaskMetricVelocityCbfActionCfg
+            "frozen_candidate_action": isinstance(
+                action_cfg,
+                (
+                    InstrumentedCurrentVelocityCbfActionCfg,
+                    TaskMetricVelocityCbfActionCfg,
+                ),
             ),
+            "candidate_mode": candidate["mode"],
             "runtime_filter": bool(action_cfg.enabled),
             "actor_observation_dim": int(runner.alg.actor.obs_dim),
             "critic_observation_dim": int(runner.alg.critic.obs_dim),
@@ -215,7 +221,7 @@ def main() -> None:
             "moving_policy_KL": True,
         }
         required = (
-            structural["task_metric_velocity_action"]
+            structural["frozen_candidate_action"]
             and structural["runtime_filter"]
             and structural["actor_observation_dim"] == 405
             and structural["critic_observation_dim"] == 838

@@ -318,14 +318,15 @@ def _condition_spec(
     base_checkpoint: Path,
     v31_checkpoint: Path,
     trained_checkpoint: Path,
+    selected_mode: str,
 ) -> dict[str, tuple[Path, str, bool]]:
     return {
         "base_current": (base_checkpoint, CURRENT_CBF_MODE, True),
         "v31_A2_current": (v31_checkpoint, CURRENT_CBF_MODE, True),
-        "v31_A2_optimized": (v31_checkpoint, OPTIMIZED_CBF_MODE, True),
-        "trained_A2_optimized": (trained_checkpoint, OPTIMIZED_CBF_MODE, True),
+        "v31_A2_optimized": (v31_checkpoint, selected_mode, True),
+        "trained_A2_optimized": (trained_checkpoint, selected_mode, True),
         "v31_A2_off": (v31_checkpoint, CURRENT_CBF_MODE, False),
-        "trained_A2_off": (trained_checkpoint, OPTIMIZED_CBF_MODE, False),
+        "trained_A2_off": (trained_checkpoint, selected_mode, False),
     }
 
 
@@ -411,6 +412,7 @@ def main() -> None:
             base_checkpoint=base_checkpoint,
             v31_checkpoint=v31_checkpoint,
             trained_checkpoint=trained_checkpoint,
+            selected_mode=str(selected["mode"]),
         )
         context_payload: dict[str, Any] = {}
         for section, evaluation_context, episodes, batch_size, seed_group in (

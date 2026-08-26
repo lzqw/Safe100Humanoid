@@ -92,9 +92,7 @@ def _evaluate(
             "--context",
             context,
             "--cbf-mode",
-            OPTIMIZED_CBF_MODE,
-            "--parameters-json",
-            json.dumps(parameters),
+            str(candidate["mode"]),
             "--runtime-filter",
             "on",
             "--num-envs",
@@ -114,6 +112,8 @@ def _evaluate(
             "--output-csv",
             str(episodes_path),
         ]
+        if candidate["mode"] == OPTIMIZED_CBF_MODE:
+            command.extend(["--parameters-json", json.dumps(parameters)])
         completed = subprocess.run(
             command, cwd=repo, capture_output=True, text=True, check=False
         )
@@ -219,6 +219,7 @@ def main() -> None:
         "selection_objective": "trained mean F1/F2/F3 CBF-on success only",
         "candidate": selected_name,
         "candidate_index": int(selected["candidate_index"]),
+        "mode": selected["mode"],
         "parameters": {name: float(selected[name]) for name in PARAMETER_NAMES},
         "trained_development_results": rows,
         "trained_development_mean_success": float(rows[0]["mean_success"]),

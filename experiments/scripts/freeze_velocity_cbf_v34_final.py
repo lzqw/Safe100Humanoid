@@ -86,6 +86,7 @@ def main() -> None:
         "status": "globally_selected_and_final_test_frozen",
         "candidate": selected["candidate"],
         "candidate_index": selected["candidate_index"],
+        "mode": selected["mode"],
         "parameters": selected["parameters"],
         "selection_objective": selected["selection_objective"],
         "stage2_direct_replacement": {

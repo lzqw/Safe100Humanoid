@@ -1212,6 +1212,17 @@
   "development_target_delta_pp": 3.0,
   "final_identities_accessible_during_development": false,
   "final_seeds_created": false,
+  "post_search_pretraining_amendment": {
+    "affected_phases": [
+      "top_two_training",
+      "trained_development_selection",
+      "final_audit"
+    ],
+    "candidate_search_results_changed": false,
+    "reason": "The ranked top two included candidate 0; honor each frozen candidate's current or task-metric mode during training and later evaluation.",
+    "search_action_and_evaluator_changed": false,
+    "timing": "after both search stages and before any training run"
+  },
   "final_test": {
     "identities_accessible": false,
     "maximum_invocations": 1,
