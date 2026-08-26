@@ -1,0 +1,160 @@
+{
+  "checkpoint_sha256": "65ebc05a007fda98076b4c671028cf3ce2026db0fc0da5ac6c056c207363967f",
+  "checks": {
+    "exact_safe_nominal_identity": true,
+    "filtered_margin_within_tolerance": true,
+    "gpu_vectorized": true,
+    "no_cpu_sync_in_hocbf_hot_path": true,
+    "no_nan_or_inf": true,
+    "single_fixed_invocation": true,
+    "throughput_at_least_70_percent_of_CBF0": true,
+    "violation_has_nonzero_correction": true,
+    "violation_observed": true
+  },
+  "current_CBF0": {
+    "action_device": "cuda:0",
+    "all_finite": true,
+    "cbf": {
+      "actor_observation_changed": false,
+      "critic_observation_changed": false,
+      "current_CBF0_source_unchanged": true,
+      "mode": "current_velocity_cbf",
+      "parameters": {
+        "alpha": 10.0,
+        "correction_smoothness": null,
+        "forward_task_weight": null,
+        "omega": null
+      },
+      "plant_action_transform": "identity",
+      "runtime_filter": true
+    },
+    "elapsed_seconds": 5.712531742989086,
+    "environment_steps_per_second": 358.5100428568267,
+    "maximum_nominal_safe_target_error": 2.384185791015625e-07,
+    "mean_cbf_compute_time_ms": 2.7610268746502697,
+    "minimum_projected_margin_on_violation": -4.0531158447265625e-06,
+    "mode": "current_velocity_cbf",
+    "nonzero_correction_steps": 1287,
+    "num_envs": 8,
+    "shift": {
+      "actor_observation_fields_added": 0,
+      "baseline_riser_height_m": 0.13,
+      "cbf_geometry_exact": true,
+      "clearance_barrier": "sloped_xz",
+      "clearance_barrier_slope": 0.8,
+      "command_changed": false,
+      "context": "F1",
+      "context_name": "main_uniform_18cm",
+      "controller_changed": false,
+      "filter_alpha": 10.0,
+      "fixed_deployment_environment": {
+        "actor_observation_corruption_disabled": true,
+        "base_com_randomization_absent": true,
+        "curriculum_disabled": true,
+        "encoder_bias_absent": true,
+        "friction_randomization_absent": true,
+        "push_randomization_absent": true,
+        "registered_environment_variant": "fixed_deployment_play",
+        "reset_events_exact": true,
+        "retained_fresh_initial_state_events": [
+          "reset_base",
+          "reset_robot_joints"
+        ]
+      },
+      "friction_changed": false,
+      "num_risers": 9,
+      "plant_action_transform": "identity",
+      "recovery_distance_m": 0.15,
+      "riser_height_m": 0.18,
+      "riser_profile_m": null,
+      "runtime_filter": true,
+      "shift": "fixed_uniform_higher_riser",
+      "stair_riser_patch_slots": 9,
+      "stair_target_patch_slots": 10,
+      "terrain_geometry_changed": true,
+      "top_platform_patch_included": true
+    },
+    "steps": 256,
+    "violation_steps": 328
+  },
+  "forbidden_hot_path_tokens": [],
+  "new_HOCBF": {
+    "action_device": "cuda:0",
+    "all_finite": true,
+    "cbf": {
+      "actor_observation_changed": false,
+      "critic_observation_changed": false,
+      "current_CBF0_source_unchanged": true,
+      "mode": "task_consistent_acceleration_hocbf",
+      "parameters": {
+        "alpha": null,
+        "correction_smoothness": 0.1,
+        "drift_clip_m_per_s2": 20.0,
+        "drift_ema_previous": 0.8,
+        "forward_task_weight": 8.0,
+        "omega": 8.0,
+        "zeta": 1.0
+      },
+      "plant_action_transform": "identity",
+      "runtime_filter": true
+    },
+    "elapsed_seconds": 5.486612176056951,
+    "environment_steps_per_second": 373.2722369073716,
+    "maximum_nominal_safe_target_error": 0.0,
+    "mean_cbf_compute_time_ms": 2.269732253625989,
+    "minimum_projected_margin_on_violation": -6.866455078125e-05,
+    "mode": "task_consistent_acceleration_hocbf",
+    "nonzero_correction_steps": 273,
+    "num_envs": 8,
+    "shift": {
+      "actor_observation_fields_added": 0,
+      "baseline_riser_height_m": 0.13,
+      "cbf_geometry_exact": true,
+      "clearance_barrier": "sloped_xz",
+      "clearance_barrier_slope": 0.8,
+      "command_changed": false,
+      "context": "F1",
+      "context_name": "main_uniform_18cm",
+      "controller_changed": false,
+      "filter_alpha": 10.0,
+      "fixed_deployment_environment": {
+        "actor_observation_corruption_disabled": true,
+        "base_com_randomization_absent": true,
+        "curriculum_disabled": true,
+        "encoder_bias_absent": true,
+        "friction_randomization_absent": true,
+        "push_randomization_absent": true,
+        "registered_environment_variant": "fixed_deployment_play",
+        "reset_events_exact": true,
+        "retained_fresh_initial_state_events": [
+          "reset_base",
+          "reset_robot_joints"
+        ]
+      },
+      "friction_changed": false,
+      "num_risers": 9,
+      "plant_action_transform": "identity",
+      "recovery_distance_m": 0.15,
+      "riser_height_m": 0.18,
+      "riser_profile_m": null,
+      "runtime_filter": true,
+      "shift": "fixed_uniform_higher_riser",
+      "stair_riser_patch_slots": 9,
+      "stair_target_patch_slots": 10,
+      "terrain_geometry_changed": true,
+      "top_platform_patch_included": true
+    },
+    "steps": 256,
+    "violation_steps": 273
+  },
+  "parameters": {
+    "lambda_s": 0.1,
+    "lambda_x": 8.0,
+    "omega": 8.0
+  },
+  "passed": true,
+  "protocol_id": "safe100-task-consistent-acceleration-hocbf-v33",
+  "schema_version": 1,
+  "seed": 201300101,
+  "throughput_ratio": 1.0411765147021008
+}
