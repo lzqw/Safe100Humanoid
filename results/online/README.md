@@ -1,5 +1,19 @@
 # Online safe-refinement evidence
 
+## Latest outcome-optimized velocity-CBF study (v34)
+
+The complete bilingual v34 package is in
+[`velocity_cbf_v34/`](velocity_cbf_v34/README.md). It contains the frozen
+60-candidate search, top-8 confirmation, six eight-round training runs, the
+single held-out F1/F2/F3 + D0 audit, four figures, and checksums.
+
+The outcome-only selector fell back to the existing current CBF. On the single
+held-out audit, v31 A2 + current CBF averaged 70.44% success and the newly
+trained round-8 policies + selected current CBF averaged 68.88% (-1.56 pp).
+Thus v34 did not meet the +3 pp development target; the package publishes this
+as a negative result rather than relabeling a repeated current-CBF run as an
+improvement.
+
 This directory contains the curated, one-GPU evidence for the simulation-only
 online refinement prototype. One candidate passed the declared D0/DQ/DQN gate,
 but this must not be interpreted as a real-robot result or filter-free safety.
