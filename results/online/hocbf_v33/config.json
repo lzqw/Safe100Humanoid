@@ -1,0 +1,402 @@
+{
+  "A2": {
+    "name": "residual_eta_025_all_interventions",
+    "teacher_eta": 0.25,
+    "teacher_gate": "all_interventions",
+    "teacher_loss": "weighted_smooth_l1_per_action_mean",
+    "teacher_mode": "residual",
+    "teacher_weight": 1.0
+  },
+  "base_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "checkpoints": {
+    "base": {
+      "sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8"
+    },
+    "v31_round_8": {
+      "F1": {
+        "A1": {
+          "relative_external_path": "F1/A1/round_08.pt",
+          "sha256": "39b1b8fdcd976e5c7990f380d79e72bee3ffd09c432368dd31c9c753b42e1b2a"
+        },
+        "A2": {
+          "relative_external_path": "F1/A2/round_08.pt",
+          "sha256": "65ebc05a007fda98076b4c671028cf3ce2026db0fc0da5ac6c056c207363967f"
+        }
+      },
+      "F2": {
+        "A1": {
+          "relative_external_path": "F2/A1/round_08.pt",
+          "sha256": "d5fe4f54531a56d419fb9aa07f33f0251d6371ea6238c5cdd56dbbadef5c5af6"
+        },
+        "A2": {
+          "relative_external_path": "F2/A2/round_08.pt",
+          "sha256": "00ed5967ebebe8f60832c53030f586e8a4fb39b9ad8ee3df70acdf00ba20abdb"
+        }
+      },
+      "F3": {
+        "A1": {
+          "relative_external_path": "F3/A1/round_08.pt",
+          "sha256": "7efdf3864bb78fb83f334501452d5aacc5ac67094a0811d8c5668c5e8c58c39b"
+        },
+        "A2": {
+          "relative_external_path": "F3/A2/round_08.pt",
+          "sha256": "8fc5134f0bf083c09e259f61acb72ea85427fc3053335d665e0992bf6ed06e64"
+        }
+      }
+    }
+  },
+  "contexts": {
+    "D0": {
+      "all_non_riser_factors": "nominal",
+      "clearance_barrier_slope": 0.8,
+      "context": "D0",
+      "exponential_cbf_alpha": 10.0,
+      "name": "nominal_uniform_13cm",
+      "num_risers": 9,
+      "observation_interface": "original_405D_actor_838D_critic",
+      "plant_action_transform": "identity",
+      "post_edge_recovery_window_m": 0.15,
+      "riser_height_m": 0.13,
+      "riser_profile_m": null,
+      "runtime_cbf_during_training": "always_on",
+      "stair_target_patch_slots": 10,
+      "task_id": "Unitree-G1-Stairs-Online-DQHMED"
+    },
+    "F1": {
+      "all_non_riser_factors": "nominal",
+      "clearance_barrier_slope": 0.8,
+      "context": "F1",
+      "exponential_cbf_alpha": 10.0,
+      "name": "main_uniform_18cm",
+      "num_risers": 9,
+      "observation_interface": "original_405D_actor_838D_critic",
+      "plant_action_transform": "identity",
+      "post_edge_recovery_window_m": 0.15,
+      "riser_height_m": 0.18,
+      "riser_profile_m": null,
+      "runtime_cbf_during_training": "always_on",
+      "stair_target_patch_slots": 10,
+      "task_id": "Unitree-G1-Stairs-Online-DQHMED"
+    },
+    "F2": {
+      "all_non_riser_factors": "nominal",
+      "clearance_barrier_slope": 0.8,
+      "context": "F2",
+      "exponential_cbf_alpha": 10.0,
+      "name": "hard_uniform_18_4cm",
+      "num_risers": 9,
+      "observation_interface": "original_405D_actor_838D_critic",
+      "plant_action_transform": "identity",
+      "post_edge_recovery_window_m": 0.15,
+      "riser_height_m": 0.184,
+      "riser_profile_m": null,
+      "runtime_cbf_during_training": "always_on",
+      "stair_target_patch_slots": 10,
+      "task_id": "Unitree-G1-Stairs-Online-DQHMED"
+    },
+    "F3": {
+      "all_non_riser_factors": "nominal",
+      "clearance_barrier_slope": 0.8,
+      "context": "F3",
+      "exponential_cbf_alpha": 10.0,
+      "name": "nonuniform_11_riser_profile",
+      "num_risers": 11,
+      "observation_interface": "original_405D_actor_838D_critic",
+      "plant_action_transform": "identity",
+      "post_edge_recovery_window_m": 0.15,
+      "riser_height_m": null,
+      "riser_profile_m": [
+        0.176,
+        0.18,
+        0.184,
+        0.18,
+        0.178,
+        0.182,
+        0.18,
+        0.184,
+        0.178,
+        0.182,
+        0.18
+      ],
+      "runtime_cbf_during_training": "always_on",
+      "stair_target_patch_slots": 12,
+      "task_id": "Unitree-G1-Stairs-Online-DQHMED"
+    }
+  },
+  "development": {
+    "confirmation_contexts": [
+      "F1",
+      "F2",
+      "F3"
+    ],
+    "confirmation_episodes": 256,
+    "policies": [
+      "A1",
+      "A2"
+    ],
+    "primary_tie_tolerance": 0.005,
+    "screen_contexts": [
+      "F1",
+      "F2"
+    ],
+    "screen_episodes": 128,
+    "top_k": 4
+  },
+  "formal": {
+    "D0_episodes": 256,
+    "bootstrap_samples": 2000,
+    "frozen_policy_episodes": 512,
+    "target_episodes": 512,
+    "training": {
+      "actor_epochs_exact": 2,
+      "actor_learning_rate": 5e-06,
+      "critic_epochs": 2,
+      "critic_learning_rate": 0.0001,
+      "entropy_coefficient": 0.0,
+      "freeze_log_std": true,
+      "gae_lambda": 0.95,
+      "gamma": 0.99,
+      "hard_kl_rollback": false,
+      "maximum_gradient_norm": 0.5,
+      "maximum_std": 0.25,
+      "minibatches": 4,
+      "minimum_std": 0.05,
+      "moving_kl_beta": 0.5,
+      "num_envs": 64,
+      "online_rounds": 8,
+      "performance_selection_or_rollback": false,
+      "ppo_clip": 0.05,
+      "rollout_steps_per_round": 1024,
+      "save_round_checkpoints": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "std_scale_from_base": 0.35,
+      "target_kl_early_stopping": false
+    },
+    "training_seeds": {
+      "F1": 205310001,
+      "F2": 205320001,
+      "F3": 205330001
+    }
+  },
+  "geometry": {
+    "clearance_barrier_slope": 0.8,
+    "existing_riser_metadata": true,
+    "existing_selected_swing_foot": true,
+    "recovery_distance_m": 0.15,
+    "top_clearance_m": 0.025
+  },
+  "hocbf": {
+    "drift_clip_m_per_s2": 20.0,
+    "drift_ema_previous": 0.8,
+    "grid": [
+      {
+        "candidate": "w04_x00_s00",
+        "lambda_s": 0.0,
+        "lambda_x": 0.0,
+        "omega": 4.0
+      },
+      {
+        "candidate": "w04_x00_s01",
+        "lambda_s": 0.1,
+        "lambda_x": 0.0,
+        "omega": 4.0
+      },
+      {
+        "candidate": "w04_x08_s00",
+        "lambda_s": 0.0,
+        "lambda_x": 8.0,
+        "omega": 4.0
+      },
+      {
+        "candidate": "w04_x08_s01",
+        "lambda_s": 0.1,
+        "lambda_x": 8.0,
+        "omega": 4.0
+      },
+      {
+        "candidate": "w04_x24_s00",
+        "lambda_s": 0.0,
+        "lambda_x": 24.0,
+        "omega": 4.0
+      },
+      {
+        "candidate": "w04_x24_s01",
+        "lambda_s": 0.1,
+        "lambda_x": 24.0,
+        "omega": 4.0
+      },
+      {
+        "candidate": "w08_x00_s00",
+        "lambda_s": 0.0,
+        "lambda_x": 0.0,
+        "omega": 8.0
+      },
+      {
+        "candidate": "w08_x00_s01",
+        "lambda_s": 0.1,
+        "lambda_x": 0.0,
+        "omega": 8.0
+      },
+      {
+        "candidate": "w08_x08_s00",
+        "lambda_s": 0.0,
+        "lambda_x": 8.0,
+        "omega": 8.0
+      },
+      {
+        "candidate": "w08_x08_s01",
+        "lambda_s": 0.1,
+        "lambda_x": 8.0,
+        "omega": 8.0
+      },
+      {
+        "candidate": "w08_x24_s00",
+        "lambda_s": 0.0,
+        "lambda_x": 24.0,
+        "omega": 8.0
+      },
+      {
+        "candidate": "w08_x24_s01",
+        "lambda_s": 0.1,
+        "lambda_x": 24.0,
+        "omega": 8.0
+      },
+      {
+        "candidate": "w12_x00_s00",
+        "lambda_s": 0.0,
+        "lambda_x": 0.0,
+        "omega": 12.0
+      },
+      {
+        "candidate": "w12_x00_s01",
+        "lambda_s": 0.1,
+        "lambda_x": 0.0,
+        "omega": 12.0
+      },
+      {
+        "candidate": "w12_x08_s00",
+        "lambda_s": 0.0,
+        "lambda_x": 8.0,
+        "omega": 12.0
+      },
+      {
+        "candidate": "w12_x08_s01",
+        "lambda_s": 0.1,
+        "lambda_x": 8.0,
+        "omega": 12.0
+      },
+      {
+        "candidate": "w12_x24_s00",
+        "lambda_s": 0.0,
+        "lambda_x": 24.0,
+        "omega": 12.0
+      },
+      {
+        "candidate": "w12_x24_s01",
+        "lambda_s": 0.1,
+        "lambda_x": 24.0,
+        "omega": 12.0
+      }
+    ],
+    "joint_metric": {
+      "ankle_pitch": 1.0,
+      "hip_pitch": 2.0,
+      "hip_roll_yaw_ankle_roll_other": 4.0,
+      "knee_pitch": 1.0
+    },
+    "zeta": 1.0
+  },
+  "protocol_id": "safe100-task-consistent-acceleration-hocbf-v33",
+  "schema_version": 1,
+  "seeds": {
+    "confirmation": {
+      "A1": {
+        "F1": 203310100,
+        "F2": 203310200,
+        "F3": 203310300
+      },
+      "A2": {
+        "F1": 203320100,
+        "F2": 203320200,
+        "F3": 203320300
+      }
+    },
+    "frozen_policy_audit": {
+      "A1": {
+        "F1": 204310100,
+        "F2": 204310200,
+        "F3": 204310300
+      },
+      "A2": {
+        "F1": 204320100,
+        "F2": 204320200,
+        "F3": 204320300
+      }
+    },
+    "screening": {
+      "A1": {
+        "F1": 202310100,
+        "F2": 202310200
+      },
+      "A2": {
+        "F1": 202320100,
+        "F2": 202320200
+      }
+    }
+  },
+  "selection_or_training_gate": false,
+  "smoke": {
+    "context": "F1",
+    "control_steps": 256,
+    "num_envs": 8,
+    "policy": "v31_A2_round_8",
+    "runs_exactly_once": true,
+    "seed": 201300101,
+    "throughput_floor_vs_CBF0": 0.7
+  },
+  "source_boundary": {
+    "branch": "",
+    "current_CBF0_source_unchanged": true,
+    "git_commit": "ab23421d510f12cc0af9b7c73e4274735096d7c9",
+    "source_files": {
+      "experiments/scripts/audit_hocbf_v33.py": "c69ac537e8a05c5e6afd4b1f277bc91eb4c0aa7f27cdada259b41d4ec3036f05",
+      "experiments/scripts/develop_hocbf_v33.py": "20f69ff84112596500bcec83180729f27b8a32039be2ab92656cbe28cadb477a",
+      "experiments/scripts/evaluate_hocbf_v33.py": "50e6b829d9ac380da60601591cf5bd43d626383af9ff4a53a06774ae112450ff",
+      "experiments/scripts/freeze_hocbf_v33.py": "fd66825ac35d8df55554fc5728443b3b6f195508ff3b3499963023a43d43a1a6",
+      "experiments/scripts/hocbf_v33_protocol.py": "2b086e94ecdb5869758faadab307c19e0bdb977b5571e3ed7c81b72b51f8e8e2",
+      "experiments/scripts/package_hocbf_v33.py": "62fe78066a7867e4a21d3c15f29828fdabe73a6f0b09add1b4c29fb261121cc4",
+      "experiments/scripts/refine_hocbf_v33.py": "6e79ca6a3ad0bb2b97fcac9a24f5762d511409a7a9af10c67643dadce8fbfa4d",
+      "experiments/scripts/run_hocbf_v33.py": "137ee29d52bd20f1d5cc2624a36daa7aeea7f6651e2018659e9ebf1b726534a7",
+      "experiments/scripts/run_hocbf_v33.sh": "0a5499b6f1b1e7c9f9cf9722b8a18997943bb638b3511438926c5a29a35dc363",
+      "experiments/tests/test_hocbf_v33.py": "d011e3f35ed9c5194b58fc0e2ef4f6514f4e5387f53e474c2bfc83a39e79c411",
+      "src/tasks/stairs_cbf/hocbf_action.py": "356a7ac3824ee82d0676932faadd7762733ea968ca9780f7b2443d68f17d41e1",
+      "src/tasks/stairs_cbf/hocbf_math.py": "7e803676103e2308cb348214547c5762eaf5067e5da467ed0989ea225768a371"
+    },
+    "v31_v32_sources_or_results_modified": false
+  },
+  "status": "frozen_before_single_smoke_and_development",
+  "task_id": "Unitree-G1-Stairs-Online-DQHMED",
+  "v31_checkpoint_sha256": {
+    "F1": {
+      "A1": "39b1b8fdcd976e5c7990f380d79e72bee3ffd09c432368dd31c9c753b42e1b2a",
+      "A2": "65ebc05a007fda98076b4c671028cf3ce2026db0fc0da5ac6c056c207363967f"
+    },
+    "F2": {
+      "A1": "d5fe4f54531a56d419fb9aa07f33f0251d6371ea6238c5cdd56dbbadef5c5af6",
+      "A2": "00ed5967ebebe8f60832c53030f586e8a4fb39b9ad8ee3df70acdf00ba20abdb"
+    },
+    "F3": {
+      "A1": "7efdf3864bb78fb83f334501452d5aacc5ac67094a0811d8c5668c5e8c58c39b",
+      "A2": "8fc5134f0bf083c09e259f61acb72ea85427fc3053335d665e0992bf6ed06e64"
+    }
+  }
+}
