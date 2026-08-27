@@ -337,6 +337,14 @@ def _parse_args() -> argparse.Namespace:
     ),
   )
   parser.add_argument(
+    "--conservative-outcome-advantage",
+    action="store_true",
+    help=(
+      "v107: reduce v106 outcome credit to 0.5 so task GAE remains dominant; "
+      "requires transactional aligned-rollout acceptance."
+    ),
+  )
+  parser.add_argument(
     "--transactional-rollout-acceptance",
     action="store_true",
     help=(
@@ -454,19 +462,59 @@ def _load_initial_checkpoint(
     )
 
   loaded = torch.load(checkpoint, map_location="cpu", weights_only=False)
-  expanded_actor, actor_expansion = _expand_actor_state(
-    loaded["actor_state_dict"], runner.alg.actor.state_dict()
-  )
-  expanded_critic, critic_expansion = _expand_critic_state(
-    loaded["critic_state_dict"], runner.alg.critic.state_dict()
-  )
-  if (
-    actor_expansion["new_feature_count"] != 10
-    or critic_expansion["new_feature_count"] != 10
-    or not actor_expansion["pi0_exact_preservation_proof"]
-    or not critic_expansion["exact_prefix_expansion"]
-  ):
-    raise RuntimeError("v104 persistent-geometry prefix expansion is not exact")
+  source_actor = loaded["actor_state_dict"]
+  source_critic = loaded["critic_state_dict"]
+  target_actor = runner.alg.actor.state_dict()
+  target_critic = runner.alg.critic.state_dict()
+  source_actor_width = int(source_actor["mlp.0.weight"].shape[1])
+  target_actor_width = int(target_actor["mlp.0.weight"].shape[1])
+  source_critic_width = int(source_critic["mlp.0.weight"].shape[1])
+  target_critic_width = int(target_critic["mlp.0.weight"].shape[1])
+  if source_actor_width == target_actor_width == 415:
+    if source_critic_width != target_critic_width:
+      raise RuntimeError(
+        "same-interface continuation requires an unchanged critic width"
+      )
+    checkpoint_interface = loaded.get("actor_observation_interface")
+    if checkpoint_interface not in (
+      None,
+      "deployable-cbf-persistent-geometry-415",
+    ):
+      raise RuntimeError(
+        "same-interface checkpoint declares a different actor observation"
+      )
+    expanded_actor = source_actor
+    expanded_critic = source_critic
+    expansion = {
+      "source_actor_width": source_actor_width,
+      "expanded_actor_width": target_actor_width,
+      "source_critic_width": source_critic_width,
+      "expanded_critic_width": target_critic_width,
+      "new_feature_count": 0,
+      "same_interface_exact_state_load": True,
+      "geometry_columns_preserved": True,
+      "checkpoint_actor_observation_interface": checkpoint_interface,
+    }
+  else:
+    expanded_actor, actor_expansion = _expand_actor_state(
+      source_actor, target_actor
+    )
+    expanded_critic, critic_expansion = _expand_critic_state(
+      source_critic, target_critic
+    )
+    if (
+      actor_expansion["new_feature_count"] != 10
+      or critic_expansion["new_feature_count"] != 10
+      or not actor_expansion["pi0_exact_preservation_proof"]
+      or not critic_expansion["exact_prefix_expansion"]
+    ):
+      raise RuntimeError("v104 persistent-geometry prefix expansion is not exact")
+    expansion = {
+      **actor_expansion,
+      **{f"critic_{key}": value for key, value in critic_expansion.items()},
+      "same_interface_exact_state_load": False,
+      "geometry_columns_preserved": False,
+    }
   runner.alg.actor.load_state_dict(expanded_actor, strict=True)
   runner.alg.critic.load_state_dict(expanded_critic, strict=True)
   runner.alg._std_initialized = False
@@ -481,8 +529,7 @@ def _load_initial_checkpoint(
   ):
     raise RuntimeError("v104 requires the complete 415-D actor MLP to train")
   return {
-    **actor_expansion,
-    **{f"critic_{key}": value for key, value in critic_expansion.items()},
+    **expansion,
     "source_iteration": int(loaded.get("iter", -1)),
     "actor_observation_interface": actor_observation_interface,
     "actor_mlp_trainable_parameter_count": sum(
@@ -774,6 +821,14 @@ def main() -> None:
     raise ValueError(
       "v106 outcome advantage requires v105 geometry balancing and fixed "
       "mixed execution with filter-group-balanced advantages"
+    )
+  if args.conservative_outcome_advantage and not (
+    args.outcome_centered_episode_advantage
+    and args.transactional_rollout_acceptance
+  ):
+    raise ValueError(
+      "v107 conservative outcome advantage requires v106 outcome credit and "
+      "transactional rollout acceptance"
     )
   if args.actor_gradient_accumulation_microbatches < 1:
     raise ValueError("actor gradient accumulation chunks must be positive")
@@ -1288,8 +1343,13 @@ def main() -> None:
   elif args.full_batch_sgd_actor:
     if args.outcome_centered_episode_advantage:
       agent_cfg.algorithm.class_name = (
-        "src.tasks.stairs_cbf.paper_outcome_geometry_v106:"
-        "PaperOutcomeGeometryV106PPO"
+        "src.tasks.stairs_cbf.paper_outcome_transactional_v107:"
+        "PaperOutcomeTransactionalV107PPO"
+        if args.conservative_outcome_advantage
+        else (
+          "src.tasks.stairs_cbf.paper_outcome_geometry_v106:"
+          "PaperOutcomeGeometryV106PPO"
+        )
       )
     elif args.persistent_geometry_gradient_balance:
       agent_cfg.algorithm.class_name = (
@@ -1486,6 +1546,9 @@ def main() -> None:
         ),
         "outcome_centered_episode_advantage": (
           args.outcome_centered_episode_advantage
+        ),
+        "conservative_outcome_advantage": (
+          args.conservative_outcome_advantage
         ),
         "fully_filtered_full_batch_actor": fully_filtered_full_batch_actor,
         "fully_filtered_transactional_actor": (
@@ -1805,6 +1868,9 @@ def main() -> None:
           "outcome_centered_episode_advantage": (
             args.outcome_centered_episode_advantage
           ),
+          "conservative_outcome_advantage": (
+            args.conservative_outcome_advantage
+          ),
           "fully_filtered_full_batch_actor": fully_filtered_full_batch_actor,
           "fully_filtered_transactional_actor": (
             fully_filtered_transactional_actor
@@ -1893,6 +1959,9 @@ def main() -> None:
       ),
       "outcome_centered_episode_advantage": (
         args.outcome_centered_episode_advantage
+      ),
+      "conservative_outcome_advantage": (
+        args.conservative_outcome_advantage
       ),
       "fully_filtered_full_batch_actor": fully_filtered_full_batch_actor,
       "fully_filtered_transactional_actor": fully_filtered_transactional_actor,

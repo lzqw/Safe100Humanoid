@@ -20,6 +20,9 @@ OUTCOME_ADVANTAGE_WEIGHT = 1.0
 class PaperOutcomeGeometryV106PPO(PaperGeometryBalancedV105PPO):
   """Blend unit-scale complete-episode outcome credit with paper-dual GAE."""
 
+  outcome_method_id = METHOD_ID
+  outcome_advantage_weight = OUTCOME_ADVANTAGE_WEIGHT
+
   def __init__(self, *args, **kwargs) -> None:
     super().__init__(*args, **kwargs)
     t = self.storage.num_transitions_per_env
@@ -66,7 +69,8 @@ class PaperOutcomeGeometryV106PPO(PaperGeometryBalancedV105PPO):
     balanced_base, base_metrics = normalize_filter_group_advantages(
       base_advantage, filter_mask.to(base_advantage.device)
     )
-    combined = balanced_base + OUTCOME_ADVANTAGE_WEIGHT * outcome_credit
+    outcome_weight = float(self.outcome_advantage_weight)
+    combined = balanced_base + outcome_weight * outcome_credit
     balanced_combined, combined_metrics = normalize_filter_group_advantages(
       combined, filter_mask.to(combined.device)
     )
@@ -88,7 +92,8 @@ class PaperOutcomeGeometryV106PPO(PaperGeometryBalancedV105PPO):
       **outcome_metrics,
       **{f"outcome_base_{key}": value for key, value in base_metrics.items()},
       **combined_metrics,
-      "outcome_advantage_weight": OUTCOME_ADVANTAGE_WEIGHT,
+      "outcome_method_id": self.outcome_method_id,
+      "outcome_advantage_weight": outcome_weight,
       "outcome_joint_success_fall_terminal_count": float(joint_terminal.sum()),
       "outcome_credit_applied_transition_count": float(applied.sum()),
       "outcome_credit_applied_transition_fraction": float(applied.float().mean()),
@@ -113,8 +118,10 @@ class PaperOutcomeGeometryV106PPO(PaperGeometryBalancedV105PPO):
     output = super().save()
     output.update(
       {
-        "proximal_method_id": METHOD_ID,
-        "v106_outcome_advantage_weight": OUTCOME_ADVANTAGE_WEIGHT,
+        "proximal_method_id": self.outcome_method_id,
+        "v106_outcome_advantage_weight": float(
+          self.outcome_advantage_weight
+        ),
         "v106_outcome_credit": (
           "episode-equal centered success/failure within each filter group"
         ),
