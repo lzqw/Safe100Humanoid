@@ -62,6 +62,17 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--actor-learning-rate", type=float, default=0.01)
   parser.add_argument("--moving-kl-beta", type=float, default=0.5)
   parser.add_argument("--max-reference-kl", type=float, default=0.001)
+  parser.add_argument(
+    "--target-reference-kl",
+    type=float,
+    default=None,
+    help=(
+      "Optional v52 target for expanding a safe raw adapter step along its "
+      "consensus-gradient direction. Omit to retain v51 cap-only behavior."
+    ),
+  )
+  parser.add_argument("--max-adapter-scale", type=float, default=64.0)
+  parser.add_argument("--line-search-iterations", type=int, default=14)
   parser.add_argument("--clip-ratio", type=float, default=0.2)
   parser.add_argument("--max-grad-norm", type=float, default=10.0)
   parser.add_argument("--device", default="cuda:0")
@@ -190,6 +201,9 @@ def _robust_adapter_ppo_step(
   learning_rate: float,
   moving_kl_beta: float,
   max_reference_kl: float,
+  target_reference_kl: float | None,
+  max_adapter_scale: float,
+  line_search_iterations: int,
   clip_ratio: float,
   max_grad_norm: float,
   device: str,
@@ -274,7 +288,12 @@ def _robust_adapter_ppo_step(
 
   scale = 1.0
   projection_iterations = 0
-  if unprojected["reference_forward_kl"] > max_reference_kl:
+  expansion_iterations = 0
+  line_search_records: list[dict[str, Any]] = []
+  selection_reason = "raw_step_within_cap"
+  if target_reference_kl is None and (
+    unprojected["reference_forward_kl"] > max_reference_kl
+  ):
     low, high = 0.0, 1.0
     for _ in range(12):
       projection_iterations += 1
@@ -289,6 +308,100 @@ def _robust_adapter_ppo_step(
         high = middle
     scale = low
     load_scale(scale)
+    selection_reason = "projected_to_max_reference_kl"
+  elif target_reference_kl is not None:
+    def record(scale_value: float, metrics: dict[str, Any]) -> None:
+      line_search_records.append(
+        {
+          "scale": float(scale_value),
+          "reference_forward_kl": metrics["reference_forward_kl"],
+          "minimum_surrogate_gain": metrics["minimum_surrogate_gain"],
+          "positive_batch_count": metrics["positive_batch_count"],
+          "batch_count": metrics["batch_count"],
+          "mean_filter_on_surrogate_gain": metrics[
+            "mean_filter_on_surrogate_gain"
+          ],
+          "mean_filter_off_surrogate_gain": metrics[
+            "mean_filter_off_surrogate_gain"
+          ],
+        }
+      )
+
+    def batch_positive(metrics: dict[str, Any]) -> bool:
+      return (
+        metrics["positive_batch_count"] == metrics["batch_count"]
+        and metrics["mean_filter_on_surrogate_gain"] > 0.0
+        and metrics["mean_filter_off_surrogate_gain"] > 0.0
+      )
+
+    def acceptable(metrics: dict[str, Any]) -> bool:
+      return (
+        metrics["reference_forward_kl"] <= target_reference_kl
+        and batch_positive(metrics)
+      )
+
+    record(1.0, unprojected)
+    if acceptable(unprojected):
+      low = 1.0
+      high = min(2.0, max_adapter_scale)
+      high_metrics: dict[str, Any] | None = None
+      while high > low:
+        load_scale(high)
+        high_metrics = _policy_metrics(
+          actor, reference_actor, batches, labels=labels, clip_ratio=clip_ratio
+        )
+        expansion_iterations += 1
+        record(high, high_metrics)
+        if not acceptable(high_metrics) or high >= max_adapter_scale:
+          break
+        low = high
+        high = min(2.0 * high, max_adapter_scale)
+      if high_metrics is not None and acceptable(high_metrics):
+        scale = high
+        selection_reason = "maximum_adapter_scale_reached"
+      else:
+        for _ in range(line_search_iterations):
+          middle = 0.5 * (low + high)
+          load_scale(middle)
+          metrics = _policy_metrics(
+            actor,
+            reference_actor,
+            batches,
+            labels=labels,
+            clip_ratio=clip_ratio,
+          )
+          projection_iterations += 1
+          record(middle, metrics)
+          if acceptable(metrics):
+            low = middle
+          else:
+            high = middle
+        scale = low
+        selection_reason = "largest_batch_positive_target_kl_step"
+      load_scale(scale)
+    elif batch_positive(unprojected):
+      low, high = 0.0, 1.0
+      for _ in range(line_search_iterations):
+        middle = 0.5 * (low + high)
+        load_scale(middle)
+        metrics = _policy_metrics(
+          actor,
+          reference_actor,
+          batches,
+          labels=labels,
+          clip_ratio=clip_ratio,
+        )
+        projection_iterations += 1
+        record(middle, metrics)
+        if acceptable(metrics):
+          low = middle
+        else:
+          high = middle
+      scale = low
+      load_scale(scale)
+      selection_reason = "raw_step_projected_to_target_kl"
+    else:
+      selection_reason = "raw_step_not_expandable"
   after = _policy_metrics(
     actor, reference_actor, batches, labels=labels, clip_ratio=clip_ratio
   )
@@ -315,15 +428,27 @@ def _robust_adapter_ppo_step(
     "after": after,
     "trust_region": {
       "max_reference_kl": max_reference_kl,
+      "target_reference_kl": target_reference_kl,
+      "mode": (
+        "targeted-batch-positive-expansion"
+        if target_reference_kl is not None
+        else "cap-only-projection"
+      ),
       "adapter_interpolation_scale": scale,
+      "max_adapter_scale": max_adapter_scale,
+      "selection_reason": selection_reason,
+      "expansion_iterations": expansion_iterations,
       "projection_iterations": projection_iterations,
+      "line_search_evaluations": line_search_records,
     },
     "legacy_first_layer_change_max_abs": legacy_error,
     "inactive_geometry_exact_base_policy": legacy_error == 0.0,
   }, optimizer
 
 
-def main() -> None:
+def main(
+  *, method_id: str = METHOD_ID, require_target_reference_kl: bool = False
+) -> None:
   args = _parse_args()
   seeds = _parse_seeds(args.training_seeds)
   if args.num_envs < 2 or args.rollout_steps < 64:
@@ -334,6 +459,16 @@ def main() -> None:
     raise ValueError("v51 moving KL beta must lie in [0, 4]")
   if not 0.0 < args.max_reference_kl <= 0.02:
     raise ValueError("v51 reference KL cap must lie in (0, 0.02]")
+  if require_target_reference_kl and args.target_reference_kl is None:
+    raise ValueError("v52 requires --target-reference-kl")
+  if args.target_reference_kl is not None and not (
+    0.0 < args.target_reference_kl <= args.max_reference_kl
+  ):
+    raise ValueError("target reference KL must lie in (0, max-reference-kl]")
+  if not 1.0 <= args.max_adapter_scale <= 256.0:
+    raise ValueError("maximum adapter scale must lie in [1, 256]")
+  if not 4 <= args.line_search_iterations <= 24:
+    raise ValueError("line-search iterations must lie in [4, 24]")
   repo = args.repo.resolve()
   checkpoint = args.base_checkpoint.resolve()
   output = args.output_dir.resolve()
@@ -354,7 +489,7 @@ def main() -> None:
   _atomic_json(
     output / "execution_started.json",
     {
-      "method_id": METHOD_ID,
+      "method_id": method_id,
       "git_commit": _git(repo, "rev-parse", "HEAD"),
       "base_checkpoint_sha256": checkpoint_sha,
       "training_seeds": seeds,
@@ -458,6 +593,9 @@ def main() -> None:
       learning_rate=args.actor_learning_rate,
       moving_kl_beta=args.moving_kl_beta,
       max_reference_kl=args.max_reference_kl,
+      target_reference_kl=args.target_reference_kl,
+      max_adapter_scale=args.max_adapter_scale,
+      line_search_iterations=args.line_search_iterations,
       clip_ratio=args.clip_ratio,
       max_grad_norm=args.max_grad_norm,
       device=args.device,
@@ -483,7 +621,7 @@ def main() -> None:
       optimizer.state_dict()
     )
     infos = dict(candidate_payload.get("infos") or {})
-    infos[METHOD_ID] = {
+    infos[method_id] = {
       "source_git_commit": _git(repo, "rev-parse", "HEAD"),
       "training_seeds": seeds,
       "optimization_seed": args.optimization_seed,
@@ -494,7 +632,7 @@ def main() -> None:
     _atomic_torch(candidate_path, candidate_payload)
     summary = {
       "schema_version": 1,
-      "method_id": METHOD_ID,
+      "method_id": method_id,
       "git_commit": _git(repo, "rev-parse", "HEAD"),
       "context": args.context,
       "training_seeds": seeds,
@@ -520,6 +658,9 @@ def main() -> None:
       "actor_learning_rate": args.actor_learning_rate,
       "moving_kl_beta": args.moving_kl_beta,
       "max_reference_kl": args.max_reference_kl,
+      "target_reference_kl": args.target_reference_kl,
+      "max_adapter_scale": args.max_adapter_scale,
+      "line_search_iterations": args.line_search_iterations,
       "clip_ratio": args.clip_ratio,
       "offline_gate_passed": offline_gate_passed,
       "training": training,
