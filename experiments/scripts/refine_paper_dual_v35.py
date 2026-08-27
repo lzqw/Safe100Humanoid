@@ -320,6 +320,15 @@ def _parse_args() -> argparse.Namespace:
     ),
   )
   parser.add_argument(
+    "--persistent-geometry-gradient-balance",
+    action="store_true",
+    help=(
+      "v105: retain complete-actor paper-dual PPO, but scale the appended "
+      "10-D first-layer gradient to a bounded 1:1 norm with the legacy input "
+      "block before the existing global gradient clip."
+    ),
+  )
+  parser.add_argument(
     "--transactional-rollout-acceptance",
     action="store_true",
     help=(
@@ -738,6 +747,17 @@ def main() -> None:
     )
   ):
     raise ValueError("v103 bounded swing-credit configuration differs")
+  if args.persistent_geometry_gradient_balance and (
+    args.actor_observation_interface
+    != "deployable-cbf-persistent-geometry-415"
+    or not args.full_batch_sgd_actor
+    or args.actor_gradient_accumulation_microbatches != 1
+    or bounded_swing_credit
+  ):
+    raise ValueError(
+      "v105 geometry gradient balance requires the 415-D actor, one "
+      "materialized full-batch SGD step, and no temporal-credit variant"
+    )
   if args.actor_gradient_accumulation_microbatches < 1:
     raise ValueError("actor gradient accumulation chunks must be positive")
   if (
@@ -1249,7 +1269,12 @@ def main() -> None:
       args.actor_gradient_accumulation_microbatches
     )
   elif args.full_batch_sgd_actor:
-    if bounded_swing_credit:
+    if args.persistent_geometry_gradient_balance:
+      agent_cfg.algorithm.class_name = (
+        "src.tasks.stairs_cbf.paper_geometry_balanced_v105:"
+        "PaperGeometryBalancedV105PPO"
+      )
+    elif bounded_swing_credit:
       agent_cfg.algorithm.class_name = (
         "src.tasks.stairs_cbf.paper_swing_credit_v103:"
         "PaperSwingCreditV103PPO"
@@ -1424,6 +1449,9 @@ def main() -> None:
         "full_batch_sgd_actor": args.full_batch_sgd_actor,
         "actor_gradient_accumulation_microbatches": (
           args.actor_gradient_accumulation_microbatches
+        ),
+        "persistent_geometry_gradient_balance": (
+          args.persistent_geometry_gradient_balance
         ),
         "fully_filtered_full_batch_actor": fully_filtered_full_batch_actor,
         "fully_filtered_transactional_actor": (
@@ -1732,6 +1760,9 @@ def main() -> None:
           "actor_gradient_accumulation_microbatches": (
             args.actor_gradient_accumulation_microbatches
           ),
+          "persistent_geometry_gradient_balance": (
+            args.persistent_geometry_gradient_balance
+          ),
           "fully_filtered_full_batch_actor": fully_filtered_full_batch_actor,
           "fully_filtered_transactional_actor": (
             fully_filtered_transactional_actor
@@ -1814,6 +1845,9 @@ def main() -> None:
       "full_batch_sgd_actor": args.full_batch_sgd_actor,
       "actor_gradient_accumulation_microbatches": (
         args.actor_gradient_accumulation_microbatches
+      ),
+      "persistent_geometry_gradient_balance": (
+        args.persistent_geometry_gradient_balance
       ),
       "fully_filtered_full_batch_actor": fully_filtered_full_batch_actor,
       "fully_filtered_transactional_actor": fully_filtered_transactional_actor,
