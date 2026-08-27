@@ -52,6 +52,10 @@ CAUSAL_GATE = _load(
     "causal_gated_residual_v115_test",
     "experiments/scripts/train_causal_gated_residual_v115.py",
 )
+FILTER_OFF_PPO = _load(
+    "filter_off_residual_ppo_v117_test",
+    "experiments/scripts/train_filter_off_residual_ppo_v117.py",
+)
 
 
 def test_v34_sherman_morrison_matches_dense_solve() -> None:
@@ -424,6 +428,22 @@ def test_v116_routes_residual_to_actual_successful_filtered_trajectory() -> None
     assert trace_mode == "paired-trajectory"
     with pytest.raises(ValueError, match="unsupported"):
         CAUSAL_GATE.residual_teacher_configuration("unsigned-local-filter")
+
+
+def test_v117_outcome_credit_is_balanced_and_episode_equal() -> None:
+    environment_ids = torch.tensor((0, 0, 1, 2, 2, 2), dtype=torch.long)
+    success = torch.tensor((True, False, False))
+    weights, advantages = FILTER_OFF_PPO.balanced_outcome_weights(
+        environment_ids, success
+    )
+    assert torch.isclose(weights[environment_ids == 0].sum(), torch.tensor(0.5))
+    assert torch.isclose(weights[environment_ids == 1].sum(), torch.tensor(0.25))
+    assert torch.isclose(weights[environment_ids == 2].sum(), torch.tensor(0.25))
+    assert torch.equal(advantages, torch.tensor((1.0, 1.0, -1.0, -1.0, -1.0, -1.0)))
+    actions = torch.tensor(((0.1, -0.1),))
+    log_prob = FILTER_OFF_PPO._normal_log_prob(actions, torch.zeros_like(actions), 0.2)
+    expected = torch.distributions.Normal(0.0, 0.2).log_prob(actions).sum(dim=-1)
+    assert torch.allclose(log_prob, expected)
 
 
 def test_v95_critic_expansion_accepts_ten_persistent_features() -> None:
