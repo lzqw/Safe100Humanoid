@@ -325,7 +325,10 @@ def main() -> None:
       configure_v35_mean_teacher_telemetry,
     )
 
-    deterministic_mean_teacher = configure_v35_mean_teacher_telemetry(env_cfg)
+    deterministic_mean_teacher = configure_v35_mean_teacher_telemetry(
+      env_cfg,
+      runtime_filter_during_training=training_runtime_filter,
+    )
   height_curriculum = None
   if args.height_curriculum:
     height_curriculum = _configure_height_curriculum(

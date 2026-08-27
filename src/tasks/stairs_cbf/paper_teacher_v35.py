@@ -60,7 +60,9 @@ def v35_mean_teacher_telemetry(
   return zeros
 
 
-def configure_v35_mean_teacher_telemetry(env_cfg) -> dict[str, Any]:
+def configure_v35_mean_teacher_telemetry(
+  env_cfg, *, runtime_filter_during_training: bool
+) -> dict[str, Any]:
   """Replace only the training telemetry function; action execution is fixed."""
   action = env_cfg.actions.get("joint_pos")
   if action is None:
@@ -77,7 +79,11 @@ def configure_v35_mean_teacher_telemetry(env_cfg) -> dict[str, Any]:
     "enabled": True,
     "target_source": "same_state_cbf_projection_of_round_reference_mean",
     "rollout_action_source": "stochastic_policy_sample",
-    "rollout_action_execution": "runtime_cbf_filtered",
+    "rollout_action_execution": (
+      "runtime_cbf_filtered"
+      if runtime_filter_during_training
+      else "nominal_unshielded"
+    ),
     "loss": "weighted_smooth_l1_per_action_mean",
     "eligibility": "deterministic_mean_cbf_interventions_only",
   }
