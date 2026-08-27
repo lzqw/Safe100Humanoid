@@ -17,6 +17,7 @@ from src.tasks.stairs_cbf.edge_detection import (
 )
 from src.tasks.stairs_cbf.paper_dual_v35 import (
   PAPER_DUAL_CANDIDATES,
+  configure_paper_training_domain_randomization,
 )
 
 
@@ -180,3 +181,20 @@ def test_v35_paper_stair_candidate_uses_reduced_order_foot_distance():
     "margin_weight": 10.0,
     "intervention_weight": 100.0,
   }
+
+
+def test_v57_restores_native_static_training_domain_randomization():
+  from src.tasks.stairs_cbf.config import g1_online_stairs_env_cfg
+
+  cfg = g1_online_stairs_env_cfg("DQHMED", play=True)
+  assert cfg.observations["actor"].enable_corruption is False
+  assert not ({"encoder_bias", "foot_friction", "base_com"} & cfg.events.keys())
+
+  metadata = configure_paper_training_domain_randomization(cfg, "paper_static")
+
+  assert metadata["enabled"] is True
+  assert metadata["external_pushes"] is False
+  assert cfg.observations["actor"].enable_corruption is True
+  assert {"encoder_bias", "foot_friction", "base_com"} <= cfg.events.keys()
+  assert "push_robot" not in cfg.events
+  assert metadata["foot_friction_range"] == [0.3, 1.6]

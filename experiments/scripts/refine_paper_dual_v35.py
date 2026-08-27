@@ -209,6 +209,16 @@ def _parse_args() -> argparse.Namespace:
       "PPO without the historical continuation anchor."
     ),
   )
+  parser.add_argument(
+    "--training-domain-randomization",
+    choices=("off", "paper_static", "paper_full"),
+    default="off",
+    help=(
+      "Restore native G1 training observation/parameter randomization; "
+      "paper_full additionally restores interval pushes. Evaluation remains "
+      "the fixed play environment."
+    ),
+  )
   return parser.parse_args()
 
 
@@ -463,7 +473,10 @@ def main() -> None:
 
   import src.tasks  # noqa: F401
   from src.tasks.stairs_cbf.environment_v31 import configure_v31_context
-  from src.tasks.stairs_cbf.paper_dual_v35 import configure_paper_dual_reward
+  from src.tasks.stairs_cbf.paper_dual_v35 import (
+    configure_paper_dual_reward,
+    configure_paper_training_domain_randomization,
+  )
   from src.tasks.stairs_cbf.teacher_v30 import CbfTeacherV30Runner
   from src.tasks.stairs_cbf.teacher_v30_math import (
     linear_filter_fraction_schedule,
@@ -495,6 +508,19 @@ def main() -> None:
     args.candidate,
     runtime_filter_during_training=training_runtime_filter,
   )
+  training_domain_randomization = (
+    configure_paper_training_domain_randomization(
+      env_cfg, args.training_domain_randomization
+    )
+  )
+  if training_domain_randomization["enabled"]:
+    evaluation_contract = shift.pop("fixed_deployment_environment", None)
+    if evaluation_contract is not None:
+      shift["fixed_evaluation_environment"] = evaluation_contract
+    shift["friction_changed"] = True
+    shift["actor_observation_corruption_changed"] = True
+    shift["physical_parameter_randomization_changed"] = True
+  shift["training_domain_randomization"] = training_domain_randomization
   if args.candidate == "paper_stair_demo_scale":
     clearance = env_cfg.rewards["foot_clearance"]
     clearance.params = {
@@ -647,6 +673,7 @@ def main() -> None:
         "training_action_std": args.training_action_std,
         "actor_learning_rate": args.actor_learning_rate,
         "moving_kl_beta": args.moving_kl_beta,
+        "training_domain_randomization": training_domain_randomization,
       },
     )
     for round_index in range(1, args.rounds + 1):
@@ -746,6 +773,7 @@ def main() -> None:
           "training_action_std": args.training_action_std,
           "actor_learning_rate": args.actor_learning_rate,
           "moving_kl_beta": args.moving_kl_beta,
+          "training_domain_randomization": training_domain_randomization,
         },
       )
       _atomic_json(output_dir / "round_metrics.json", records)
@@ -783,6 +811,7 @@ def main() -> None:
       "training_action_std": args.training_action_std,
       "actor_learning_rate": args.actor_learning_rate,
       "moving_kl_beta": args.moving_kl_beta,
+      "training_domain_randomization": training_domain_randomization,
       "seed": args.seed,
       "rounds": args.rounds,
       "num_envs": args.num_envs,

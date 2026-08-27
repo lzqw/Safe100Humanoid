@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import Any
 
 PAPER_ARXIV_ID = "2510.14959v6"
 PAPER_DEMO_COMMIT = "68955c8ba9e929d974b6677635370ee93eecc63a"
+PAPER_DOMAIN_RANDOMIZATION_MODES = ("off", "paper_static", "paper_full")
 
 # ``raw_demo`` reproduces the two weights and action-coordinate distance used
 # by the authors' public navigation demo. The intermediate variants are needed
@@ -81,3 +83,72 @@ def configure_paper_dual_reward(
     "runtime_filter_during_training": bool(runtime_filter_during_training),
     "historical_default_preserved": candidate == "current",
   }
+
+
+def configure_paper_training_domain_randomization(
+  env_cfg,
+  mode: str,
+) -> dict[str, Any]:
+  """Restore repository-native G1 randomization for CBF-RL training.
+
+  The online deployment task intentionally removes physical randomization and
+  its play variant also disables actor observation corruption. That is the
+  correct evaluation protocol, but it differs from the paper's training
+  setup. Reusing the native G1 distributions keeps their ranges owned by one
+  authoritative configuration rather than copying them by hand.
+  """
+  if mode not in PAPER_DOMAIN_RANDOMIZATION_MODES:
+    raise ValueError(
+      "paper domain-randomization mode must be one of "
+      f"{PAPER_DOMAIN_RANDOMIZATION_MODES}, got {mode!r}"
+    )
+  if mode == "off":
+    return {
+      "mode": mode,
+      "enabled": False,
+      "actor_observation_corruption": False,
+      "event_terms": [],
+    }
+
+  # Import lazily to keep the reward-only module lightweight and avoid adding
+  # a configuration dependency to pure CBF math users.
+  from src.tasks.velocity.config.g1.env_cfgs import unitree_g1_rough_env_cfg
+
+  native_training_cfg = unitree_g1_rough_env_cfg(play=False)
+  event_names = ["encoder_bias", "foot_friction", "base_com"]
+  if mode == "paper_full":
+    event_names.append("push_robot")
+  missing = [name for name in event_names if name not in native_training_cfg.events]
+  if missing:
+    raise RuntimeError(f"native G1 training config lacks DR events: {missing}")
+  for name in event_names:
+    env_cfg.events[name] = deepcopy(native_training_cfg.events[name])
+  env_cfg.observations["actor"].enable_corruption = True
+
+  friction = native_training_cfg.events["foot_friction"].params
+  base_com = native_training_cfg.events["base_com"].params
+  encoder = native_training_cfg.events["encoder_bias"].params
+  metadata: dict[str, Any] = {
+    "mode": mode,
+    "enabled": True,
+    "source": "unitree_g1_rough_env_cfg(play=False)",
+    "actor_observation_corruption": True,
+    "event_terms": event_names,
+    "encoder_bias_range": list(encoder["bias_range"]),
+    "foot_friction_range": list(friction["ranges"]),
+    "foot_friction_operation": friction["operation"],
+    "foot_friction_shared_random": bool(friction["shared_random"]),
+    "base_com_operation": base_com["operation"],
+    "base_com_ranges_m": {
+      str(axis): list(bounds) for axis, bounds in base_com["ranges"].items()
+    },
+    "external_pushes": mode == "paper_full",
+  }
+  if mode == "paper_full":
+    push = native_training_cfg.events["push_robot"]
+    metadata["push_interval_range_s"] = list(push.interval_range_s)
+    metadata["push_velocity_range"] = {
+      axis: list(bounds)
+      for axis, bounds in push.params["velocity_range"].items()
+    }
+  return metadata
