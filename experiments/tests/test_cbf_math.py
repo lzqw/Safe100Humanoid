@@ -19,6 +19,7 @@ from src.tasks.stairs_cbf.paper_dual_v35 import (
   PAPER_DUAL_CANDIDATES,
   configure_paper_training_domain_randomization,
   normalize_filter_group_advantages,
+  split_filter_actor_objective_masks,
 )
 
 
@@ -214,6 +215,24 @@ def test_v67_rejects_empty_mixed_filter_advantage_group():
   with pytest.raises(ValueError, match="both be non-empty"):
     normalize_filter_group_advantages(
       torch.ones(2, 3), torch.ones(3, dtype=torch.bool)
+    )
+
+
+def test_v68_routes_nominal_worlds_to_ppo_and_filtered_worlds_to_teacher():
+  filter_mask = torch.tensor([True, True, False, False])
+  ppo, teacher = split_filter_actor_objective_masks(filter_mask, 3)
+
+  assert ppo.shape == teacher.shape == (3, 4)
+  assert torch.equal(teacher, filter_mask.unsqueeze(0).expand(3, -1))
+  assert torch.equal(ppo, ~teacher)
+  assert not bool((ppo & teacher).any())
+  assert bool((ppo | teacher).all())
+
+
+def test_v68_rejects_single_execution_group_actor_routing():
+  with pytest.raises(ValueError, match="both execution groups"):
+    split_filter_actor_objective_masks(
+      torch.zeros(4, dtype=torch.bool), 2
     )
 
 

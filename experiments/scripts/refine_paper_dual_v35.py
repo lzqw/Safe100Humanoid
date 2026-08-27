@@ -202,6 +202,14 @@ def _parse_args() -> argparse.Namespace:
     ),
   )
   parser.add_argument(
+    "--split-filter-actor-objectives",
+    action="store_true",
+    help=(
+      "Route nominal filter-off transitions to PPO actor gradients and "
+      "filtered transitions to the deterministic-mean CBF teacher."
+    ),
+  )
+  parser.add_argument(
     "--training-filter-end-fraction",
     type=float,
     default=0.0,
@@ -515,6 +523,26 @@ def main() -> None:
     )
   if args.distill_only_actor and not args.deterministic_mean_teacher:
     raise ValueError("distillation-only actor requires deterministic mean labels")
+  if args.split_filter_actor_objectives:
+    if (
+      not args.deterministic_mean_teacher
+      or args.distill_only_actor
+      or args.failure_focused_actor
+      or args.failure_only_mean_teacher
+      or args.success_only_mean_teacher
+    ):
+      raise ValueError(
+        "split filter actor objectives require ungated deterministic-mean A2"
+      )
+    if (
+      args.training_filter_schedule != "fixed"
+      or not 0.0 < training_filter_fraction < 1.0
+      or not args.filter_group_balanced_advantages
+    ):
+      raise ValueError(
+        "split filter actor objectives require fixed mixed execution and "
+        "group-balanced advantages"
+      )
   if not 0.0 <= args.success_local_kl_beta <= 4.0:
     raise ValueError("success-local KL beta must lie in [0, 4]")
   if args.success_local_kl_beta > 0.0:
@@ -702,6 +730,7 @@ def main() -> None:
       failure_focused_actor=args.failure_focused_actor,
       distill_only_actor=args.distill_only_actor,
       success_local_kl_beta=args.success_local_kl_beta,
+      split_filter_actor_objectives=args.split_filter_actor_objectives,
     )
     deterministic_mean_teacher["runtime_filter_fraction"] = (
       training_filter_fraction
@@ -752,6 +781,9 @@ def main() -> None:
     )
     runner_cfg["algorithm"]["v35_success_local_kl_beta"] = (
       args.success_local_kl_beta
+    )
+    runner_cfg["algorithm"]["v35_split_filter_actor_objectives"] = (
+      args.split_filter_actor_objectives
     )
   runner = CbfTeacherV30Runner(
     env, runner_cfg, log_dir=None, device=args.device
@@ -820,6 +852,9 @@ def main() -> None:
         "filter_group_balanced_advantages": (
           args.filter_group_balanced_advantages
         ),
+        "split_filter_actor_objectives": (
+          args.split_filter_actor_objectives
+        ),
         "training_action_std": args.training_action_std,
         "actor_learning_rate": args.actor_learning_rate,
         "moving_kl_beta": args.moving_kl_beta,
@@ -861,6 +896,10 @@ def main() -> None:
         device=base_env.device,
       )
       action_term.set_runtime_filter_mask(round_filter_mask)
+      if args.split_filter_actor_objectives:
+        runner.alg.set_v35_filter_execution_environment_mask(
+          round_filter_mask
+        )
       after_compute_returns = None
       if args.filter_group_balanced_advantages:
         def after_compute_returns(active_runner):
@@ -961,6 +1000,9 @@ def main() -> None:
           "filter_group_balanced_advantages": (
             args.filter_group_balanced_advantages
           ),
+          "split_filter_actor_objectives": (
+            args.split_filter_actor_objectives
+          ),
           "training_action_std": args.training_action_std,
           "actor_learning_rate": args.actor_learning_rate,
           "moving_kl_beta": args.moving_kl_beta,
@@ -1001,6 +1043,9 @@ def main() -> None:
       "training_filter_schedule": filter_schedule,
       "filter_group_balanced_advantages": (
         args.filter_group_balanced_advantages
+      ),
+      "split_filter_actor_objectives": (
+        args.split_filter_actor_objectives
       ),
       "training_action_std": args.training_action_std,
       "actor_learning_rate": args.actor_learning_rate,

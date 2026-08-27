@@ -63,6 +63,22 @@ def normalize_filter_group_advantages(
   metrics["balanced_advantage_std"] = float(output.std(unbiased=False))
   return output, metrics
 
+
+def split_filter_actor_objective_masks(
+  filter_mask: torch.Tensor,
+  num_transitions: int,
+) -> tuple[torch.Tensor, torch.Tensor]:
+  """Route nominal worlds to PPO and filtered worlds to the CBF teacher."""
+  if filter_mask.ndim != 1 or filter_mask.dtype != torch.bool:
+    raise ValueError("split actor filter mask must be boolean with shape [N]")
+  if num_transitions < 1:
+    raise ValueError("split actor objective needs at least one transition")
+  if not bool(filter_mask.any()) or bool(filter_mask.all()):
+    raise ValueError("split actor objective requires both execution groups")
+  teacher = filter_mask.unsqueeze(0).expand(num_transitions, -1)
+  ppo = ~teacher
+  return ppo, teacher
+
 # ``raw_demo`` reproduces the two weights and action-coordinate distance used
 # by the authors' public navigation demo. The intermediate variants are needed
 # because humanoid reward rates and action geometry differ from a 2-D point

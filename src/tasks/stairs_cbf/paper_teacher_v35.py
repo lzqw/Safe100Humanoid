@@ -16,6 +16,7 @@ from typing import Any
 
 import torch
 
+from .paper_dual_v35 import split_filter_actor_objective_masks
 from .teacher_v26 import HigherRiserCbfAction, v26_online_safety_telemetry
 from .teacher_v30 import CbfTeacherV30PPO, CbfTeacherV30PpoAlgorithmCfg
 from .teacher_v30_math import (
@@ -73,6 +74,7 @@ def configure_v35_mean_teacher_telemetry(
   failure_focused_actor: bool = False,
   distill_only_actor: bool = False,
   success_local_kl_beta: float = 0.0,
+  split_filter_actor_objectives: bool = False,
 ) -> dict[str, Any]:
   """Replace only the training telemetry function; action execution is fixed."""
   action = env_cfg.actions.get("joint_pos")
@@ -107,6 +109,8 @@ def configure_v35_mean_teacher_telemetry(
     "actor_ppo_scope": (
       "none_distillation_only"
       if distill_only_actor
+      else "nominal_filter_off_transitions"
+      if split_filter_actor_objectives
       else "failed_episodes"
       if failure_focused_actor
       else "all_transitions"
@@ -127,6 +131,12 @@ def configure_v35_mean_teacher_telemetry(
       )
     ),
     "success_local_kl_beta": float(success_local_kl_beta),
+    "split_filter_actor_objectives": bool(split_filter_actor_objectives),
+    "filtered_transition_actor_objective": (
+      "deterministic_mean_CBF_teacher_plus_global_round_reference_KL"
+      if split_filter_actor_objectives
+      else "shared_PPO_teacher_objective"
+    ),
   }
 
 
@@ -150,6 +160,7 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     v35_failure_focused_actor: bool = False,
     v35_distill_only_actor: bool = False,
     v35_success_local_kl_beta: float = 0.0,
+    v35_split_filter_actor_objectives: bool = False,
     **kwargs,
   ) -> None:
     super().__init__(*args, **kwargs)
@@ -165,6 +176,9 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     )
     self.v35_failure_focused_actor = bool(v35_failure_focused_actor)
     self.v35_distill_only_actor = bool(v35_distill_only_actor)
+    self.v35_split_filter_actor_objectives = bool(
+      v35_split_filter_actor_objectives
+    )
     self.v35_success_local_kl_beta = float(v35_success_local_kl_beta)
     if (
       not math.isfinite(self.v35_success_local_kl_beta)
@@ -177,6 +191,15 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
       )
     if self.v35_failure_only_mean_teacher and self.v35_success_only_mean_teacher:
       raise ValueError("v35 mean teacher outcome gates are mutually exclusive")
+    if self.v35_split_filter_actor_objectives and (
+      self.v35_distill_only_actor
+      or self.v35_failure_focused_actor
+      or self.v35_failure_only_mean_teacher
+      or self.v35_success_only_mean_teacher
+    ):
+      raise ValueError(
+        "v68 split filter actor objectives require ungated mixed A2 training"
+      )
     t = self.storage.num_transitions_per_env
     n = self.storage.num_envs
     action_dim = self.storage.actions.shape[-1]
@@ -198,6 +221,36 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     )
     self.v35_success_episode_transition = torch.zeros_like(
       self.v35_failed_episode_transition
+    )
+    self.v35_filter_execution_environment_mask = torch.zeros(
+      n, dtype=torch.bool, device=self.device
+    )
+    self.v35_split_filter_mask_present = False
+
+  def set_v35_filter_execution_environment_mask(
+    self, filter_mask: torch.Tensor
+  ) -> None:
+    """Set the fixed per-world objective routing for the next rollout."""
+    if not self.v35_split_filter_actor_objectives:
+      raise RuntimeError("v68 split actor objective routing is disabled")
+    if (
+      filter_mask.shape != self.v35_filter_execution_environment_mask.shape
+      or filter_mask.dtype != torch.bool
+    ):
+      raise ValueError("v68 filter execution mask must be boolean with shape [N]")
+    # The pure helper owns the non-empty/disjoint routing contract.
+    split_filter_actor_objective_masks(filter_mask, 1)
+    self.v35_filter_execution_environment_mask.copy_(
+      filter_mask.to(self.device)
+    )
+    self.v35_split_filter_mask_present = True
+
+  def _split_filter_actor_masks(self) -> tuple[torch.Tensor, torch.Tensor]:
+    if not self.v35_split_filter_mask_present:
+      raise RuntimeError("v68 split filter actor mask was not staged")
+    return split_filter_actor_objective_masks(
+      self.v35_filter_execution_environment_mask,
+      self.storage.num_transitions_per_env,
     )
 
   def process_env_step(
@@ -264,6 +317,9 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
       success_transition,
       gate=gate,
     )
+    if self.v35_split_filter_actor_objectives:
+      _, teacher_environment = self._split_filter_actor_masks()
+      gated_intervention &= teacher_environment
     eligible, weights = intervention_teacher_weights(
       gated_intervention,
       self.v35_mean_correction_norm,
@@ -288,6 +344,9 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
       return torch.zeros_like(self.teacher_eligible, dtype=torch.bool)
     if self.v35_failure_focused_actor:
       return self.v35_failed_episode_transition
+    if self.v35_split_filter_actor_objectives:
+      ppo_environment, _ = self._split_filter_actor_masks()
+      return ppo_environment
     return super()._actor_ppo_transition_mask()
 
   def _actor_local_kl_transition_mask(self) -> torch.Tensor:
@@ -339,6 +398,14 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
       flat_weights,
     )
     intervened_count = int(self.v35_mean_intervened.sum())
+    if self.v35_split_filter_actor_objectives:
+      ppo_environment, teacher_environment = self._split_filter_actor_masks()
+    else:
+      ppo_environment = torch.ones_like(self.v35_mean_intervened)
+      teacher_environment = torch.ones_like(self.v35_mean_intervened)
+    teacher_environment_intervention_count = int(
+      (self.v35_mean_intervened & teacher_environment).sum()
+    )
     eligible_count = int(self.teacher_eligible.sum())
     weighted_count = float(effective.sum())
     mean_weighted_correction = (
@@ -372,6 +439,18 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
         "v35_failure_focused_actor": self.v35_failure_focused_actor,
         "v35_distill_only_actor": self.v35_distill_only_actor,
         "v35_success_local_kl_beta": self.v35_success_local_kl_beta,
+        "v35_split_filter_actor_objectives": (
+          self.v35_split_filter_actor_objectives
+        ),
+        "v35_ppo_environment_transition_fraction": float(
+          ppo_environment.float().mean()
+        ),
+        "v35_teacher_environment_transition_fraction": float(
+          teacher_environment.float().mean()
+        ),
+        "v35_teacher_environment_intervention_count": float(
+          teacher_environment_intervention_count
+        ),
         "v35_failed_episode_count": float(
           failed_terminal.sum()
         ),
@@ -384,7 +463,8 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
           self.v35_success_episode_transition.float().mean()
         ),
         "teacher_eligible_fraction_among_interventions": (
-          int(self.teacher_eligible.sum()) / max(1, intervened_count)
+          int(self.teacher_eligible.sum())
+          / max(1, teacher_environment_intervention_count)
         ),
         "teacher_actor_coordinate_correction_mean": float(
           self.v35_mean_correction_norm.mean()
@@ -443,4 +523,7 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     output["v35_failure_focused_actor"] = self.v35_failure_focused_actor
     output["v35_distill_only_actor"] = self.v35_distill_only_actor
     output["v35_success_local_kl_beta"] = self.v35_success_local_kl_beta
+    output["v35_split_filter_actor_objectives"] = (
+      self.v35_split_filter_actor_objectives
+    )
     return output

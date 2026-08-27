@@ -167,6 +167,15 @@ def test_v66_allows_success_local_kl_for_shielded_distillation_only() -> None:
     assert "shielded_distillation or unshielded_ppo" in source
 
 
+def test_v68_routes_mixed_execution_actor_objectives_before_update() -> None:
+    source = (REPO / "src/tasks/stairs_cbf/paper_teacher_v35.py").read_text()
+    assert "set_v35_filter_execution_environment_mask" in source
+    assert "gated_intervention &= teacher_environment" in source
+    assert "return ppo_environment" in source
+    script = (REPO / "experiments/scripts/refine_paper_dual_v35.py").read_text()
+    assert "runner.alg.set_v35_filter_execution_environment_mask(" in script
+
+
 def test_v35_filter_dropout_mask_is_balanced_and_rotates() -> None:
     first = MATH.rotating_environment_filter_mask(
         4, 0.5, 1, device="cpu"
