@@ -158,6 +158,7 @@ def _first_episode_rollout(
   runtime_filter: bool,
   device: str,
   retain_runner: bool,
+  stochastic_policy: bool = False,
 ) -> tuple[dict[str, Any], Any | None, Any | None]:
   _seed_everything(seed)
   import mjlab.tasks  # noqa: F401
@@ -205,7 +206,11 @@ def _first_episode_rollout(
     map_location=device,
   )
   actor_hash = actor_state_sha256(actor_state(runner.alg.actor))
-  policy = runner.get_inference_policy(device)
+  policy = (
+    (lambda policy_obs: runner.alg.actor(policy_obs, stochastic_output=True))
+    if stochastic_policy
+    else runner.get_inference_policy(device)
+  )
   base_env.seed(seed)
   obs, _ = env.reset()
   term = base_env.action_manager.get_term("joint_pos")
@@ -254,6 +259,7 @@ def _first_episode_rollout(
     "runtime_filter": runtime_filter,
     "initial_state_signature": signature,
     "actor_sha256": actor_hash,
+    "stochastic_policy": stochastic_policy,
     "success": successes.cpu(),
     "fell": falls.cpu(),
     "steps": steps.cpu(),
