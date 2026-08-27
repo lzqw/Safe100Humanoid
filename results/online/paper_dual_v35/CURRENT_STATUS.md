@@ -38,6 +38,7 @@
 | v109 | 成对 filter-off 观测/filter-on 安全轨迹训练；screen 仅 41/64=64.06%，未触发独立 gate | [`paired_rescue_trajectory_v109/`](paired_rescue_trajectory_v109/) |
 | v110 | 修正 v109 分叉后的状态/动作错配；离线方向更好但 screen 降至 36/64=56.25%，拒绝 | [`deployment_counterfactual_v110/`](deployment_counterfactual_v110/) |
 | v111 | paired terminal outcome 正负对比；rescued/harmed 方向近乎抵消，screen 38/64=59.38% | [`paired_outcome_contrast_v111/`](paired_outcome_contrast_v111/) |
+| v112 | 正负对比开放完整第一层状态条件化；平均到达更远但 screen 仍为 38/64=59.38% | [`state_conditioned_outcome_v112/`](state_conditioned_outcome_v112/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -204,3 +205,11 @@ episode 等权。3,675 条目标的正负方向几乎抵消，完整 gradient no
 仍远低于 75%。因此没有运行独立 gate。该证据说明 CBF 的任务价值高度依赖状态，
 不能再用一个全局 adapter 平均处理；下一步需要显式学习 state-dependent paired
 counterfactual value/gating，而不是继续调整全局正负权重。当前最佳仍为 v79。
+
+v112 将 v111 的正负 outcome contrast 从 10 个 geometry 列扩展到完整 415-D 第一层，
+允许 212,480 个权重依赖本体历史与几何联合区分 CBF 是否有益，并在 90,951 个状态
+上限制 KL。训练配对中 28 rescued 对 30 harmed，方向 cosine 仅 0.0204；更新投影到
+17.1% 后 KL 为 4.99e-5。同一开发 screen 仍为 38/64=59.38%，虽 mean reached riser
+从 v111 的 7.625 提高到 8.234，但登顶数没有增加。因此不运行独立 gate，并可排除
+“只因第一层条件化容量不足”这一解释。下一步应把 paired treatment-effect 分类与
+action residual 预测拆成显式 gate + residual 两个头。当前最佳仍为 v79。
