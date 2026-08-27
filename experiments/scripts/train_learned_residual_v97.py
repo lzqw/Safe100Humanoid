@@ -138,7 +138,7 @@ def _base_hidden(actor, observations) -> torch.Tensor:
   return hidden
 
 
-def _policy_step(actor, residual, observations):
+def _policy_step(actor, residual, observations, residual_scale=1.0):
   base_action = actor(observations, stochastic_output=False)
   geometry = observations["cbf_geometry"]
   if geometry.shape[-1] != PERSISTENT_GEOMETRY_DIM:
@@ -146,6 +146,12 @@ def _policy_step(actor, residual, observations):
   hidden = _base_hidden(actor, observations)
   features = torch.cat((hidden, geometry, base_action), dim=-1)
   correction = residual(features)
+  scale = torch.as_tensor(
+    residual_scale, device=correction.device, dtype=correction.dtype
+  )
+  if scale.ndim == 1:
+    scale = scale.unsqueeze(-1)
+  correction = correction * scale
   return base_action + correction, features, correction
 
 
@@ -366,6 +372,7 @@ def _evaluate_filter_off(
   *,
   seed: int,
   gate_envs: int,
+  residual_scale: float = 1.0,
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
   _set_filter(action_term, False, base_env.num_envs, base_env.device)
   _seed_everything(seed)
@@ -392,7 +399,9 @@ def _evaluate_filter_off(
   residual.eval()
   with torch.no_grad():
     for _ in range(maximum_steps):
-      actions, _, correction = _policy_step(actor, residual, observations)
+      actions, _, correction = _policy_step(
+        actor, residual, observations, residual_scale=residual_scale
+      )
       next_observations, _, dones, extras = runner.env.step(actions)
       extras = dict(extras)
       ids = active.nonzero(as_tuple=False).flatten()
@@ -435,6 +444,7 @@ def _evaluate_filter_off(
     "num_episodes": gate_envs,
     "initial_state_signature": signature,
     "runtime_filter": False,
+    "residual_scale": residual_scale,
     "success_count": success_count,
     "success_rate": success_count / gate_envs,
     "fall_count": int(fell[considered].sum()),
