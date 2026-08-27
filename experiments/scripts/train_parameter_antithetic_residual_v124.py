@@ -43,6 +43,9 @@ from velocity_cbf_v34_protocol import CURRENT_CBF_MODE, PROTOCOL_ID
 
 METHOD_ID = "heldout-validated-parameter-antithetic-residual-es-v124"
 LOCAL_METHOD_ID = "heldout-validated-local-parameter-antithetic-residual-es-v125"
+TOLERANT_LOCAL_METHOD_ID = (
+  "heldout-validated-tolerant-local-parameter-antithetic-residual-es-v126"
+)
 BASE_HIDDEN_DIM = 128
 GEOMETRY_DIM = 10
 ACTION_DIM = 12
@@ -50,7 +53,9 @@ FEATURE_DIM = 150
 PARAMETER_WIDTH = GEOMETRY_DIM + 1
 
 
-def parameter_method_id(local_search: bool) -> str:
+def parameter_method_id(local_search: bool, consensus_tolerant: bool = False) -> str:
+  if consensus_tolerant:
+    return TOLERANT_LOCAL_METHOD_ID
   return LOCAL_METHOD_ID if local_search else METHOD_ID
 
 
@@ -158,6 +163,7 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--screen-envs", type=int, default=64)
   parser.add_argument("--direction-seed-offset", type=int, default=124_000_000)
   parser.add_argument("--local-search", action="store_true")
+  parser.add_argument("--consensus-tolerant", action="store_true")
   parser.add_argument("--parameter-sigma", type=float, default=0.02)
   parser.add_argument("--target-mean-residual-norm", type=float, default=0.001)
   parser.add_argument("--success-bonus", type=float, default=1.0)
@@ -298,13 +304,18 @@ def _collect_parameter_branch(
 def main() -> None:
   args = _parse_args()
   seeds = _parse_seeds(args.training_seeds)
-  method_id = parameter_method_id(args.local_search)
+  method_id = parameter_method_id(args.local_search, args.consensus_tolerant)
   if args.num_envs < 2 or not 1 <= args.screen_envs <= args.num_envs:
     raise ValueError("v124 environment counts are invalid")
   if not 0.001 <= args.parameter_sigma <= 0.1:
     raise ValueError("v124 parameter sigma is outside [0.001, 0.1]")
   if args.local_search and args.parameter_sigma > 0.01:
     raise ValueError("v125 local parameter sigma must not exceed 0.01")
+  if args.consensus_tolerant and (
+    not args.local_search
+    or not math.isclose(args.minimum_train_pairwise_cosine, -0.05)
+  ):
+    raise ValueError("v126 requires local search and train cosine threshold -0.05")
   if not 0.0001 <= args.target_mean_residual_norm <= 0.01:
     raise ValueError("v124 target residual norm is outside [0.0001, 0.01]")
   if not 0.0 <= args.success_bonus <= 4.0:
@@ -345,6 +356,7 @@ def main() -> None:
       "screen_seed": args.screen_seed,
       "parameter_sigma": args.parameter_sigma,
       "local_parameter_search": args.local_search,
+      "consensus_tolerant": args.consensus_tolerant,
       "target_mean_residual_norm": args.target_mean_residual_norm,
       "training_runtime_filter": False,
     },
@@ -608,6 +620,7 @@ def main() -> None:
       "training_runtime_filter": False,
       "parameter_sigma": args.parameter_sigma,
       "local_parameter_search": args.local_search,
+      "consensus_tolerant": args.consensus_tolerant,
       "target_mean_residual_norm": args.target_mean_residual_norm,
       "success_bonus": args.success_bonus,
       "plus_success_count": total_plus_success,

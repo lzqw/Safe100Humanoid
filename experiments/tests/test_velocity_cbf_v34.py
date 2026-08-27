@@ -622,6 +622,14 @@ def test_v125_local_parameter_es_has_a_distinct_prespecified_method() -> None:
     assert PARAMETER_ES.LOCAL_METHOD_ID != PARAMETER_ES.METHOD_ID
 
 
+def test_v126_tolerant_local_es_has_a_distinct_prespecified_method() -> None:
+    method_id = PARAMETER_ES.parameter_method_id(
+        local_search=True, consensus_tolerant=True
+    )
+    assert method_id.endswith("v126")
+    assert method_id == PARAMETER_ES.TOLERANT_LOCAL_METHOD_ID
+
+
 def test_v95_critic_expansion_accepts_ten_persistent_features() -> None:
     source = {"mlp.0.weight": torch.randn(3, 7)}
     target = {"mlp.0.weight": torch.randn(3, 17)}
