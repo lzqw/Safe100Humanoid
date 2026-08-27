@@ -1,5 +1,14 @@
 # v35 Paper-Aligned Dual CBF-RL Pilot
 
+## 最新实验：v71 25/75 deployment-weighted CBF-dual PPO
+
+v71 关闭 supervised teacher，只保留论文式 CBF-dual PPO，并把执行分布调整为
+25% filter-on、75% filter-off。配置路由准确，但所有更新后的 off 都低于本次
+base 66.33%，最佳仅 64.50%；round 3 更分裂为 on **78.79%**、off **62.50%**。
+四轮 actor 梯度仍全部裁剪，pre-clip 最大值达到 11.16–14.40。因此没有追加评估
+或上传 checkpoint，下一步转向单次 full-batch 保方向更新。完整证据见
+[`deployment_weighted_ppo_v71/`](deployment_weighted_ppo_v71/README.md)。
+
 ## 最新实验：v70 投影后 CBF teacher 梯度范数平衡
 
 v70 在任务优先投影后把 teacher 梯度稳定到 deployment 梯度的 0.5，实测达到
