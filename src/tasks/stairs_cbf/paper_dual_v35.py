@@ -279,6 +279,18 @@ PAPER_DUAL_CANDIDATES: dict[str, dict[str, float | str]] = {
     "margin_weight": 0.1,
     "intervention_weight": 1.0,
   },
+  "paper_stair_sloped_mid_balanced": {
+    # v82/v83 kept the complete Eq. (27) penalty near 14% of the nominal
+    # reward, but repeated continuation plateaued below the deployment gate.
+    # Raising only the velocity-margin bridge from 0.1 to 0.25 puts the
+    # measured CBF penalty near 22% of nominal reward.  This remains far below
+    # the 73--82% measured with unit margin weight in v76 while strengthening
+    # the safety signal that must transfer to the filter-free actor.
+    "correction_space": "foot_task",
+    "sigma": 0.05,
+    "margin_weight": 0.25,
+    "intervention_weight": 1.0,
+  },
   "paper_stair_sloped_demo_scale": {
     # Keep the paper's reduced-order swing-foot correction and public-demo
     # reward scale, but pair it with the task-compatible sloped clearance CBF.

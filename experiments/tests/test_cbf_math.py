@@ -203,6 +203,12 @@ def test_v35_paper_stair_candidate_uses_reduced_order_foot_distance():
     "margin_weight": 0.1,
     "intervention_weight": 1.0,
   }
+  assert PAPER_DUAL_CANDIDATES["paper_stair_sloped_mid_balanced"] == {
+    "correction_space": "foot_task",
+    "sigma": 0.05,
+    "margin_weight": 0.25,
+    "intervention_weight": 1.0,
+  }
 
 
 def test_v67_normalizes_mixed_filter_advantages_per_execution_group():
