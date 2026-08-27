@@ -26,6 +26,8 @@
 | v97 | learned residual head 能拟合 CBF correction，但 filter-on 随拟合增强从 95/128 降至 78/128；off gate 45/64=70.31% | [`learned_residual_v97_v99/`](learned_residual_v97_v99/) |
 | v98 | 同屏幅度校准选择 0.05x；screen 47/64，唯一 unseen off gate 46/64=71.88%，拒绝 | [`learned_residual_v97_v99/`](learned_residual_v97_v99/) |
 | v99 | 只学习成功 filtered episode 后，幅度 screen 最终选择 0x；learned direction 完全拒绝 | [`learned_residual_v97_v99/`](learned_residual_v97_v99/) |
+| v100 | 同 seed filter-on 对照中 task-metric CBF 为 46/64，当前 CBF 为 44/64，且脚尖峰值力降低 21.5% | [`task_metric_residual_v100_v101/`](task_metric_residual_v100_v101/) |
+| v101 | task-metric 成功轨迹 residual 的 scale screen 达 49/64，但唯一 unseen filter-off gate 仅 40/64，拒绝 | [`task_metric_residual_v100_v101/`](task_metric_residual_v100_v101/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -98,3 +100,11 @@ episode，离线 distance 降到 0.108；然而 scale screen 中最优反而是 
 learned residual。由此可排除“网络容量不足”与“失败轨迹污染”两种解释：当前
 instantaneous CBF correction 本身不是稳定的 task-success direction。下一步需要先提高
 CBF filter-on ceiling 和 task compatibility，再继续论文式 filter internalization。
+
+v100 在相同 initial-state seed 上比较当前 Euclidean CBF 与历史最优 task metric `c012`。
+`c012` 的 filter-on 成功率从 44/64 提高到 46/64，mean reached riser 从 8.000 提高到
+8.125，同时脚尖峰值接触力从 1561.15 降到 1225.35。因此 v101 改用 `c012`，并只从
+最终成功的 filtered episode 学习 residual。四轮共得到 9,070 条 teacher transitions，
+teacher distance 降到 0.08661。部署 scale screen 中 0.05x 短暂达到 49/64=76.56%，
+但全新 seed 的唯一 filter-off gate 只有 40/64=62.50%。该提升未能泛化，v101 已拒绝；
+当前最佳与 GitHub 对外选择仍为 v79。
