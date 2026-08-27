@@ -31,6 +31,7 @@ from proximal_v23_io import actor_state, actor_state_sha256, file_sha256
 from velocity_cbf_v34_protocol import CURRENT_CBF_MODE, PROTOCOL_ID
 
 METHOD_ID = "matched-filter-rescue-off-state-distillation-v36"
+SHIELDED_METHOD_ID = "matched-filter-rescue-shielded-state-distillation-v37"
 
 
 def _parse_args() -> argparse.Namespace:
@@ -46,6 +47,15 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--teacher-eta", type=float, default=0.25)
   parser.add_argument("--actor-learning-rate", type=float, default=5.0e-6)
   parser.add_argument("--moving-kl-beta", type=float, default=0.5)
+  parser.add_argument(
+    "--teacher-state-source", choices=("off", "on"), default="off"
+  )
+  parser.add_argument(
+    "--max-reference-kl",
+    type=float,
+    default=0.0,
+    help="Project the actor update to this dataset mean forward-KL; zero disables it.",
+  )
   parser.add_argument("--epochs", type=int, default=1)
   parser.add_argument("--minibatches", type=int, default=4)
   parser.add_argument("--max-grad-norm", type=float, default=0.5)
@@ -316,6 +326,7 @@ def _distill_actor(
   eta: float,
   learning_rate: float,
   moving_kl_beta: float,
+  max_reference_kl: float,
   epochs: int,
   minibatches: int,
   max_grad_norm: float,
@@ -407,6 +418,60 @@ def _distill_actor(
     device=device,
     batch_size=batch_size,
   )
+  unprojected_after = dict(after)
+  interpolation_scale = 1.0
+  projection_iterations = 0
+  if max_reference_kl > 0.0 and after["reference_forward_kl"] > max_reference_kl:
+    reference_state = {
+      key: value.detach().clone()
+      for key, value in reference_actor.mlp.state_dict().items()
+    }
+    proposal_state = {
+      key: value.detach().clone() for key, value in actor.mlp.state_dict().items()
+    }
+
+    def load_interpolation(scale: float) -> None:
+      actor.mlp.load_state_dict(
+        {
+          key: reference_state[key]
+          + float(scale) * (proposal_state[key] - reference_state[key])
+          for key in reference_state
+        },
+        strict=True,
+      )
+
+    low = 0.0
+    high = 1.0
+    for _ in range(12):
+      projection_iterations += 1
+      middle = 0.5 * (low + high)
+      load_interpolation(middle)
+      middle_metrics = _dataset_policy_metrics(
+        actor,
+        reference_actor,
+        dataset,
+        eligible,
+        weights,
+        eta=eta,
+        device=device,
+        batch_size=batch_size,
+      )
+      if middle_metrics["reference_forward_kl"] <= max_reference_kl:
+        low = middle
+      else:
+        high = middle
+    interpolation_scale = low
+    load_interpolation(interpolation_scale)
+    after = _dataset_policy_metrics(
+      actor,
+      reference_actor,
+      dataset,
+      eligible,
+      weights,
+      eta=eta,
+      device=device,
+      batch_size=batch_size,
+    )
   return {
     "dataset_transition_count": total,
     "rescued_environment_count": int(rescued_env_ids.numel()),
@@ -425,7 +490,14 @@ def _distill_actor(
     "teacher_loss_during_update": teacher_loss_total / max(1, updates),
     "moving_kl_during_update": kl_loss_total / max(1, updates),
     "before": before,
+    "unprojected_after": unprojected_after,
     "after": after,
+    "trust_region": {
+      "enabled": max_reference_kl > 0.0,
+      "max_reference_kl": max_reference_kl,
+      "parameter_interpolation_scale": interpolation_scale,
+      "projection_iterations": projection_iterations,
+    },
   }, optimizer
 
 
@@ -439,6 +511,8 @@ def main() -> None:
     raise ValueError("v36 actor learning rate is outside the safe range")
   if not 0.0 <= args.moving_kl_beta <= 4.0 or args.max_grad_norm <= 0.0:
     raise ValueError("v36 KL beta or gradient norm is invalid")
+  if not 0.0 <= args.max_reference_kl <= 0.05:
+    raise ValueError("v36 reference-KL cap must lie in [0, 0.05]")
   repo = args.repo.resolve()
   checkpoint = args.base_checkpoint.resolve()
   config_path = args.search_config.resolve()
@@ -457,10 +531,13 @@ def main() -> None:
     raise FileExistsError(output)
   output.mkdir(parents=True)
   started = time.monotonic()
+  method_id = (
+    SHIELDED_METHOD_ID if args.teacher_state_source == "on" else METHOD_ID
+  )
   _atomic_json(
     output / "execution_started.json",
     {
-      "method_id": METHOD_ID,
+      "method_id": method_id,
       "git_commit": _git(repo, "rev-parse", "HEAD"),
       "seed": args.seed,
       "base_checkpoint_sha256": checkpoint_sha,
@@ -469,26 +546,48 @@ def main() -> None:
   sys.path.insert(0, str(repo))
   from src.tasks.stairs_cbf.teacher_v30_math import filter_rescued_episode_mask
 
-  on, _, _ = _first_episode_rollout(
-    repo=repo,
-    checkpoint=checkpoint,
-    context=args.context,
-    seed=args.seed,
-    num_envs=args.num_envs,
-    runtime_filter=True,
-    device=args.device,
-    retain_runner=False,
-  )
-  off, runner, env = _first_episode_rollout(
-    repo=repo,
-    checkpoint=checkpoint,
-    context=args.context,
-    seed=args.seed,
-    num_envs=args.num_envs,
-    runtime_filter=False,
-    device=args.device,
-    retain_runner=True,
-  )
+  if args.teacher_state_source == "off":
+    on, _, _ = _first_episode_rollout(
+      repo=repo,
+      checkpoint=checkpoint,
+      context=args.context,
+      seed=args.seed,
+      num_envs=args.num_envs,
+      runtime_filter=True,
+      device=args.device,
+      retain_runner=False,
+    )
+    off, runner, env = _first_episode_rollout(
+      repo=repo,
+      checkpoint=checkpoint,
+      context=args.context,
+      seed=args.seed,
+      num_envs=args.num_envs,
+      runtime_filter=False,
+      device=args.device,
+      retain_runner=True,
+    )
+  else:
+    off, _, _ = _first_episode_rollout(
+      repo=repo,
+      checkpoint=checkpoint,
+      context=args.context,
+      seed=args.seed,
+      num_envs=args.num_envs,
+      runtime_filter=False,
+      device=args.device,
+      retain_runner=False,
+    )
+    on, runner, env = _first_episode_rollout(
+      repo=repo,
+      checkpoint=checkpoint,
+      context=args.context,
+      seed=args.seed,
+      num_envs=args.num_envs,
+      runtime_filter=True,
+      device=args.device,
+      retain_runner=True,
+    )
   if on["initial_state_signature"] != off["initial_state_signature"]:
     env.close()
     raise RuntimeError("v36 paired on/off initial states differ")
@@ -500,10 +599,11 @@ def main() -> None:
   if rescued_env_ids.numel() < 1:
     env.close()
     raise RuntimeError("v36 training seed contains no filter-rescued episodes")
-  dataset = off["dataset"]
+  dataset = (on if args.teacher_state_source == "on" else off)["dataset"]
   dataset_payload = {
     "schema_version": 1,
-    "method_id": METHOD_ID,
+    "method_id": method_id,
+    "teacher_state_source": args.teacher_state_source,
     "seed": args.seed,
     "initial_state_signature": on["initial_state_signature"],
     "actor_sha256": on["actor_sha256"],
@@ -520,6 +620,7 @@ def main() -> None:
     eta=args.teacher_eta,
     learning_rate=args.actor_learning_rate,
     moving_kl_beta=args.moving_kl_beta,
+    max_reference_kl=args.max_reference_kl,
     epochs=args.epochs,
     minibatches=args.minibatches,
     max_grad_norm=args.max_grad_norm,
@@ -534,12 +635,19 @@ def main() -> None:
   source_payload["rescue_distill_optimizer_state_dict"] = optimizer.state_dict()
   source_payload["iter"] = int(source_payload.get("iter", 0)) + args.epochs
   infos = dict(source_payload.get("infos") or {})
-  infos["rescue_distill_v36"] = {
-    "method_id": METHOD_ID,
+  info_key = (
+    "rescue_shielded_distill_v37"
+    if args.teacher_state_source == "on"
+    else "rescue_distill_v36"
+  )
+  infos[info_key] = {
+    "method_id": method_id,
     "source_git_commit": _git(repo, "rev-parse", "HEAD"),
     "training_seed": args.seed,
     "teacher_eta": args.teacher_eta,
     "moving_kl_beta": args.moving_kl_beta,
+    "teacher_state_source": args.teacher_state_source,
+    "max_reference_kl": args.max_reference_kl,
     "rescued_environment_ids": rescued_env_ids.tolist(),
   }
   source_payload["infos"] = infos
@@ -562,7 +670,7 @@ def main() -> None:
   _write_outcomes(output / "paired_outcomes.csv", rows)
   summary = {
     "schema_version": 1,
-    "method_id": METHOD_ID,
+    "method_id": method_id,
     "git_commit": _git(repo, "rev-parse", "HEAD"),
     "context": args.context,
     "seed": args.seed,
@@ -585,6 +693,8 @@ def main() -> None:
     "teacher_eta": args.teacher_eta,
     "actor_learning_rate": args.actor_learning_rate,
     "moving_kl_beta": args.moving_kl_beta,
+    "teacher_state_source": args.teacher_state_source,
+    "max_reference_kl": args.max_reference_kl,
     "epochs": args.epochs,
     "minibatches": args.minibatches,
     "elapsed_seconds": time.monotonic() - started,
