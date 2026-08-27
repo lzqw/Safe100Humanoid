@@ -1,5 +1,13 @@
 # v35 Paper-Aligned Dual CBF-RL Pilot
 
+## 最新实验：v70 投影后 CBF teacher 梯度范数平衡
+
+v70 在任务优先投影后把 teacher 梯度稳定到 deployment 梯度的 0.5，实测达到
+0.488–0.500，平均放大 2.57–3.30 倍。尽管 teacher target distance 下降更快，
+所有更新后的 filter-off 均低于本次 base 71.76%，最佳仅 **68.99%**。因此没有
+追加评估或上传 checkpoint，并停止继续放大 supervised CBF teacher。完整证据见
+[`norm_balanced_surgery_v70/`](norm_balanced_surgery_v70/README.md)。
+
 ## 最新实验：v69 任务优先 CBF teacher 梯度投影
 
 v69 显式分开 filter-off PPO+KL 与 filter-on CBF teacher 的全参数梯度，并只在
