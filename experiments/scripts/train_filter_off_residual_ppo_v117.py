@@ -62,6 +62,11 @@ CRITIC_GAE_VALIDATED_METHOD_ID = (
 ANTITHETIC_VALIDATED_METHOD_ID = (
   "heldout-validated-paired-antithetic-residual-ppo-v122"
 )
+CALIBRATED_ANTITHETIC_METHOD_ID = (
+  "heldout-calibrated-paired-antithetic-residual-ppo-v123"
+)
+JOINT_SCALE_GRID = tuple(0.5**index for index in range(8))
+MINIMUM_JOINT_SURROGATE_GAIN = 1.0e-6
 ACTION_DIM = 12
 
 
@@ -302,6 +307,40 @@ def standardized_antithetic_weights(
   return weights, advantages
 
 
+def select_joint_surrogate_scale(
+  records: list[dict[str, Any]],
+  *,
+  training_before: float,
+  validation_before: float,
+  max_reference_kl: float,
+  minimum_gain: float = MINIMUM_JOINT_SURROGATE_GAIN,
+) -> float | None:
+  """Choose the largest predefined scale improving both clipped objectives."""
+  selected: list[float] = []
+  for record in records:
+    scale = float(record["scale"])
+    training = record["training"]
+    validation = record["validation"]
+    values = (
+      scale,
+      float(training["clipped_surrogate"]),
+      float(validation["clipped_surrogate"]),
+      float(training["reference_forward_kl"]),
+      float(validation["reference_forward_kl"]),
+    )
+    if not all(math.isfinite(value) for value in values):
+      raise ValueError("v123 scale-search metric is non-finite")
+    if (
+      0.0 < scale <= 1.0
+      and values[1] >= float(training_before) + float(minimum_gain)
+      and values[2] >= float(validation_before) + float(minimum_gain)
+      and values[3] <= float(max_reference_kl)
+      and values[4] <= float(max_reference_kl)
+    ):
+      selected.append(scale)
+  return max(selected) if selected else None
+
+
 def last_seed_transition_masks(
   environment_ids: torch.Tensor,
   *,
@@ -359,6 +398,7 @@ def _parse_args() -> argparse.Namespace:
       "terminal-progress-standardized",
       "pretrained-critic-gae",
       "paired-antithetic-progress",
+      "paired-antithetic-calibrated",
     ),
     default="binary-balanced",
   )
@@ -876,7 +916,11 @@ def main() -> None:
   args = _parse_args()
   seeds = _parse_seeds(args.training_seeds)
   use_critic_gae = args.episode_credit == "pretrained-critic-gae"
-  use_antithetic = args.episode_credit == "paired-antithetic-progress"
+  use_joint_scale_search = args.episode_credit == "paired-antithetic-calibrated"
+  use_antithetic = args.episode_credit in (
+    "paired-antithetic-progress",
+    "paired-antithetic-calibrated",
+  )
   if (use_critic_gae or use_antithetic) and not args.validation_last_seed:
     raise ValueError("v121/v122 requires a complete held-out rollout seed")
   if args.validation_last_seed:
@@ -884,6 +928,8 @@ def main() -> None:
       raise ValueError("v119 held-out validation requires SGD and four seeds")
     if use_critic_gae:
       method_id = CRITIC_GAE_VALIDATED_METHOD_ID
+    elif use_joint_scale_search:
+      method_id = CALIBRATED_ANTITHETIC_METHOD_ID
     elif use_antithetic:
       method_id = ANTITHETIC_VALIDATED_METHOD_ID
     elif args.episode_credit == "terminal-progress-standardized":
@@ -947,6 +993,8 @@ def main() -> None:
       "gamma": args.gamma,
       "gae_lambda": args.gae_lambda,
       "paired_antithetic": use_antithetic,
+      "joint_scale_search": use_joint_scale_search,
+      "joint_scale_grid": JOINT_SCALE_GRID if use_joint_scale_search else None,
     },
   )
 
@@ -1323,7 +1371,90 @@ def main() -> None:
       device=args.device,
     )
     validation_after = None
-    if validation_dataset is not None:
+    joint_scale_search = None
+    if use_joint_scale_search:
+      assert validation_dataset is not None
+      assert validation_before is not None
+      assert validation_weights is not None and validation_advantages is not None
+      projected_residual_state = actor_state(residual)
+      projected_training_after = copy.deepcopy(training["after"])
+      scale_records: list[dict[str, Any]] = []
+      for scale in JOINT_SCALE_GRID:
+        _load_scaled_state(
+          residual,
+          reference_residual_state,
+          projected_residual_state,
+          scale,
+        )
+        scale_records.append(
+          {
+            "scale": scale,
+            "training": _ppo_metrics(
+              residual,
+              training_dataset,
+              weights,
+              advantages,
+              exploration_std=args.exploration_std,
+              clip_ratio=args.clip_ratio,
+              device=args.device,
+              batch_size=args.batch_size,
+            ),
+            "validation": _ppo_metrics(
+              residual,
+              validation_dataset,
+              validation_weights,
+              validation_advantages,
+              exploration_std=args.exploration_std,
+              clip_ratio=args.clip_ratio,
+              device=args.device,
+              batch_size=args.batch_size,
+            ),
+          }
+        )
+      selected_scale = select_joint_surrogate_scale(
+        scale_records,
+        training_before=float(training["before"]["clipped_surrogate"]),
+        validation_before=float(validation_before["clipped_surrogate"]),
+        max_reference_kl=args.max_reference_kl,
+      )
+      if selected_scale is None:
+        _load_scaled_state(
+          residual,
+          reference_residual_state,
+          projected_residual_state,
+          0.0,
+        )
+        training["after"] = copy.deepcopy(training["before"])
+        validation_after = copy.deepcopy(validation_before)
+      else:
+        _load_scaled_state(
+          residual,
+          reference_residual_state,
+          projected_residual_state,
+          selected_scale,
+        )
+        selected_record = next(
+          record
+          for record in scale_records
+          if float(record["scale"]) == float(selected_scale)
+        )
+        training["after"] = copy.deepcopy(selected_record["training"])
+        validation_after = copy.deepcopy(selected_record["validation"])
+      training["train_kl_projected_after"] = projected_training_after
+      joint_scale_search = {
+        "grid": JOINT_SCALE_GRID,
+        "minimum_joint_surrogate_gain": MINIMUM_JOINT_SURROGATE_GAIN,
+        "selected_scale_relative_to_train_kl_proposal": selected_scale,
+        "effective_scale_relative_to_unprojected_proposal": (
+          float(training["trust_region"]["parameter_interpolation_scale"])
+          * float(selected_scale)
+          if selected_scale is not None
+          else 0.0
+        ),
+        "records": scale_records,
+      }
+      training["heldout_scale_search"] = joint_scale_search
+    elif validation_dataset is not None:
       assert validation_weights is not None and validation_advantages is not None
       validation_after = _ppo_metrics(
         residual,
@@ -1387,6 +1518,7 @@ def main() -> None:
         "gae_lambda": args.gae_lambda,
         "gae_summary": gae_summary,
         "antithetic_summary": antithetic_summary,
+        "joint_scale_search": joint_scale_search,
         "heldout_validation": {
           "seed": seeds[-1],
           "before": validation_before,
@@ -1441,6 +1573,7 @@ def main() -> None:
       "gae_lambda": args.gae_lambda,
       "gae_summary": gae_summary,
       "antithetic_summary": antithetic_summary,
+      "joint_scale_search": joint_scale_search,
       "training_advantage_mean": float(advantages.mean()),
       "training_advantage_std": float(advantages.std(unbiased=False)),
       "validation_advantage_mean": (

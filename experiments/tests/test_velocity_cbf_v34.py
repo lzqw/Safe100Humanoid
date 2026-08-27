@@ -554,6 +554,35 @@ def test_v122_antithetic_credit_is_mirrored_and_branch_episode_equal() -> None:
     assert FILTER_OFF_PPO.ANTITHETIC_VALIDATED_METHOD_ID.endswith("v122")
 
 
+def test_v123_selects_largest_scale_improving_both_clipped_surrogates() -> None:
+    def record(scale: float, training: float, validation: float) -> dict:
+        return {
+            "scale": scale,
+            "training": {
+                "clipped_surrogate": training,
+                "reference_forward_kl": 0.004,
+            },
+            "validation": {
+                "clipped_surrogate": validation,
+                "reference_forward_kl": 0.004,
+            },
+        }
+
+    selected = FILTER_OFF_PPO.select_joint_surrogate_scale(
+        [
+            record(1.0, 0.02, -0.001),
+            record(0.5, 0.015, 0.002),
+            record(0.25, 0.01, 0.004),
+        ],
+        training_before=0.0,
+        validation_before=0.0,
+        max_reference_kl=0.005,
+    )
+    assert selected == 0.5
+    assert FILTER_OFF_PPO.JOINT_SCALE_GRID == tuple(0.5**index for index in range(8))
+    assert FILTER_OFF_PPO.CALIBRATED_ANTITHETIC_METHOD_ID.endswith("v123")
+
+
 def test_v95_critic_expansion_accepts_ten_persistent_features() -> None:
     source = {"mlp.0.weight": torch.randn(3, 7)}
     target = {"mlp.0.weight": torch.randn(3, 17)}
