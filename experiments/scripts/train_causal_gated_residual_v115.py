@@ -988,7 +988,7 @@ def main() -> None:
       "paper_dual_reward": reward,
       "geometry_observation": geometry,
       "actor_expansion": expansion,
-      "optimizer_state_in_candidate": false,
+      "optimizer_state_in_candidate": False,
       "gate_optimizer_parameter_state_count": len(gate_optimizer.state),
       "residual_optimizer_parameter_state_count": len(residual_optimizer.state),
       "elapsed_seconds": time.monotonic() - started,
