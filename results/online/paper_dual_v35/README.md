@@ -19,8 +19,10 @@ filter-free actor 中。它是当前 v35 best result，但仍不是最终论文�
 绝对成功率未达到 75%，每个条件只有一个 64-episode pilot，而且 A1 阶段最终
 moving KL 为 0.67–0.71，表明 full-action teacher 更新过强。
 
-下一步应降低或改写 A1 的高曲率 Gaussian-NLL 更新，并加入从较低台阶到目标
-高度的 curriculum，而不是增加相同配置的重复评估。
+后续已经分别测试 soft-A1 与 stair-height curriculum。前者降低 KL 但降低任务
+成功率；后者把 F2 filter-on 提高到 81.25%，但没有同步改善 filter-off。因此
+staged actor 仍是当前综合结果，下一步是把 curriculum 的 A2 阶段接到固定目标
+高度的 A1 consolidation，而不是增加相同配置的重复评估。
 
 ### Soft-A1 follow-up（已拒绝）
 
@@ -30,7 +32,25 @@ moving KL 为 0.67–0.71，表明 full-action teacher 更新过强。
 62.50%/64.06%，低于 current best 的 70.31%/68.75%。该方向按预设 gate
 停止，没有运行 F3；详见 [`soft_a1_f2_summary.json`](soft_a1_f2_summary.json)。
 这说明单纯抑制策略移动能修复优化诊断，却不能提升困难台阶的任务能力，下一步
-转向 stair-height curriculum。
+转向 stair-height curriculum；该后续实验结果见下一节。
+
+### Stair-height curriculum follow-up（仅改善 filter-on）
+
+F2 使用 13.0 cm 到 18.4 cm 的五级高度课程，训练期间仍执行 CBF-filtered
+action，teacher schedule 保持 A2×4 → A1×4。最终在固定 18.4 cm F2、同一独立
+评估 seed 的 64 episodes 上得到：
+
+| F2 run | Filter on | Filter off | Off - on | Training time |
+|---|---:|---:|---:|---:|
+| fixed-height staged（当前综合最佳） | 70.31% (45/64) | **68.75% (44/64)** | -1.56 pp | 231.0 s |
+| five-level height curriculum | **81.25% (52/64)** | 67.19% (43/64) | -14.06 pp | 233.8 s |
+
+课程训练将 filter-on 提高 10.94 pp，并使其超过 75% gate；但 filter-off 降低
+1.56 pp，on/off gap 扩大到 14.06 pp，所以没有把它选为最终 actor。结果表明
+课程提高了安全过滤器辅助下的目标高度通过能力，但高台阶上的 CBF correction
+还没有充分内化。下一次算法实验将使用 curriculum A2 warm-up，随后只在固定
+18.4 cm 目标高度做 A1 consolidation。精确 provenance 与逐轮诊断见
+[`height_curriculum_f2_summary.json`](height_curriculum_f2_summary.json)。
 
 ## 方法与第一阶段 F1 ablation
 
@@ -67,6 +87,7 @@ winner。后续 staged experiment 解决了 F1 矛盾，并已冻结扩展到 F2
 - [`staged_eval_summary.csv`](staged_eval_summary.csv): staged 方法的六个 on/off 结果。
 - [`staged_round_metrics.csv`](staged_round_metrics.csv): staged 方法全部 24 轮及 KL 诊断。
 - [`soft_a1_f2_summary.json`](soft_a1_f2_summary.json): 低 KL 但成功率退化的 F2 负结果。
+- [`height_curriculum_f2_summary.json`](height_curriculum_f2_summary.json): F2 五级高度课程的配对评估、模型哈希与逐轮诊断。
 
 大型 `.pt` checkpoint 没有提交进 Git；其 SHA-256 已写入
 `pilot_summary.json`，原始 checkpoint 和逐 episode 文件保留在 4080 artifact
