@@ -487,6 +487,7 @@ winner。后续 staged experiment 解决了 F1 矛盾，并已冻结扩展到 F2
 - [`paper_demo_clearance_v55/`](paper_demo_clearance_v55/): 持续 next-riser clearance、demo-scale CBF reward、标准 PPO、393,216-transition 早停轨迹、失败的 untouched gate 与精确 checkpoint。
 - [`filter_anneal_v56/`](filter_anneal_v56/): 训练期 CBF filter 从 100% 线性退火至 0%、完整 unshielded rollout 诊断、失败的正式 gate 与精确 checkpoint。
 - [`paper_domain_randomization_v57/`](paper_domain_randomization_v57/): 恢复并缩放论文式训练域随机化、三组 screening、独立 filter-off gate、逐 episode 证据与被拒绝 checkpoint。
+- [`target_height_curriculum_v58_v61/`](target_height_curriculum_v58_v61/): DR25 高度课程、过滤退火、目标高度单调锁定、失败 episode CBF 教师、固定高度评估与精确 v60 checkpoint。
 
 历史大型 `.pt` checkpoint 没有提交进 Git；其 SHA-256 已写入相应 summary。
 v49b、v50、v51 smoke、v53、v54 与 v55 的候选 checkpoint 已随各自结果目录

@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "experiment": "target_height_curriculum_v58_v61",
+  "hardware": "NVIDIA GeForce RTX 4080 SUPER",
+  "acceptance_success_rate": 0.75,
+  "source_commits": {
+    "domain_randomization": "531798aa8540aefe00b577fa47087690c4df007c",
+    "target_terrain_floor": "577fb13a4de2fc1b116c8587a9386213bc2e559b"
+  },
+  "runs": [
+    {
+      "version": "v58",
+      "seed": 201352403,
+      "training_elapsed_seconds": 85.23520427697804,
+      "fixed_filter_off_gate": {
+        "seed": 201352413,
+        "success_count": 36,
+        "num_episodes": 64,
+        "success_rate": 0.5625
+      },
+      "decision": "rejected"
+    },
+    {
+      "version": "v59",
+      "seed": 201352404,
+      "training_elapsed_seconds": 110.08888555294834,
+      "final_pure_filter_off_rollout": {
+        "success_count": 107,
+        "num_episodes": 127,
+        "success_rate": 0.84251968503937,
+        "terrain_level_histogram": [1, 5, 26, 13, 19]
+      },
+      "fixed_filter_off_gates": [
+        {"checkpoint_round": 3, "seed": 201352414, "success_count": 36, "num_episodes": 64, "success_rate": 0.5625},
+        {"checkpoint_round": 1, "seed": 201352415, "success_count": 39, "num_episodes": 64, "success_rate": 0.609375}
+      ],
+      "decision": "rejected"
+    },
+    {
+      "version": "v60",
+      "seed": 201352406,
+      "num_envs": 128,
+      "training_elapsed_seconds": 193.11578448908404,
+      "target_floor_rounds": [3, 4, 5, 6],
+      "target_floor_histogram": [0, 0, 0, 0, 128],
+      "final_pure_filter_off_rollout": {
+        "success_count": 175,
+        "num_episodes": 260,
+        "success_rate": 0.6730769230769231
+      },
+      "aligned_checkpoint": "v60_target_floor/round_05.pt",
+      "aligned_checkpoint_sha256": "f00e3a56276f629504234a20b40c124ee43a2f4d145cb143b3b2899acc024b27",
+      "aligned_actor_sha256": "97a88c0ff2aa684766b499c606ae2c3eefd84e7f501c840058fa98efbb08fcc9",
+      "decision": "rejected_at_training_gate"
+    },
+    {
+      "version": "v61",
+      "seed": 201352407,
+      "num_envs": 128,
+      "training_elapsed_seconds": 85.7088767059613,
+      "success_rates": [0.5328467153284672, 0.5272727272727272, 0.49280575539568344],
+      "teacher_transition_counts": [5646, 5754, 6262],
+      "decision": "rejected_at_training_gate"
+    }
+  ],
+  "decision": "no_accepted_checkpoint",
+  "retained_change": "Clamp late curriculum resets to the target terrain row.",
+  "next_experiment": "Refresh physical domain-randomization samples between rollout rounds to approximate the paper's much larger environment population."
+}
