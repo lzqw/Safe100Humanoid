@@ -1,0 +1,21 @@
+{
+  "schema_version": "paper_dual_v35.v86.decision.v1",
+  "candidate": "full-filter-proximity-v86",
+  "decision": "reject_updates_below_filtered_gate",
+  "reason": "Both full-filter proposals regressed; the unchanged base pooled to 789/1094 (72.12%), below the 75% prerequisite for filter-off evaluation.",
+  "source_commit": "3666721",
+  "input_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "training": {"seed": 201352629, "num_envs": 256, "rounds": 4, "rollout_steps_per_round": 1024, "elapsed_seconds": 150.31875182699878, "training_filter_fraction": 1.0, "actor_gradient_accumulation_microbatches": 2, "transactional_rollback_count": 2},
+  "aligned_filter_on_rollouts": [
+    {"round": 1, "success_count": 390, "episode_count": 543, "success_rate": 0.7182320441988951, "actor_role": "base"},
+    {"round": 2, "success_count": 380, "episode_count": 546, "success_rate": 0.6959706959706959, "actor_role": "rejected_proposal"},
+    {"round": 3, "success_count": 399, "episode_count": 551, "success_rate": 0.7241379310344828, "actor_role": "base_retry"},
+    {"round": 4, "success_count": 398, "episode_count": 552, "success_rate": 0.7210144927536232, "actor_role": "rejected_proposal"}
+  ],
+  "selected_actor_pooled_evidence": {"success_count": 789, "episode_count": 1094, "success_rate": 0.7212065813528337},
+  "selected_checkpoint_sha256": "586d3b4eec3ea168cae63b6eb2508da23df9b00d80168b4801c2c3ebd681105e",
+  "selected_actor_sha256": "b0a717cef34d128e4175226b86780e5210cc5287558d78cb5a44e095e37fb600",
+  "deployment_filter_off_gate_run": false,
+  "global_best_changed": false,
+  "next_hypothesis": "Average actor deltas from four independent 256-environment unit-balanced rollouts to approximate a one-million-transition consensus PPO gradient."
+}
