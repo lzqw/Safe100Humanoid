@@ -1,0 +1,34 @@
+{
+  "schema_version": "paper_dual_v35.v105.decision.v1",
+  "candidate": "persistent-geometry-gradient-balanced-paper-dual-v105",
+  "context": "F2_18.4cm",
+  "deployment_filter": "off",
+  "gate_threshold": 0.75,
+  "training_transition_count": 786432,
+  "aligned_rollout_count": 6,
+  "zero_column_baseline": {
+    "checkpoint_round": 0,
+    "success_count": 140,
+    "episode_count": 198,
+    "success_rate": 0.7070707070707071
+  },
+  "best_aligned_result": {
+    "rollout_round": 3,
+    "checkpoint_round": 2,
+    "success_count": 138,
+    "episode_count": 194,
+    "success_rate": 0.711340206185567,
+    "improvement_percentage_points_over_run_baseline": 0.42694991148599626,
+    "checkpoint_sha256": "e1debe45edd0cc8db6f6ff1278972b17ddb66ee16474fabae84cba85d18257b6",
+    "actor_sha256": "1c74f980f54737cd7a138ed88ecc4f8320a3c1e333612b5c84c7d816a22cf522"
+  },
+  "geometry_gradient_applied_scale_range": [8.781107151971232, 12.162462694801356],
+  "geometry_to_legacy_scaled_gradient_ratio": 1.0,
+  "historical_best_success_rate": 0.7202072538860104,
+  "historical_best_version": "v79",
+  "training_threshold_passed": false,
+  "independent_gate_run": false,
+  "accepted": false,
+  "global_selection": "v79",
+  "reason": "Geometry gradient starvation was corrected, but the best aligned filter-off result was only 71.13%, below both the 75% gate and v79."
+}

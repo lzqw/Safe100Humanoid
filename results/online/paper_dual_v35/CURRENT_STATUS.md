@@ -31,6 +31,7 @@
 | v102 | task-metric CBF 接入 paper-dual PPO；修复 mixed mask 路由后最佳对齐 off 133/197=67.51%，拒绝 | [`task_metric_paper_dual_v102/`](task_metric_paper_dual_v102/) |
 | v103 | 1 秒 bounded max swing credit 尺度稳定，但最佳对齐 off 131/193=67.88%，拒绝 | [`swing_credit_v103/`](swing_credit_v103/) |
 | v104 | 415-D persistent geometry 接入完整 PPO；8 轮最佳 off 132/200=66.00%，新增几何列几乎未被利用，拒绝 | [`persistent_paper_dual_v104/`](persistent_paper_dual_v104/) |
+| v105 | 自适应放大 geometry 梯度到 legacy block 的 1:1；最佳 off 138/194=71.13%，仍低于 v79 与 gate | [`persistent_geometry_balanced_v105/`](persistent_geometry_balanced_v105/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -135,3 +136,11 @@ filter-off 仅 132/200=66.00%，比本次零列 baseline 高 0.52 pp，低于 v7
 MLP 变化达 8.88e-6，证明普通 PPO 几乎没有利用新增观测。下一步应保留完整 actor
 训练，同时显式放大 geometry-relative gradient 或增加与 episode outcome 对齐的几何
 auxiliary objective；不能再简单重复纯 adapter 或无差别全网络 PPO。
+
+v105 针对 v104 的 geometry gradient starvation，在保留完整 actor PPO 的同时，将
+新增 10-D 首层梯度块自适应提升到 legacy 405-D 首层块的同等 norm。六轮实测倍率
+为 8.78×–12.16×，缩放后 ratio 每轮均为 1.0；最佳 checkpoint 的 geometry 权重
+仅两轮即达到 v104 五轮的 3.28 倍，证明该机制确实生效。然而最佳 filter-off 只有
+138/194=71.13%，相对本次 baseline 仅 +0.43 pp，仍低于 v79 和 75% gate。由此可
+排除“只因新增观测梯度太弱”这一解释；下一步必须让 geometry auxiliary objective
+直接与完整 episode outcome 对齐，而不是继续扩大同一个 per-transition PPO 梯度。
