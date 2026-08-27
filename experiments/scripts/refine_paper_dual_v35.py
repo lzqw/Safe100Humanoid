@@ -278,6 +278,15 @@ def _parse_args() -> argparse.Namespace:
     ),
   )
   parser.add_argument(
+    "--state-value-occupancy-correction",
+    action="store_true",
+    help=(
+      "v127: cross-fit d_filter_off(s)/d_filter_on(s) from a balanced mixed "
+      "rollout, apply weighted GAE only to filtered actor transitions, and "
+      "retain every transition for critic learning."
+    ),
+  )
+  parser.add_argument(
     "--split-filter-actor-objectives",
     action="store_true",
     help=(
@@ -872,6 +881,31 @@ def main() -> None:
     raise ValueError(
       "filter-group-balanced advantages require a fixed mixed filter fraction"
     )
+  if args.state_value_occupancy_correction:
+    if not (
+      training_runtime_filter
+      and args.training_filter_schedule == "fixed"
+      and math.isclose(
+        training_filter_fraction, 0.5, rel_tol=0.0, abs_tol=1.0e-12
+      )
+      and args.full_batch_sgd_actor
+      and args.actor_gradient_accumulation_microbatches == 2
+      and args.transactional_rollout_acceptance
+    ):
+      raise ValueError(
+        "v127 occupancy correction requires transactional 50/50 mixed "
+        "execution and one two-chunk full-batch SGD actor step"
+      )
+    if any(
+      (
+        args.filter_group_balanced_advantages,
+        args.persistent_geometry_gradient_balance,
+        args.outcome_centered_episode_advantage,
+        args.conservative_outcome_advantage,
+        args.deterministic_mean_teacher,
+      )
+    ):
+      raise ValueError("v127 occupancy correction owns the actor credit path")
   teacher_arms = _teacher_arms_by_round(
     rounds=args.rounds,
     teacher_arm=args.teacher_arm,
@@ -989,7 +1023,10 @@ def main() -> None:
     mixed_group_balanced_execution = (
       args.training_filter_schedule == "fixed"
       and 0.0 < training_filter_fraction < 1.0
-      and args.filter_group_balanced_advantages
+      and (
+        args.filter_group_balanced_advantages
+        or args.state_value_occupancy_correction
+      )
     )
     paper_fully_filtered_execution = (
       args.training_filter_schedule == "fixed"
@@ -1341,7 +1378,12 @@ def main() -> None:
       args.actor_gradient_accumulation_microbatches
     )
   elif args.full_batch_sgd_actor:
-    if args.outcome_centered_episode_advantage:
+    if args.state_value_occupancy_correction:
+      agent_cfg.algorithm.class_name = (
+        "src.tasks.stairs_cbf.paper_occupancy_corrected_v127:"
+        "PaperOccupancyCorrectedV127PPO"
+      )
+    elif args.outcome_centered_episode_advantage:
       agent_cfg.algorithm.class_name = (
         "src.tasks.stairs_cbf.paper_outcome_transactional_v107:"
         "PaperOutcomeTransactionalV107PPO"
@@ -1528,6 +1570,9 @@ def main() -> None:
         "filter_group_balanced_advantages": (
           args.filter_group_balanced_advantages
         ),
+        "state_value_occupancy_correction": (
+          args.state_value_occupancy_correction
+        ),
         "split_filter_actor_objectives": (
           args.split_filter_actor_objectives
         ),
@@ -1626,7 +1671,12 @@ def main() -> None:
           round_filter_mask
         )
       after_compute_returns = None
-      if args.outcome_centered_episode_advantage:
+      if args.state_value_occupancy_correction:
+        def after_compute_returns(active_runner):
+          return active_runner.alg.apply_state_value_occupancy_correction(
+            round_filter_mask
+          )
+      elif args.outcome_centered_episode_advantage:
         def after_compute_returns(active_runner):
           return active_runner.alg.apply_outcome_centered_episode_advantage(
             round_filter_mask
@@ -1849,6 +1899,9 @@ def main() -> None:
           "filter_group_balanced_advantages": (
             args.filter_group_balanced_advantages
           ),
+          "state_value_occupancy_correction": (
+            args.state_value_occupancy_correction
+          ),
           "split_filter_actor_objectives": (
             args.split_filter_actor_objectives
           ),
@@ -1940,6 +1993,9 @@ def main() -> None:
       "training_filter_schedule": filter_schedule,
       "filter_group_balanced_advantages": (
         args.filter_group_balanced_advantages
+      ),
+      "state_value_occupancy_correction": (
+        args.state_value_occupancy_correction
       ),
       "split_filter_actor_objectives": (
         args.split_filter_actor_objectives

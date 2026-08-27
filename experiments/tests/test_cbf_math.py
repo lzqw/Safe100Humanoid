@@ -23,6 +23,9 @@ from src.tasks.stairs_cbf.paper_dual_v35 import (
   split_filter_actor_objective_masks,
   task_priority_project_auxiliary_gradients,
 )
+from src.tasks.stairs_cbf.paper_occupancy_corrected_v127 import (
+  crossfit_occupancy_corrected_advantages,
+)
 
 
 def test_halfspace_projection_repairs_violation():
@@ -242,6 +245,45 @@ def test_v67_rejects_empty_mixed_filter_advantage_group():
     normalize_filter_group_advantages(
       torch.ones(2, 3), torch.ones(3, dtype=torch.bool)
     )
+
+
+def test_v127_crossfits_state_occupancy_and_keeps_only_filtered_actor_credit():
+  time = torch.linspace(-1.0, 1.0, 12).view(12, 1)
+  environment = torch.tensor([-0.3, 0.2, -0.1, 0.4]).view(1, 4)
+  on = torch.stack(
+    (
+      -1.0 + time + environment,
+      time.square() + environment,
+      time - environment,
+    ),
+    dim=-1,
+  )
+  off = on + torch.tensor([2.0, 0.6, -0.4])
+  features = torch.empty(12, 8, 3)
+  filter_mask = torch.tensor([True, False, True, False, True, False, True, False])
+  features[:, filter_mask] = on
+  features[:, ~filter_mask] = off
+  advantages = torch.arange(96, dtype=torch.float32).reshape(12, 8)
+
+  corrected, metrics = crossfit_occupancy_corrected_advantages(
+    features, advantages, filter_mask
+  )
+
+  assert torch.equal(corrected[:, ~filter_mask], torch.zeros(12, 4))
+  torch.testing.assert_close(
+    corrected[:, filter_mask].mean(), torch.tensor(0.0), atol=1.0e-6, rtol=0
+  )
+  torch.testing.assert_close(
+    corrected[:, filter_mask].std(unbiased=False),
+    torch.tensor(2.0),
+    atol=1.0e-5,
+    rtol=0,
+  )
+  assert metrics["occupancy_correction_active"] is True
+  assert metrics["occupancy_classifier_balanced_accuracy"] > 0.9
+  assert metrics["occupancy_density_ratio_effective_sample_fraction"] > 0.0
+  assert metrics["occupancy_actor_filter_off_advantage_max_abs"] == 0.0
+  assert metrics["occupancy_critic_uses_all_transitions"] is True
 
 
 def test_v68_routes_nominal_worlds_to_ppo_and_filtered_worlds_to_teacher():
