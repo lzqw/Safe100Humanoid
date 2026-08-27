@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import random
@@ -237,6 +238,15 @@ def _parse_args() -> argparse.Namespace:
       "fraction below 1 when continuing a nominal pretrained gait."
     ),
   )
+  parser.add_argument(
+    "--training-domain-randomization-refresh",
+    choices=("startup", "round"),
+    default="startup",
+    help=(
+      "Keep one physical-parameter draw per environment, or refresh native "
+      "startup DR terms at every rollout round."
+    ),
+  )
   return parser.parse_args()
 
 
@@ -392,6 +402,21 @@ def _terrain_level_metrics(base_env, *, num_rows: int) -> dict[str, Any]:
   }
 
 
+def _domain_randomization_state_sha256(base_env) -> str:
+  """Fingerprint every per-world physical parameter and encoder-bias draw."""
+  robot = base_env.scene["robot"]
+  tensors = {
+    "encoder_bias": robot.data.encoder_bias,
+    "geom_friction": base_env.sim.model.geom_friction,
+    "body_ipos": base_env.sim.model.body_ipos,
+  }
+  signature = hashlib.sha256()
+  for name, tensor in tensors.items():
+    signature.update(name.encode("utf-8"))
+    signature.update(tensor.detach().cpu().contiguous().numpy().tobytes())
+  return signature.hexdigest()
+
+
 def main() -> None:
   args = _parse_args()
   if args.rounds < 1 or args.num_envs < 1 or args.rollout_steps < 1:
@@ -418,6 +443,11 @@ def main() -> None:
     raise ValueError("v35 actor learning rate must lie in [1e-7, 5e-6]")
   if not 0.0 <= args.moving_kl_beta <= 0.5:
     raise ValueError("v35 moving KL beta must lie in [0, 0.5]")
+  if (
+    args.training_domain_randomization_refresh == "round"
+    and args.training_domain_randomization == "off"
+  ):
+    raise ValueError("round DR refresh requires training domain randomization")
   training_runtime_filter = args.training_runtime_filter == "on"
   training_filter_fraction = (
     1.0 if training_runtime_filter else 0.0
@@ -569,6 +599,21 @@ def main() -> None:
       strength=args.training_domain_randomization_strength,
     )
   )
+  training_domain_randomization["refresh_mode"] = (
+    args.training_domain_randomization_refresh
+  )
+  physical_draw_sets = (
+    args.rounds
+    if training_domain_randomization["enabled"]
+    and args.training_domain_randomization_refresh == "round"
+    else int(training_domain_randomization["enabled"])
+  )
+  training_domain_randomization["physical_parameter_draw_sets"] = (
+    physical_draw_sets
+  )
+  training_domain_randomization["physical_parameter_draw_count"] = (
+    physical_draw_sets * args.num_envs
+  )
   if training_domain_randomization["enabled"]:
     evaluation_contract = shift.pop("fixed_deployment_environment", None)
     if evaluation_contract is not None:
@@ -697,6 +742,7 @@ def main() -> None:
     stage_reached_top if args.deterministic_mean_teacher else None
   )
   records: list[dict[str, Any]] = []
+  observed_dr_state_hashes: set[str] = set()
   try:
     warm_start = runner.load_initial_checkpoint(
       str(checkpoint), map_location=args.device
@@ -735,6 +781,17 @@ def main() -> None:
       },
     )
     for round_index in range(1, args.rounds + 1):
+      dr_state_sha256 = None
+      if training_domain_randomization["enabled"]:
+        if args.training_domain_randomization_refresh == "round":
+          base_env.event_manager.apply(mode="startup")
+        dr_state_sha256 = _domain_randomization_state_sha256(base_env)
+        if (
+          args.training_domain_randomization_refresh == "round"
+          and dr_state_sha256 in observed_dr_state_hashes
+        ):
+          raise RuntimeError("v62 round DR refresh repeated a parameter state")
+        observed_dr_state_hashes.add(dr_state_sha256)
       round_terrain_floor = height_floor_schedule[round_index - 1]
       setattr(
         base_env,
@@ -767,6 +824,13 @@ def main() -> None:
           "filter_on": round_filter_mask,
           "filter_off": ~round_filter_mask,
         },
+      )
+      metrics["training_domain_randomization_state_sha256"] = dr_state_sha256
+      metrics["training_domain_randomization_refresh_mode"] = (
+        args.training_domain_randomization_refresh
+      )
+      metrics["training_domain_randomization_distinct_state_count"] = len(
+        observed_dr_state_hashes
       )
       for count_name in ("episode", "success", "fall", "timeout"):
         grouped_count = (
