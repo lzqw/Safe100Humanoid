@@ -21,6 +21,34 @@ def masked_population_mean(
     return (values * mask.to(values.dtype)).mean()
 
 
+def success_population_smooth_l1_loss(
+    policy_mean: torch.Tensor,
+    safe_action_target: torch.Tensor,
+    successful_episode_transition: torch.Tensor,
+    *,
+    beta: float = 0.05,
+) -> torch.Tensor:
+    """Clone successful safe actions without renormalizing away success rate."""
+    if policy_mean.ndim != 2 or safe_action_target.shape != policy_mean.shape:
+        raise ValueError("v88 policy mean and safe target must share [B, A]")
+    if successful_episode_transition.shape != policy_mean.shape[:1]:
+        raise ValueError("v88 success mask must have shape [B]")
+    if successful_episode_transition.dtype != torch.bool:
+        raise TypeError("v88 success mask must be boolean")
+    if not math.isfinite(beta) or beta <= 0.0:
+        raise ValueError("v88 Smooth-L1 beta must be finite and positive")
+    per_transition = F.smooth_l1_loss(
+        policy_mean,
+        safe_action_target.detach(),
+        beta=float(beta),
+        reduction="none",
+    ).mean(dim=-1)
+    return masked_population_mean(
+        per_transition,
+        successful_episode_transition,
+    )
+
+
 def terminal_episode_transition_mask(
     episode_ids: torch.Tensor, terminal_events: torch.Tensor
 ) -> torch.Tensor:

@@ -116,6 +116,20 @@ def _parse_args() -> argparse.Namespace:
     ),
   )
   parser.add_argument(
+    "--success-safe-action-imitation",
+    action="store_true",
+    help=(
+      "On fully filtered rollouts, imitate executed safe actions only from "
+      "complete reached-top episodes while retaining PPO and moving KL."
+    ),
+  )
+  parser.add_argument(
+    "--success-imitation-weight",
+    type=float,
+    default=0.5,
+    help="Population-scaled Smooth-L1 coefficient for v88 success imitation.",
+  )
+  parser.add_argument(
     "--failure-only-mean-teacher",
     action="store_true",
     help=(
@@ -360,6 +374,7 @@ def _set_teacher_arm(
   *,
   a1_teacher_weight: float,
   a2_teacher_eta: float,
+  a2_teacher_weight: float | None = None,
 ) -> dict[str, Any]:
   """Switch the four teacher fields at a recorded round boundary."""
   parameters = arm_parameters(arm)
@@ -370,8 +385,14 @@ def _set_teacher_arm(
     )
   elif arm == "A2":
     parameters["teacher_eta"] = float(a2_teacher_eta)
+    if a2_teacher_weight is not None:
+      parameters["teacher_weight"] = float(a2_teacher_weight)
     parameters["name"] = (
       f"residual_eta_{a2_teacher_eta:g}_all_interventions"
+      if a2_teacher_weight is None
+      else (
+        f"success_safe_action_imitation_weight_{a2_teacher_weight:g}"
+      )
     )
   algorithm.teacher_mode = parameters["teacher_mode"]
   algorithm.teacher_gate = parameters["teacher_gate"]
@@ -512,6 +533,11 @@ def main() -> None:
     raise ValueError("sloped paper stair candidate requires a positive barrier slope")
   if not 0.0 < args.a1_teacher_weight <= 0.1:
     raise ValueError("v35 A1 teacher weight must be in (0, 0.1]")
+  if (
+    not math.isfinite(args.success_imitation_weight)
+    or not 0.0 < args.success_imitation_weight <= 2.0
+  ):
+    raise ValueError("v88 success-imitation weight must lie in (0, 2]")
   if args.curriculum_rows < 2:
     raise ValueError("v35 curriculum rows must be at least two")
   if args.curriculum_freeze_target_after_round is not None:
@@ -521,7 +547,7 @@ def main() -> None:
       raise ValueError("target-height freeze round must lie within training rounds")
   if not 0.01 <= args.training_action_std <= 0.05:
     raise ValueError("v35 training action std must lie in [0.01, 0.05]")
-  if args.full_batch_sgd_actor:
+  if args.full_batch_sgd_actor or args.success_safe_action_imitation:
     if not 1.0e-6 <= args.actor_learning_rate <= 1.0e-3:
       raise ValueError("v72 SGD learning rate must lie in [1e-6, 1e-3]")
   elif not 1.0e-7 <= args.actor_learning_rate <= 5.0e-6:
@@ -532,9 +558,13 @@ def main() -> None:
     raise ValueError("actor gradient accumulation chunks must be positive")
   if (
     args.actor_gradient_accumulation_microbatches > 1
-    and not args.full_batch_sgd_actor
+    and not (
+      args.full_batch_sgd_actor or args.success_safe_action_imitation
+    )
   ):
-    raise ValueError("actor gradient accumulation requires full-batch SGD")
+    raise ValueError(
+      "actor gradient accumulation requires a single-step SGD actor"
+    )
   if (
     args.training_domain_randomization_refresh == "round"
     and args.training_domain_randomization == "off"
@@ -574,6 +604,30 @@ def main() -> None:
   )
   if args.deterministic_mean_teacher and any(arm != "A2" for arm in teacher_arms):
     raise ValueError("v35 deterministic-mean teacher currently requires only A2")
+  if args.success_safe_action_imitation:
+    if not args.deterministic_mean_teacher or any(
+      arm != "A2" for arm in teacher_arms
+    ):
+      raise ValueError("v88 success imitation requires deterministic A2 telemetry")
+    if args.full_batch_sgd_actor:
+      raise ValueError("v88 owns its SGD actor; do not also select v72")
+    if (
+      args.training_filter_schedule != "fixed"
+      or training_filter_fraction != 1.0
+      or args.filter_group_balanced_advantages
+    ):
+      raise ValueError("v88 success imitation requires fully filtered training")
+    if any(
+      (
+        args.failure_only_mean_teacher,
+        args.success_only_mean_teacher,
+        args.failure_focused_actor,
+        args.distill_only_actor,
+        args.split_filter_actor_objectives,
+        args.task_priority_gradient_surgery,
+      )
+    ) or args.success_local_kl_beta != 0.0:
+      raise ValueError("v88 success imitation is mutually exclusive with v35 gates")
   if args.failure_only_mean_teacher and not args.deterministic_mean_teacher:
     raise ValueError("failure-only mean teacher requires deterministic mean labels")
   if args.failure_only_mean_teacher and args.training_runtime_filter != "off":
@@ -659,9 +713,11 @@ def main() -> None:
         "group-balanced advantages or paper-style fully filtered execution"
       )
   if args.transactional_rollout_acceptance:
-    if not args.full_batch_sgd_actor:
+    if not (
+      args.full_batch_sgd_actor or args.success_safe_action_imitation
+    ):
       raise ValueError(
-        "v73 transactional acceptance requires full-batch SGD"
+        "transactional acceptance requires a single-step SGD actor"
       )
     if args.rounds < 2:
       raise ValueError("v73 transactional acceptance requires at least 2 rounds")
@@ -674,8 +730,13 @@ def main() -> None:
     and args.training_filter_schedule == "fixed"
     and training_filter_fraction == 1.0
   )
+  fully_filtered_transactional_actor = bool(
+    (args.full_batch_sgd_actor or args.success_safe_action_imitation)
+    and args.training_filter_schedule == "fixed"
+    and training_filter_fraction == 1.0
+  )
   transactional_acceptance_group = (
-    "filter_on" if fully_filtered_full_batch_actor else "filter_off"
+    "filter_on" if fully_filtered_transactional_actor else "filter_off"
   )
   if not 0.0 <= args.success_local_kl_beta <= 4.0:
     raise ValueError("success-local KL beta must lie in [0, 4]")
@@ -880,6 +941,14 @@ def main() -> None:
     deterministic_mean_teacher["runtime_filter_fraction"] = (
       training_filter_fraction
     )
+    deterministic_mean_teacher["success_safe_action_imitation"] = (
+      args.success_safe_action_imitation
+    )
+    deterministic_mean_teacher["success_imitation_weight"] = (
+      args.success_imitation_weight
+      if args.success_safe_action_imitation
+      else 0.0
+    )
   height_curriculum = None
   if args.height_curriculum:
     height_curriculum = _configure_height_curriculum(
@@ -900,7 +969,16 @@ def main() -> None:
   agent_cfg.algorithm.moving_kl_beta = float(args.moving_kl_beta)
   agent_cfg.algorithm.minimum_std = float(args.training_action_std)
   agent_cfg.algorithm.maximum_std = float(args.training_action_std)
-  if args.full_batch_sgd_actor:
+  if args.success_safe_action_imitation:
+    agent_cfg.algorithm.class_name = (
+      "src.tasks.stairs_cbf.paper_success_imitation_v88:"
+      "PaperSuccessImitationV88PPO"
+    )
+    agent_cfg.algorithm.num_learning_epochs = 1
+    agent_cfg.algorithm.num_mini_batches = (
+      args.actor_gradient_accumulation_microbatches
+    )
+  elif args.full_batch_sgd_actor:
     if args.actor_gradient_accumulation_microbatches > 1:
       agent_cfg.algorithm.class_name = (
         "src.tasks.stairs_cbf.paper_accumulated_v82:PaperAccumulatedV82PPO"
@@ -951,6 +1029,10 @@ def main() -> None:
     runner_cfg["algorithm"]["v35_teacher_gradient_target_ratio"] = (
       args.teacher_gradient_target_ratio
     )
+    if args.success_safe_action_imitation:
+      runner_cfg["algorithm"]["v88_success_imitation_weight"] = (
+        args.success_imitation_weight
+      )
   runner = CbfTeacherV30Runner(
     env, runner_cfg, log_dir=None, device=args.device
   )
@@ -1008,6 +1090,11 @@ def main() -> None:
       teacher_arms[0],
       a1_teacher_weight=args.a1_teacher_weight,
       a2_teacher_eta=args.a2_teacher_eta,
+      a2_teacher_weight=(
+        args.success_imitation_weight
+        if args.success_safe_action_imitation
+        else None
+      ),
     )
     initial_hash = actor_state_sha256(actor_state(runner.alg.actor))
     _save_checkpoint(
@@ -1024,6 +1111,12 @@ def main() -> None:
         "height_curriculum": height_curriculum,
         "deterministic_mean_teacher": deterministic_mean_teacher,
         "success_only_mean_teacher": args.success_only_mean_teacher,
+        "success_safe_action_imitation": args.success_safe_action_imitation,
+        "success_imitation_weight": (
+          args.success_imitation_weight
+          if args.success_safe_action_imitation
+          else 0.0
+        ),
         "failure_focused_actor": args.failure_focused_actor,
         "distill_only_actor": args.distill_only_actor,
         "success_local_kl_beta": args.success_local_kl_beta,
@@ -1047,6 +1140,9 @@ def main() -> None:
           args.actor_gradient_accumulation_microbatches
         ),
         "fully_filtered_full_batch_actor": fully_filtered_full_batch_actor,
+        "fully_filtered_transactional_actor": (
+          fully_filtered_transactional_actor
+        ),
         "transactional_rollout_acceptance": (
           args.transactional_rollout_acceptance
         ),
@@ -1085,6 +1181,11 @@ def main() -> None:
         round_teacher_arm,
         a1_teacher_weight=args.a1_teacher_weight,
         a2_teacher_eta=args.a2_teacher_eta,
+        a2_teacher_weight=(
+          args.success_imitation_weight
+          if args.success_safe_action_imitation
+          else None
+        ),
       )
       runner.alg.freeze_round_reference()
       transaction = (
@@ -1304,6 +1405,14 @@ def main() -> None:
           "height_curriculum": height_curriculum,
           "deterministic_mean_teacher": deterministic_mean_teacher,
           "success_only_mean_teacher": args.success_only_mean_teacher,
+          "success_safe_action_imitation": (
+            args.success_safe_action_imitation
+          ),
+          "success_imitation_weight": (
+            args.success_imitation_weight
+            if args.success_safe_action_imitation
+            else 0.0
+          ),
           "failure_focused_actor": args.failure_focused_actor,
           "distill_only_actor": args.distill_only_actor,
           "success_local_kl_beta": args.success_local_kl_beta,
@@ -1327,6 +1436,9 @@ def main() -> None:
             args.actor_gradient_accumulation_microbatches
           ),
           "fully_filtered_full_batch_actor": fully_filtered_full_batch_actor,
+          "fully_filtered_transactional_actor": (
+            fully_filtered_transactional_actor
+          ),
           "transactional_rollout_acceptance": (
             args.transactional_rollout_acceptance
           ),
@@ -1364,6 +1476,12 @@ def main() -> None:
       "height_curriculum": height_curriculum,
       "deterministic_mean_teacher": deterministic_mean_teacher,
       "success_only_mean_teacher": args.success_only_mean_teacher,
+      "success_safe_action_imitation": args.success_safe_action_imitation,
+      "success_imitation_weight": (
+        args.success_imitation_weight
+        if args.success_safe_action_imitation
+        else 0.0
+      ),
       "failure_focused_actor": args.failure_focused_actor,
       "distill_only_actor": args.distill_only_actor,
       "success_local_kl_beta": args.success_local_kl_beta,
@@ -1390,6 +1508,7 @@ def main() -> None:
         args.actor_gradient_accumulation_microbatches
       ),
       "fully_filtered_full_batch_actor": fully_filtered_full_batch_actor,
+      "fully_filtered_transactional_actor": fully_filtered_transactional_actor,
       "transactional_rollout_acceptance": (
         args.transactional_rollout_acceptance
       ),

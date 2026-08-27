@@ -119,7 +119,7 @@ def test_v75_full_batch_allows_paper_fully_filtered_execution() -> None:
     script = (REPO / "experiments/scripts/refine_paper_dual_v35.py").read_text()
     assert "paper_fully_filtered_execution" in script
     assert 'transactional_acceptance_group = (' in script
-    assert '"filter_on" if fully_filtered_full_batch_actor' in script
+    assert '"filter_on" if fully_filtered_transactional_actor' in script
     assert "PaperFullFilterV75PPO" in script
     algorithm = (
         REPO / "src/tasks/stairs_cbf/paper_full_filter_v75.py"
@@ -203,6 +203,29 @@ def test_v35_masked_actor_mean_preserves_population_scale() -> None:
     assert float(empty) == 0.0
     empty.backward()
     assert torch.equal(empty_values.grad, torch.zeros_like(empty_values))
+
+
+def test_v88_success_imitation_keeps_population_scale_and_stops_target_grad() -> None:
+    policy_mean = torch.tensor(
+        ((0.10, 0.0), (1.0, 1.0), (0.0, -0.10), (2.0, 2.0)),
+        requires_grad=True,
+    )
+    target = torch.zeros_like(policy_mean, requires_grad=True)
+    successful = torch.tensor((True, False, True, False))
+    loss = MATH.success_population_smooth_l1_loss(
+        policy_mean,
+        target,
+        successful,
+        beta=0.05,
+    )
+    # Each selected transition has per-action Smooth-L1 mean 0.0375, then the
+    # success mask retains the original four-transition population scale.
+    assert float(loss.detach()) == pytest.approx(0.01875)
+    loss.backward()
+    assert policy_mean.grad is not None
+    assert torch.equal(policy_mean.grad[1], torch.zeros(2))
+    assert torch.equal(policy_mean.grad[3], torch.zeros(2))
+    assert target.grad is None
 
 
 def test_v35_terminal_episode_mask_keeps_environment_identity() -> None:
@@ -350,6 +373,21 @@ def test_v82_accumulates_equal_chunk_gradients_before_one_sgd_step() -> None:
     assert "accumulate_actor_microbatch_gradients = True" in algorithm
     assert '"--actor-gradient-accumulation-microbatches"' in script
     assert "paper_accumulated_v82:PaperAccumulatedV82PPO" in script
+
+
+def test_v88_routes_success_safe_action_imitation_through_one_sgd_step() -> None:
+    algorithm = (
+        REPO / "src/tasks/stairs_cbf/paper_success_imitation_v88.py"
+    ).read_text()
+    script = (REPO / "experiments/scripts/refine_paper_dual_v35.py").read_text()
+    assert "self.teacher_policy_actions.detach()" in algorithm
+    assert "self.v35_success_episode_transition" in algorithm
+    assert "success_population_smooth_l1_loss(" in algorithm
+    assert "accumulate_actor_microbatch_gradients = True" in algorithm
+    assert "self.actor_optimizer = torch.optim.SGD(" in algorithm
+    assert '"--success-safe-action-imitation"' in script
+    assert "paper_success_imitation_v88:" in script
+    assert 'runner_cfg["algorithm"]["v88_success_imitation_weight"]' in script
 
 
 def test_v35_filter_dropout_mask_is_balanced_and_rotates() -> None:
