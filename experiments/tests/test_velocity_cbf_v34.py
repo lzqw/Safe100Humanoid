@@ -334,6 +334,21 @@ def test_v111_contrasts_rescued_and_harmed_terminal_pairs() -> None:
     assert torch.isclose(weights.sum(), torch.tensor(2.0))
 
 
+def test_v112_full_first_layer_retains_state_conditioning_gradients() -> None:
+    gradient = torch.ones(3, 415)
+    geometry_only = ADAPTER._apply_first_layer_update_scope(
+        gradient.clone(), "geometry-columns"
+    )
+    state_conditioned = ADAPTER._apply_first_layer_update_scope(
+        gradient.clone(), "full-first-layer"
+    )
+    assert torch.count_nonzero(geometry_only[:, :405]) == 0
+    assert torch.equal(geometry_only[:, 405:], torch.ones(3, 10))
+    assert torch.equal(state_conditioned, gradient)
+    with pytest.raises(ValueError, match="unsupported"):
+        ADAPTER._apply_first_layer_update_scope(gradient.clone(), "all-layers")
+
+
 def test_v95_critic_expansion_accepts_ten_persistent_features() -> None:
     source = {"mlp.0.weight": torch.randn(3, 7)}
     target = {"mlp.0.weight": torch.randn(3, 17)}

@@ -13,6 +13,8 @@ trajectory state itself.
 v111 additionally signs the full target trace by the paired terminal outcome,
 learning toward CBF corrections on rescued pairs and away from them on pairs
 where filtering destroys an otherwise successful episode.
+v112 gives that contrast access to the complete first-layer state representation
+instead of forcing all conditional structure through ten geometry columns.
 Consequently
 the candidate remains bit-exact to the base policy whenever the CBF geometry is
 inactive, while training still uses the paper's filtered-action distance.
@@ -71,6 +73,9 @@ DEPLOYMENT_COUNTERFACTUAL_METHOD_ID = (
 PAIRED_OUTCOME_CONTRAST_METHOD_ID = (
   "paired-terminal-outcome-contrast-trajectory-adapter-v111"
 )
+STATE_CONDITIONED_OUTCOME_METHOD_ID = (
+  "state-conditioned-paired-outcome-contrast-adapter-v112"
+)
 LEGACY_ACTOR_OBSERVATION_DIM = 405
 GEOMETRY_OBSERVATION_DIM = 5
 PERSISTENT_GEOMETRY_OBSERVATION_DIM = 10
@@ -113,6 +118,7 @@ def _parse_args() -> argparse.Namespace:
       "paired-trajectory",
       "deployment-counterfactual",
       "paired-outcome-contrast",
+      "state-conditioned-outcome-contrast",
     ),
     default="instantaneous-filter",
   )
@@ -120,6 +126,11 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--paired-post-horizon", type=int, default=50)
   parser.add_argument("--paired-pre-decay", type=float, default=0.9)
   parser.add_argument("--actor-learning-rate", type=float, default=1.0e-3)
+  parser.add_argument(
+    "--adapter-update-scope",
+    choices=("geometry-columns", "full-first-layer"),
+    default="geometry-columns",
+  )
   parser.add_argument(
     "--adapter-optimizer",
     choices=("adam", "sgd"),
@@ -363,9 +374,14 @@ def _paired_trajectory_rescue_dataset(
     "paired-trajectory",
     "deployment-counterfactual",
     "paired-outcome-contrast",
+    "state-conditioned-outcome-contrast",
   ):
     raise ValueError("rescue trajectory target mode is unsupported")
-  if target_mode == "paired-outcome-contrast":
+  outcome_contrast = target_mode in (
+    "paired-outcome-contrast",
+    "state-conditioned-outcome-contrast",
+  )
+  if outcome_contrast:
     if (
       episode_signs is None
       or episode_signs.shape != rescued.shape
@@ -404,6 +420,7 @@ def _paired_trajectory_rescue_dataset(
     if target_mode in (
       "deployment-counterfactual",
       "paired-outcome-contrast",
+      "state-conditioned-outcome-contrast",
     ):
       trace = paired_rescue_action_trace(
         off_data["nominal_actions"][off_rows],
@@ -439,7 +456,7 @@ def _paired_trajectory_rescue_dataset(
     ):
       raise RuntimeError("v109 trace tensors are missing")
     outcome_sign = 1
-    if target_mode == "paired-outcome-contrast":
+    if outcome_contrast:
       assert episode_signs is not None
       outcome_sign = int(episode_signs[environment_id])
       correction = correction * float(outcome_sign)
@@ -609,6 +626,20 @@ def _teacher_metrics(
   }
 
 
+def _apply_first_layer_update_scope(
+  gradient: torch.Tensor,
+  update_scope: str,
+) -> torch.Tensor:
+  """Keep either only geometry columns or the complete state-conditioned layer."""
+  if gradient.ndim != 2 or gradient.shape[1] <= LEGACY_ACTOR_OBSERVATION_DIM:
+    raise ValueError("adapter gradient must be a widened first-layer matrix")
+  if update_scope == "geometry-columns":
+    gradient[:, :LEGACY_ACTOR_OBSERVATION_DIM] = 0.0
+  elif update_scope != "full-first-layer":
+    raise ValueError("adapter update scope is unsupported")
+  return gradient
+
+
 def _train_adapter(
   actor,
   dataset: dict[str, torch.Tensor],
@@ -618,6 +649,7 @@ def _train_adapter(
   eta: float,
   learning_rate: float,
   optimizer_name: str,
+  update_scope: str,
   moving_kl_beta: float,
   max_reference_kl: float,
   epochs: int,
@@ -708,7 +740,7 @@ def _train_adapter(
       loss.backward()
       if first_layer.weight.grad is None:
         raise RuntimeError("v49 adapter gradient is missing")
-      first_layer.weight.grad[:, :LEGACY_ACTOR_OBSERVATION_DIM] = 0.0
+      _apply_first_layer_update_scope(first_layer.weight.grad, update_scope)
       gradient_norm = torch.nn.utils.clip_grad_norm_(
         [first_layer.weight], max_grad_norm
       )
@@ -716,10 +748,11 @@ def _train_adapter(
         raise RuntimeError("v49 adapter gradient is non-finite")
       maximum_gradient_norm = max(maximum_gradient_norm, float(gradient_norm))
       optimizer.step()
-      with torch.no_grad():
-        first_layer.weight[:, :LEGACY_ACTOR_OBSERVATION_DIM].copy_(
-          reference_weight[:, :LEGACY_ACTOR_OBSERVATION_DIM]
-        )
+      if update_scope == "geometry-columns":
+        with torch.no_grad():
+          first_layer.weight[:, :LEGACY_ACTOR_OBSERVATION_DIM].copy_(
+            reference_weight[:, :LEGACY_ACTOR_OBSERVATION_DIM]
+          )
       update_count += 1
 
   unprojected_teacher = _teacher_metrics(
@@ -738,16 +771,11 @@ def _train_adapter(
     device=device,
     batch_size=batch_size,
   )
-  proposed_columns = first_layer.weight[
-    :, LEGACY_ACTOR_OBSERVATION_DIM:
-  ].detach().clone()
+  proposed_delta = first_layer.weight.detach().clone() - reference_weight
 
   def load_scale(scale: float) -> None:
     with torch.no_grad():
-      first_layer.weight.copy_(reference_weight)
-      first_layer.weight[:, LEGACY_ACTOR_OBSERVATION_DIM:].copy_(
-        proposed_columns * float(scale)
-      )
+      first_layer.weight.copy_(reference_weight + proposed_delta * float(scale))
 
   scale = 1.0
   projection_iterations = 0
@@ -795,9 +823,11 @@ def _train_adapter(
     )
   )
   return {
-    "actor_update_scope": "new-geometry-first-layer-input-columns-only",
+    "actor_update_scope": update_scope,
     "trainable_parameter_count": int(
-      first_layer.out_features
+      first_layer.weight.numel()
+      if update_scope == "full-first-layer"
+      else first_layer.out_features
       * (first_layer.in_features - LEGACY_ACTOR_OBSERVATION_DIM)
     ),
     "optimizer": optimizer_name,
@@ -859,8 +889,15 @@ def main() -> None:
     "paired-trajectory",
     "deployment-counterfactual",
     "paired-outcome-contrast",
+    "state-conditioned-outcome-contrast",
   )
-  contrast_teacher = args.teacher_target == "paired-outcome-contrast"
+  contrast_teacher = args.teacher_target in (
+    "paired-outcome-contrast",
+    "state-conditioned-outcome-contrast",
+  )
+  state_conditioned_teacher = (
+    args.teacher_target == "state-conditioned-outcome-contrast"
+  )
   if trajectory_teacher and (
     args.geometry_interface != "persistent-10"
     or args.teacher_episode_scope
@@ -872,6 +909,12 @@ def main() -> None:
   ):
     raise ValueError(
       "v109-v111 trajectory targets require their paired scope, persistent SGD, and valid trace"
+    )
+  if state_conditioned_teacher != (
+    args.adapter_update_scope == "full-first-layer"
+  ):
+    raise ValueError(
+      "v112 alone requires full-first-layer scope; earlier adapters require geometry-columns"
     )
   repo = args.repo.resolve()
   checkpoint = args.base_checkpoint.resolve()
@@ -890,7 +933,9 @@ def main() -> None:
     raise FileExistsError(output)
   output.mkdir(parents=True)
   started = time.monotonic()
-  if args.teacher_target == "paired-outcome-contrast":
+  if args.teacher_target == "state-conditioned-outcome-contrast":
+    method_id = STATE_CONDITIONED_OUTCOME_METHOD_ID
+  elif args.teacher_target == "paired-outcome-contrast":
     method_id = PAIRED_OUTCOME_CONTRAST_METHOD_ID
   elif args.teacher_target == "deployment-counterfactual":
     method_id = DEPLOYMENT_COUNTERFACTUAL_METHOD_ID
@@ -919,6 +964,7 @@ def main() -> None:
       "rollout_conditions": ["filter_off", "filter_on"],
       "teacher_episode_scope": args.teacher_episode_scope,
       "teacher_target": args.teacher_target,
+      "adapter_update_scope": args.adapter_update_scope,
       "actor_observation_interface": (
         f"405D proprioception + {geometry_dim}D deployable CBF geometry"
       ),
@@ -1088,16 +1134,24 @@ def main() -> None:
             value = value + global_environment_offset
           dataset_chunks[key].append(value)
         weight_chunks.append(effective)
-      on_active = _geometry_active(on_data["observations"])
       off_data = off["dataset"]
       off_success_transition = off["success"][off_data["environment_ids"]]
-      off_active = _geometry_active(off_data["observations"])
-      trust_chunks.extend(
-        (
-          on_data["observations"][on_active],
-          off_data["observations"][off_success_transition & off_active],
+      if state_conditioned_teacher:
+        trust_chunks.extend(
+          (
+            on_data["observations"],
+            off_data["observations"][off_success_transition],
+          )
         )
-      )
+      else:
+        on_active = _geometry_active(on_data["observations"])
+        off_active = _geometry_active(off_data["observations"])
+        trust_chunks.extend(
+          (
+            on_data["observations"][on_active],
+            off_data["observations"][off_success_transition & off_active],
+          )
+        )
       rollout_summaries.extend(
         (
           {
@@ -1143,6 +1197,7 @@ def main() -> None:
       eta=args.teacher_eta,
       learning_rate=args.actor_learning_rate,
       optimizer_name=args.adapter_optimizer,
+      update_scope=args.adapter_update_scope,
       moving_kl_beta=args.moving_kl_beta,
       max_reference_kl=args.max_reference_kl,
       epochs=args.epochs,
@@ -1158,7 +1213,10 @@ def main() -> None:
       and training["after"]["teacher"]["teacher_correction_cosine"] > 0.0
       and training["after"]["trust"]["reference_forward_kl"]
       <= args.max_reference_kl
-      and training["legacy_first_layer_change_max_abs"] == 0.0
+      and (
+        args.adapter_update_scope == "full-first-layer"
+        or training["legacy_first_layer_change_max_abs"] == 0.0
+      )
     )
     candidate_payload = _checkpoint_payload(
       source_payload,
@@ -1170,6 +1228,7 @@ def main() -> None:
         "expansion": expansion,
         "training_seeds": seeds,
         "teacher_target": args.teacher_target,
+        "adapter_update_scope": args.adapter_update_scope,
         "paired_trace": {
           "pre_horizon": args.paired_pre_horizon,
           "post_horizon": args.paired_post_horizon,
@@ -1215,6 +1274,7 @@ def main() -> None:
       else None,
       "actor_learning_rate": args.actor_learning_rate,
       "adapter_optimizer": args.adapter_optimizer,
+      "adapter_update_scope": args.adapter_update_scope,
       "moving_kl_beta": args.moving_kl_beta,
       "max_reference_kl": args.max_reference_kl,
       "rescued_episode_count": rescued_episode_count,
