@@ -21,6 +21,7 @@
 | v92 | 5-D geometry adapter 的 full-batch SGD 方向正确；untouched filter-off 47/64=73.44%，差 1 episode | [`observable_rescue_sgd_v92/`](observable_rescue_sgd_v92/) |
 | v93 | 16-D 左右脚/phase 条件化 adapter 离线方向改善，但唯一 untouched filter-off 仅 45/64=70.31%，拒绝 | [`conditional_geometry_sgd_v93/`](conditional_geometry_sgd_v93/) |
 | v94 | 10-D persistent 双脚 next-riser 几何使 paired filter-on 达 191/256，但单步 imitation 的 untouched off 仍为 45/64=70.31% | [`persistent_geometry_sgd_v94/`](persistent_geometry_sgd_v94/) |
+| v95 | persistent geometry paired PPO 的 6/6 surrogate 改善，但跨 seed gradient cosine 仅 0.020；untouched off 44/64=68.75% | [`persistent_geometry_ppo_v95/`](persistent_geometry_ppo_v95/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -70,3 +71,9 @@ v94 修复了更早的时序缺口：原 5-D/16-D geometry 仅在脚已离地且
 仍只有 45/64=70.31%。这说明提前几何提高了 safety filter 的轨迹价值，但局部 action
 拟合仍不能把早期抬脚 credit 内化；下一步应把 persistent geometry 放入论文式
 filtered-execution PPO 闭环，用 episode return/GAE 训练预摆动动作。
+
+v95 将 persistent geometry 接入上述 paired filter-on/off PPO。49,152 transitions 的
+6/6 batch surrogate 均改善，最差 gain 为 +1.26e-4，KL 精确限制在 5e-5；但三组
+paired-seed gradient 的平均 cosine 仍只有 0.0202，唯一 untouched filter-off gate
+下降到 44/64=68.75%。因此提前观测解决了信息时序，却没有解决跨 rollout 的 outcome
+gradient 不一致；继续沿同一局部 PPO surrogate 放大或多轮更新没有证据支持。
