@@ -294,6 +294,20 @@ v45 改用保留梯度幅度的 SGD trust-region step。KL=`2.5e-5` 时，同一
 filter-on。完整离线诊断、base 对照和逐 episode 证据见
 [`outcome_ppo_v44_v45/`](outcome_ppo_v44_v45/)。
 
+#### Paired multi-rollout CBF-dual GAE consensus（与 base 持平）
+
+v46 回到论文式逐步 bounded CBF-dual reward 和 critic GAE，不再使用整回合二值
+标签。3 个独立训练 seed 分别采集完全 filter-on/off 的配对 rollout，共 6 批、
+49,152 transitions；actor 全部 MLP 层只做一次 SGD 更新并投影到 KL=`2.5e-5`。
+6/6 rollout surrogate 均改善，但原始 batch gradient 平均余弦为 `-0.0020`。
+在全新 seed `201350942` 上，candidate 与 base 均为 38/64。
+
+v47 进一步先平均每个 seed 内的 on/off 梯度，再在 3 个 seed 间逐坐标取中位数；
+paired-seed gradient 平均余弦提高到 `0.0275`，6/6 离线门控仍通过。但在开发
+seed `201350932` 上，candidate 与 base 仍同为 46/64（71.875%）。两者均未改善
+filter-off control，因此不运行 filter-on。完整训练与逐 episode 证据见
+[`multi_rollout_gae_v46_v47/`](multi_rollout_gae_v46_v47/)。
+
 ## 方法与第一阶段 F1 ablation
 
 本目录发布 v35 第一阶段 F1 pilot 的关键结果。该阶段依据
@@ -340,6 +354,7 @@ winner。后续 staged experiment 解决了 F1 矛盾，并已冻结扩展到 F2
 - [`elite_self_imitation_v41_v42/`](elite_self_imitation_v41_v42/): 无过滤成功轨迹收集、full-batch 更新、成功的 paired gate 与失败的 untouched-seed 确认。
 - [`elite_self_imitation_v43_6seed/`](elite_self_imitation_v43_6seed/): 六训练 seed 合并、KL 放大负结果及稳定 seed gate。
 - [`outcome_ppo_v44_v45/`](outcome_ppo_v44_v45/): episode-balanced outcome PPO、Adam 泛化失败、SGD trust-region 最佳点与独立 base 对照。
+- [`multi_rollout_gae_v46_v47/`](multi_rollout_gae_v46_v47/): 配对 on/off CBF-dual GAE、两级梯度共识及与 base 持平的独立 gate。
 
 大型 `.pt` checkpoint 没有提交进 Git；其 SHA-256 已写入
 `pilot_summary.json`，原始 checkpoint 和逐 episode 文件保留在 4080 artifact

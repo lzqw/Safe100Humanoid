@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "method_family": "paired-multi-rollout-cbf-dual-gae-consensus",
+  "decision": "rejected_no_independent_filter_off_improvement",
+  "shared_training_protocol": {
+    "training_seeds": [201350522, 201350532, 201350542],
+    "conditions_per_seed": ["filter_on", "filter_off"],
+    "rollout_batch_count": 6,
+    "num_envs_per_batch": 16,
+    "steps_per_batch": 512,
+    "total_transition_count": 49152,
+    "reward": "raw_moderate_bounded_cbf_dual",
+    "actor_update_scope": "all-mlp-layers",
+    "optimizer": "sgd",
+    "max_reference_kl": 0.000025
+  },
+  "v46_flat_trimmed_aggregation": {
+    "source_git_commit": "7b82fa6326ff9d6111d16cc123c033a3a0fa80f0",
+    "elapsed_seconds": 70.61499883106444,
+    "positive_rollout_batch_count": 6,
+    "pairwise_gradient_cosine_mean": -0.0019599448423832655,
+    "paired_filter_on_off_gradient_cosine_mean": 0.05360735207796097,
+    "reference_forward_kl": 0.000024965001405992854,
+    "gate_seed": 201350942,
+    "initial_state_signature": "9112030d7b372cfcd49fce15cb7f90b8da5fea510a77f455aac944662b49bcff",
+    "base_filter_off_success_count": 38,
+    "candidate_filter_off_success_count": 38,
+    "candidate_filter_off_success_rate": 0.59375,
+    "candidate_actor_sha256": "af30580a4d9214bb2a719a066265215845be0a5c8faf179171e291a6df64e870",
+    "candidate_checkpoint_sha256": "47f043ec4e79d66737adf45d719f4b673abbd671058d6fa5a040e8eab217574f",
+    "decision": "rejected_tied_base_below_absolute_gate"
+  },
+  "v47_hierarchical_paired_aggregation": {
+    "source_git_commit": "6ec9def69dcae6561833cda6358c120d057ab501",
+    "elapsed_seconds": 90.91929548489861,
+    "aggregation": "mean_on_off_within_seed_then_coordinate_median_across_seeds",
+    "positive_rollout_batch_count": 6,
+    "paired_seed_gradient_cosine_mean": 0.027492128312587738,
+    "reference_forward_kl": 0.000024073577757614355,
+    "gate_seed": 201350932,
+    "initial_state_signature": "d23be073266da086ee6f52aee9d6f5df6049703320bb6594c7bab8de36d91f35",
+    "base_filter_off_success_count": 46,
+    "candidate_filter_off_success_count": 46,
+    "candidate_filter_off_success_rate": 0.71875,
+    "candidate_actor_sha256": "2d2e259bffe65d65e109c9b34c28003b06b3cca081abc7f7fdc1da0f85a11945",
+    "candidate_checkpoint_sha256": "5ceda0d939c9ee2d320b9bb5a63f6481647336b7f4e1e6d00166ffbaa60e0e57",
+    "decision": "rejected_tied_base_below_absolute_gate"
+  },
+  "filter_on_evaluations_run": 0,
+  "early_stop_reason": "neither_candidate_improved_its_filter_off_control"
+}
