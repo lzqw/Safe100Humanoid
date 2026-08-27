@@ -524,6 +524,36 @@ def test_v121_pretrained_critic_gae_is_terminal_and_seed_normalized() -> None:
     assert FILTER_OFF_PPO.CRITIC_GAE_VALIDATED_METHOD_ID.endswith("v121")
 
 
+def test_v122_antithetic_credit_is_mirrored_and_branch_episode_equal() -> None:
+    pair_ids = torch.tensor(
+        (0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3), dtype=torch.long
+    )
+    branch_signs = torch.tensor(
+        (1, 1, -1, 1, -1, -1, 1, 1, -1, 1, -1, -1),
+        dtype=torch.int8,
+    )
+    score_differences = torch.tensor((2.0, -2.0, 1.0, -1.0))
+    weights, advantages = FILTER_OFF_PPO.standardized_antithetic_weights(
+        pair_ids,
+        branch_signs,
+        score_differences,
+        num_pairs_per_seed=2,
+    )
+    branch_weights = torch.stack(
+        [
+            weights[(pair_ids == pair_id) & (branch_signs == branch_sign)].sum()
+            for pair_id in range(4)
+            for branch_sign in (-1, 1)
+        ]
+    )
+    assert torch.allclose(branch_weights, torch.full((8,), 0.125))
+    for pair_id in range(4):
+        plus = advantages[(pair_ids == pair_id) & (branch_signs == 1)][0]
+        minus = advantages[(pair_ids == pair_id) & (branch_signs == -1)][0]
+        assert torch.isclose(plus, -minus)
+    assert FILTER_OFF_PPO.ANTITHETIC_VALIDATED_METHOD_ID.endswith("v122")
+
+
 def test_v95_critic_expansion_accepts_ten_persistent_features() -> None:
     source = {"mlp.0.weight": torch.randn(3, 7)}
     target = {"mlp.0.weight": torch.randn(3, 17)}

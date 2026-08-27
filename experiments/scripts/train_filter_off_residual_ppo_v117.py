@@ -59,6 +59,9 @@ PROGRESS_VALIDATED_METHOD_ID = (
 CRITIC_GAE_VALIDATED_METHOD_ID = (
   "heldout-validated-pretrained-critic-gae-residual-ppo-v121"
 )
+ANTITHETIC_VALIDATED_METHOD_ID = (
+  "heldout-validated-paired-antithetic-residual-ppo-v122"
+)
 ACTION_DIM = 12
 
 
@@ -253,6 +256,52 @@ def standardized_gae_weights(
   return weights, advantages
 
 
+def standardized_antithetic_weights(
+  pair_ids: torch.Tensor,
+  branch_signs: torch.Tensor,
+  pair_score_differences: torch.Tensor,
+  *,
+  num_pairs_per_seed: int,
+) -> tuple[torch.Tensor, torch.Tensor]:
+  """Center matched +/- trajectory differences and weight every branch equally."""
+  if (
+    pair_ids.ndim != 1
+    or pair_ids.dtype != torch.long
+    or branch_signs.shape != pair_ids.shape
+    or branch_signs.dtype != torch.int8
+    or pair_score_differences.ndim != 1
+    or not len(pair_ids)
+    or int(pair_ids.min()) < 0
+    or int(pair_ids.max()) >= len(pair_score_differences)
+    or not bool(torch.isfinite(pair_score_differences).all())
+    or num_pairs_per_seed < 2
+  ):
+    raise ValueError("v122 paired antithetic inputs are invalid")
+  weights = torch.zeros(len(pair_ids), dtype=torch.float32)
+  advantages = torch.zeros(len(pair_ids), dtype=torch.float32)
+  seed_ids = torch.div(pair_ids, int(num_pairs_per_seed), rounding_mode="floor")
+  unique_seeds = seed_ids.unique(sorted=True)
+  for seed_id in unique_seeds.tolist():
+    seed_rows = (seed_ids == int(seed_id)).nonzero(as_tuple=False).flatten()
+    seed_pairs = pair_ids[seed_rows].unique(sorted=True)
+    differences = pair_score_differences[seed_pairs].float()
+    normalized = (differences - differences.mean()) / differences.std(
+      unbiased=False
+    ).clamp_min(1.0e-6)
+    for pair_id, pair_advantage in zip(seed_pairs.tolist(), normalized.tolist()):
+      for branch_sign in (-1, 1):
+        branch_rows = (
+          (pair_ids == int(pair_id)) & (branch_signs == int(branch_sign))
+        ).nonzero(as_tuple=False).flatten()
+        if not len(branch_rows):
+          raise ValueError("v122 requires both mirrored branches for every pair")
+        weights[branch_rows] = 1.0 / float(
+          len(unique_seeds) * len(seed_pairs) * 2 * len(branch_rows)
+        )
+        advantages[branch_rows] = float(pair_advantage) * float(branch_sign)
+  return weights, advantages
+
+
 def last_seed_transition_masks(
   environment_ids: torch.Tensor,
   *,
@@ -309,6 +358,7 @@ def _parse_args() -> argparse.Namespace:
       "binary-balanced",
       "terminal-progress-standardized",
       "pretrained-critic-gae",
+      "paired-antithetic-progress",
     ),
     default="binary-balanced",
   )
@@ -369,11 +419,16 @@ def _collect_rollout(
   max_residual: float,
   environment_offset: int,
   collect_critic_gae: bool = False,
+  exploration_sign: float = 1.0,
 ) -> dict[str, Any]:
+  if exploration_sign not in (-1.0, 1.0):
+    raise ValueError("v122 exploration sign must be -1 or +1")
   _set_filter_off(action_term, base_env.num_envs, base_env.device)
   _seed_everything(seed)
   base_env.seed(seed)
   observations, _ = runner.env.reset()
+  exploration_generator = torch.Generator(device=base_env.device)
+  exploration_generator.manual_seed(int(seed))
   signature = _initial_state_signature(
     observations,
     base_env,
@@ -412,7 +467,15 @@ def _collect_rollout(
       )
       features = _features_from_observations(actor, observations)
       means = residual(features)
-      sampled = means + float(exploration_std) * torch.randn_like(means)
+      exploration_noise = torch.randn(
+        means.shape,
+        generator=exploration_generator,
+        device=means.device,
+        dtype=means.dtype,
+      )
+      sampled = means + float(exploration_sign) * float(
+        exploration_std
+      ) * exploration_noise
       executed_residual = torch.clamp(
         sampled, -float(max_residual), float(max_residual)
       )
@@ -490,6 +553,7 @@ def _collect_rollout(
     "fall_count": int(fell.sum()),
     "mean_reached_riser": float(reached_risers.float().mean()),
     "active_geometry_transition_count": active_geometry_transition_count,
+    "exploration_sign": exploration_sign,
     "features": torch.cat(feature_chunks),
     "sampled_residuals": torch.cat(sampled_chunks),
     "old_means": torch.cat(mean_chunks),
@@ -812,13 +876,16 @@ def main() -> None:
   args = _parse_args()
   seeds = _parse_seeds(args.training_seeds)
   use_critic_gae = args.episode_credit == "pretrained-critic-gae"
-  if use_critic_gae and not args.validation_last_seed:
-    raise ValueError("v121 critic GAE requires a complete held-out rollout seed")
+  use_antithetic = args.episode_credit == "paired-antithetic-progress"
+  if (use_critic_gae or use_antithetic) and not args.validation_last_seed:
+    raise ValueError("v121/v122 requires a complete held-out rollout seed")
   if args.validation_last_seed:
     if args.optimizer != "sgd" or len(seeds) < 4:
       raise ValueError("v119 held-out validation requires SGD and four seeds")
     if use_critic_gae:
       method_id = CRITIC_GAE_VALIDATED_METHOD_ID
+    elif use_antithetic:
+      method_id = ANTITHETIC_VALIDATED_METHOD_ID
     elif args.episode_credit == "terminal-progress-standardized":
       method_id = PROGRESS_VALIDATED_METHOD_ID
     else:
@@ -879,6 +946,7 @@ def main() -> None:
       "success_bonus": args.success_bonus,
       "gamma": args.gamma,
       "gae_lambda": args.gae_lambda,
+      "paired_antithetic": use_antithetic,
     },
   )
 
@@ -970,6 +1038,9 @@ def main() -> None:
     }
     if use_critic_gae:
       dataset_chunks["full_transition_indices"] = []
+    if use_antithetic:
+      dataset_chunks["pair_ids"] = []
+      dataset_chunks["branch_signs"] = []
     critic_dataset_chunks: dict[str, list[torch.Tensor]] = {
       "values": [],
       "rewards": [],
@@ -980,20 +1051,18 @@ def main() -> None:
     all_success: list[torch.Tensor] = []
     all_reached_risers: list[torch.Tensor] = []
     rollout_summaries: list[dict[str, Any]] = []
-    environment_offset = 0
     critic_transition_offset = 0
-    for seed in seeds:
-      rollout = _collect_rollout(
-        runner,
-        base_env,
-        action_term,
-        residual,
-        seed=seed,
-        exploration_std=args.exploration_std,
-        max_residual=args.max_residual,
-        environment_offset=environment_offset,
-        collect_critic_gae=use_critic_gae,
-      )
+    paired_score_branches = torch.zeros(
+      (len(seeds) * args.num_envs, 2), dtype=torch.float32
+    )
+    paired_success_branches = torch.zeros(
+      (len(seeds) * args.num_envs, 2), dtype=torch.bool
+    )
+
+    def record_rollout(
+      rollout: dict[str, Any],
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+      nonlocal critic_transition_offset
       if use_critic_gae:
         local_critic_dataset = rollout.pop("critic_dataset")
         rollout["full_transition_indices"] += critic_transition_offset
@@ -1010,7 +1079,60 @@ def main() -> None:
       all_reached_risers.append(reached_risers)
       rollout_summaries.append(rollout)
       print(json.dumps({"outcome_rollout_completed": rollout}), flush=True)
-      environment_offset += args.num_envs
+      return success, reached_risers
+
+    if use_antithetic:
+      for seed_index, seed in enumerate(seeds):
+        signatures: list[str] = []
+        pair_offset = seed_index * args.num_envs
+        for branch_index, exploration_sign in enumerate((1.0, -1.0)):
+          environment_offset = (
+            seed_index * 2 + branch_index
+          ) * args.num_envs
+          rollout = _collect_rollout(
+            runner,
+            base_env,
+            action_term,
+            residual,
+            seed=seed,
+            exploration_std=args.exploration_std,
+            max_residual=args.max_residual,
+            environment_offset=environment_offset,
+            exploration_sign=exploration_sign,
+          )
+          signatures.append(str(rollout["initial_state_signature"]))
+          rollout["pair_ids"] = (
+            rollout["environment_ids"] - environment_offset + pair_offset
+          )
+          rollout["branch_signs"] = torch.full(
+            (len(rollout["environment_ids"]),),
+            int(exploration_sign),
+            dtype=torch.int8,
+          )
+          success, reached_risers = record_rollout(rollout)
+          pair_rows = slice(pair_offset, pair_offset + args.num_envs)
+          paired_success_branches[pair_rows, branch_index] = success
+          paired_score_branches[pair_rows, branch_index] = (
+            reached_risers.float() + float(args.success_bonus) * success.float()
+          )
+        if signatures[0] != signatures[1]:
+          raise RuntimeError("v122 mirrored initial-state signatures differ")
+    else:
+      environment_offset = 0
+      for seed in seeds:
+        rollout = _collect_rollout(
+          runner,
+          base_env,
+          action_term,
+          residual,
+          seed=seed,
+          exploration_std=args.exploration_std,
+          max_residual=args.max_residual,
+          environment_offset=environment_offset,
+          collect_critic_gae=use_critic_gae,
+        )
+        record_rollout(rollout)
+        environment_offset += args.num_envs
 
     dataset = {key: torch.cat(chunks) for key, chunks in dataset_chunks.items()}
     critic_dataset = (
@@ -1045,6 +1167,28 @@ def main() -> None:
       if full_advantages is not None
       else None
     )
+    pair_score_differences = (
+      paired_score_branches[:, 0] - paired_score_branches[:, 1]
+      if use_antithetic
+      else None
+    )
+    antithetic_summary = (
+      {
+        "pair_count": len(pair_score_differences),
+        "plus_success_count": int(paired_success_branches[:, 0].sum()),
+        "minus_success_count": int(paired_success_branches[:, 1].sum()),
+        "positive_difference_count": int((pair_score_differences > 0).sum()),
+        "negative_difference_count": int((pair_score_differences < 0).sum()),
+        "zero_difference_count": int((pair_score_differences == 0).sum()),
+        "score_difference_mean": float(pair_score_differences.mean()),
+        "score_difference_std": float(
+          pair_score_differences.std(unbiased=False)
+        ),
+        "matched_initial_state_signatures": True,
+      }
+      if pair_score_differences is not None
+      else None
+    )
     episode_success = torch.cat(all_success)
     episode_reached_risers = torch.cat(all_reached_risers)
     validation_dataset = None
@@ -1052,12 +1196,28 @@ def main() -> None:
     if args.validation_last_seed:
       train_mask, validation_mask = last_seed_transition_masks(
         dataset["environment_ids"],
-        num_envs=args.num_envs,
+        num_envs=args.num_envs * (2 if use_antithetic else 1),
         num_seeds=len(seeds),
       )
       training_dataset = _subset_dataset(dataset, train_mask)
       validation_dataset = _subset_dataset(dataset, validation_mask)
-      if use_critic_gae:
+      if use_antithetic:
+        assert pair_score_differences is not None
+        weights, advantages = standardized_antithetic_weights(
+          training_dataset["pair_ids"],
+          training_dataset["branch_signs"],
+          pair_score_differences,
+          num_pairs_per_seed=args.num_envs,
+        )
+        validation_weights, validation_advantages = (
+          standardized_antithetic_weights(
+            validation_dataset["pair_ids"],
+            validation_dataset["branch_signs"],
+            pair_score_differences,
+            num_pairs_per_seed=args.num_envs,
+          )
+        )
+      elif use_critic_gae:
         assert full_advantages is not None
         weights, advantages = standardized_gae_weights(
           training_dataset["environment_ids"],
@@ -1095,7 +1255,15 @@ def main() -> None:
         )
     else:
       training_dataset = dataset
-      if use_critic_gae:
+      if use_antithetic:
+        assert pair_score_differences is not None
+        weights, advantages = standardized_antithetic_weights(
+          training_dataset["pair_ids"],
+          training_dataset["branch_signs"],
+          pair_score_differences,
+          num_pairs_per_seed=args.num_envs,
+        )
+      elif use_critic_gae:
         assert full_advantages is not None
         weights, advantages = standardized_gae_weights(
           training_dataset["environment_ids"],
@@ -1218,6 +1386,7 @@ def main() -> None:
         "gamma": args.gamma,
         "gae_lambda": args.gae_lambda,
         "gae_summary": gae_summary,
+        "antithetic_summary": antithetic_summary,
         "heldout_validation": {
           "seed": seeds[-1],
           "before": validation_before,
@@ -1271,6 +1440,7 @@ def main() -> None:
       "gamma": args.gamma,
       "gae_lambda": args.gae_lambda,
       "gae_summary": gae_summary,
+      "antithetic_summary": antithetic_summary,
       "training_advantage_mean": float(advantages.mean()),
       "training_advantage_std": float(advantages.std(unbiased=False)),
       "validation_advantage_mean": (
