@@ -113,6 +113,9 @@ class StairCbfJointPositionAction(JointPositionAction):
     self.psi_nominal = torch.zeros(shape, device=self.device)
     self.psi_filtered = torch.zeros(shape, device=self.device)
     self.filter_active = torch.zeros(shape, dtype=torch.bool, device=self.device)
+    self.runtime_filter_mask = torch.full(
+      shape, bool(cfg.enabled), dtype=torch.bool, device=self.device
+    )
     self.geometric_active = torch.zeros(shape, dtype=torch.bool, device=self.device)
     self.intervened = torch.zeros(shape, dtype=torch.bool, device=self.device)
     self.would_intervene = torch.zeros(shape, dtype=torch.bool, device=self.device)
@@ -223,6 +226,14 @@ class StairCbfJointPositionAction(JointPositionAction):
       self.num_envs, cfg.safety_history_length, device=self.device
     )
     self.correction_history = torch.zeros_like(self.h_history)
+
+  def set_runtime_filter_mask(self, enabled: torch.Tensor) -> None:
+    """Select which vector environments execute the projected action."""
+    if enabled.shape != self.runtime_filter_mask.shape or enabled.dtype != torch.bool:
+      raise ValueError("runtime filter mask must be boolean with shape [num_envs]")
+    if bool(enabled.any()) and not self.cfg.enabled:
+      raise ValueError("cannot enable a per-environment filter in an off config")
+    self.runtime_filter_mask.copy_(enabled)
 
   def stage_counterfactual_policy_action(self, actions: torch.Tensor) -> None:
     """Stage a shadow actor action for projection during the next env step."""
@@ -428,8 +439,11 @@ class StairCbfJointPositionAction(JointPositionAction):
       self.counterfactual_policy_intervened.zero_()
       self.counterfactual_policy_correction_norm.zero_()
       self.counterfactual_policy_nominal_margin.zero_()
-    executed_qdot = projected_qdot if self.cfg.enabled else qdot_nominal
-    psi_executed = psi_projected if self.cfg.enabled else psi_nominal
+    filter_enabled = self.runtime_filter_mask & bool(self.cfg.enabled)
+    executed_qdot = torch.where(
+      filter_enabled.unsqueeze(-1), projected_qdot, qdot_nominal
+    )
+    psi_executed = torch.where(filter_enabled, psi_projected, psi_nominal)
 
     # Match the upstream JointPositionAction behavior: do not add an extra
     # target clamp here. Clipping after projection could invalidate the CBF
@@ -441,8 +455,8 @@ class StairCbfJointPositionAction(JointPositionAction):
     # without claiming that the action was actually changed.
     self.safe_target[:] = projected_target
     self.safe_raw_action[:] = projected_raw_action
-    self.executed_raw_action[:] = (
-      projected_raw_action if self.cfg.enabled else deployment_actions
+    self.executed_raw_action[:] = torch.where(
+      filter_enabled.unsqueeze(-1), projected_raw_action, deployment_actions
     )
     self.h[:] = torch.where(active, h, torch.full_like(h, torch.inf))
     self.selected_edge_top_z[:] = selected_top_z
@@ -451,7 +465,7 @@ class StairCbfJointPositionAction(JointPositionAction):
       active, psi_executed, torch.zeros_like(psi_executed)
     )
     self.geometric_active[:] = active
-    self.filter_active[:] = active & self.cfg.enabled
+    self.filter_active[:] = active & filter_enabled
     self.intervention_norm[:] = torch.linalg.vector_norm(
       executed_qdot - qdot_nominal, dim=1
     )
@@ -461,7 +475,7 @@ class StairCbfJointPositionAction(JointPositionAction):
     self.counterfactual_intervention_norm[:] = counterfactual_qdot_norm
     self.counterfactual_target_intervention_norm[:] = counterfactual_target_norm
     self.would_intervene[:] = would_intervene
-    self.intervened[:] = self.cfg.enabled & would_intervene
+    self.intervened[:] = filter_enabled & would_intervene
     self.intervention_count += self.intervened.float()
     current_h = torch.where(active, h, torch.ones_like(h)).clamp(-1.0, 1.0)
     derivative_valid = active & torch.isfinite(previous_h)

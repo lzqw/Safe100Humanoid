@@ -172,10 +172,6 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
       )
     if self.v35_failure_only_mean_teacher and self.v35_success_only_mean_teacher:
       raise ValueError("v35 mean teacher outcome gates are mutually exclusive")
-    if self.v35_distill_only_actor and not self.v35_success_only_mean_teacher:
-      raise ValueError(
-        "v35 distillation-only actor requires success-only mean teacher"
-      )
     t = self.storage.num_transitions_per_env
     n = self.storage.num_envs
     action_dim = self.storage.actions.shape[-1]

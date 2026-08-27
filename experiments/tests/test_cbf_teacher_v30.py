@@ -144,6 +144,21 @@ def test_v35_outcome_gate_selects_only_successful_interventions() -> None:
     )
 
 
+def test_v35_filter_dropout_mask_is_balanced_and_rotates() -> None:
+    first = MATH.rotating_environment_filter_mask(
+        4, 0.5, 1, device="cpu"
+    )
+    second = MATH.rotating_environment_filter_mask(
+        4, 0.5, 2, device="cpu"
+    )
+    assert torch.equal(first, torch.tensor((True, True, False, False)))
+    assert torch.equal(second, torch.tensor((False, False, True, True)))
+    assert torch.equal(
+        MATH.rotating_environment_filter_mask(4, 1.0, 2, device="cpu"),
+        torch.ones(4, dtype=torch.bool),
+    )
+
+
 def test_v30_update_has_no_kl_threshold_control_flow() -> None:
     source = (REPO / "src/tasks/stairs_cbf/teacher_v30.py").read_text()
     tree = ast.parse(source)

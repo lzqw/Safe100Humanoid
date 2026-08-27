@@ -152,6 +152,15 @@ def _parse_args() -> argparse.Namespace:
     ),
   )
   parser.add_argument(
+    "--training-filter-fraction",
+    type=float,
+    default=None,
+    help=(
+      "Fraction of vector environments that execute the runtime filter in "
+      "each round; defaults to 1 for on and 0 for off."
+    ),
+  )
+  parser.add_argument(
     "--training-action-std",
     type=float,
     default=0.05,
@@ -305,6 +314,17 @@ def main() -> None:
     raise ValueError("v35 training action std must lie in [0.01, 0.05]")
   if not 1.0e-6 <= args.actor_learning_rate <= 5.0e-6:
     raise ValueError("v35 actor learning rate must lie in [1e-6, 5e-6]")
+  training_runtime_filter = args.training_runtime_filter == "on"
+  training_filter_fraction = (
+    1.0 if training_runtime_filter else 0.0
+  ) if args.training_filter_fraction is None else float(
+    args.training_filter_fraction
+  )
+  if training_runtime_filter:
+    if not 0.0 < training_filter_fraction <= 1.0:
+      raise ValueError("enabled training filter fraction must lie in (0, 1]")
+  elif training_filter_fraction != 0.0:
+    raise ValueError("disabled training filter requires fraction 0")
   teacher_arms = _teacher_arms_by_round(
     rounds=args.rounds,
     teacher_arm=args.teacher_arm,
@@ -321,16 +341,14 @@ def main() -> None:
     raise ValueError("success-only mean teacher requires deterministic mean labels")
   if args.failure_only_mean_teacher and args.success_only_mean_teacher:
     raise ValueError("mean-teacher outcome gates are mutually exclusive")
-  if args.success_only_mean_teacher and args.training_runtime_filter != "on":
-    raise ValueError("success-only mean teacher requires shielded training")
+  if args.success_only_mean_teacher and training_filter_fraction != 1.0:
+    raise ValueError("success-only mean teacher requires fully shielded training")
   if args.failure_focused_actor and not args.failure_only_mean_teacher:
     raise ValueError(
       "failure-focused actor requires the failure-only mean teacher"
     )
-  if args.distill_only_actor and not args.success_only_mean_teacher:
-    raise ValueError(
-      "distillation-only actor requires the success-only mean teacher"
-    )
+  if args.distill_only_actor and not args.deterministic_mean_teacher:
+    raise ValueError("distillation-only actor requires deterministic mean labels")
   if not 0.0 <= args.success_local_kl_beta <= 4.0:
     raise ValueError("success-local KL beta must lie in [0, 4]")
   if args.success_local_kl_beta > 0.0 and (
@@ -390,9 +408,11 @@ def main() -> None:
   from src.tasks.stairs_cbf.environment_v31 import configure_v31_context
   from src.tasks.stairs_cbf.paper_dual_v35 import configure_paper_dual_reward
   from src.tasks.stairs_cbf.teacher_v30 import CbfTeacherV30Runner
+  from src.tasks.stairs_cbf.teacher_v30_math import (
+    rotating_environment_filter_mask,
+  )
 
   env_cfg = load_env_cfg(TASK_ID, play=True)
-  training_runtime_filter = args.training_runtime_filter == "on"
   shift = configure_v31_context(
     env_cfg,
     context=args.context,
@@ -407,6 +427,8 @@ def main() -> None:
     args.candidate,
     runtime_filter_during_training=training_runtime_filter,
   )
+  shift["runtime_filter_fraction"] = training_filter_fraction
+  reward["runtime_filter_fraction"] = training_filter_fraction
   deterministic_mean_teacher = None
   if args.deterministic_mean_teacher:
     from src.tasks.stairs_cbf.paper_teacher_v35 import (
@@ -421,6 +443,9 @@ def main() -> None:
       failure_focused_actor=args.failure_focused_actor,
       distill_only_actor=args.distill_only_actor,
       success_local_kl_beta=args.success_local_kl_beta,
+    )
+    deterministic_mean_teacher["runtime_filter_fraction"] = (
+      training_filter_fraction
     )
   height_curriculum = None
   if args.height_curriculum:
@@ -527,6 +552,7 @@ def main() -> None:
         "distill_only_actor": args.distill_only_actor,
         "success_local_kl_beta": args.success_local_kl_beta,
         "training_runtime_filter": training_runtime_filter,
+        "training_filter_fraction": training_filter_fraction,
         "training_action_std": args.training_action_std,
         "actor_learning_rate": args.actor_learning_rate,
       },
@@ -541,6 +567,13 @@ def main() -> None:
       )
       runner.alg.freeze_round_reference()
       start_hash = actor_state_sha256(actor_state(runner.alg.actor))
+      round_filter_mask = rotating_environment_filter_mask(
+        args.num_envs,
+        training_filter_fraction,
+        round_index,
+        device=base_env.device,
+      )
+      action_term.set_runtime_filter_mask(round_filter_mask)
       round_started = time.monotonic()
       metrics = _collect_round(
         runner,
@@ -551,6 +584,19 @@ def main() -> None:
         metrics.update(
           _terrain_level_metrics(base_env, num_rows=args.curriculum_rows)
         )
+      observed_filter_fraction = float(
+        metrics["runtime_filter_enabled_fraction"]
+      )
+      expected_filter_fraction = float(round_filter_mask.float().mean())
+      if not math.isclose(
+        observed_filter_fraction,
+        expected_filter_fraction,
+        rel_tol=0.0,
+        abs_tol=1.0e-8,
+      ):
+        raise RuntimeError("v35 runtime filter mask was not executed exactly")
+      metrics["configured_runtime_filter_fraction"] = expected_filter_fraction
+      metrics["configured_runtime_filter_count"] = int(round_filter_mask.sum())
       end_hash = actor_state_sha256(actor_state(runner.alg.actor))
       record = {
         "round": round_index,
@@ -562,6 +608,7 @@ def main() -> None:
         "rollout_actor_sha256": start_hash,
         "rollout_checkpoint_round": round_index - 1,
         "rollout_precedes_update": True,
+        "runtime_filter_mask_rotation_round": round_index,
         "teacher_arm": round_teacher_arm,
         "teacher_parameters": round_teacher_parameters,
         "metrics": metrics,
@@ -585,6 +632,7 @@ def main() -> None:
           "distill_only_actor": args.distill_only_actor,
           "success_local_kl_beta": args.success_local_kl_beta,
           "training_runtime_filter": training_runtime_filter,
+          "training_filter_fraction": training_filter_fraction,
           "training_action_std": args.training_action_std,
           "actor_learning_rate": args.actor_learning_rate,
         },
@@ -619,6 +667,7 @@ def main() -> None:
         "round_N_rollout_uses_round_N_minus_1_checkpoint"
       ),
       "training_runtime_filter": training_runtime_filter,
+      "training_filter_fraction": training_filter_fraction,
       "training_action_std": args.training_action_std,
       "actor_learning_rate": args.actor_learning_rate,
       "seed": args.seed,

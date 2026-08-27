@@ -68,6 +68,29 @@ def outcome_gated_interventions(
     raise ValueError(f"unknown v35 outcome gate {gate!r}")
 
 
+def rotating_environment_filter_mask(
+    num_envs: int,
+    fraction: float,
+    round_index: int,
+    *,
+    device: torch.device | str,
+) -> torch.Tensor:
+    """Build a deterministic balanced per-round filter-execution mask."""
+    if num_envs < 1 or round_index < 1:
+        raise ValueError("v35 filter mask requires positive env and round counts")
+    if not 0.0 <= float(fraction) <= 1.0:
+        raise ValueError("v35 runtime filter fraction must lie in [0, 1]")
+    enabled_count = int(round(float(fraction) * num_envs))
+    if fraction > 0.0:
+        enabled_count = max(1, enabled_count)
+    enabled_count = min(num_envs, enabled_count)
+    if enabled_count == 0:
+        return torch.zeros(num_envs, dtype=torch.bool, device=device)
+    offset = ((round_index - 1) * enabled_count) % num_envs
+    environment_ids = torch.arange(num_envs, device=device)
+    return ((environment_ids - offset) % num_envs) < enabled_count
+
+
 def residual_teacher_target(
     reference_mean: torch.Tensor,
     safe_actor_action: torch.Tensor,

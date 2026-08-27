@@ -156,9 +156,7 @@ def _record_online_cbf_telemetry(
   env.extras["cbf_executed_raw_action"] = (
     term.executed_raw_action.detach().clone()
   )
-  env.extras["cbf_filter_enabled"] = torch.full(
-    (env.num_envs,), term.cfg.enabled, dtype=torch.bool, device=env.device
-  )
+  env.extras["cbf_filter_enabled"] = term.runtime_filter_mask.detach().clone()
   env.extras["online_stair_index"] = stair_index(env).detach().clone()
 
 
