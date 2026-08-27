@@ -23,6 +23,9 @@
 | v94 | 10-D persistent 双脚 next-riser 几何使 paired filter-on 达 191/256，但单步 imitation 的 untouched off 仍为 45/64=70.31% | [`persistent_geometry_sgd_v94/`](persistent_geometry_sgd_v94/) |
 | v95 | persistent geometry paired PPO 的 6/6 surrogate 改善，但跨 seed gradient cosine 仅 0.020；untouched off 44/64=68.75% | [`persistent_geometry_ppo_v95/`](persistent_geometry_ppo_v95/) |
 | v96 | persistent geometry + filter-free 成功轨迹自模仿离线方向为正，但 cosine 仅 0.005；唯一 untouched off 35/64=54.69%，拒绝 | [`persistent_geometry_elite_v96/`](persistent_geometry_elite_v96/) |
+| v97 | learned residual head 能拟合 CBF correction，但 filter-on 随拟合增强从 95/128 降至 78/128；off gate 45/64=70.31% | [`learned_residual_v97_v99/`](learned_residual_v97_v99/) |
+| v98 | 同屏幅度校准选择 0.05x；screen 47/64，唯一 unseen off gate 46/64=71.88%，拒绝 | [`learned_residual_v97_v99/`](learned_residual_v97_v99/) |
+| v99 | 只学习成功 filtered episode 后，幅度 screen 最终选择 0x；learned direction 完全拒绝 | [`learned_residual_v97_v99/`](learned_residual_v97_v99/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -85,3 +88,13 @@ v96 进一步把 v42 曾短暂达到 75% 的 filter-free 成功轨迹自模仿�
 为 4.9991e-5，但探索方向 cosine 仅 0.0050；唯一 untouched deterministic filter-off gate
 显著降至 35/64=54.69%。这表明把成功条件下的随机动作残差绑定到楼梯几何仍在拟合
 seed-specific exploration noise，不能作为下一轮的可靠训练信号。当前仍选 v79。
+
+v97–v99 改用独立的 28,364 参数 residual policy head，冻结 v79，并直接学习论文
+Eq. (23) 的 deterministic `safe - nominal` 方向。v97 对全部 intervention 的 teacher
+distance 从 0.317 降到 0.128，但 filter-on 成功率随 residual 增强由 95/128 持续降到
+78/128，唯一 off gate 为 45/64。v98 将同一个方向缩放后，0.05x 在 screen 得到
+47/64，但 unseen gate 仅 46/64。v99 再把 teacher 严格限制为最终成功的 filtered
+episode，离线 distance 降到 0.108；然而 scale screen 中最优反而是 0x，即不使用
+learned residual。由此可排除“网络容量不足”与“失败轨迹污染”两种解释：当前
+instantaneous CBF correction 本身不是稳定的 task-success direction。下一步需要先提高
+CBF filter-on ceiling 和 task compatibility，再继续论文式 filter internalization。

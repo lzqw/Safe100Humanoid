@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "experiment_family": "learned_cbf_residual_v97_v99",
+  "hardware": "NVIDIA GeForce RTX 4080 SUPER",
+  "targeted_tests_passed": 2,
+  "input_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "v97": {
+    "source_commit": "3631e4edc5d8823d706c84ea480bba1410d56848",
+    "method_id": "learned-cbf-residual-policy-dagger-v97",
+    "training_seeds": [201353000, 201353010, 201353020, 201353030],
+    "num_envs": 128,
+    "trainable_parameter_count": 28364,
+    "round_filter_on_success_counts": [95, 89, 85, 78],
+    "round_intervention_counts": [5115, 2926, 3061, 3177],
+    "final_teacher_distance": 0.12763730520727554,
+    "elapsed_seconds": 84.37986738199834,
+    "untouched_filter_off_gate": {
+      "seed": 201353050,
+      "success_count": 45,
+      "episode_count": 64,
+      "success_rate": 0.703125
+    },
+    "decision": "reject"
+  },
+  "v98": {
+    "source_commit": "ec51df1b7629a53a01c1c1e604d5b264b30c1572",
+    "method_id": "heldout-group-scaled-learned-cbf-residual-v98",
+    "screen_seed": 201353060,
+    "screen_episode_count_per_scale": 64,
+    "screen": [
+      {"scale": 0.0, "success_count": 43, "success_rate": 0.671875},
+      {"scale": 0.05, "success_count": 47, "success_rate": 0.734375},
+      {"scale": 0.1, "success_count": 43, "success_rate": 0.671875},
+      {"scale": 0.2, "success_count": 46, "success_rate": 0.71875}
+    ],
+    "selected_scale": 0.05,
+    "elapsed_seconds": 38.95599020796362,
+    "untouched_filter_off_gate": {
+      "seed": 201353080,
+      "success_count": 46,
+      "episode_count": 64,
+      "success_rate": 0.71875
+    },
+    "decision": "reject"
+  },
+  "v99": {
+    "source_commit": "e71728f2ec397e9cb7d834f7e0c9ff63fc8cb2f1",
+    "method_id": "successful-filtered-episode-learned-cbf-residual-dagger-v99",
+    "training_seeds": [201353100, 201353110, 201353120, 201353130],
+    "num_envs": 128,
+    "successful_teacher_transition_count": 9270,
+    "round_filter_on_success_counts": [96, 88, 82, 80],
+    "final_teacher_distance": 0.10784959597623593,
+    "training_elapsed_seconds": 69.79423984198365,
+    "screen_seed": 201353160,
+    "screen_episode_count_per_scale": 64,
+    "screen": [
+      {"scale": 0.0, "success_count": 47, "success_rate": 0.734375},
+      {"scale": 0.025, "success_count": 46, "success_rate": 0.71875},
+      {"scale": 0.05, "success_count": 39, "success_rate": 0.609375},
+      {"scale": 0.1, "success_count": 43, "success_rate": 0.671875}
+    ],
+    "selected_scale": 0.0,
+    "calibration_elapsed_seconds": 54.03032836201601,
+    "untouched_filter_off_gate": {
+      "seed": 201353180,
+      "success_count": 43,
+      "episode_count": 64,
+      "success_rate": 0.671875
+    },
+    "decision": "reject_learned_direction_select_zero_scale"
+  },
+  "global_best_changed": false,
+  "global_selected_version": "v79",
+  "formal_256_episode_gate_run": false
+}
