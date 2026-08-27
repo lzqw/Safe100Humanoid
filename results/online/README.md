@@ -2,12 +2,13 @@
 
 ## Latest paper-aligned dual-reward pilot (v35)
 
-The compact F1 pilot package is in
-[`paper_dual_v35/`](paper_dual_v35/README.md). It publishes three paired
-64-episode filter-on/off evaluations, all 24 training-round diagnostics,
-runtime, seeds, and checkpoint hashes. The best filter-off result is 76.56%
-with the A1 corrective teacher, but its filter-on success is only 67.19%; v35
-therefore records no winner yet and does not claim paper-level reproduction.
+The compact pilot package is in
+[`paper_dual_v35/`](paper_dual_v35/README.md). After the initial F1 ablation,
+the frozen A2×4→A1×4 staged method reached 78.12%/76.56% filter-on/off in F1.
+Across F1/F2/F3 its single-pilot mean is 71.35% on and 68.23% off, a 3.12 pp
+gap. This is the current best internalization result, but F2/F3 remain below
+the 75% task-success gate and the package does not claim paper-level
+reproduction.
 
 ## Latest outcome-optimized velocity-CBF study (v34)
 
