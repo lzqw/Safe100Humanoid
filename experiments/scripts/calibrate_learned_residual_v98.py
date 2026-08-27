@@ -30,6 +30,7 @@ from refine_rescue_distill_v36 import (
 )
 from train_learned_residual_v97 import (
   METHOD_ID as SOURCE_METHOD_ID,
+  SUCCESSFUL_EPISODE_METHOD_ID,
   LearnedCbfResidual,
   _evaluate_filter_off,
   _policy_step,
@@ -210,8 +211,11 @@ def main() -> None:
   if source_sha != expected:
     raise RuntimeError("v98 source checkpoint SHA-256 differs")
   source = torch.load(source_checkpoint, map_location="cpu", weights_only=False)
-  if source.get("method_id") != SOURCE_METHOD_ID:
-    raise RuntimeError("v98 source method is not v97")
+  if source.get("method_id") not in {
+    SOURCE_METHOD_ID,
+    SUCCESSFUL_EPISODE_METHOD_ID,
+  }:
+    raise RuntimeError("v98 source method is not a supported learned residual")
   output.mkdir(parents=True)
   started = time.monotonic()
   source_commit = _git(repo, "rev-parse", "HEAD")

@@ -43,6 +43,9 @@ from velocity_cbf_v34_protocol import CURRENT_CBF_MODE, PROTOCOL_ID
 
 
 METHOD_ID = "learned-cbf-residual-policy-dagger-v97"
+SUCCESSFUL_EPISODE_METHOD_ID = (
+  "successful-filtered-episode-learned-cbf-residual-dagger-v99"
+)
 BASE_HIDDEN_DIM = 128
 PERSISTENT_GEOMETRY_DIM = 10
 ACTION_DIM = 12
@@ -107,6 +110,16 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--batch-size", type=int, default=4096)
   parser.add_argument("--trust-weight", type=float, default=0.05)
   parser.add_argument("--max-grad-norm", type=float, default=5.0)
+  parser.add_argument(
+    "--successful-episodes-only",
+    action="store_true",
+    help="Retain CBF teacher transitions only from reached-top episodes.",
+  )
+  parser.add_argument(
+    "--skip-final-gate",
+    action="store_true",
+    help="Save the learned direction for a separate scale-selection protocol.",
+  )
   parser.add_argument("--device", default="cuda:0")
   return parser.parse_args()
 
@@ -170,6 +183,7 @@ def _collect_dagger_round(
   seed: int,
   teacher_eta: float,
   max_residual: float,
+  successful_episodes_only: bool = False,
 ) -> dict[str, Any]:
   _set_filter(action_term, True, base_env.num_envs, base_env.device)
   _seed_everything(seed)
@@ -188,6 +202,7 @@ def _collect_dagger_round(
   teacher_features: list[torch.Tensor] = []
   teacher_targets: list[torch.Tensor] = []
   teacher_corrections: list[torch.Tensor] = []
+  teacher_environment_ids: list[torch.Tensor] = []
   trust_features: list[torch.Tensor] = []
   trust_targets: list[torch.Tensor] = []
   transition_count = intervention_count = 0
@@ -223,6 +238,7 @@ def _collect_dagger_round(
           teacher_features.append(features[selected].cpu())
           teacher_targets.append(target.cpu())
           teacher_corrections.append(correction.cpu())
+          teacher_environment_ids.append(selected.cpu())
           intervention_count += len(selected)
       steps += active.long()
       completed = dones.bool() & active
@@ -240,7 +256,17 @@ def _collect_dagger_round(
     raise RuntimeError("v97 did not finish every DAgger first episode")
   if not teacher_features:
     raise RuntimeError("v97 collected no CBF interventions")
+  combined_teacher_features = torch.cat(teacher_features)
+  combined_teacher_targets = torch.cat(teacher_targets)
   corrections = torch.cat(teacher_corrections)
+  teacher_ids = torch.cat(teacher_environment_ids)
+  if successful_episodes_only:
+    successful_teacher = success.cpu()[teacher_ids]
+    combined_teacher_features = combined_teacher_features[successful_teacher]
+    combined_teacher_targets = combined_teacher_targets[successful_teacher]
+    corrections = corrections[successful_teacher]
+  if not len(combined_teacher_features):
+    raise RuntimeError("v99 collected no successful filtered teacher transitions")
   return {
     "seed": seed,
     "initial_state_signature": signature,
@@ -252,10 +278,12 @@ def _collect_dagger_round(
     "transition_count": transition_count,
     "intervention_count": intervention_count,
     "intervention_fraction": intervention_count / transition_count,
+    "teacher_transition_count": len(combined_teacher_features),
+    "teacher_successful_episodes_only": successful_episodes_only,
     "correction_norm_mean": float(torch.linalg.vector_norm(corrections, dim=-1).mean()),
     "correction_norm_max": float(torch.linalg.vector_norm(corrections, dim=-1).max()),
-    "teacher_features": torch.cat(teacher_features),
-    "teacher_targets": torch.cat(teacher_targets),
+    "teacher_features": combined_teacher_features,
+    "teacher_targets": combined_teacher_targets,
     "trust_features": torch.cat(trust_features),
     "trust_targets": torch.cat(trust_targets),
   }
@@ -470,6 +498,7 @@ def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
 def main() -> None:
   args = _parse_args()
   seeds = _parse_seeds(args.training_seeds)
+  method_id = SUCCESSFUL_EPISODE_METHOD_ID if args.successful_episodes_only else METHOD_ID
   if args.num_envs < 2 or not 1 <= args.gate_envs <= args.num_envs:
     raise ValueError("v97 environment counts are invalid")
   if args.epochs_per_round < 1 or args.batch_size < 1:
@@ -501,7 +530,7 @@ def main() -> None:
   _atomic_json(
     output / "execution_started.json",
     {
-      "method_id": METHOD_ID,
+      "method_id": method_id,
       "git_commit": source_commit,
       "base_checkpoint_sha256": checkpoint_sha,
       "training_seeds": seeds,
@@ -596,6 +625,7 @@ def main() -> None:
         seed=seed,
         teacher_eta=args.teacher_eta,
         max_residual=args.max_residual,
+        successful_episodes_only=args.successful_episodes_only,
       )
       replay_teacher_features.append(rollout.pop("teacher_features"))
       replay_teacher_targets.append(rollout.pop("teacher_targets"))
@@ -642,7 +672,7 @@ def main() -> None:
       candidate_path,
       {
         "schema_version": 1,
-        "method_id": METHOD_ID,
+        "method_id": method_id,
         "git_commit": source_commit,
         "base_checkpoint_sha256": checkpoint_sha,
         "base_actor_state_dict": {
@@ -664,22 +694,24 @@ def main() -> None:
         "round_summaries": round_summaries,
       },
     )
-    gate, gate_rows = _evaluate_filter_off(
-      runner,
-      base_env,
-      action_term,
-      residual,
-      seed=args.gate_seed,
-      gate_envs=args.gate_envs,
-    )
-    gate["candidate_checkpoint_sha256"] = file_sha256(candidate_path)
-    gate["residual_state_sha256"] = final_residual_hash
-    gate["passed_75_percent"] = gate["success_rate"] >= 0.75
-    _atomic_json(output / "untouched_filter_off_gate.json", gate)
-    _write_csv(output / "untouched_filter_off_gate.csv", gate_rows)
+    gate = None
+    if not args.skip_final_gate:
+      gate, gate_rows = _evaluate_filter_off(
+        runner,
+        base_env,
+        action_term,
+        residual,
+        seed=args.gate_seed,
+        gate_envs=args.gate_envs,
+      )
+      gate["candidate_checkpoint_sha256"] = file_sha256(candidate_path)
+      gate["residual_state_sha256"] = final_residual_hash
+      gate["passed_75_percent"] = gate["success_rate"] >= 0.75
+      _atomic_json(output / "untouched_filter_off_gate.json", gate)
+      _write_csv(output / "untouched_filter_off_gate.csv", gate_rows)
     summary = {
       "schema_version": 1,
-      "method_id": METHOD_ID,
+      "method_id": method_id,
       "git_commit": source_commit,
       "context": args.context,
       "base_checkpoint_sha256": checkpoint_sha,
@@ -698,6 +730,8 @@ def main() -> None:
       "epochs_per_round": args.epochs_per_round,
       "batch_size": args.batch_size,
       "trust_weight": args.trust_weight,
+      "successful_episodes_only": args.successful_episodes_only,
+      "final_gate_skipped_for_scale_selection": args.skip_final_gate,
       "shift": shift,
       "cbf": cbf,
       "paper_dual_reward": reward,
@@ -705,7 +739,7 @@ def main() -> None:
       "actor_expansion": expansion,
       "round_summaries": round_summaries,
       "untouched_filter_off_gate": gate,
-      "selected": gate["passed_75_percent"],
+      "selected": False if gate is None else gate["passed_75_percent"],
       "elapsed_seconds": time.monotonic() - started,
     }
     _atomic_json(output / "training_summary.json", summary)
