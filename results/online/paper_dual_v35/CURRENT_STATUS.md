@@ -33,6 +33,7 @@
 | v104 | 415-D persistent geometry 接入完整 PPO；8 轮最佳 off 132/200=66.00%，新增几何列几乎未被利用，拒绝 | [`persistent_paper_dual_v104/`](persistent_paper_dual_v104/) |
 | v105 | 自适应放大 geometry 梯度到 legacy block 的 1:1；最佳 off 138/194=71.13%，仍低于 v79 与 gate | [`persistent_geometry_balanced_v105/`](persistent_geometry_balanced_v105/) |
 | v106 | episode outcome credit 与 GAE 联合训练；本轮峰值 off 68/95=71.58%，提高 2.19 pp 但仍低于 v79 与 gate | [`outcome_geometry_v106/`](outcome_geometry_v106/) |
+| v107 | outcome 权重减半并逐 proposal 事务回滚；4/4 proposal 回落，最终完整恢复输入 actor | [`outcome_transactional_v107/`](outcome_transactional_v107/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -153,3 +154,12 @@ v106 实现上述 episode-level 对齐：每个 filter group 内让成功与失�
 但该峰值仍比 v79 低 0.44 pp，随后又回落到 64.71%，故未运行独立 gate、没有替换
 v79。固定权重 episode credit 的方向有用但累积不稳定；下一步需要保守的 outcome
 weight/acceptance control，而不是继续用相同权重延长训练。
+
+v107 将 outcome 权重从 1.0 减到 0.5，并从 v106 最佳 415-D checkpoint 精确继续；
+每个 proposal 都在下一轮 filter-off rollout 中评估，回落时原子恢复完整训练状态。
+四个 proposal 分别为 69.63%、57.71%、65.31%、61.93%，全部被 rollback；LR 从
+`5e-5` 逐步缩到 `6.12e-6` 后仍没有改善。相同保留 actor 的四次重测范围却达到
+62.00%–72.92%，pool 为 534/782=68.29%。因此 v106 的单轮峰值不是可稳定累积的
+outcome-gradient 证据，且问题不能再归因于权重或步长过大。下一步去掉直接 episode
+credit，回到论文原生 GAE + CBF dual reward，并降低近收敛 policy 的 rollout std，
+减少训练与 deterministic filter-off deployment 之间的探索噪声差异。

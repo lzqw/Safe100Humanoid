@@ -1,0 +1,44 @@
+{
+  "schema_version": "paper_dual_v35.v107.decision.v1",
+  "candidate": "conservative-transactional-outcome-geometry-v107",
+  "context": "F2_18.4cm",
+  "deployment_filter": "off",
+  "gate_threshold": 0.75,
+  "training_transition_count": 1048576,
+  "elapsed_seconds": 208.75841885793488,
+  "input_anchor": {
+    "version": "v106",
+    "checkpoint_round": 3,
+    "actor_sha256": "9053bbf42079f397a83d73c6d6a9f5b508021ebcf74f4f441ce5b964939ff935"
+  },
+  "transactional_result": {
+    "proposal_count": 4,
+    "accepted_proposal_count": 0,
+    "rollback_count": 4,
+    "proposal_filter_off_success_rates": [
+      0.6963350785340315,
+      0.5771144278606966,
+      0.6530612244897959,
+      0.6192893401015228
+    ],
+    "best_proposal_success_count": 133,
+    "best_proposal_episode_count": 191,
+    "best_proposal_success_rate": 0.6963350785340315
+  },
+  "retained_anchor_evidence": {
+    "success_count": 534,
+    "episode_count": 782,
+    "pooled_success_rate": 0.6828644501278772,
+    "single_rollout_rate_min": 0.62,
+    "single_rollout_rate_max": 0.7291666666666666,
+    "actor_sha256": "9053bbf42079f397a83d73c6d6a9f5b508021ebcf74f4f441ce5b964939ff935"
+  },
+  "outcome_advantage_weight": 0.5,
+  "mean_outcome_labeled_transition_fraction": 0.8130340576171875,
+  "mean_base_gae_credit_cosine": 0.25395359192043543,
+  "training_threshold_passed": false,
+  "independent_gate_run": false,
+  "accepted": false,
+  "global_selection": "v79",
+  "reason": "All four lower-weight outcome proposals regressed and were rolled back; the 72.92% maximum was only a retry of the unchanged input actor and remained below the 75% gate."
+}
