@@ -32,6 +32,7 @@ from refine_rescue_distill_v36 import (
 )
 
 METHOD_ID = "paired-multi-rollout-cbf-dual-gae-consensus-v46"
+HIERARCHICAL_METHOD_ID = "hierarchical-paired-cbf-dual-gae-consensus-v47"
 
 
 def _parse_args() -> argparse.Namespace:
@@ -49,6 +50,11 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--moving-kl-beta", type=float, default=0.5)
   parser.add_argument("--max-reference-kl", type=float, default=2.5e-5)
   parser.add_argument("--clip-ratio", type=float, default=0.2)
+  parser.add_argument(
+    "--gradient-aggregation",
+    choices=("coordinate-trimmed", "paired-mean-coordinate-median"),
+    default="coordinate-trimmed",
+  )
   parser.add_argument("--max-grad-norm", type=float, default=10.0)
   parser.add_argument("--device", default="cuda:0")
   return parser.parse_args()
@@ -282,6 +288,7 @@ def _robust_ppo_step(
   moving_kl_beta: float,
   max_reference_kl: float,
   clip_ratio: float,
+  gradient_aggregation: str,
   max_grad_norm: float,
   device: str,
 ) -> tuple[dict[str, Any], torch.optim.Optimizer]:
@@ -342,11 +349,55 @@ def _robust_ppo_step(
   off_diagonal = cosines[
     ~torch.eye(len(batches), dtype=torch.bool, device=cosines.device)
   ]
-  for parameter_index, parameter in enumerate(parameters):
-    stacked = torch.stack(
-      [gradients[parameter_index] for gradients in gradients_by_batch]
+  paired_gradient_sets: list[tuple[torch.Tensor, ...]] = []
+  paired_gradient_labels: list[int] = []
+  for seed in sorted({int(label["seed"]) for label in labels}):
+    indices = [
+      index for index, label in enumerate(labels) if int(label["seed"]) == seed
+    ]
+    conditions = {bool(labels[index]["runtime_filter"]) for index in indices}
+    if len(indices) != 2 or conditions != {False, True}:
+      raise RuntimeError("v47 requires exactly one paired on/off batch per seed")
+    paired_gradient_sets.append(
+      tuple(
+        0.5
+        * (
+          gradients_by_batch[indices[0]][parameter_index]
+          + gradients_by_batch[indices[1]][parameter_index]
+        )
+        for parameter_index in range(len(parameters))
+      )
     )
-    parameter.grad = stacked.sort(dim=0).values[1:-1].mean(dim=0)
+    paired_gradient_labels.append(seed)
+  paired_flattened = torch.stack(
+    [
+      torch.cat([value.flatten() for value in gradients])
+      for gradients in paired_gradient_sets
+    ]
+  )
+  paired_norms = torch.linalg.vector_norm(paired_flattened, dim=1)
+  paired_normalized = paired_flattened / paired_norms.clamp_min(1.0e-12).unsqueeze(1)
+  paired_seed_cosines = paired_normalized @ paired_normalized.T
+  paired_seed_off_diagonal = paired_seed_cosines[
+    ~torch.eye(
+      len(paired_gradient_sets),
+      dtype=torch.bool,
+      device=paired_seed_cosines.device,
+    )
+  ]
+  for parameter_index, parameter in enumerate(parameters):
+    if gradient_aggregation == "paired-mean-coordinate-median":
+      stacked = torch.stack(
+        [gradients[parameter_index] for gradients in paired_gradient_sets]
+      )
+      parameter.grad = stacked.median(dim=0).values
+    elif gradient_aggregation == "coordinate-trimmed":
+      stacked = torch.stack(
+        [gradients[parameter_index] for gradients in gradients_by_batch]
+      )
+      parameter.grad = stacked.sort(dim=0).values[1:-1].mean(dim=0)
+    else:
+      raise ValueError(f"unknown v46 gradient aggregation {gradient_aggregation!r}")
   aggregate_gradient_norm = torch.nn.utils.clip_grad_norm_(
     parameters, max_grad_norm
   )
@@ -418,7 +469,7 @@ def _robust_ppo_step(
     ),
     "optimizer": "sgd",
     "optimizer_updates": 1,
-    "gradient_aggregation": "coordinate-trimmed-mean",
+    "gradient_aggregation": gradient_aggregation,
     "per_batch_policy_loss_before": policy_losses,
     "per_batch_gradient_norm": norms.tolist(),
     "pairwise_gradient_cosine_min": float(off_diagonal.min()),
@@ -426,6 +477,10 @@ def _robust_ppo_step(
     "paired_filter_on_off_gradient_cosines": paired_cosines,
     "paired_filter_on_off_gradient_cosine_mean": sum(paired_cosines)
     / len(paired_cosines),
+    "paired_seed_gradient_labels": paired_gradient_labels,
+    "paired_seed_gradient_norm": paired_norms.tolist(),
+    "paired_seed_gradient_cosine_min": float(paired_seed_off_diagonal.min()),
+    "paired_seed_gradient_cosine_mean": float(paired_seed_off_diagonal.mean()),
     "aggregate_gradient_norm_pre_clip": float(aggregate_gradient_norm),
     "before": before,
     "unprojected_after": unprojected,
@@ -465,17 +520,23 @@ def main() -> None:
     raise RuntimeError("v46 base checkpoint SHA-256 differs")
   if output.exists():
     raise FileExistsError(output)
+  method_id = (
+    HIERARCHICAL_METHOD_ID
+    if args.gradient_aggregation == "paired-mean-coordinate-median"
+    else METHOD_ID
+  )
   output.mkdir(parents=True)
   started = time.monotonic()
   _atomic_json(
     output / "execution_started.json",
     {
-      "method_id": METHOD_ID,
+      "method_id": method_id,
       "git_commit": _git(repo, "rev-parse", "HEAD"),
       "base_checkpoint_sha256": checkpoint_sha,
       "training_seeds": training_seeds,
       "rollout_conditions": ["filter_on", "filter_off"],
       "optimization_seed": args.optimization_seed,
+      "gradient_aggregation": args.gradient_aggregation,
     },
   )
 
@@ -553,6 +614,7 @@ def main() -> None:
       moving_kl_beta=args.moving_kl_beta,
       max_reference_kl=args.max_reference_kl,
       clip_ratio=args.clip_ratio,
+      gradient_aggregation=args.gradient_aggregation,
       max_grad_norm=args.max_grad_norm,
       device=args.device,
     )
@@ -574,12 +636,18 @@ def main() -> None:
     )
     source_payload["iter"] = int(source_payload.get("iter", 0)) + 1
     infos = dict(source_payload.get("infos") or {})
-    infos["multi_rollout_gae_consensus_v46"] = {
-      "method_id": METHOD_ID,
+    info_key = (
+      "hierarchical_paired_gae_consensus_v47"
+      if method_id == HIERARCHICAL_METHOD_ID
+      else "multi_rollout_gae_consensus_v46"
+    )
+    infos[info_key] = {
+      "method_id": method_id,
       "source_git_commit": _git(repo, "rev-parse", "HEAD"),
       "training_seeds": training_seeds,
       "optimization_seed": args.optimization_seed,
       "rollout_conditions": ["filter_on", "filter_off"],
+      "gradient_aggregation": args.gradient_aggregation,
       "offline_gate_passed": offline_gate_passed,
     }
     source_payload["infos"] = infos
@@ -587,7 +655,7 @@ def main() -> None:
     _atomic_torch(candidate_path, source_payload)
     summary = {
       "schema_version": 1,
-      "method_id": METHOD_ID,
+      "method_id": method_id,
       "git_commit": _git(repo, "rev-parse", "HEAD"),
       "context": args.context,
       "training_seeds": training_seeds,
@@ -609,6 +677,7 @@ def main() -> None:
       "max_reference_kl": args.max_reference_kl,
       "clip_ratio": args.clip_ratio,
       "max_grad_norm": args.max_grad_norm,
+      "gradient_aggregation": args.gradient_aggregation,
       "offline_gate_passed": offline_gate_passed,
       "training": training,
       "elapsed_seconds": time.monotonic() - started,
