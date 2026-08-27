@@ -57,6 +57,7 @@ def _parse_args() -> argparse.Namespace:
       "raw_demo",
       "paper_stair_exact",
       "paper_stair_demo_scale",
+      "paper_stair_sloped_demo_scale",
     ),
     required=True,
   )
@@ -428,6 +429,11 @@ def main() -> None:
     and args.clearance_barrier_slope != 0.0
   ):
     raise ValueError("paper stair candidates require the horizontal barrier (slope 0)")
+  if (
+    args.candidate == "paper_stair_sloped_demo_scale"
+    and args.clearance_barrier_slope <= 0.0
+  ):
+    raise ValueError("sloped paper stair candidate requires a positive barrier slope")
   if not 0.0 < args.a1_teacher_weight <= 0.1:
     raise ValueError("v35 A1 teacher weight must be in (0, 0.1]")
   if args.curriculum_rows < 2:
@@ -622,7 +628,10 @@ def main() -> None:
     shift["actor_observation_corruption_changed"] = True
     shift["physical_parameter_randomization_changed"] = True
   shift["training_domain_randomization"] = training_domain_randomization
-  if args.candidate == "paper_stair_demo_scale":
+  if args.candidate in {
+    "paper_stair_demo_scale",
+    "paper_stair_sloped_demo_scale",
+  }:
     clearance = env_cfg.rewards["foot_clearance"]
     clearance.params = {
       **clearance.params,
@@ -634,6 +643,11 @@ def main() -> None:
       "lookahead_distance_m": 0.60,
       "persists_after_cbf_deactivation": True,
     }
+    reward["clearance_barrier_geometry"] = (
+      "paper_horizontal"
+      if args.clearance_barrier_slope == 0.0
+      else "task_compatible_sloped"
+    )
   filter_schedule = {
     "name": args.training_filter_schedule,
     "fractions_by_round": list(training_filter_fractions),

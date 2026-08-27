@@ -59,6 +59,19 @@ PAPER_DUAL_CANDIDATES: dict[str, dict[str, float | str]] = {
     "margin_weight": 10.0,
     "intervention_weight": 100.0,
   },
+  "paper_stair_sloped_demo_scale": {
+    # Keep the paper's reduced-order swing-foot correction and public-demo
+    # reward scale, but pair it with the task-compatible sloped clearance CBF.
+    # The horizontal Eq. (27) geometry only reacts at the riser plane; on the
+    # 18.4 cm target stairs it did not lift the toe early enough under fresh
+    # dynamics randomization.  This variant preserves the CBF-RL training
+    # principle while making the barrier anticipate the required vertical
+    # clearance.
+    "correction_space": "foot_task",
+    "sigma": 0.05,
+    "margin_weight": 10.0,
+    "intervention_weight": 100.0,
+  },
 }
 
 
