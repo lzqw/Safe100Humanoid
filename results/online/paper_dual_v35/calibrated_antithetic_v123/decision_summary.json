@@ -1,0 +1,50 @@
+{
+  "schema_version": "paper_dual_v35.v123.decision.v1",
+  "method_id": "heldout-calibrated-paired-antithetic-residual-ppo-v123",
+  "decision": "joint_surrogate_gate_passed_but_deterministic_screen_rejected_candidate",
+  "reason": "A predefined scale improved train and held-out clipped surrogates, but the sole unseen deterministic filter-off screen remained far below 75%.",
+  "source_commit": "750281da5116f40b990824744cb3d68b798c5dbc",
+  "targeted_tests_passed": 1,
+  "hardware": "NVIDIA GeForce RTX 4080 SUPER",
+  "input_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "paired_rollout": {
+    "pair_count": 256,
+    "matched_initial_state_signatures": true,
+    "plus_success_count": 162,
+    "minus_success_count": 168,
+    "positive_difference_count": 66,
+    "negative_difference_count": 73,
+    "zero_difference_count": 117,
+    "score_difference_mean": -0.04296875,
+    "score_difference_std": 3.5993311405181885
+  },
+  "training": {
+    "episode_credit": "paired-antithetic-calibrated",
+    "train_transition_count": 133518,
+    "validation_transition_count": 43954,
+    "train_kl_projected_clipped_surrogate": 0.0014632528182119131,
+    "selected_scale_relative_to_train_kl_proposal": 0.25,
+    "effective_scale_relative_to_unprojected_proposal": 0.00445556640625,
+    "train_clipped_surrogate_after": 0.0006577594904229045,
+    "validation_clipped_surrogate_after": 6.182119250297546e-06,
+    "train_reference_forward_kl": 0.00030916841933503747,
+    "validation_reference_forward_kl": 0.0003092697588726878,
+    "offline_gate_passed": true,
+    "transactional_rollback": false,
+    "initial_residual_sha256": "d6baab6e66929514c75f798a2c92fb1c32aa5b12ffa851ea06942c8580b6f167",
+    "final_residual_sha256": "3969245f2017990638b97d74d267ac1f14def212f20f2eb2b32b5dc53601c1a2"
+  },
+  "screen": {
+    "seed": 201354480,
+    "episode_count": 64,
+    "runtime_filter": false,
+    "success_count": 38,
+    "success_rate": 0.59375,
+    "mean_reached_riser": 7.828125,
+    "mean_residual_norm": 0.00040136351407629034,
+    "independent_gate_run": false
+  },
+  "elapsed_seconds": 195.91699706099462,
+  "global_best_changed": false,
+  "next_hypothesis": "Optimize deterministic residual parameters with matched-initial-state parameter-space antithetic returns instead of another stochastic action-space PPO scale."
+}

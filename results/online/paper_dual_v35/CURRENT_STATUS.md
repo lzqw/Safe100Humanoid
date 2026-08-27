@@ -49,6 +49,7 @@
 | v120 | 连续 reached-riser credit 的 held-out surrogate 仍为负；exact rollback 后 base screen 46/64=71.88% | [`progress_residual_v120/`](progress_residual_v120/) |
 | v121 | v79 pretrained critic 的逐步 GAE 在 train 改善、held-out 反转；exact rollback 后 screen 41/64=64.06% | [`critic_gae_residual_v121/`](critic_gae_residual_v121/) |
 | v122 | matched `+noise/-noise` 使 held-out unclipped 变正，但 clipped 略负；exact rollback 后 screen 42/64=65.63% | [`antithetic_residual_v122/`](antithetic_residual_v122/) |
+| v123 | joint scale=0.25 使 train/held-out clipped 均改善，但 unseen deterministic screen 仅 38/64=59.38% | [`calibrated_antithetic_v123/`](calibrated_antithetic_v123/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -295,3 +296,11 @@ surrogate 提高到 +0.001510。held-out unclipped surrogate 也首次为正（+
 screen 为 42/64=65.63%，未运行独立 gate。该结果说明 paired 差分已改善一阶方向，
 下一步应缩放同一 proposal，使 train/held-out clipped surrogate 同时为正，而不是再次
 更换 objective。当前最佳仍为 v79。
+
+v123 保留相同 paired objective，只在固定 `1...1/128` scale grid 上选择 train 与
+held-out clipped surrogate 都至少改善 1e-6 的最大步长。scale=0.25 通过：train 为
++0.000658、held-out 为 +0.00000618、KL 约 0.000309，候选没有回滚。但唯一 unseen
+deterministic filter-off screen 只有 38/64=59.38%，因此未运行 gate 且不替换 v79。
+这证明 action-space stochastic PPO surrogate 即使在完整 held-out seed 上同向，也仍
+不能预测 deterministic mean-policy 成功率；下一步应直接优化 deterministic residual
+参数的 paired return。当前最佳仍为 v79。
