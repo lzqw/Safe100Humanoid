@@ -1,0 +1,41 @@
+{
+  "schema_version": "paper_dual_v35.v82.decision.v1",
+  "candidate": "pooled-256-microbatch-full-gradient-v82",
+  "decision": "continue_training_below_gate",
+  "reason": "The memory-bounded full-rollout gradient ran successfully and improved the aligned filter-off rate by 6.15 pp, but the selected 69.37% remained below both the 75% gate and v79's 72.02%.",
+  "source_commit": "7faad93cc4133f8a250d78d742593855dac06028",
+  "input_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "training": {
+    "seed": 201352625,
+    "num_envs": 256,
+    "rounds": 4,
+    "rollout_steps_per_round": 1024,
+    "elapsed_seconds": 137.25398548098747,
+    "actor_gradient_accumulation_microbatches": 2,
+    "actor_optimizer_updates_per_round": 1,
+    "initial_actor_learning_rate": 0.00005,
+    "transactional_rollback_count": 0,
+    "cuda_out_of_memory": false
+  },
+  "aligned_rollouts": [
+    {"round": 1, "actor_role": "base", "filter_off_success_count": 251, "filter_off_episode_count": 397, "filter_off_success_rate": 0.6322418136020151, "filter_on_success_rate": 0.6762589928057554},
+    {"round": 2, "actor_role": "proposal_1", "filter_off_success_count": 249, "filter_off_episode_count": 390, "filter_off_success_rate": 0.6384615384615384, "filter_on_success_rate": 0.7185185185185186},
+    {"round": 3, "actor_role": "proposal_2", "filter_off_success_count": 274, "filter_off_episode_count": 404, "filter_off_success_rate": 0.6782178217821783, "filter_on_success_rate": 0.7428571428571429},
+    {"round": 4, "actor_role": "proposal_3", "filter_off_success_count": 265, "filter_off_episode_count": 382, "filter_off_success_rate": 0.693717277486911, "filter_on_success_rate": 0.732824427480916}
+  ],
+  "run_internal_filter_off_improvement_percentage_points": 6.147546388489591,
+  "selected_checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/pooled_256_v82_7faad93_s201352625/round_03.pt",
+  "selected_checkpoint_sha256": "b483e95ab345b7936d7b0f8b360e758a01ccd96d77d1ac08f3a915714001c16a",
+  "selected_actor_sha256": "e13d5290a1b550b65d523797db4b7f94c27ec35815965054c17cf1939ea86165",
+  "deployment_filter_off_gate": {
+    "success_threshold": 0.75,
+    "run": false,
+    "reason": "training_gate_failed"
+  },
+  "global_best": {
+    "version": "v79",
+    "filter_off_success_rate": 0.7202072538860104,
+    "changed_by_v82": false
+  },
+  "next_action": "Continue from the v82 aligned checkpoint on a new seed using the same two-chunk full-rollout actor gradient."
+}
