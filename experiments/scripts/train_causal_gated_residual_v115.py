@@ -958,7 +958,7 @@ def main() -> None:
       "gate_training": gate_training,
       "residual_training": residual_training,
       "screen": screen,
-      "independent_gate_run": false,
+      "independent_gate_run": False,
       "independent_gate_policy": "run separately only if screen_rate_gte_0.75",
       "shift": shift,
       "cbf": cbf,
