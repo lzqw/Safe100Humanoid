@@ -1,5 +1,15 @@
 # v35 Paper-Aligned Dual CBF-RL Pilot
 
+## 最新实验：v72 单步 full-batch SGD
+
+v72 保持 v71 的 25% filter-on / 75% filter-off 论文式 CBF-dual PPO 数据流，
+把每轮 8 个 Adam minibatch actor step 改为一次保方向的 full-batch SGD step。
+moving forward KL 稳定在 `2.63e-5`–`4.25e-5`；严格对齐的 round-2 checkpoint
+将本次 filter-off 从 67.86% 提高到 **71.58%（+3.72 pp）**，但仍未达到 75%
+门槛，下一 checkpoint 又降到 60.91%。因此没有追加验证或上传 rejected checkpoint，
+当前正式最佳不变。完整证据见
+[`full_batch_sgd_v72/`](full_batch_sgd_v72/README.md)。
+
 ## 最新实验：v71 25/75 deployment-weighted CBF-dual PPO
 
 v71 关闭 supervised teacher，只保留论文式 CBF-dual PPO，并把执行分布调整为

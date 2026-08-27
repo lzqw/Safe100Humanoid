@@ -1,0 +1,93 @@
+{
+  "schema_version": "paper_dual_v35.v72.decision.v1",
+  "candidate": "full-batch-sgd-paper-style-cbf-dual-ppo-v72",
+  "decision": "rejected_at_training_gate",
+  "reason": "The aligned round-2 checkpoint improved filter-off success from the run's 67.86% base to 71.58%, but remained below the 75% gate; the next checkpoint regressed to 60.91%.",
+  "source_commit": "de28d67847c82182b8d03d0c3f6c3110c61202ce",
+  "base_checkpoint_sha256": "3ec45cd196447901cf815d0fa1ff400af1b519ed2bb85c2fc179458ce3e81d3f",
+  "training": {
+    "seed": 201352619,
+    "num_envs": 128,
+    "filter_on_envs": 32,
+    "filter_off_envs": 96,
+    "rounds": 4,
+    "rollout_steps_per_round": 1024,
+    "elapsed_seconds": 136.78862885502167,
+    "actor_optimizer": "sgd",
+    "actor_optimizer_updates_per_round": 1,
+    "actor_full_batch_update": true,
+    "actor_learning_rate": 0.0001,
+    "moving_kl_beta": 0.5,
+    "filter_group_balanced_advantages": true,
+    "teacher_arm": "A0",
+    "domain_randomization": false
+  },
+  "rollout_checkpoint_alignment": "round_N_rollout_uses_round_N_minus_1_checkpoint",
+  "aligned_rollouts": [
+    {
+      "rollout_round": 1,
+      "checkpoint_round": 0,
+      "filter_off_success_count": 133,
+      "filter_off_episode_count": 196,
+      "filter_off_success_rate": 0.6785714285714286,
+      "filter_on_success_count": 47,
+      "filter_on_episode_count": 68,
+      "filter_on_success_rate": 0.6911764705882353
+    },
+    {
+      "rollout_round": 2,
+      "checkpoint_round": 1,
+      "filter_off_success_count": 131,
+      "filter_off_episode_count": 195,
+      "filter_off_success_rate": 0.6717948717948717,
+      "filter_on_success_count": 47,
+      "filter_on_episode_count": 64,
+      "filter_on_success_rate": 0.734375
+    },
+    {
+      "rollout_round": 3,
+      "checkpoint_round": 2,
+      "filter_off_success_count": 136,
+      "filter_off_episode_count": 190,
+      "filter_off_success_rate": 0.7157894736842105,
+      "filter_on_success_count": 48,
+      "filter_on_episode_count": 69,
+      "filter_on_success_rate": 0.6956521739130435
+    },
+    {
+      "rollout_round": 4,
+      "checkpoint_round": 3,
+      "filter_off_success_count": 120,
+      "filter_off_episode_count": 197,
+      "filter_off_success_rate": 0.6091370558375635,
+      "filter_on_success_count": 47,
+      "filter_on_episode_count": 70,
+      "filter_on_success_rate": 0.6714285714285714
+    }
+  ],
+  "best_updated_aligned_checkpoint": {
+    "checkpoint_round": 2,
+    "checkpoint_sha256": "3285223174b01c97009db54361042c4c3d2d87054ca2156c84769f6d13ceccbc",
+    "actor_sha256": "672dfdb3af5f19c870313183b461e90cdd4198bff59d41060ce1553eb24fea32",
+    "filter_off_success_rate": 0.7157894736842105,
+    "filter_off_improvement_over_run_base_percentage_points": 3.721804511278196,
+    "selected": false,
+    "uploaded": false
+  },
+  "optimization_diagnostics": {
+    "actor_optimizer_name_by_round": ["sgd", "sgd", "sgd", "sgd"],
+    "actor_optimizer_updates_per_round": [1, 1, 1, 1],
+    "moving_forward_kl_by_round": [2.630256858537905e-05, 4.209421240375377e-05, 3.769303293665871e-05, 4.249665653333068e-05],
+    "action_mean_shift_by_round": [0.00034682141267694533, 0.0004234468506183475, 0.0004082274972461164, 0.0004281013971194625],
+    "actor_gradient_norm_pre_clip_by_round": [3.76222825050354, 4.445956707000732, 3.9975454807281494, 4.648108005523682],
+    "actor_gradient_clipped_fraction_by_round": [1.0, 1.0, 1.0, 1.0]
+  },
+  "deployment_filter_off_gate": {
+    "planned_episode_count": 128,
+    "success_threshold": 0.75,
+    "run": false,
+    "reason": "training_gate_failed"
+  },
+  "current_best_changed": false,
+  "next_hypothesis": "Continue near the aligned round-2 region with a smaller KL-adaptive full-batch step and transactional rollout-based checkpoint acceptance or rollback."
+}
