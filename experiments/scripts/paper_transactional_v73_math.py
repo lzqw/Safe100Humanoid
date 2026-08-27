@@ -16,39 +16,60 @@ def rollout_candidate_decision(
   success_count: int,
   episode_count: int,
   accepted_actor_sha256: str | None,
-  accepted_success_rate: float | None,
+  accepted_success_count: int | None,
+  accepted_episode_count: int | None,
 ) -> dict[str, Any]:
-  """Accept the baseline/retry or a success-rate-noninferior candidate."""
+  """Accept a noninferior candidate and pool repeated anchor rollouts."""
   if not actor_sha256:
     raise ValueError("candidate actor SHA-256 must be non-empty")
   if episode_count <= 0 or not 0 <= success_count <= episode_count:
     raise ValueError("candidate rollout counts are invalid")
   success_rate = success_count / episode_count
   if accepted_actor_sha256 is None:
-    if accepted_success_rate is not None:
-      raise ValueError("an empty accepted actor requires an empty accepted rate")
+    if accepted_success_count is not None or accepted_episode_count is not None:
+      raise ValueError("an empty accepted actor requires empty accepted counts")
     return {
       "accepted": True,
       "replace_anchor": True,
+      "same_actor_retry": False,
       "reason": "initial_baseline",
       "success_rate": success_rate,
       "improvement_percentage_points": None,
+      "anchor_success_count_after": success_count,
+      "anchor_episode_count_after": episode_count,
+      "anchor_success_rate_after": success_rate,
     }
-  if accepted_success_rate is None or not 0.0 <= accepted_success_rate <= 1.0:
-    raise ValueError("the accepted actor requires a finite success rate")
+  if (
+    accepted_success_count is None
+    or accepted_episode_count is None
+    or accepted_episode_count <= 0
+    or not 0 <= accepted_success_count <= accepted_episode_count
+  ):
+    raise ValueError("the accepted actor requires valid pooled counts")
+  accepted_success_rate = accepted_success_count / accepted_episode_count
   if actor_sha256 == accepted_actor_sha256:
+    pooled_success_count = accepted_success_count + success_count
+    pooled_episode_count = accepted_episode_count + episode_count
     return {
       "accepted": True,
       "replace_anchor": False,
+      "same_actor_retry": True,
       "reason": "accepted_actor_retry_after_rollback",
       "success_rate": success_rate,
-      "improvement_percentage_points": 0.0,
+      "improvement_percentage_points": 100.0
+      * (success_rate - accepted_success_rate),
+      "anchor_success_count_after": pooled_success_count,
+      "anchor_episode_count_after": pooled_episode_count,
+      "anchor_success_rate_after": (
+        pooled_success_count / pooled_episode_count
+      ),
     }
   improvement = 100.0 * (success_rate - accepted_success_rate)
   accepted = success_rate >= accepted_success_rate
   return {
     "accepted": accepted,
     "replace_anchor": accepted,
+    "same_actor_retry": False,
     "reason": (
       "candidate_noninferior_to_anchor"
       if accepted
@@ -56,6 +77,15 @@ def rollout_candidate_decision(
     ),
     "success_rate": success_rate,
     "improvement_percentage_points": improvement,
+    "anchor_success_count_after": (
+      success_count if accepted else accepted_success_count
+    ),
+    "anchor_episode_count_after": (
+      episode_count if accepted else accepted_episode_count
+    ),
+    "anchor_success_rate_after": (
+      success_rate if accepted else accepted_success_rate
+    ),
   }
 
 

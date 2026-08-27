@@ -957,6 +957,8 @@ def main() -> None:
   observed_dr_state_hashes: set[str] = set()
   accepted_transaction = None
   accepted_actor_sha256: str | None = None
+  accepted_success_count: int | None = None
+  accepted_episode_count: int | None = None
   accepted_success_rate: float | None = None
   accepted_checkpoint: Path | None = None
   accepted_rollout_round: int | None = None
@@ -1153,15 +1155,25 @@ def main() -> None:
             ]
           ),
           accepted_actor_sha256=accepted_actor_sha256,
-          accepted_success_rate=accepted_success_rate,
+          accepted_success_count=accepted_success_count,
+          accepted_episode_count=accepted_episode_count,
         )
         if candidate_decision["replace_anchor"]:
           assert transaction is not None
           accepted_transaction = transaction
           accepted_actor_sha256 = start_hash
-          accepted_success_rate = float(candidate_decision["success_rate"])
           accepted_checkpoint = candidate_checkpoint
           accepted_rollout_round = round_index
+        if candidate_decision["accepted"]:
+          accepted_success_count = int(
+            candidate_decision["anchor_success_count_after"]
+          )
+          accepted_episode_count = int(
+            candidate_decision["anchor_episode_count_after"]
+          )
+          accepted_success_rate = float(
+            candidate_decision["anchor_success_rate_after"]
+          )
         if not candidate_decision["accepted"]:
           if accepted_transaction is None:
             raise RuntimeError("v73 rejected a candidate without an anchor")
@@ -1186,6 +1198,9 @@ def main() -> None:
             "transactional_candidate_replace_anchor": bool(
               candidate_decision["replace_anchor"]
             ),
+            "transactional_candidate_same_actor_retry": bool(
+              candidate_decision["same_actor_retry"]
+            ),
             "transactional_candidate_reason": candidate_decision["reason"],
             "transactional_candidate_improvement_percentage_points": (
               candidate_decision["improvement_percentage_points"]
@@ -1203,6 +1218,8 @@ def main() -> None:
               TARGET_MOVING_FORWARD_KL
             ),
             "transactional_accepted_actor_sha256": accepted_actor_sha256,
+            "transactional_accepted_success_count": accepted_success_count,
+            "transactional_accepted_episode_count": accepted_episode_count,
             "transactional_accepted_success_rate": accepted_success_rate,
             "transactional_accepted_filter_off_success_rate": (
               accepted_success_rate
@@ -1370,6 +1387,8 @@ def main() -> None:
         else None
       ),
       "selected_actor_sha256": accepted_actor_sha256,
+      "selected_success_count": accepted_success_count,
+      "selected_episode_count": accepted_episode_count,
       "selected_success_rate": accepted_success_rate,
       "selected_filter_off_success_rate": (
         accepted_success_rate

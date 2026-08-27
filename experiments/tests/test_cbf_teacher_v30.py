@@ -55,7 +55,8 @@ def test_v73_transaction_accepts_baseline_retry_and_only_noninferior_proposal() 
         success_count=71,
         episode_count=100,
         accepted_actor_sha256=None,
-        accepted_success_rate=None,
+        accepted_success_count=None,
+        accepted_episode_count=None,
     )
     assert baseline["accepted"] and baseline["replace_anchor"]
     retry = V73.rollout_candidate_decision(
@@ -63,15 +64,21 @@ def test_v73_transaction_accepts_baseline_retry_and_only_noninferior_proposal() 
         success_count=68,
         episode_count=100,
         accepted_actor_sha256="base",
-        accepted_success_rate=0.71,
+        accepted_success_count=71,
+        accepted_episode_count=100,
     )
     assert retry["accepted"] and not retry["replace_anchor"]
+    assert retry["same_actor_retry"]
+    assert retry["anchor_success_count_after"] == 139
+    assert retry["anchor_episode_count_after"] == 200
+    assert retry["anchor_success_rate_after"] == pytest.approx(0.695)
     improved = V73.rollout_candidate_decision(
         actor_sha256="candidate",
         success_count=73,
         episode_count=100,
         accepted_actor_sha256="base",
-        accepted_success_rate=0.71,
+        accepted_success_count=71,
+        accepted_episode_count=100,
     )
     assert improved["accepted"] and improved["replace_anchor"]
     regressed = V73.rollout_candidate_decision(
@@ -79,7 +86,8 @@ def test_v73_transaction_accepts_baseline_retry_and_only_noninferior_proposal() 
         success_count=70,
         episode_count=100,
         accepted_actor_sha256="base",
-        accepted_success_rate=0.71,
+        accepted_success_count=71,
+        accepted_episode_count=100,
     )
     assert not regressed["accepted"] and not regressed["replace_anchor"]
 
