@@ -493,6 +493,37 @@ def test_v120_terminal_progress_credit_is_seed_standardized_and_episode_equal() 
     assert FILTER_OFF_PPO.PROGRESS_VALIDATED_METHOD_ID.endswith("v120")
 
 
+def test_v121_pretrained_critic_gae_is_terminal_and_seed_normalized() -> None:
+    critic_dataset = {
+        "values": torch.zeros(2),
+        "rewards": torch.ones(2),
+        "dones": torch.tensor((False, True)),
+        "environment_ids": torch.zeros(2, dtype=torch.long),
+        "episode_steps": torch.tensor((0, 1), dtype=torch.long),
+    }
+    full_gae = FILTER_OFF_PPO.compute_pretrained_critic_gae(
+        critic_dataset, gamma=1.0, gae_lambda=1.0
+    )
+    assert torch.equal(full_gae, torch.tensor((2.0, 1.0)))
+
+    environment_ids = torch.tensor((0, 0, 1, 2, 2, 2, 3), dtype=torch.long)
+    full_indices = torch.arange(len(environment_ids), dtype=torch.long)
+    full_advantages = torch.tensor((2.0, 1.0, -1.0, 3.0, 2.0, 1.0, -2.0))
+    weights, advantages = FILTER_OFF_PPO.standardized_gae_weights(
+        environment_ids,
+        full_indices,
+        full_advantages,
+        num_envs=2,
+    )
+    episode_weights = torch.stack(
+        [weights[environment_ids == index].sum() for index in range(4)]
+    )
+    assert torch.allclose(episode_weights, torch.full((4,), 0.25))
+    assert torch.isclose(advantages[:3].mean(), torch.tensor(0.0), atol=1e-6)
+    assert torch.isclose(advantages[3:].mean(), torch.tensor(0.0), atol=1e-6)
+    assert FILTER_OFF_PPO.CRITIC_GAE_VALIDATED_METHOD_ID.endswith("v121")
+
+
 def test_v95_critic_expansion_accepts_ten_persistent_features() -> None:
     source = {"mlp.0.weight": torch.randn(3, 7)}
     target = {"mlp.0.weight": torch.randn(3, 17)}

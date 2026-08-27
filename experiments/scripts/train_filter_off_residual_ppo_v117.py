@@ -32,6 +32,7 @@ from cbf_teacher_v31_protocol import (
 )
 from proximal_v23_io import actor_state, actor_state_sha256, file_sha256
 from refine_observable_cbf_adapter_v49 import _expand_actor_state
+from refine_observable_cbf_ppo_v51 import _expand_critic_state
 from refine_rescue_distill_v36 import (
   _atomic_json,
   _atomic_torch,
@@ -54,6 +55,9 @@ VALIDATED_FULL_BATCH_METHOD_ID = (
 )
 PROGRESS_VALIDATED_METHOD_ID = (
   "heldout-validated-terminal-progress-residual-ppo-v120"
+)
+CRITIC_GAE_VALIDATED_METHOD_ID = (
+  "heldout-validated-pretrained-critic-gae-residual-ppo-v121"
 )
 ACTION_DIM = 12
 
@@ -150,6 +154,105 @@ def standardized_progress_weights(
   return weights, advantages
 
 
+def compute_pretrained_critic_gae(
+  critic_dataset: dict[str, torch.Tensor],
+  *,
+  gamma: float,
+  gae_lambda: float,
+) -> torch.Tensor:
+  """Compute causal GAE on complete first episodes using stored critic values."""
+  required = {"values", "rewards", "dones", "environment_ids", "episode_steps"}
+  if (
+    set(critic_dataset) != required
+    or not 0.0 < gamma <= 1.0
+    or not 0.0 <= gae_lambda <= 1.0
+  ):
+    raise ValueError("v121 critic dataset or GAE parameters are invalid")
+  count = len(critic_dataset["values"])
+  if (
+    count == 0
+    or any(value.ndim != 1 or len(value) != count for value in critic_dataset.values())
+    or critic_dataset["dones"].dtype != torch.bool
+    or critic_dataset["environment_ids"].dtype != torch.long
+    or critic_dataset["episode_steps"].dtype != torch.long
+    or not bool(torch.isfinite(critic_dataset["values"]).all())
+    or not bool(torch.isfinite(critic_dataset["rewards"]).all())
+  ):
+    raise ValueError("v121 critic transition tensors are empty or misaligned")
+  advantages = torch.zeros(count, dtype=torch.float32)
+  for environment_id in critic_dataset["environment_ids"].unique(sorted=True).tolist():
+    rows = (critic_dataset["environment_ids"] == int(environment_id)).nonzero(
+      as_tuple=False
+    ).flatten()
+    rows = rows[critic_dataset["episode_steps"][rows].argsort()]
+    episode_steps = critic_dataset["episode_steps"][rows]
+    expected_steps = torch.arange(len(rows), dtype=torch.long)
+    episode_dones = critic_dataset["dones"][rows]
+    if (
+      not torch.equal(episode_steps, expected_steps)
+      or not bool(episode_dones[-1])
+      or bool(episode_dones[:-1].any())
+    ):
+      raise ValueError("v121 requires one complete ordered first episode per env")
+    running = 0.0
+    for position in range(len(rows) - 1, -1, -1):
+      row = int(rows[position])
+      done = bool(critic_dataset["dones"][row])
+      next_value = (
+        0.0
+        if done or position + 1 == len(rows)
+        else float(critic_dataset["values"][int(rows[position + 1])])
+      )
+      nonterminal = 0.0 if done else 1.0
+      delta = (
+        float(critic_dataset["rewards"][row])
+        + float(gamma) * next_value * nonterminal
+        - float(critic_dataset["values"][row])
+      )
+      running = delta + float(gamma) * float(gae_lambda) * nonterminal * running
+      advantages[row] = running
+  return advantages
+
+
+def standardized_gae_weights(
+  environment_ids: torch.Tensor,
+  full_transition_indices: torch.Tensor,
+  full_advantages: torch.Tensor,
+  *,
+  num_envs: int,
+) -> tuple[torch.Tensor, torch.Tensor]:
+  """Normalize GAE per rollout seed while keeping every episode equally weighted."""
+  if (
+    environment_ids.shape != full_transition_indices.shape
+    or environment_ids.dtype != torch.long
+    or full_transition_indices.dtype != torch.long
+    or not len(environment_ids)
+    or int(full_transition_indices.max()) >= len(full_advantages)
+    or num_envs < 1
+  ):
+    raise ValueError("v121 actor/critic transition mapping is invalid")
+  raw = full_advantages[full_transition_indices].float()
+  advantages = torch.zeros_like(raw)
+  seed_ids = torch.div(environment_ids, int(num_envs), rounding_mode="floor")
+  unique_seeds = seed_ids.unique(sorted=True)
+  weights = torch.zeros(len(environment_ids), dtype=torch.float32)
+  for seed_id in unique_seeds.tolist():
+    seed_rows = (seed_ids == int(seed_id)).nonzero(as_tuple=False).flatten()
+    seed_values = raw[seed_rows]
+    advantages[seed_rows] = (seed_values - seed_values.mean()) / seed_values.std(
+      unbiased=False
+    ).clamp_min(1.0e-6)
+    seed_episodes = environment_ids[seed_rows].unique(sorted=True)
+    for environment_id in seed_episodes.tolist():
+      episode_rows = (environment_ids == int(environment_id)).nonzero(
+        as_tuple=False
+      ).flatten()
+      weights[episode_rows] = 1.0 / float(
+        len(unique_seeds) * len(seed_episodes) * len(episode_rows)
+      )
+  return weights, advantages
+
+
 def last_seed_transition_masks(
   environment_ids: torch.Tensor,
   *,
@@ -202,10 +305,16 @@ def _parse_args() -> argparse.Namespace:
   )
   parser.add_argument(
     "--episode-credit",
-    choices=("binary-balanced", "terminal-progress-standardized"),
+    choices=(
+      "binary-balanced",
+      "terminal-progress-standardized",
+      "pretrained-critic-gae",
+    ),
     default="binary-balanced",
   )
   parser.add_argument("--success-bonus", type=float, default=1.0)
+  parser.add_argument("--gamma", type=float, default=0.99)
+  parser.add_argument("--gae-lambda", type=float, default=0.95)
   parser.add_argument("--epochs", type=int, default=4)
   parser.add_argument("--batch-size", type=int, default=8192)
   parser.add_argument("--clip-ratio", type=float, default=0.2)
@@ -259,6 +368,7 @@ def _collect_rollout(
   exploration_std: float,
   max_residual: float,
   environment_offset: int,
+  collect_critic_gae: bool = False,
 ) -> dict[str, Any]:
   _set_filter_off(action_term, base_env.num_envs, base_env.device)
   _seed_everything(seed)
@@ -280,6 +390,13 @@ def _collect_rollout(
   mean_chunks: list[torch.Tensor] = []
   log_prob_chunks: list[torch.Tensor] = []
   environment_id_chunks: list[torch.Tensor] = []
+  full_transition_index_chunks: list[torch.Tensor] = []
+  critic_value_chunks: list[torch.Tensor] = []
+  reward_chunks: list[torch.Tensor] = []
+  done_chunks: list[torch.Tensor] = []
+  critic_environment_id_chunks: list[torch.Tensor] = []
+  episode_step_chunks: list[torch.Tensor] = []
+  full_transition_count = 0
   active_geometry_transition_count = 0
   maximum_steps = int(base_env.max_episode_length) + 2
   actor = runner.alg.actor
@@ -288,6 +405,11 @@ def _collect_rollout(
   with torch.no_grad():
     for _ in range(maximum_steps):
       base_action = actor(observations, stochastic_output=False)
+      critic_values = (
+        runner.alg.critic(observations).reshape(-1)
+        if collect_critic_gae
+        else None
+      )
       features = _features_from_observations(actor, observations)
       means = residual(features)
       sampled = means + float(exploration_std) * torch.randn_like(means)
@@ -297,14 +419,31 @@ def _collect_rollout(
       geometry_active = _geometry_active_from_observations(observations)
       executed_residual = executed_residual * geometry_active.unsqueeze(-1)
       actions = base_action + executed_residual
-      next_observations, _, dones, extras = runner.env.step(actions)
+      next_observations, rewards, dones, extras = runner.env.step(actions)
       extras = dict(extras)
       ids = active.nonzero(as_tuple=False).flatten()
       if ids.numel():
+        ids_cpu = ids.cpu()
+        current_full_indices = None
+        if collect_critic_gae:
+          assert critic_values is not None
+          current_full_indices = torch.arange(
+            full_transition_count,
+            full_transition_count + len(ids),
+            dtype=torch.long,
+          )
+          critic_value_chunks.append(critic_values[ids].float().cpu())
+          reward_chunks.append(rewards.reshape(-1)[ids].float().cpu())
+          done_chunks.append(dones.reshape(-1)[ids].bool().cpu())
+          critic_environment_id_chunks.append(ids_cpu + int(environment_offset))
+          episode_step_chunks.append(steps[ids].cpu())
         reached_risers[ids] = torch.maximum(
           reached_risers[ids], extras["online_stair_index"][ids].long()
         )
-        selected = ids[geometry_active[ids]]
+        selected_positions = geometry_active[ids].nonzero(
+          as_tuple=False
+        ).flatten()
+        selected = ids[selected_positions]
         if selected.numel():
           feature_chunks.append(features[selected].cpu())
           sampled_chunks.append(sampled[selected].cpu())
@@ -315,13 +454,16 @@ def _collect_rollout(
             ).cpu()
           )
           environment_id_chunks.append(
-            torch.full_like(
-              selected.cpu(), 0, dtype=torch.long
-            )
-            + selected.cpu()
-            + int(environment_offset)
+            selected.cpu() + int(environment_offset)
           )
+          if collect_critic_gae:
+            assert current_full_indices is not None
+            full_transition_index_chunks.append(
+              current_full_indices[selected_positions.cpu()]
+            )
           active_geometry_transition_count += len(selected)
+        if collect_critic_gae:
+          full_transition_count += len(ids)
       steps += active.long()
       completed = dones.bool() & active
       if bool(completed.any()):
@@ -337,7 +479,7 @@ def _collect_rollout(
     raise RuntimeError("v117 did not finish every explored first episode")
   if not feature_chunks:
     raise RuntimeError("v117 collected no active-geometry residual transitions")
-  return {
+  result = {
     "seed": seed,
     "initial_state_signature": signature,
     "success": success.cpu(),
@@ -354,6 +496,18 @@ def _collect_rollout(
     "old_log_prob": torch.cat(log_prob_chunks),
     "environment_ids": torch.cat(environment_id_chunks),
   }
+  if collect_critic_gae:
+    result["full_transition_indices"] = torch.cat(
+      full_transition_index_chunks
+    )
+    result["critic_dataset"] = {
+      "values": torch.cat(critic_value_chunks),
+      "rewards": torch.cat(reward_chunks),
+      "dones": torch.cat(done_chunks),
+      "environment_ids": torch.cat(critic_environment_id_chunks),
+      "episode_steps": torch.cat(episode_step_chunks),
+    }
+  return result
 
 
 def _ppo_metrics(
@@ -657,14 +811,18 @@ def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
 def main() -> None:
   args = _parse_args()
   seeds = _parse_seeds(args.training_seeds)
+  use_critic_gae = args.episode_credit == "pretrained-critic-gae"
+  if use_critic_gae and not args.validation_last_seed:
+    raise ValueError("v121 critic GAE requires a complete held-out rollout seed")
   if args.validation_last_seed:
     if args.optimizer != "sgd" or len(seeds) < 4:
       raise ValueError("v119 held-out validation requires SGD and four seeds")
-    method_id = (
-      PROGRESS_VALIDATED_METHOD_ID
-      if args.episode_credit == "terminal-progress-standardized"
-      else VALIDATED_FULL_BATCH_METHOD_ID
-    )
+    if use_critic_gae:
+      method_id = CRITIC_GAE_VALIDATED_METHOD_ID
+    elif args.episode_credit == "terminal-progress-standardized":
+      method_id = PROGRESS_VALIDATED_METHOD_ID
+    else:
+      method_id = VALIDATED_FULL_BATCH_METHOD_ID
   else:
     method_id = FULL_BATCH_METHOD_ID if args.optimizer == "sgd" else METHOD_ID
   if args.num_envs < 2 or not 1 <= args.screen_envs <= args.num_envs:
@@ -685,6 +843,8 @@ def main() -> None:
     raise ValueError("v117 reference KL cap must lie in (0, 0.1]")
   if not 0.0 <= args.success_bonus <= 4.0:
     raise ValueError("v120 success bonus must lie in [0, 4]")
+  if not 0.0 < args.gamma <= 1.0 or not 0.0 <= args.gae_lambda <= 1.0:
+    raise ValueError("v121 gamma/lambda are outside the supported range")
 
   repo = args.repo.resolve()
   checkpoint = args.base_checkpoint.resolve()
@@ -717,6 +877,8 @@ def main() -> None:
       "validation_last_seed": args.validation_last_seed,
       "episode_credit": args.episode_credit,
       "success_bonus": args.success_bonus,
+      "gamma": args.gamma,
+      "gae_lambda": args.gae_lambda,
     },
   )
 
@@ -784,6 +946,18 @@ def main() -> None:
     runner.alg.actor.eval()
     for parameter in runner.alg.actor.parameters():
       parameter.requires_grad_(False)
+    expanded_critic = None
+    critic_expansion = None
+    base_critic_sha = None
+    if use_critic_gae:
+      expanded_critic, critic_expansion = _expand_critic_state(
+        source_payload["critic_state_dict"], runner.alg.critic.state_dict()
+      )
+      runner.alg.critic.load_state_dict(expanded_critic, strict=True)
+      runner.alg.critic.eval()
+      for parameter in runner.alg.critic.parameters():
+        parameter.requires_grad_(False)
+      base_critic_sha = actor_state_sha256(expanded_critic)
     residual = LearnedCbfResidual(args.max_residual).to(args.device)
     initial_residual_sha = actor_state_sha256(actor_state(residual))
 
@@ -794,10 +968,20 @@ def main() -> None:
       "old_log_prob": [],
       "environment_ids": [],
     }
+    if use_critic_gae:
+      dataset_chunks["full_transition_indices"] = []
+    critic_dataset_chunks: dict[str, list[torch.Tensor]] = {
+      "values": [],
+      "rewards": [],
+      "dones": [],
+      "environment_ids": [],
+      "episode_steps": [],
+    }
     all_success: list[torch.Tensor] = []
     all_reached_risers: list[torch.Tensor] = []
     rollout_summaries: list[dict[str, Any]] = []
     environment_offset = 0
+    critic_transition_offset = 0
     for seed in seeds:
       rollout = _collect_rollout(
         runner,
@@ -808,7 +992,14 @@ def main() -> None:
         exploration_std=args.exploration_std,
         max_residual=args.max_residual,
         environment_offset=environment_offset,
+        collect_critic_gae=use_critic_gae,
       )
+      if use_critic_gae:
+        local_critic_dataset = rollout.pop("critic_dataset")
+        rollout["full_transition_indices"] += critic_transition_offset
+        for key in critic_dataset_chunks:
+          critic_dataset_chunks[key].append(local_critic_dataset[key])
+        critic_transition_offset += len(local_critic_dataset["values"])
       for key in dataset_chunks:
         dataset_chunks[key].append(rollout.pop(key))
       success = rollout.pop("success")
@@ -822,6 +1013,38 @@ def main() -> None:
       environment_offset += args.num_envs
 
     dataset = {key: torch.cat(chunks) for key, chunks in dataset_chunks.items()}
+    critic_dataset = (
+      {
+        key: torch.cat(chunks)
+        for key, chunks in critic_dataset_chunks.items()
+      }
+      if use_critic_gae
+      else None
+    )
+    full_advantages = (
+      compute_pretrained_critic_gae(
+        critic_dataset,
+        gamma=args.gamma,
+        gae_lambda=args.gae_lambda,
+      )
+      if critic_dataset is not None
+      else None
+    )
+    gae_summary = (
+      {
+        "gamma": args.gamma,
+        "gae_lambda": args.gae_lambda,
+        "full_transition_count": len(full_advantages),
+        "active_geometry_transition_count": len(dataset["environment_ids"]),
+        "advantage_mean": float(full_advantages.mean()),
+        "advantage_std": float(full_advantages.std(unbiased=False)),
+        "advantage_min": float(full_advantages.min()),
+        "advantage_max": float(full_advantages.max()),
+        "all_finite": bool(torch.isfinite(full_advantages).all()),
+      }
+      if full_advantages is not None
+      else None
+    )
     episode_success = torch.cat(all_success)
     episode_reached_risers = torch.cat(all_reached_risers)
     validation_dataset = None
@@ -834,7 +1057,21 @@ def main() -> None:
       )
       training_dataset = _subset_dataset(dataset, train_mask)
       validation_dataset = _subset_dataset(dataset, validation_mask)
-      if args.episode_credit == "terminal-progress-standardized":
+      if use_critic_gae:
+        assert full_advantages is not None
+        weights, advantages = standardized_gae_weights(
+          training_dataset["environment_ids"],
+          training_dataset["full_transition_indices"],
+          full_advantages,
+          num_envs=args.num_envs,
+        )
+        validation_weights, validation_advantages = standardized_gae_weights(
+          validation_dataset["environment_ids"],
+          validation_dataset["full_transition_indices"],
+          full_advantages,
+          num_envs=args.num_envs,
+        )
+      elif args.episode_credit == "terminal-progress-standardized":
         weights, advantages = standardized_progress_weights(
           training_dataset["environment_ids"],
           episode_success,
@@ -858,7 +1095,15 @@ def main() -> None:
         )
     else:
       training_dataset = dataset
-      if args.episode_credit == "terminal-progress-standardized":
+      if use_critic_gae:
+        assert full_advantages is not None
+        weights, advantages = standardized_gae_weights(
+          training_dataset["environment_ids"],
+          training_dataset["full_transition_indices"],
+          full_advantages,
+          num_envs=args.num_envs,
+        )
+      elif args.episode_credit == "terminal-progress-standardized":
         weights, advantages = standardized_progress_weights(
           training_dataset["environment_ids"],
           episode_success,
@@ -928,6 +1173,7 @@ def main() -> None:
       training["after"]["clipped_surrogate"]
       > training["before"]["clipped_surrogate"]
       and training["after"]["reference_forward_kl"] <= args.max_reference_kl
+      and (gae_summary is None or gae_summary["all_finite"])
       and (
         validation_after is None
         or (
@@ -954,6 +1200,8 @@ def main() -> None:
           key: value.detach().cpu() for key, value in expanded_state.items()
         },
         "base_actor_sha256": actor_state_sha256(expanded_state),
+        "base_critic_sha256": base_critic_sha,
+        "critic_expansion": critic_expansion,
         "residual_state_dict": {
           key: value.detach().cpu() for key, value in final_residual_state.items()
         },
@@ -967,6 +1215,9 @@ def main() -> None:
         "offline_gate_passed": offline_gate_passed,
         "episode_credit": args.episode_credit,
         "success_bonus": args.success_bonus,
+        "gamma": args.gamma,
+        "gae_lambda": args.gae_lambda,
+        "gae_summary": gae_summary,
         "heldout_validation": {
           "seed": seeds[-1],
           "before": validation_before,
@@ -999,6 +1250,7 @@ def main() -> None:
       "candidate_checkpoint": str(candidate_path),
       "candidate_checkpoint_sha256": file_sha256(candidate_path),
       "base_actor_sha256": actor_state_sha256(expanded_state),
+      "base_critic_sha256": base_critic_sha,
       "initial_residual_sha256": initial_residual_sha,
       "final_residual_sha256": final_residual_sha,
       "trainable_parameter_count": sum(
@@ -1016,6 +1268,21 @@ def main() -> None:
       "validation_seed": seeds[-1] if args.validation_last_seed else None,
       "episode_credit": args.episode_credit,
       "success_bonus": args.success_bonus,
+      "gamma": args.gamma,
+      "gae_lambda": args.gae_lambda,
+      "gae_summary": gae_summary,
+      "training_advantage_mean": float(advantages.mean()),
+      "training_advantage_std": float(advantages.std(unbiased=False)),
+      "validation_advantage_mean": (
+        float(validation_advantages.mean())
+        if validation_advantages is not None
+        else None
+      ),
+      "validation_advantage_std": (
+        float(validation_advantages.std(unbiased=False))
+        if validation_advantages is not None
+        else None
+      ),
       "episode_success_count": int(episode_success.sum()),
       "episode_failure_count": int((~episode_success).sum()),
       "training_transition_count": len(weights),
@@ -1040,6 +1307,7 @@ def main() -> None:
       "paper_dual_reward": reward,
       "geometry_observation": geometry,
       "actor_expansion": expansion,
+      "critic_expansion": critic_expansion,
       "optimizer_state_in_candidate": False,
       "optimizer_parameter_state_count": len(optimizer.state),
       "elapsed_seconds": time.monotonic() - started,
