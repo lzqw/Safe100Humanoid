@@ -171,6 +171,13 @@ def test_v56_filter_fraction_schedule_reaches_pure_unshielded_rollout() -> None:
         MATH.linear_filter_fraction_schedule(4, 0.5, 0.5)
 
 
+def test_v60_target_terrain_floor_prevents_late_curriculum_retreat() -> None:
+    assert MATH.target_terrain_floor_schedule(6, 5, 4) == (0, 0, 0, 4, 4, 4)
+    assert MATH.target_terrain_floor_schedule(4, 5, None) == (0, 0, 0, 0)
+    with pytest.raises(ValueError, match="within training rounds"):
+        MATH.target_terrain_floor_schedule(4, 5, 5)
+
+
 def test_v36_rescue_gate_uses_matched_on_success_off_failure() -> None:
     on = torch.tensor((True, True, False, False))
     off = torch.tensor((False, True, False, True))

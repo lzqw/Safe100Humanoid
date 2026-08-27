@@ -150,6 +150,15 @@ def _parse_args() -> argparse.Namespace:
   )
   parser.add_argument("--curriculum-start-height", type=float, default=0.13)
   parser.add_argument("--curriculum-rows", type=int, default=5)
+  parser.add_argument(
+    "--curriculum-freeze-target-after-round",
+    type=int,
+    default=None,
+    help=(
+      "At this rollout round, clamp every reset to the highest terrain row. "
+      "This preserves early adaptive promotion but prevents easy-row retreat."
+    ),
+  )
   parser.add_argument("--rounds", type=int, default=8)
   parser.add_argument("--num-envs", type=int, default=64)
   parser.add_argument("--rollout-steps", type=int, default=1024)
@@ -296,11 +305,10 @@ def _configure_height_curriculum(
   *,
   start_height: float,
   num_rows: int,
+  minimum_level_schedule: tuple[int, ...],
 ) -> dict[str, Any]:
   """Turn one fixed uniform target into an ordered training curriculum."""
   from mjlab.managers.curriculum_manager import CurriculumTermCfg
-
-  from src.tasks.velocity.mdp.curriculums import terrain_levels_vel
 
   target_height = shift.get("riser_height_m")
   if target_height is None or shift.get("riser_profile_m") is not None:
@@ -328,7 +336,7 @@ def _configure_height_curriculum(
   terrain_cfg.max_init_terrain_level = 0
   env_cfg.curriculum = {
     "terrain_levels": CurriculumTermCfg(
-      func=terrain_levels_vel,
+      func=_terrain_levels_vel_with_floor,
       params={"command_name": "twist"},
     )
   }
@@ -338,10 +346,36 @@ def _configure_height_curriculum(
     "target_height_m": target,
     "num_rows": int(num_rows),
     "initial_level": 0,
-    "promotion_rule": "terrain_levels_vel",
+    "promotion_rule": "terrain_levels_vel_with_monotone_floor",
+    "minimum_level_schedule": list(minimum_level_schedule),
     "exact_per_level_cbf_geometry": True,
     "target_evaluation_remains_fixed": True,
   }
+
+
+_HEIGHT_CURRICULUM_FLOOR_ATTRIBUTE = "_v35_height_curriculum_floor"
+
+
+def _terrain_levels_vel_with_floor(env, env_ids, command_name: str) -> torch.Tensor:
+  """Apply the native curriculum update, then enforce the current phase floor."""
+  from src.tasks.velocity.mdp.curriculums import terrain_levels_vel
+
+  terrain_levels_vel(env, env_ids, command_name)
+  floor = int(getattr(env, _HEIGHT_CURRICULUM_FLOOR_ATTRIBUTE, 0))
+  terrain = env.scene.terrain
+  if terrain is None or terrain.terrain_origins is None:
+    raise RuntimeError("v60 terrain floor requires curriculum terrain origins")
+  if not 0 <= floor < terrain.max_terrain_level:
+    raise RuntimeError("v60 terrain floor lies outside generated terrain rows")
+  levels = terrain.terrain_levels[env_ids]
+  below_floor = levels < floor
+  if bool(below_floor.any()):
+    clamped_ids = env_ids[below_floor]
+    terrain.terrain_levels[clamped_ids] = floor
+    terrain.env_origins[clamped_ids] = terrain.terrain_origins[
+      terrain.terrain_levels[clamped_ids], terrain.terrain_types[clamped_ids]
+    ]
+  return torch.mean(terrain.terrain_levels.float())
 
 
 def _terrain_level_metrics(base_env, *, num_rows: int) -> dict[str, Any]:
@@ -373,6 +407,11 @@ def main() -> None:
     raise ValueError("v35 A1 teacher weight must be in (0, 0.1]")
   if args.curriculum_rows < 2:
     raise ValueError("v35 curriculum rows must be at least two")
+  if args.curriculum_freeze_target_after_round is not None:
+    if not args.height_curriculum:
+      raise ValueError("target-height freeze requires the height curriculum")
+    if not 1 <= args.curriculum_freeze_target_after_round <= args.rounds:
+      raise ValueError("target-height freeze round must lie within training rounds")
   if not 0.01 <= args.training_action_std <= 0.05:
     raise ValueError("v35 training action std must lie in [0.01, 0.05]")
   if not 1.0e-7 <= args.actor_learning_rate <= 5.0e-6:
@@ -490,6 +529,7 @@ def main() -> None:
   from src.tasks.stairs_cbf.teacher_v30_math import (
     linear_filter_fraction_schedule,
     rotating_environment_filter_mask,
+    target_terrain_floor_schedule,
   )
 
   training_filter_fractions = (
@@ -500,6 +540,11 @@ def main() -> None:
     )
     if args.training_filter_schedule == "linear_to_off"
     else (training_filter_fraction,) * args.rounds
+  )
+  height_floor_schedule = target_terrain_floor_schedule(
+    args.rounds,
+    args.curriculum_rows,
+    args.curriculum_freeze_target_after_round,
   )
 
   env_cfg = load_env_cfg(TASK_ID, play=True)
@@ -580,6 +625,7 @@ def main() -> None:
       shift,
       start_height=args.curriculum_start_height,
       num_rows=args.curriculum_rows,
+      minimum_level_schedule=height_floor_schedule,
     )
   env_cfg.scene.num_envs = args.num_envs
   env_cfg.seed = args.seed
@@ -600,6 +646,7 @@ def main() -> None:
   output_dir.mkdir(parents=True)
   started = time.monotonic()
   base_env = ManagerBasedRlEnv(env_cfg, device=args.device)
+  setattr(base_env, _HEIGHT_CURRICULUM_FLOOR_ATTRIBUTE, 0)
   env = RslRlVecEnvWrapper(base_env, clip_actions=agent_cfg.clip_actions)
   runner_cfg = asdict(agent_cfg)
   if args.deterministic_mean_teacher:
@@ -688,6 +735,12 @@ def main() -> None:
       },
     )
     for round_index in range(1, args.rounds + 1):
+      round_terrain_floor = height_floor_schedule[round_index - 1]
+      setattr(
+        base_env,
+        _HEIGHT_CURRICULUM_FLOOR_ATTRIBUTE,
+        round_terrain_floor,
+      )
       round_teacher_arm = teacher_arms[round_index - 1]
       round_teacher_parameters = _set_teacher_arm(
         runner.alg,
@@ -730,6 +783,9 @@ def main() -> None:
         metrics.update(
           _terrain_level_metrics(base_env, num_rows=args.curriculum_rows)
         )
+        metrics["terrain_level_floor"] = round_terrain_floor
+        if metrics["terrain_level_min"] < round_terrain_floor:
+          raise RuntimeError("v60 terrain level escaped its configured floor")
       observed_filter_fraction = float(
         metrics["runtime_filter_enabled_fraction"]
       )

@@ -114,6 +114,25 @@ def linear_filter_fraction_schedule(
     )
 
 
+def target_terrain_floor_schedule(
+    rounds: int,
+    num_rows: int,
+    freeze_target_after_round: int | None,
+) -> tuple[int, ...]:
+    """Keep adaptive terrain early, then prevent retreat from the target row."""
+    if rounds < 1 or num_rows < 2:
+        raise ValueError("v60 terrain-floor schedule requires positive rounds and rows")
+    if freeze_target_after_round is None:
+        return (0,) * rounds
+    if not 1 <= freeze_target_after_round <= rounds:
+        raise ValueError("v60 target-freeze round must lie within training rounds")
+    target_level = num_rows - 1
+    return tuple(
+        0 if round_index < freeze_target_after_round else target_level
+        for round_index in range(1, rounds + 1)
+    )
+
+
 def filter_rescued_episode_mask(
     filter_on_success: torch.Tensor, filter_off_success: torch.Tensor
 ) -> torch.Tensor:
