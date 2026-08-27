@@ -265,6 +265,18 @@ filter-free self-imitation 比直接 CBF 蒸馏更接近论文部署目标；但
 untouched 逐 episode 证据见
 [`elite_self_imitation_v41_v42/`](elite_self_imitation_v41_v42/)。
 
+#### Six-seed elite self-imitation（有改善，仍低于 gate）
+
+v43 新增 3 个训练 seed 的 96 个无过滤探索 episode（64 个成功），并与 v41
+数据合并为 6 个 seed、80,044 transitions，其中 60,976 个来自成功 episode。
+只对 actor 最后一层做一次 full-batch 更新；elite Smooth-L1 从
+`0.02121494` 降至 `0.02121404`，reference KL 为 `9.991e-5`，训练耗时 10.3 秒。
+
+在 v42 未通过的 stable-reset seed `201350922` 上，无过滤成功率从 44/64 提高到
+46/64（71.875%），但仍比 75% gate 少 2 个 episode。因此按预设早停，不运行
+filter-on 或额外 seed，也不选择该 actor。代码提交、训练摘要及逐 episode 证据见
+[`elite_self_imitation_v43_6seed/`](elite_self_imitation_v43_6seed/)。
+
 ## 方法与第一阶段 F1 ablation
 
 本目录发布 v35 第一阶段 F1 pilot 的关键结果。该阶段依据

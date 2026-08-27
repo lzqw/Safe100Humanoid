@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "method_family": "filter-free-elite-self-imitation",
+  "decision": "rejected_filter_off_below_75_percent_gate",
+  "additional_collection": {
+    "source_git_commit": "5ac4e3e243c990590aa1d0773304ae123c3d7856",
+    "training_seeds": [201350392, 201350402, 201350412],
+    "total_initial_episodes": 96,
+    "successful_initial_episodes": 64,
+    "elite_transition_count": 28832,
+    "dataset_transition_count": 39257,
+    "exploration_std": 0.05,
+    "elapsed_seconds": 57.26619971101172,
+    "dataset_sha256": "ba86487a7716d63bcb33eebd8b6bdee4ece295905ca8a0b279b131ea5786d4a2"
+  },
+  "six_seed_full_batch_update": {
+    "source_git_commit": "bd9122a4fc8db9c0bccdb73442510a892b6e7f92",
+    "source_training_seeds": [
+      201350342,
+      201350352,
+      201350362,
+      201350392,
+      201350402,
+      201350412
+    ],
+    "source_dataset_sha256s": [
+      "7540dcd99cd67d90dc5c9b511fe7050469eb6e02696fbbc67841d74a89fd6ac7",
+      "ba86487a7716d63bcb33eebd8b6bdee4ece295905ca8a0b279b131ea5786d4a2"
+    ],
+    "dataset_transition_count": 80044,
+    "elite_transition_count": 60976,
+    "actor_update_scope": "last-layer",
+    "trainable_parameter_count": 1548,
+    "optimizer_updates": 1,
+    "elite_smooth_l1_before": 0.021214937857210212,
+    "elite_smooth_l1_after": 0.021214040987950177,
+    "reference_forward_kl": 0.00009990902498895383,
+    "offline_gate_passed": true,
+    "elapsed_seconds": 10.267629283014685
+  },
+  "gate_seed_201350922": {
+    "initial_state_signature": "00c0952f21c0488485f70633a3b921c1aeaeef8bdf9c91713b5f5500255c0c9c",
+    "previous_v42_filter_off_success_count": 44,
+    "candidate_filter_off_success_count": 46,
+    "candidate_filter_off_success_rate": 0.71875,
+    "absolute_gate_success_count": 48,
+    "filter_on_run": false,
+    "early_stop_reason": "filter_off_below_75_percent_gate"
+  },
+  "candidate_actor_sha256": "06ece92c81765305d2b518dcdcb45e1df7681f0db0e07a3d2db26b1be488d749",
+  "candidate_checkpoint_sha256": "41b0aed76754f28c8f6a9bda4ed3cb524a1051e1ed153e498d66937ae8476746"
+}
