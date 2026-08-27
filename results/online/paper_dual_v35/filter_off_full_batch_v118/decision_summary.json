@@ -1,0 +1,35 @@
+{
+  "schema_version": "paper_dual_v35.v118.decision.v1",
+  "method_id": "filter-off-episodic-full-batch-residual-ppo-v118",
+  "decision": "rejected_screen_regression_after_positive_offline_surrogate",
+  "reason": "Full-batch SGD preserved a positive clipped surrogate, but the new-seed filter-off screen reached only 40/64=62.5%.",
+  "source_commit": "f2e3b11c28ae24151fdca2710ff0c551970e98be",
+  "targeted_tests_passed": 1,
+  "hardware": "NVIDIA GeForce RTX 4080 SUPER",
+  "input_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "training": {
+    "episode_count": 256,
+    "success_count": 169,
+    "failure_count": 87,
+    "transition_count": 88571,
+    "optimizer": "SGD",
+    "optimizer_updates": 1,
+    "clipped_surrogate_after": 0.0011788313277065754,
+    "unclipped_surrogate_after": 0.0025587226264178753,
+    "reference_forward_kl": 0.004852909594774246,
+    "parameter_interpolation_scale": 0.012451171875,
+    "offline_gate_passed": true
+  },
+  "screen": {
+    "seed": 201353980,
+    "episode_count": 64,
+    "runtime_filter": false,
+    "success_count": 40,
+    "success_rate": 0.625,
+    "mean_reached_riser": 7.921875,
+    "independent_gate_run": false
+  },
+  "elapsed_seconds": 135.97775172896218,
+  "global_best_changed": false,
+  "next_hypothesis": "Reserve one rollout seed for transactional surrogate validation and rollback before screening when the held-out surrogate is not positive."
+}

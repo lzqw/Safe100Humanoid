@@ -44,6 +44,7 @@
 | v115 | causal GRU 只区分 rescued/harmed，0.6 高置信 gate；screen 恢复到 47/64=73.44%，差 1 episode | [`causal_gated_residual_v115/`](causal_gated_residual_v115/) |
 | v116 | causal gate + 实际成功 filter-on trajectory teacher；state/action mismatch 使 screen 回落到 38/64=59.38% | [`outcome_gated_trajectory_v116/`](outcome_gated_trajectory_v116/) |
 | v117 | filter-off deployment-state episodic residual PPO；Adam 后 clipped surrogate 为负，screen 44/64=68.75% | [`filter_off_residual_ppo_v117/`](filter_off_residual_ppo_v117/) |
+| v118 | 一次 full-batch SGD 修复离线 surrogate，但新 seed screen 仅 40/64=62.50% | [`filter_off_full_batch_v118/`](filter_off_full_batch_v118/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -255,3 +256,9 @@ v117 首次完全去掉 action teacher，让 residual 在 filter-off deployment 
 clipped surrogate 变成 -0.01666，KL 投影只保留 5.54% delta。screen 为
 44/64=68.75%，离线和在线均拒绝。下一步保留相同 on-policy objective，只改成一次
 full-batch direction-preserving SGD，避免优化器扭曲方向。当前最佳仍为 v79。
+
+v118 用一次 full-batch SGD 将 clipped surrogate 从约 0 提高到 +0.001179，并把 KL
+限制为 0.004853，离线 gate 成功通过；但新 seed screen 仅 40/64=62.50%。因此优化器
+扭曲已修复，剩余问题是 pooled episode-outcome gradient 对 rollout seeds 过拟合。
+下一步将第 4 个 rollout seed 完整留作 surrogate validation，验证不改善就原子回滚，
+不让过拟合 proposal 进入 screen。当前最佳仍为 v79。
