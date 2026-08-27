@@ -378,16 +378,25 @@ class TaskMetricVelocityCbfAction(_V34Timing, HigherRiserCbfAction):
                 > self.cfg.intervention_epsilon
             )
         )
-        executed_velocity = safe_velocity if self.cfg.enabled else nominal_velocity
-        executed_target = projected_target if self.cfg.enabled else nominal_target
-        executed_margin = projected_margin if self.cfg.enabled else nominal_margin
-        executed_correction = (
-            correction if self.cfg.enabled else torch.zeros_like(correction)
+        filter_enabled = self.runtime_filter_mask & bool(self.cfg.enabled)
+        executed_velocity = torch.where(
+            filter_enabled.unsqueeze(-1), safe_velocity, nominal_velocity
+        )
+        executed_target = torch.where(
+            filter_enabled.unsqueeze(-1), projected_target, nominal_target
+        )
+        executed_margin = torch.where(
+            filter_enabled, projected_margin, nominal_margin
+        )
+        executed_correction = torch.where(
+            filter_enabled.unsqueeze(-1), correction, torch.zeros_like(correction)
         )
         self._processed_actions[:] = executed_target
         self.safe_target[:] = projected_target
         self.safe_raw_action[:] = projected_raw
-        self.executed_raw_action[:] = projected_raw if self.cfg.enabled else actions
+        self.executed_raw_action[:] = torch.where(
+            filter_enabled.unsqueeze(-1), projected_raw, actions
+        )
         self.h[:] = torch.where(active, h, torch.full_like(h, torch.inf))
         self.selected_edge_top_z[:] = selected_top_z
         self.selected_riser[:] = torch.where(active, riser, -1)
@@ -398,9 +407,9 @@ class TaskMetricVelocityCbfAction(_V34Timing, HigherRiserCbfAction):
             active, executed_margin, torch.zeros_like(executed_margin)
         )
         self.geometric_active[:] = active
-        self.filter_active[:] = active & self.cfg.enabled
+        self.filter_active[:] = active & filter_enabled
         self.would_intervene[:] = would_intervene
-        self.intervened[:] = self.cfg.enabled & would_intervene
+        self.intervened[:] = filter_enabled & would_intervene
         self.intervention_count += self.intervened.float()
         self.intervention_norm[:] = torch.linalg.vector_norm(
             executed_velocity - nominal_velocity, dim=-1
