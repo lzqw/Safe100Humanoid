@@ -19,6 +19,7 @@
 | v90 | 25% bounded residual 的本机 32-env 筛选中两个 proposal 均回落；不正式放大 | [`success_residual_v90/`](success_residual_v90/) |
 | v91 | 64-env 放大后两个 residual-only proposal 均低于 pooled base 194/269=72.12%，路线拒绝 | [`success_residual_only_v91/`](success_residual_only_v91/) |
 | v92 | 5-D geometry adapter 的 full-batch SGD 方向正确；untouched filter-off 47/64=73.44%，差 1 episode | [`observable_rescue_sgd_v92/`](observable_rescue_sgd_v92/) |
+| v93 | 16-D 左右脚/phase 条件化 adapter 离线方向改善，但唯一 untouched filter-off 仅 45/64=70.31%，拒绝 | [`conditional_geometry_sgd_v93/`](conditional_geometry_sgd_v93/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -54,3 +55,9 @@ v92 随后补充 5 个可部署 CBF geometry 输入，只从 54 个 matched-resc
 KL 为 5e-5；唯一 untouched deterministic filter-off gate 为 47/64=73.44%，距离 75%
 只差 1 个 episode，但仍按门槛拒绝。下一步应把几何 residual 按 swing side / barrier
 phase 条件化，避免相反的局部修正被单一全局 adapter 平均掉。
+
+v93 完成了上述条件化：将 5-D geometry 展开为 left/right × unsafe/safe 的 16-D
+可部署特征，只训练 8,192 个新增首层权重。一次 full-batch SGD 将离线 correction cosine
+提高到 0.641，distance 从 0.135701 降到 0.135405，且 KL 仅 3.02e-5；但唯一全新 seed
+的 deterministic filter-off gate 只有 45/64=70.31%。因此该结构虽改善 teacher 对齐，
+仍未改善最终成功率，候选已拒绝，未追加更多 rollout，正式最佳继续保留 v79。
