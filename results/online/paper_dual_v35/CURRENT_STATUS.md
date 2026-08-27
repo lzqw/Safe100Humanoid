@@ -1,4 +1,4 @@
-# Paper-dual 当前结果索引（2026-08-27）
+# Paper-dual 当前结果索引（2026-08-28）
 
 当前目标是 F2 18.4 cm、部署时 filter-off 成功率至少 75%。截至本次记录，目标尚未达到，
 当前最好的训练内对齐结果仍是 v79 的 **139/193（72.02%）**。
@@ -14,6 +14,7 @@
 | v85 | Eq. (23) proximity 1→2 后单轮 69.49%；同 actor pooled 526/777=67.70% | [`proximity_v85/`](proximity_v85/) |
 | v86 | 100% filtered execution 的 base pooled 789/1094=72.12%；两个 proposal 均回落 | [`full_filter_v86/`](full_filter_v86/) |
 | v87 | 四个 256-env PPO delta 共识；方向 cosine 0.017，独立 off gate 173/256=67.58% | [`consensus_v87/`](consensus_v87/) |
+| v88 | 成功轨迹 sampled-safe-action 模仿的两个 proposal 均回落；base pooled 754/1078=69.94% | [`success_imitation_v88/`](success_imitation_v88/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -25,7 +26,8 @@ v82/v83 已证明 microbatch 路径稳定：每轮多个等权 backward chunks�
 后的 accepted actor 两次 rollout 合并仅 66.75%，说明同配置 continuation 已进入噪声平台。
 v87 将有效 PPO batch 扩到 1,048,576 transitions。四个 delta 的平均 pairwise cosine 仅
 0.017，共识范数也只有单成员平均的 51.3%；独立 filter-off gate 仍只有 67.58%。这证明
-reward-only PPO 的局部梯度主要是 rollout 噪声，继续增加同类样本不会解决问题。下一步改为
-成功 filtered trajectory 的 safe-action 自模仿：只克隆真正到顶 episode 中执行过的安全
-动作，并保留 PPO、moving KL 和事务 rollback。
-
+reward-only PPO 的局部梯度主要是 rollout 噪声，继续增加同类样本不会解决问题。v88 随后
+对成功 filtered trajectory 做 sampled-safe-action 自模仿，但成功轨迹中只有约 8.5%–8.8%
+的 transition 真正被 CBF 修正，其余目标主要是 stochastic exploration noise；两个 proposal
+均被 rollback。下一步只训练“成功且实际 CBF 干预”的 transition，并改用同状态
+deterministic safe mean 作为低噪声目标。
