@@ -36,6 +36,7 @@
 | v107 | outcome 权重减半并逐 proposal 事务回滚；4/4 proposal 回落，最终完整恢复输入 actor | [`outcome_transactional_v107/`](outcome_transactional_v107/) |
 | v108 | 回到原生 CBF-dual 并将 std 降至 0.03；4/4 proposal 回落，低探索噪声仍未改善 | [`low_noise_transactional_v108/`](low_noise_transactional_v108/) |
 | v109 | 成对 filter-off 观测/filter-on 安全轨迹训练；screen 仅 41/64=64.06%，未触发独立 gate | [`paired_rescue_trajectory_v109/`](paired_rescue_trajectory_v109/) |
+| v110 | 修正 v109 分叉后的状态/动作错配；离线方向更好但 screen 降至 36/64=56.25%，拒绝 | [`deployment_counterfactual_v110/`](deployment_counterfactual_v110/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -185,3 +186,12 @@ filter-on 为 184/256=71.88%，69 个 matched rescue 共给出 4,899 条 teacher
 即使把真实安全轨迹延伸到干预前，局部 action imitation 仍不是稳定的部署成功方向；
 下一步需要 sequence-level counterfactual outcome/value objective，而不是继续扩大同类
 teacher 数据或重复局部拟合。
+
+v110 修正了 v109 的关键因果错配：filter-on 轨迹只用于识别 matched rescue，实际
+teacher action 则由每个 filter-off 部署状态上的 CBF 反事实投影产生。4x32 paired
+initial states 得到 30 个 rescue、1,982 条目标；teacher distance 从 0.062279 降到
+0.062002，cosine 为 0.454，且 KL 精确限制在 5e-5。尽管这些离线指标优于 v109，
+同一开发 seed 的 deterministic filter-off screen 反而只有 36/64=56.25%，因此没有
+运行独立 gate。该结果进一步确认局部 CBF action correction 与最终任务成功方向并不
+等价；后续不再扩充同类蒸馏，而应直接学习 sequence-level counterfactual
+outcome/value objective。当前最佳继续为 v79。
