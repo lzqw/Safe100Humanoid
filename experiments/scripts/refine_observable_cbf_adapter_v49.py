@@ -207,6 +207,7 @@ def _collect_first_episodes(
   *,
   seed: int,
   runtime_filter: bool,
+  stochastic_policy: bool = False,
 ) -> dict[str, Any]:
   action_term.set_runtime_filter_mask(
     torch.full(
@@ -243,7 +244,7 @@ def _collect_first_episodes(
   with torch.no_grad():
     for _ in range(maximum_steps):
       flat = _flat_observations(observations)
-      actions = actor(observations, stochastic_output=False)
+      actions = actor(observations, stochastic_output=stochastic_policy)
       next_observations, _, dones, extras = runner.env.step(actions)
       extras = dict(extras)
       ids = active.nonzero(as_tuple=False).flatten()
@@ -279,6 +280,7 @@ def _collect_first_episodes(
   return {
     "seed": seed,
     "runtime_filter": runtime_filter,
+    "stochastic_policy": stochastic_policy,
     "initial_state_signature": signature,
     "success": success.cpu(),
     "fell": fell.cpu(),
