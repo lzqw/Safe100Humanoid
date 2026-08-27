@@ -1,0 +1,84 @@
+{
+  "actor_learning_rate": 5e-06,
+  "actor_update_scope": "last-layer",
+  "base_checkpoint_sha256": "3ec45cd196447901cf815d0fa1ff400af1b519ed2bb85c2fc179458ce3e81d3f",
+  "candidate_actor_sha256": "e2f87f173954e3474f8b714abdf5e321f2d34fa34baedfcd7d45c9e0c214c6cd",
+  "candidate_checkpoint_sha256": "fccf63fb774e4df5097103aa1c736fb00ed329c2300020a407b96db7ef38f5fd",
+  "candidate_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/pilot/F2/raw_moderate_last_layer_rescue_v40/candidate.pt",
+  "context": "F2",
+  "elapsed_seconds": 9.5520964700263,
+  "epochs": 1,
+  "git_commit": "96f98462adfd9e0383236e560dd088cb63867117",
+  "initial_actor_sha256": "3964c0ef24707addbaa0dacfd4fd627882bd8b45a2c9799142710fa45bc29499",
+  "max_reference_kl": 0.00025,
+  "method_id": "last-layer-multi-seed-rescue-distillation-v40",
+  "minibatches": 4,
+  "moving_kl_beta": 0.5,
+  "optimization_seed": 201350332,
+  "schema_version": 1,
+  "source_dataset": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/pilot/F2/raw_moderate_multi_seed_rescue_v38_3x32/rescue_dataset.pt",
+  "source_dataset_sha256": "1d9fa21bdfb18a5801b685b6f0800c03172a04115ae8484e8f4898f78276c4a6",
+  "source_training_seeds": [
+    201350282,
+    201350292,
+    201350302
+  ],
+  "teacher_eta": 0.25,
+  "training": {
+    "actor_gradient_clipped_fraction": 1.0,
+    "actor_gradient_norm_pre_clip_max": 2.338883399963379,
+    "actor_update_scope": "last-layer",
+    "after": {
+      "reference_forward_kl": 0.0002209385464709227,
+      "reference_mean_shift": 0.000977325321884892,
+      "teacher_weighted_distance": 0.1373596819537713,
+      "teacher_weighted_smooth_l1": 0.01248775771646502
+    },
+    "before": {
+      "reference_forward_kl": 0.0,
+      "reference_mean_shift": 0.0,
+      "teacher_weighted_distance": 0.13856060756065916,
+      "teacher_weighted_smooth_l1": 0.012619178009041694
+    },
+    "dataset_transition_count": 38936,
+    "epochs": 1,
+    "minibatches": 4,
+    "minibatches_with_teacher": 4,
+    "moving_kl_beta": 0.5,
+    "moving_kl_during_update": 0.00021218162873992696,
+    "optimizer_updates": 4,
+    "rescued_environment_count": 23,
+    "rescued_transition_count": 9721,
+    "teacher_eta": 0.25,
+    "teacher_loss_during_update": 0.012487621512264013,
+    "teacher_transition_count": 860,
+    "teacher_transition_fraction": 0.022087527438998222,
+    "teacher_weight_sum": 844.5980224609375,
+    "trainable_parameter_count": 1548,
+    "trust_region": {
+      "after": {
+        "reference_forward_kl": 0.000223404767703177,
+        "reference_mean_shift": 0.0009837763051760329
+      },
+      "before": {
+        "reference_forward_kl": 0.0,
+        "reference_mean_shift": 0.0
+      },
+      "enabled": true,
+      "max_reference_kl": 0.00025,
+      "observation_count": 30797,
+      "parameter_interpolation_scale": 1.0,
+      "projection_iterations": 0,
+      "unprojected_after": {
+        "reference_forward_kl": 0.000223404767703177,
+        "reference_mean_shift": 0.0009837763051760329
+      }
+    },
+    "unprojected_after": {
+      "reference_forward_kl": 0.0002209385464709227,
+      "reference_mean_shift": 0.000977325321884892,
+      "teacher_weighted_distance": 0.1373596819537713,
+      "teacher_weighted_smooth_l1": 0.01248775771646502
+    }
+  }
+}

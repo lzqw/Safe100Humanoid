@@ -235,6 +235,17 @@ actor，训练耗时 115.2 秒。
 相同 filtered PPO 方向不符合部署目标。完整证据见
 [`filtered_ppo_v39/`](filtered_ppo_v39/)。
 
+#### Last-layer-only rescue distillation（已拒绝）
+
+v40 复用 v38 的冻结多 seed 数据，不再进行 rollout，只更新 actor 最后一个线性层
+的 1,548 个参数。离线训练耗时 9.6 秒，off-success 状态上的 KL 为 `0.0002234`，
+低于预设上限且无需参数缩放。但 hard seed `201350912` 的 filter-off 仍只有
+36/64（56.25%），比基线少 7 个成功 episode。
+
+因此 v36–v38 的失败不是单纯由全网络表征漂移造成；CBF correction 的 supervised
+方向本身无法稳定提高 filter-free task return。该路线至此停止，证据见
+[`last_layer_rescue_v40/`](last_layer_rescue_v40/)。
+
 ## 方法与第一阶段 F1 ablation
 
 本目录发布 v35 第一阶段 F1 pilot 的关键结果。该阶段依据
@@ -277,6 +288,7 @@ winner。后续 staged experiment 解决了 F1 矛盾，并已冻结扩展到 F2
 - [`rescue_shielded_v37/`](rescue_shielded_v37/): trust-region 训练、adaptive paired gate 与失败的 untouched-seed 泛化确认。
 - [`multi_seed_rescue_v38/`](multi_seed_rescue_v38/): 三训练 seed 聚合、off-success trust anchor 及失败的 filter-off gate。
 - [`filtered_ppo_v39/`](filtered_ppo_v39/): 论文式 filtered PPO continuation、checkpoint 对齐及失败的 hard-seed filter-off gate。
+- [`last_layer_rescue_v40/`](last_layer_rescue_v40/): 输出层局部更新、离线 KL 审计及失败的 hard-seed gate。
 
 大型 `.pt` checkpoint 没有提交进 Git；其 SHA-256 已写入
 `pilot_summary.json`，原始 checkpoint 和逐 episode 文件保留在 4080 artifact
