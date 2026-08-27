@@ -470,6 +470,29 @@ def test_v119_reserves_the_complete_last_rollout_seed() -> None:
     assert FILTER_OFF_PPO.VALIDATED_FULL_BATCH_METHOD_ID.endswith("v119")
 
 
+def test_v120_terminal_progress_credit_is_seed_standardized_and_episode_equal() -> None:
+    environment_ids = torch.tensor((0, 0, 1, 2, 2, 2), dtype=torch.long)
+    success = torch.tensor((False, False, True))
+    reached = torch.tensor((2, 5, 9))
+    weights, advantages = FILTER_OFF_PPO.standardized_progress_weights(
+        environment_ids,
+        success,
+        reached,
+        num_envs=3,
+        success_bonus=1.0,
+    )
+    episode_weight = torch.stack(
+        [weights[environment_ids == index].sum() for index in range(3)]
+    )
+    episode_advantage = torch.stack(
+        [advantages[environment_ids == index][0] for index in range(3)]
+    )
+    assert torch.allclose(episode_weight, torch.full((3,), 1.0 / 3.0))
+    assert torch.isclose(episode_advantage.mean(), torch.tensor(0.0), atol=1e-6)
+    assert episode_advantage[2] > episode_advantage[1] > episode_advantage[0]
+    assert FILTER_OFF_PPO.PROGRESS_VALIDATED_METHOD_ID.endswith("v120")
+
+
 def test_v95_critic_expansion_accepts_ten_persistent_features() -> None:
     source = {"mlp.0.weight": torch.randn(3, 7)}
     target = {"mlp.0.weight": torch.randn(3, 17)}

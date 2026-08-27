@@ -52,6 +52,9 @@ FULL_BATCH_METHOD_ID = "filter-off-episodic-full-batch-residual-ppo-v118"
 VALIDATED_FULL_BATCH_METHOD_ID = (
   "heldout-validated-filter-off-full-batch-residual-ppo-v119"
 )
+PROGRESS_VALIDATED_METHOD_ID = (
+  "heldout-validated-terminal-progress-residual-ppo-v120"
+)
 ACTION_DIM = 12
 
 
@@ -98,6 +101,52 @@ def balanced_outcome_weights(
     class_count = positive_count if positive else negative_count
     weights[rows] = 0.5 / float(class_count * len(rows))
     advantages[rows] = 1.0 if positive else -1.0
+  return weights, advantages
+
+
+def standardized_progress_weights(
+  environment_ids: torch.Tensor,
+  episode_success: torch.Tensor,
+  episode_reached_risers: torch.Tensor,
+  *,
+  num_envs: int,
+  success_bonus: float,
+) -> tuple[torch.Tensor, torch.Tensor]:
+  """Give each episode equal mass and standardize terminal progress per seed."""
+  if (
+    environment_ids.ndim != 1
+    or environment_ids.dtype != torch.long
+    or episode_success.ndim != 1
+    or episode_success.dtype != torch.bool
+    or episode_reached_risers.shape != episode_success.shape
+    or num_envs < 1
+    or success_bonus < 0.0
+    or not len(environment_ids)
+  ):
+    raise ValueError("v120 terminal-progress inputs are invalid")
+  present = environment_ids.unique(sorted=True)
+  if int(present.max()) >= len(episode_success):
+    raise ValueError("v120 terminal-progress episode id is out of range")
+  seed_ids = torch.div(present, int(num_envs), rounding_mode="floor")
+  unique_seeds = seed_ids.unique(sorted=True)
+  weights = torch.zeros(len(environment_ids), dtype=torch.float32)
+  advantages = torch.zeros(len(environment_ids), dtype=torch.float32)
+  for seed_id in unique_seeds.tolist():
+    seed_episodes = present[seed_ids == int(seed_id)]
+    scores = episode_reached_risers[seed_episodes].float() + float(
+      success_bonus
+    ) * episode_success[seed_episodes].float()
+    normalized = (scores - scores.mean()) / scores.std(unbiased=False).clamp_min(
+      1.0e-6
+    )
+    for environment_id, advantage in zip(seed_episodes.tolist(), normalized.tolist()):
+      rows = (environment_ids == int(environment_id)).nonzero(
+        as_tuple=False
+      ).flatten()
+      weights[rows] = 1.0 / float(
+        len(unique_seeds) * len(seed_episodes) * len(rows)
+      )
+      advantages[rows] = float(advantage)
   return weights, advantages
 
 
@@ -151,6 +200,12 @@ def _parse_args() -> argparse.Namespace:
     action="store_true",
     help="Reserve the final complete rollout seed for transactional acceptance.",
   )
+  parser.add_argument(
+    "--episode-credit",
+    choices=("binary-balanced", "terminal-progress-standardized"),
+    default="binary-balanced",
+  )
+  parser.add_argument("--success-bonus", type=float, default=1.0)
   parser.add_argument("--epochs", type=int, default=4)
   parser.add_argument("--batch-size", type=int, default=8192)
   parser.add_argument("--clip-ratio", type=float, default=0.2)
@@ -605,7 +660,11 @@ def main() -> None:
   if args.validation_last_seed:
     if args.optimizer != "sgd" or len(seeds) < 4:
       raise ValueError("v119 held-out validation requires SGD and four seeds")
-    method_id = VALIDATED_FULL_BATCH_METHOD_ID
+    method_id = (
+      PROGRESS_VALIDATED_METHOD_ID
+      if args.episode_credit == "terminal-progress-standardized"
+      else VALIDATED_FULL_BATCH_METHOD_ID
+    )
   else:
     method_id = FULL_BATCH_METHOD_ID if args.optimizer == "sgd" else METHOD_ID
   if args.num_envs < 2 or not 1 <= args.screen_envs <= args.num_envs:
@@ -624,6 +683,8 @@ def main() -> None:
     raise ValueError("v117 moving KL beta must lie in [0, 4]")
   if not 0.0 < args.max_reference_kl <= 0.1:
     raise ValueError("v117 reference KL cap must lie in (0, 0.1]")
+  if not 0.0 <= args.success_bonus <= 4.0:
+    raise ValueError("v120 success bonus must lie in [0, 4]")
 
   repo = args.repo.resolve()
   checkpoint = args.base_checkpoint.resolve()
@@ -654,6 +715,8 @@ def main() -> None:
       "screen_seed": args.screen_seed,
       "training_runtime_filter": False,
       "validation_last_seed": args.validation_last_seed,
+      "episode_credit": args.episode_credit,
+      "success_bonus": args.success_bonus,
     },
   )
 
@@ -732,6 +795,7 @@ def main() -> None:
       "environment_ids": [],
     }
     all_success: list[torch.Tensor] = []
+    all_reached_risers: list[torch.Tensor] = []
     rollout_summaries: list[dict[str, Any]] = []
     environment_offset = 0
     for seed in seeds:
@@ -750,14 +814,16 @@ def main() -> None:
       success = rollout.pop("success")
       rollout.pop("fell")
       rollout.pop("steps")
-      rollout.pop("reached_risers")
+      reached_risers = rollout.pop("reached_risers")
       all_success.append(success)
+      all_reached_risers.append(reached_risers)
       rollout_summaries.append(rollout)
       print(json.dumps({"outcome_rollout_completed": rollout}), flush=True)
       environment_offset += args.num_envs
 
     dataset = {key: torch.cat(chunks) for key, chunks in dataset_chunks.items()}
     episode_success = torch.cat(all_success)
+    episode_reached_risers = torch.cat(all_reached_risers)
     validation_dataset = None
     validation_weights = validation_advantages = None
     if args.validation_last_seed:
@@ -768,17 +834,42 @@ def main() -> None:
       )
       training_dataset = _subset_dataset(dataset, train_mask)
       validation_dataset = _subset_dataset(dataset, validation_mask)
-      weights, advantages = balanced_outcome_weights(
-        training_dataset["environment_ids"], episode_success
-      )
-      validation_weights, validation_advantages = balanced_outcome_weights(
-        validation_dataset["environment_ids"], episode_success
-      )
+      if args.episode_credit == "terminal-progress-standardized":
+        weights, advantages = standardized_progress_weights(
+          training_dataset["environment_ids"],
+          episode_success,
+          episode_reached_risers,
+          num_envs=args.num_envs,
+          success_bonus=args.success_bonus,
+        )
+        validation_weights, validation_advantages = standardized_progress_weights(
+          validation_dataset["environment_ids"],
+          episode_success,
+          episode_reached_risers,
+          num_envs=args.num_envs,
+          success_bonus=args.success_bonus,
+        )
+      else:
+        weights, advantages = balanced_outcome_weights(
+          training_dataset["environment_ids"], episode_success
+        )
+        validation_weights, validation_advantages = balanced_outcome_weights(
+          validation_dataset["environment_ids"], episode_success
+        )
     else:
       training_dataset = dataset
-      weights, advantages = balanced_outcome_weights(
-        training_dataset["environment_ids"], episode_success
-      )
+      if args.episode_credit == "terminal-progress-standardized":
+        weights, advantages = standardized_progress_weights(
+          training_dataset["environment_ids"],
+          episode_success,
+          episode_reached_risers,
+          num_envs=args.num_envs,
+          success_bonus=args.success_bonus,
+        )
+      else:
+        weights, advantages = balanced_outcome_weights(
+          training_dataset["environment_ids"], episode_success
+        )
     if args.optimizer == "sgd" and (
       args.epochs != 1 or args.batch_size < len(weights)
     ):
@@ -874,6 +965,8 @@ def main() -> None:
           "hidden_dims": [128, 64],
         },
         "offline_gate_passed": offline_gate_passed,
+        "episode_credit": args.episode_credit,
+        "success_bonus": args.success_bonus,
         "heldout_validation": {
           "seed": seeds[-1],
           "before": validation_before,
@@ -921,6 +1014,8 @@ def main() -> None:
       "validation_last_seed": args.validation_last_seed,
       "training_seed_count": len(seeds) - int(args.validation_last_seed),
       "validation_seed": seeds[-1] if args.validation_last_seed else None,
+      "episode_credit": args.episode_credit,
+      "success_bonus": args.success_bonus,
       "episode_success_count": int(episode_success.sum()),
       "episode_failure_count": int((~episode_success).sum()),
       "training_transition_count": len(weights),
