@@ -6,6 +6,7 @@ import torch
 from src.tasks.stairs_cbf.cbf_math import (
   dual_cbf_reward,
   next_riser,
+  next_riser_clearance_reference,
   project_halfspace,
   sloped_toe_clearance_constraint,
   stair_barrier,
@@ -92,6 +93,27 @@ def test_riser_extraction_and_selection():
   assert h.item() < 0 and torch.allclose(top, torch.tensor([0.13]))
 
 
+def test_next_riser_clearance_reference_persists_to_top_platform():
+  root_x = torch.tensor([0.20, 0.40, 1.20, 2.10])
+  origin_z = torch.zeros(4)
+  edge_x = torch.tensor([[1.0, 1.5, 2.0]]).expand(4, -1)
+  edge_top_z = torch.tensor([[0.18, 0.36, 0.54]]).expand(4, -1)
+
+  reference, active, index = next_riser_clearance_reference(
+    root_x,
+    origin_z,
+    edge_x,
+    edge_top_z,
+    default_height=0.10,
+    height_above_tread=0.05,
+    lookahead_distance=0.60,
+  )
+
+  torch.testing.assert_close(reference, torch.tensor([0.10, 0.23, 0.41, 0.59]))
+  assert active.tolist() == [False, True, True, True]
+  assert index.tolist() == [0, 0, 1, 2]
+
+
 def test_dual_reward_matches_paper_and_is_bounded_without_violation():
   margin = torch.tensor([-0.25, 0.10, -4.0])
   intervention = torch.tensor([0.5, 0.0, 10.0])
@@ -151,4 +173,10 @@ def test_v35_paper_stair_candidate_uses_reduced_order_foot_distance():
     "sigma": 0.05,
     "margin_weight": 1.0,
     "intervention_weight": 1.0,
+  }
+  assert PAPER_DUAL_CANDIDATES["paper_stair_demo_scale"] == {
+    "correction_space": "foot_task",
+    "sigma": 0.05,
+    "margin_weight": 10.0,
+    "intervention_weight": 100.0,
   }

@@ -70,6 +70,62 @@ def stair_barrier(
   return edge_x - (foot_x + toe_margin)
 
 
+def next_riser_clearance_reference(
+  root_x: torch.Tensor,
+  origin_z: torch.Tensor,
+  edge_x: torch.Tensor,
+  edge_top_z: torch.Tensor,
+  *,
+  default_height: float,
+  height_above_tread: float,
+  lookahead_distance: float,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+  """Return the paper-style foot-clearance reference for the stair ahead.
+
+  The reference follows the first riser in front of the robot instead of the
+  short-lived CBF activation flag.  Once the robot passes the final riser, the
+  top-platform height remains the reference.  This keeps the target stable for
+  the entire swing rather than dropping it back to the flat-ground height as
+  soon as the toe clears the riser.
+  """
+  if root_x.ndim != 1 or origin_z.shape != root_x.shape:
+    raise ValueError("root_x and origin_z must share shape [N]")
+  if edge_x.ndim != 2 or edge_x.shape != edge_top_z.shape:
+    raise ValueError("riser edges and heights must share shape [N, R]")
+  if edge_x.shape[0] != root_x.shape[0] or edge_x.shape[1] < 1:
+    raise ValueError("riser metadata must contain at least one edge per env")
+  if default_height <= 0.0 or height_above_tread <= 0.0:
+    raise ValueError("clearance heights must be positive")
+  if lookahead_distance <= 0.0:
+    raise ValueError("clearance lookahead distance must be positive")
+
+  distance = edge_x - root_x.unsqueeze(1)
+  ahead = distance >= 0.0
+  masked_distance = torch.where(
+    ahead, distance, torch.full_like(distance, torch.inf)
+  )
+  index = masked_distance.argmin(dim=1)
+  selected_distance = masked_distance.gather(1, index.unsqueeze(1)).squeeze(1)
+  selected_top = edge_top_z.gather(1, index.unsqueeze(1)).squeeze(1)
+  within_lookahead = torch.isfinite(selected_distance) & (
+    selected_distance <= float(lookahead_distance)
+  )
+  beyond_final_riser = root_x > edge_x[:, -1]
+  selected_top = torch.where(
+    beyond_final_riser, edge_top_z[:, -1], selected_top
+  )
+  active = within_lookahead | beyond_final_riser
+  flat_reference = origin_z + float(default_height)
+  stair_reference = selected_top + float(height_above_tread)
+  reference = torch.where(active, stair_reference, flat_reference)
+  index = torch.where(
+    beyond_final_riser,
+    torch.full_like(index, edge_x.shape[1] - 1),
+    index,
+  )
+  return reference, active, index
+
+
 def sloped_toe_clearance_constraint(
   horizontal_margin: torch.Tensor,
   foot_z: torch.Tensor,

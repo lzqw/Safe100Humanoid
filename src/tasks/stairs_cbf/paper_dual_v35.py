@@ -45,6 +45,16 @@ PAPER_DUAL_CANDIDATES: dict[str, dict[str, float | str]] = {
     "margin_weight": 1.0,
     "intervention_weight": 1.0,
   },
+  "paper_stair_demo_scale": {
+    # Keep the humanoid reduced-order distance from Eq. (27), but use the
+    # 10x margin / 100x action-proximity scaling in the authors' public code.
+    # This prevents the sparse CBF signal from disappearing underneath the
+    # nominal locomotion return after whole-rollout advantage normalization.
+    "correction_space": "foot_task",
+    "sigma": 0.05,
+    "margin_weight": 10.0,
+    "intervention_weight": 100.0,
+  },
 }
 
 

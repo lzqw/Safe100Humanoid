@@ -55,6 +55,7 @@ def _parse_args() -> argparse.Namespace:
       "raw_strong",
       "raw_demo",
       "paper_stair_exact",
+      "paper_stair_demo_scale",
     ),
     required=True,
   )
@@ -183,6 +184,15 @@ def _parse_args() -> argparse.Namespace:
     type=float,
     default=5.0e-6,
     help="Actor learning rate recorded for the v35 continuation.",
+  )
+  parser.add_argument(
+    "--moving-kl-beta",
+    type=float,
+    default=0.5,
+    help=(
+      "Extra round-reference KL coefficient. Use 0 for paper-standard clipped "
+      "PPO without the historical continuation anchor."
+    ),
   )
   return parser.parse_args()
 
@@ -321,10 +331,10 @@ def main() -> None:
   if not 0.0 <= args.clearance_barrier_slope <= 2.0:
     raise ValueError("v35 clearance barrier slope must lie in [0, 2]")
   if (
-    args.candidate == "paper_stair_exact"
+    args.candidate in {"paper_stair_exact", "paper_stair_demo_scale"}
     and args.clearance_barrier_slope != 0.0
   ):
-    raise ValueError("paper_stair_exact requires the horizontal barrier (slope 0)")
+    raise ValueError("paper stair candidates require the horizontal barrier (slope 0)")
   if not 0.0 < args.a1_teacher_weight <= 0.1:
     raise ValueError("v35 A1 teacher weight must be in (0, 0.1]")
   if args.curriculum_rows < 2:
@@ -333,6 +343,8 @@ def main() -> None:
     raise ValueError("v35 training action std must lie in [0.01, 0.05]")
   if not 1.0e-7 <= args.actor_learning_rate <= 5.0e-6:
     raise ValueError("v35 actor learning rate must lie in [1e-7, 5e-6]")
+  if not 0.0 <= args.moving_kl_beta <= 0.5:
+    raise ValueError("v35 moving KL beta must lie in [0, 0.5]")
   training_runtime_filter = args.training_runtime_filter == "on"
   training_filter_fraction = (
     1.0 if training_runtime_filter else 0.0
@@ -446,6 +458,18 @@ def main() -> None:
     args.candidate,
     runtime_filter_during_training=training_runtime_filter,
   )
+  if args.candidate == "paper_stair_demo_scale":
+    clearance = env_cfg.rewards["foot_clearance"]
+    clearance.params = {
+      **clearance.params,
+      "reference_mode": "next_riser",
+      "lookahead_distance": 0.60,
+    }
+    reward["clearance_reference"] = {
+      "mode": "next_riser",
+      "lookahead_distance_m": 0.60,
+      "persists_after_cbf_deactivation": True,
+    }
   shift["runtime_filter_fraction"] = training_filter_fraction
   reward["runtime_filter_fraction"] = training_filter_fraction
   deterministic_mean_teacher = None
@@ -482,6 +506,7 @@ def main() -> None:
   _configure_algorithm(agent_cfg, teacher_arms[0], preflight=False)
   agent_cfg.algorithm.learning_rate = float(args.actor_learning_rate)
   agent_cfg.algorithm.actor_learning_rate = float(args.actor_learning_rate)
+  agent_cfg.algorithm.moving_kl_beta = float(args.moving_kl_beta)
   agent_cfg.algorithm.minimum_std = float(args.training_action_std)
   agent_cfg.algorithm.maximum_std = float(args.training_action_std)
   if args.deterministic_mean_teacher:
@@ -574,6 +599,7 @@ def main() -> None:
         "training_filter_fraction": training_filter_fraction,
         "training_action_std": args.training_action_std,
         "actor_learning_rate": args.actor_learning_rate,
+        "moving_kl_beta": args.moving_kl_beta,
       },
     )
     for round_index in range(1, args.rounds + 1):
@@ -654,6 +680,7 @@ def main() -> None:
           "training_filter_fraction": training_filter_fraction,
           "training_action_std": args.training_action_std,
           "actor_learning_rate": args.actor_learning_rate,
+          "moving_kl_beta": args.moving_kl_beta,
         },
       )
       _atomic_json(output_dir / "round_metrics.json", records)
@@ -689,6 +716,7 @@ def main() -> None:
       "training_filter_fraction": training_filter_fraction,
       "training_action_std": args.training_action_std,
       "actor_learning_rate": args.actor_learning_rate,
+      "moving_kl_beta": args.moving_kl_beta,
       "seed": args.seed,
       "rounds": args.rounds,
       "num_envs": args.num_envs,

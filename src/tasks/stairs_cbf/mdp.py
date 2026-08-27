@@ -8,7 +8,11 @@ import torch
 from mjlab.envs import ManagerBasedRlEnv
 
 from .actions import StairCbfJointPositionAction
-from .cbf_math import dual_cbf_reward, sloped_toe_clearance_constraint
+from .cbf_math import (
+  dual_cbf_reward,
+  next_riser_clearance_reference,
+  sloped_toe_clearance_constraint,
+)
 from .edge_detection import select_active_riser
 
 
@@ -1000,6 +1004,8 @@ def stair_feet_clearance(
   asset_name: str = "robot",
   default_height: float = 0.10,
   height_above_tread: float = 0.05,
+  reference_mode: str = "cbf_active",
+  lookahead_distance: float = 0.60,
 ) -> torch.Tensor:
   """Paper-described clearance reward with the next tread as reference."""
   term = _cbf_term(env, action_name)
@@ -1007,12 +1013,42 @@ def stair_feet_clearance(
   foot_z = robot.data.site_pos_w[:, term._site_local_ids, 2]
   foot_vel_xy = robot.data.site_lin_vel_w[:, term._site_local_ids, :2]
   speed = torch.linalg.vector_norm(foot_vel_xy, dim=-1)
-  target = env.scene.env_origins[:, 2:3].expand_as(foot_z) + default_height
-  active = torch.isfinite(term.h) & (term.selected_foot >= 0)
-  foot_ids = torch.arange(2, device=env.device).view(1, 2)
-  selected = active.unsqueeze(1) & (term.selected_foot.unsqueeze(1) == foot_ids)
-  stair_target = (term.selected_edge_top_z + height_above_tread).unsqueeze(1)
-  target = torch.where(selected, stair_target, target)
+  if reference_mode == "cbf_active":
+    target = env.scene.env_origins[:, 2:3].expand_as(foot_z) + default_height
+    active = torch.isfinite(term.h) & (term.selected_foot >= 0)
+    foot_ids = torch.arange(2, device=env.device).view(1, 2)
+    selected = active.unsqueeze(1) & (term.selected_foot.unsqueeze(1) == foot_ids)
+    stair_target = (term.selected_edge_top_z + height_above_tread).unsqueeze(1)
+    target = torch.where(selected, stair_target, target)
+  elif reference_mode == "next_riser":
+    terrain = env.scene.terrain
+    if terrain is None:
+      raise RuntimeError("next-riser clearance requires stair terrain")
+    edge_x = term._edge_x[terrain.terrain_levels, terrain.terrain_types]
+    edge_top_z = term._edge_top_z[
+      terrain.terrain_levels, terrain.terrain_types
+    ]
+    reference, active, index = next_riser_clearance_reference(
+      robot.data.root_link_pos_w[:, 0],
+      env.scene.env_origins[:, 2],
+      edge_x,
+      edge_top_z,
+      default_height=default_height,
+      height_above_tread=height_above_tread,
+      lookahead_distance=lookahead_distance,
+    )
+    target = reference.unsqueeze(1).expand_as(foot_z)
+    env.extras["log"]["CBF/clearance_reference_riser_mean"] = (
+      index.float().mean()
+    )
+    env.extras["log"]["CBF/clearance_reference_height_mean"] = (
+      reference.mean()
+    )
+  else:
+    raise ValueError(
+      "stair clearance reference_mode must be 'cbf_active' or 'next_riser', "
+      f"got {reference_mode!r}"
+    )
   cost = torch.sum(torch.abs(foot_z - target) * speed, dim=1)
   env.extras["log"]["CBF/clearance_target_active_fraction"] = active.float().mean()
   return cost
