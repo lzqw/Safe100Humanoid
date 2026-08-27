@@ -37,6 +37,7 @@
 | v108 | 回到原生 CBF-dual 并将 std 降至 0.03；4/4 proposal 回落，低探索噪声仍未改善 | [`low_noise_transactional_v108/`](low_noise_transactional_v108/) |
 | v109 | 成对 filter-off 观测/filter-on 安全轨迹训练；screen 仅 41/64=64.06%，未触发独立 gate | [`paired_rescue_trajectory_v109/`](paired_rescue_trajectory_v109/) |
 | v110 | 修正 v109 分叉后的状态/动作错配；离线方向更好但 screen 降至 36/64=56.25%，拒绝 | [`deployment_counterfactual_v110/`](deployment_counterfactual_v110/) |
+| v111 | paired terminal outcome 正负对比；rescued/harmed 方向近乎抵消，screen 38/64=59.38% | [`paired_outcome_contrast_v111/`](paired_outcome_contrast_v111/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -195,3 +196,11 @@ initial states 得到 30 个 rescue、1,982 条目标；teacher distance 从 0.0
 运行独立 gate。该结果进一步确认局部 CBF action correction 与最终任务成功方向并不
 等价；后续不再扩充同类蒸馏，而应直接学习 sequence-level counterfactual
 outcome/value objective。当前最佳继续为 v79。
+
+v111 将 paired terminal outcome 直接用于整段目标符号：32 个 `off失败/on成功`
+rescued episode 取 `+1`，24 个 `off成功/on失败` harmed episode 取 `-1`，每个
+episode 等权。3,675 条目标的正负方向几乎抵消，完整 gradient norm 仅 0.00264，
+最终 KL 仅 1.82e-6；同一开发 screen 为 38/64=59.38%，虽比 v110 恢复两个 episode，
+仍远低于 75%。因此没有运行独立 gate。该证据说明 CBF 的任务价值高度依赖状态，
+不能再用一个全局 adapter 平均处理；下一步需要显式学习 state-dependent paired
+counterfactual value/gating，而不是继续调整全局正负权重。当前最佳仍为 v79。
