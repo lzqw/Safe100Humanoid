@@ -1,0 +1,50 @@
+{
+  "schema_version": "paper_dual_v35.v74.decision.v1",
+  "candidate": "matched-seed-ultra-small-step-continuation-v74",
+  "decision": "rejected_at_training_gate",
+  "reason": "The v73 unaligned final actor reproduced 64.10% filter-off on the matched seed, essentially unchanged from the original 64.43% actor, and the 1.25e-5 proposal regressed to 61.73% before rollback.",
+  "source_commit": "241bfb1abd0f6816a500f9fefb3194b2794cce69",
+  "base_checkpoint_sha256": "2c5a4d0c60850c8f813bb3821b1adfd4bed79635b9ce9e23360239d79875e49a",
+  "training": {
+    "seed": 201352620,
+    "num_envs": 128,
+    "rounds": 2,
+    "rollout_steps_per_round": 1024,
+    "elapsed_seconds": 46.96174455806613,
+    "initial_actor_learning_rate": 0.0000125,
+    "final_actor_learning_rate": 0.00000625,
+    "transactional_rollback_count": 1
+  },
+  "aligned_rollouts": [
+    {
+      "rollout_round": 1,
+      "filter_off_success_count": 125,
+      "filter_off_episode_count": 195,
+      "filter_off_success_rate": 0.6410256410256411,
+      "filter_on_success_count": 50,
+      "filter_on_episode_count": 71,
+      "filter_on_success_rate": 0.704225352112676,
+      "moving_forward_kl": 1.9183244148734957e-07,
+      "rollback_applied": false
+    },
+    {
+      "rollout_round": 2,
+      "filter_off_success_count": 121,
+      "filter_off_episode_count": 196,
+      "filter_off_success_rate": 0.6173469387755102,
+      "filter_on_success_count": 51,
+      "filter_on_episode_count": 68,
+      "filter_on_success_rate": 0.75,
+      "moving_forward_kl": 6.311051947704982e-07,
+      "rollback_applied": true
+    }
+  ],
+  "deployment_filter_off_gate": {
+    "planned_episode_count": 128,
+    "success_threshold": 0.75,
+    "run": false,
+    "reason": "training_gate_failed"
+  },
+  "current_best_changed": false,
+  "next_hypothesis": "Stop shrinking the same mixed-execution gradient and restore the paper's fully safety-filtered training distribution with nominal-action PPO storage."
+}

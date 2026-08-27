@@ -1,5 +1,13 @@
 # v35 Paper-Aligned Dual CBF-RL Pilot
 
+## 最新实验：v74 同 seed 超小步长 continuation
+
+v74 用同一 seed 检查 v73 最后的 unaligned proposal：其 filter-off 为 64.10%，
+与原起点 64.43% 基本一致；新的 `1.25e-5` proposal 又降到 61.73% 并被回滚。
+moving forward KL 已只有 `1.9e-7`–`6.3e-7`，说明继续缩小同方向更新没有价值。
+因此不追加评估，下一步恢复论文的 100% 训练期 safety-filtered 分布。完整证据见
+[`matched_continuation_v74/`](matched_continuation_v74/README.md)。
+
 ## 最新实验：v73 自适应小步长与事务回滚
 
 v73 从 v72 最佳 aligned checkpoint 继续，用下一轮 filter-off rollout 接受或
