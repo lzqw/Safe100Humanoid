@@ -1,0 +1,56 @@
+{
+  "schema_version": "paper_dual_v35.v126.decision.v1",
+  "method_id": "heldout-validated-tolerant-local-parameter-antithetic-residual-es-v126",
+  "decision": "tolerant_local_es_rejected_by_negative_heldout_gradient_cosine",
+  "reason": "The relaxed train-consensus gate passed, but the complete held-out deterministic parameter-return gradient again pointed in the opposite direction.",
+  "source_commit": "ad66bfb4d42fc89eaea3b62a92bf0b294afb658c",
+  "targeted_tests_passed": 1,
+  "hardware": "NVIDIA GeForce RTX 4080 SUPER",
+  "input_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "paired_rollout": {
+    "pair_count": 256,
+    "matched_initial_state_signatures": true,
+    "mirrored_parameter_directions": true,
+    "parameter_sigma": 0.005,
+    "plus_success_count": 172,
+    "minus_success_count": 172,
+    "positive_difference_count": 56,
+    "negative_difference_count": 69,
+    "zero_difference_count": 131,
+    "plus_mean_perturbation_residual_norm": 0.010409269870856303,
+    "minus_mean_perturbation_residual_norm": 0.010379408961353977
+  },
+  "gradient_gate": {
+    "train_seed_gradient_norms": [
+      0.4625799059867859,
+      0.4020534157752991,
+      0.3923666775226593
+    ],
+    "train_pairwise_cosines": [
+      -0.027076799422502518,
+      -0.05835524946451187,
+      0.016945745795965195
+    ],
+    "mean_train_pairwise_cosine": -0.0228287676970164,
+    "heldout_gradient_cosine": -0.0950271487236023,
+    "minimum_train_pairwise_cosine": -0.05,
+    "minimum_heldout_cosine": 0.05,
+    "offline_gate_passed": false,
+    "transactional_rollback": true,
+    "initial_residual_sha256": "fee8b17b896844dd29410ad4163283bddada1ba4428f9503e28f673d52dabc91",
+    "final_residual_sha256": "fee8b17b896844dd29410ad4163283bddada1ba4428f9503e28f673d52dabc91"
+  },
+  "screen": {
+    "seed": 201354780,
+    "episode_count": 64,
+    "runtime_filter": false,
+    "success_count": 47,
+    "success_rate": 0.734375,
+    "mean_reached_riser": 8.0625,
+    "mean_residual_norm": 0.0,
+    "independent_gate_run": false
+  },
+  "elapsed_seconds": 138.69996593298856,
+  "global_best_changed": false,
+  "next_hypothesis": "Stop parameter ES after three held-out reversals and return to the paper-dual actor with a state-conditioned cross-seed value or occupancy correction."
+}

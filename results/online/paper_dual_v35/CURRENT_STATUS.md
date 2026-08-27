@@ -52,6 +52,7 @@
 | v123 | joint scale=0.25 使 train/held-out clipped 均改善，但 unseen deterministic screen 仅 38/64=59.38% | [`calibrated_antithetic_v123/`](calibrated_antithetic_v123/) |
 | v124 | 132-D deterministic parameter ES 的 train cosine 为正、held-out 为 -0.0848；rollback 后 screen 45/64=70.31% | [`parameter_antithetic_v124/`](parameter_antithetic_v124/) |
 | v125 | local sigma 使 held-out cosine 变为 +0.0854，但 train pairwise -0.0202 未过门槛；rollback 后 42/64 | [`local_parameter_es_v125/`](local_parameter_es_v125/) |
+| v126 | train tolerance 通过但 held-out cosine 再次为 -0.0950；rollback 后 base screen 47/64=73.44% | [`tolerant_local_es_v126/`](tolerant_local_es_v126/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -321,3 +322,10 @@ cosine 从 v124 的负值改善到 +0.0854，已过 +0.05 门槛；三个 train 
 pairwise cosine 为 -0.0202，略低于预声明 0 门槛，因此仍 exact rollback。screen 为
 42/64=65.63%，未运行独立 gate。下一步保留 held-out 门槛，仅将 train cosine 的噪声
 容忍线固定为 -0.05，再用全新 seeds 运行一次。当前最佳仍为 v79。
+
+v126 将 train pairwise cosine 容忍线固定为 -0.05。本轮 train 值为 -0.0228，已通过；
+但 held-out gradient cosine 再次反向到 -0.0950，因此 exact rollback。回滚后的 v79
+screen 达 47/64=73.44%，但 residual norm 为 0，不能归因于候选，且仍差一个 episode
+才触发独立 gate。v124-v126 三种 parameter-ES 设置均出现 held-out 不稳定，后续停止
+继续调 sigma/cosine threshold，回到 paper-dual actor 的 state-conditioned value 或
+occupancy correction。当前最佳仍为 v79。
