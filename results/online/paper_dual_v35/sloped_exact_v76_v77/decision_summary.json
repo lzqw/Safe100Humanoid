@@ -1,0 +1,42 @@
+{
+  "schema_version": "paper_dual_v35.v76_v77.decision.v1",
+  "candidate": "sloped-eq27-reduced-order-full-filter-ppo-v76-v77",
+  "decision": "rejected_at_training_gate",
+  "reason": "v76 reached a 73.96% late rollout but the final actor reproduced only 70.79% on the matched seed in v77; the next proposal regressed to 68.82% and was rolled back.",
+  "source_commit": "93935b8cc4424c5099a66999028d7975aaf460f0",
+  "v76": {
+    "seed": 201352623,
+    "elapsed_seconds": 91.00000444392208,
+    "aligned_filter_on_success_rates": [0.7018181818181818, 0.706959706959707, 0.7078651685393258, 0.7396226415094339],
+    "transactional_rollback_count": 0,
+    "selected_checkpoint_sha256": "66374c1114901a1f97592750be004bb4f84dede6d43ca8101d2b0aedf903df28",
+    "selected_actor_sha256": "02296e8b1d868d4dde5f93e0a82c4a90501c7add69d9fe7b979a697b7ee121e7",
+    "selected_filter_on_success_rate": 0.7396226415094339,
+    "final_unaligned_checkpoint_sha256": "bd0c7e65ae0e13990b854f38e8b619105af82823c7c20405584451543cdfa8c1",
+    "final_unaligned_actor_sha256": "05d1367150dff23f709a3a187ecb3124fc9b44737c3149a6644c4678900aa549"
+  },
+  "v77_matched_continuation": {
+    "seed": 201352623,
+    "elapsed_seconds": 55.180639902013354,
+    "aligned_filter_on_success_rates": [0.7078651685393258, 0.6881720430107527],
+    "transactional_rollback_count": 1,
+    "selected_actor_sha256": "05d1367150dff23f709a3a187ecb3124fc9b44737c3149a6644c4678900aa549"
+  },
+  "reward_decomposition": {
+    "telemetry_transition_count_per_round": 131072,
+    "component_sum_max_abs_error_max": 2.175966073991731e-09,
+    "nominal_reward_mean_per_transition_by_round": [0.853691012467948, 0.7659908499609855, 0.7958287649519207, 0.8077144719048306],
+    "margin_reward_mean_per_transition_by_round": [-0.769230398776017, -0.6804423104558737, -0.7108065475363219, -0.7221731865074617],
+    "proximity_reward_mean_per_transition_by_round": [-0.08085071016330403, -0.07994208014224569, -0.08054466180237796, -0.08001052434201483],
+    "dual_reward_mean_per_transition_by_round": [-0.8500811096296275, -0.7603843905426402, -0.7913512096338309, -0.8021837130254426],
+    "active_fraction_by_round": [0.27152252197265625, 0.27397918701171875, 0.2720794677734375, 0.2723541259765625]
+  },
+  "deployment_filter_off_gate": {
+    "planned_episode_count": 128,
+    "success_threshold": 0.75,
+    "run": false,
+    "reason": "matched_filtered_training_gate_failed"
+  },
+  "current_best_changed": false,
+  "next_hypothesis": "Audit and correct the unit mapping between the paper's joint-velocity control v and this task's normalized joint-position setpoint before changing reward weights."
+}
