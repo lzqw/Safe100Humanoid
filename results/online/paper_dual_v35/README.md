@@ -384,6 +384,21 @@ v52 针对 v51 只使用 0.3% KL 预算的问题，沿同一 paired consensus gr
 部署泛化；完整线搜索轨迹、checkpoint 与逐 episode 证据见
 [`observable_cbf_ppo_v52/`](observable_cbf_ppo_v52/)。
 
+#### Multi-round observable CBF PPO v53（刷新 rollout 后仍未泛化）
+
+v53 将 v51/v52 的单次 actor 更新扩展为 4 轮论文式循环：每轮都用 3 个新 seed
+重新收集 filter-on/off 配对 rollout，做仅限新增 5 个几何输入列的 consensus PPO
+更新，并重新拟合扩展后的 privileged critic。每轮 24,576 个 transition，共
+98,304 个；RTX 4080 训练耗时 276.8 秒。4/4 轮均通过事务式离线 gate，每轮
+6/6 batch 的 post-update surrogate 为正，critic MSE 也逐轮更新下降，旧 405-D
+actor 参数严格零变化。
+
+但在全新 seed `201351512` 上，filter-off 仅 **39/64（60.94%）**，低于
+48/64 门槛，因此不运行 filter-on，也不追加更多验证。该结果说明增加刷新
+rollout 的多轮局部 PPO 改善仍不足以解决 F2 部署泛化。完整四轮诊断、逐 episode
+证据和精确 checkpoint 见
+[`observable_cbf_ppo_v53/`](observable_cbf_ppo_v53/)。
+
 ## 方法与第一阶段 F1 ablation
 
 本目录发布 v35 第一阶段 F1 pilot 的关键结果。该阶段依据
@@ -435,10 +450,12 @@ winner。后续 staged experiment 解决了 F1 矛盾，并已冻结扩展到 F2
 - [`observable_cbf_adapter_v50/`](observable_cbf_adapter_v50/): 六训练 seed rescued-only 扩展、失败的 untouched filter-off gate、逐 episode 证据与 rejected checkpoint。
 - [`observable_cbf_ppo_v51/`](observable_cbf_ppo_v51/): 论文式几何感知 paired on/off GAE-PPO、正式 49,152-transition 训练、47/64 untouched gate 与 checkpoint。
 - [`observable_cbf_ppo_v52/`](observable_cbf_ppo_v52/): KL 目标线搜索、6/6 离线 surrogate 改善、失败的 untouched filter-off gate 与 rejected checkpoint。
+- [`observable_cbf_ppo_v53/`](observable_cbf_ppo_v53/): 四轮刷新 on-policy rollout、逐轮 actor/critic 更新、98,304-transition 诊断、失败的 untouched gate 与 checkpoint。
 
 历史大型 `.pt` checkpoint 没有提交进 Git；其 SHA-256 已写入相应 summary。
-v49b、v50 与 v51 smoke 的候选 checkpoint 已随各自结果目录提交，便于精确复现；
-其中 v50 已被 untouched gate 拒绝，v51 仅为 smoke，均不是最终稳健 actor。
+v49b、v50、v51 smoke 与 v53 的候选 checkpoint 已随各自结果目录提交，便于
+精确复现；其中 v50 与 v53 已被 untouched gate 拒绝，v51 仅为 smoke，均不是
+最终稳健 actor。
 
 ## Reproduction boundary
 

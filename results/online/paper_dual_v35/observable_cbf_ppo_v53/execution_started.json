@@ -1,0 +1,30 @@
+{
+  "all_round_seeds": [
+    201351101,
+    201351111,
+    201351121,
+    201351201,
+    201351211,
+    201351221,
+    201351301,
+    201351311,
+    201351321,
+    201351401,
+    201351411,
+    201351421
+  ],
+  "base_checkpoint_sha256": "3ec45cd196447901cf815d0fa1ff400af1b519ed2bb85c2fc179458ce3e81d3f",
+  "base_training_seeds": [
+    201351101,
+    201351111,
+    201351121
+  ],
+  "git_commit": "2ff79db9683158172c88279c392b44ae5319e55e",
+  "method_id": "observable-cbf-geometry-multiround-paired-dual-gae-v53",
+  "optimization_seed": 201351499,
+  "rollout_conditions": [
+    "filter_on",
+    "filter_off"
+  ],
+  "rounds": 4
+}
