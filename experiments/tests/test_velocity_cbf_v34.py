@@ -44,6 +44,10 @@ GATED_RESIDUAL = _load(
     "paired_gated_residual_v113_test",
     "experiments/scripts/train_paired_gated_residual_v113.py",
 )
+ADAPTER_CALIBRATION = _load(
+    "observable_adapter_calibration_v114_test",
+    "experiments/scripts/calibrate_observable_adapter_v114.py",
+)
 
 
 def test_v34_sherman_morrison_matches_dense_solve() -> None:
@@ -367,6 +371,24 @@ def test_v113_gate_balances_classes_and_suppresses_low_confidence_states() -> No
         threshold=0.5,
     )
     assert torch.allclose(gate, torch.tensor((0.0, 0.2, 0.0)))
+
+
+def test_v114_interpolation_preserves_endpoints_and_allows_bounded_extrapolation() -> None:
+    base = {
+        "weight": torch.tensor((1.0, 2.0)),
+        "count": torch.tensor(3, dtype=torch.long),
+    }
+    adapter = {
+        "weight": torch.tensor((3.0, 0.0)),
+        "count": torch.tensor(3, dtype=torch.long),
+    }
+    zero = ADAPTER_CALIBRATION.interpolate_actor_state(base, adapter, 0.0)
+    one = ADAPTER_CALIBRATION.interpolate_actor_state(base, adapter, 1.0)
+    extrapolated = ADAPTER_CALIBRATION.interpolate_actor_state(base, adapter, 1.5)
+    assert torch.equal(zero["weight"], base["weight"])
+    assert torch.equal(one["weight"], adapter["weight"])
+    assert torch.allclose(extrapolated["weight"], torch.tensor((4.0, -1.0)))
+    assert extrapolated["count"] == 3
 
 
 def test_v95_critic_expansion_accepts_ten_persistent_features() -> None:
