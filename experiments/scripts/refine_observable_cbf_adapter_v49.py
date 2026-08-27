@@ -26,6 +26,7 @@ from typing import Any
 
 import torch
 import torch.nn.functional as F
+from paired_rescue_v109_math import paired_rescue_action_trace
 from cbf_teacher_v31_protocol import (
   CLEARANCE_BARRIER_SLOPE,
   CONTEXTS,
@@ -54,6 +55,9 @@ CONDITIONAL_FULL_BATCH_SGD_METHOD_ID = (
 )
 PERSISTENT_FULL_BATCH_SGD_METHOD_ID = (
   "full-batch-sgd-persistent-next-riser-geometry-residual-adapter-v94"
+)
+PAIRED_TRAJECTORY_METHOD_ID = (
+  "paired-counterfactual-rescue-trajectory-adapter-v109"
 )
 LEGACY_ACTOR_OBSERVATION_DIM = 405
 GEOMETRY_OBSERVATION_DIM = 5
@@ -90,6 +94,14 @@ def _parse_args() -> argparse.Namespace:
     choices=("shielded-success", "rescued-only"),
     default="shielded-success",
   )
+  parser.add_argument(
+    "--teacher-target",
+    choices=("instantaneous-filter", "paired-trajectory"),
+    default="instantaneous-filter",
+  )
+  parser.add_argument("--paired-pre-horizon", type=int, default=20)
+  parser.add_argument("--paired-post-horizon", type=int, default=50)
+  parser.add_argument("--paired-pre-decay", type=float, default=0.9)
   parser.add_argument("--actor-learning-rate", type=float, default=1.0e-3)
   parser.add_argument(
     "--adapter-optimizer",
@@ -237,6 +249,7 @@ def _collect_first_episodes(
   stored_safe_actions: list[torch.Tensor] = []
   stored_interventions: list[torch.Tensor] = []
   stored_environment_ids: list[torch.Tensor] = []
+  stored_episode_steps: list[torch.Tensor] = []
   maximum_steps = int(base_env.max_episode_length) + 2
   # ``env.step`` may auto-reset completed worlds and therefore mutates sensor
   # buffers.  ``no_grad`` preserves those ordinary tensors across the paired
@@ -256,6 +269,7 @@ def _collect_first_episodes(
           extras["cbf_would_intervene"][ids].bool().cpu()
         )
         stored_environment_ids.append(ids.cpu())
+        stored_episode_steps.append(steps[ids].cpu())
       steps += active.long()
       completed = dones.bool() & active
       if bool(completed.any()):
@@ -276,6 +290,7 @@ def _collect_first_episodes(
     "safe_actions": torch.cat(stored_safe_actions),
     "would_intervene": torch.cat(stored_interventions),
     "environment_ids": torch.cat(stored_environment_ids),
+    "episode_steps": torch.cat(stored_episode_steps),
   }
   return {
     "seed": seed,
@@ -306,6 +321,127 @@ def _geometry_active(flat: torch.Tensor) -> torch.Tensor:
   if geometry.shape[-1] == CONDITIONAL_GEOMETRY_OBSERVATION_DIM:
     return geometry[:, 3::4].sum(dim=-1) > 0.5
   raise ValueError("unknown geometry width for active-state selection")
+
+
+def _paired_trajectory_rescue_dataset(
+  off: dict[str, Any],
+  on: dict[str, Any],
+  rescued: torch.Tensor,
+  *,
+  environment_offset: int,
+  pre_horizon: int,
+  post_horizon: int,
+  pre_decay: float,
+) -> tuple[dict[str, torch.Tensor], torch.Tensor, dict[str, Any]]:
+  """Build equal-episode causal targets from aligned rescued trajectories."""
+  off_data = off["dataset"]
+  on_data = on["dataset"]
+  chunks: dict[str, list[torch.Tensor]] = {
+    "observations": [],
+    "nominal_actions": [],
+    "safe_actions": [],
+    "would_intervene": [],
+    "environment_ids": [],
+  }
+  weights: list[torch.Tensor] = []
+  episode_summaries: list[dict[str, Any]] = []
+  for environment_id in rescued.nonzero(as_tuple=False).flatten().tolist():
+    off_rows = (off_data["environment_ids"] == environment_id).nonzero(
+      as_tuple=False
+    ).flatten()
+    on_rows = (on_data["environment_ids"] == environment_id).nonzero(
+      as_tuple=False
+    ).flatten()
+    off_rows = off_rows[off_data["episode_steps"][off_rows].argsort()]
+    on_rows = on_rows[on_data["episode_steps"][on_rows].argsort()]
+    if not torch.equal(
+      off_data["episode_steps"][off_rows], torch.arange(len(off_rows))
+    ) or not torch.equal(
+      on_data["episode_steps"][on_rows], torch.arange(len(on_rows))
+    ):
+      raise RuntimeError("v109 paired episode steps are not contiguous")
+    trace = paired_rescue_action_trace(
+      off_data["nominal_actions"][off_rows],
+      on_data["nominal_actions"][on_rows],
+      on_data["safe_actions"][on_rows],
+      on_data["would_intervene"][on_rows],
+      pre_horizon=pre_horizon,
+      post_horizon=post_horizon,
+      pre_decay=pre_decay,
+    )
+    indices = trace["indices"]
+    if not isinstance(indices, torch.Tensor) or not len(indices):
+      continue
+    selected_off_rows = off_rows[indices]
+    correction = trace["corrections"]
+    episode_weights = trace["weights"]
+    if not isinstance(correction, torch.Tensor) or not isinstance(
+      episode_weights, torch.Tensor
+    ):
+      raise RuntimeError("v109 trace tensors are missing")
+    nominal = off_data["nominal_actions"][selected_off_rows]
+    chunks["observations"].append(off_data["observations"][selected_off_rows])
+    chunks["nominal_actions"].append(nominal)
+    chunks["safe_actions"].append(nominal + correction)
+    chunks["would_intervene"].append(
+      on_data["would_intervene"][on_rows[indices]]
+    )
+    chunks["environment_ids"].append(
+      torch.full(
+        (len(indices),),
+        int(environment_offset + environment_id),
+        dtype=torch.long,
+      )
+    )
+    weights.append(episode_weights)
+    norms = torch.linalg.vector_norm(correction, dim=-1)
+    episode_summaries.append(
+      {
+        "environment_id": int(environment_id),
+        "first_intervention_step": int(trace["first_intervention_step"]),
+        "shared_length": int(trace["shared_length"]),
+        "teacher_transition_count": len(indices),
+        "pre_transition_count": int(trace["pre_transition_count"]),
+        "post_transition_count": int(trace["post_transition_count"]),
+        "correction_norm_mean": float(norms.mean()),
+        "correction_norm_max": float(norms.max()),
+        "episode_weight_sum": float(episode_weights.sum()),
+      }
+    )
+  if not weights:
+    empty = off_data["observations"].new_empty(
+      (0, off_data["observations"].shape[1])
+    )
+    empty_actions = off_data["nominal_actions"].new_empty(
+      (0, off_data["nominal_actions"].shape[1])
+    )
+    dataset = {
+      "observations": empty,
+      "nominal_actions": empty_actions,
+      "safe_actions": empty_actions.clone(),
+      "would_intervene": torch.empty(0, dtype=torch.bool),
+      "environment_ids": torch.empty(0, dtype=torch.long),
+    }
+    return dataset, torch.empty(0), {"episodes": []}
+  dataset = {key: torch.cat(value) for key, value in chunks.items()}
+  combined_weights = torch.cat(weights)
+  return dataset, combined_weights, {
+    "episode_count": len(episode_summaries),
+    "teacher_transition_count": len(combined_weights),
+    "pre_transition_count": sum(
+      row["pre_transition_count"] for row in episode_summaries
+    ),
+    "post_transition_count": sum(
+      row["post_transition_count"] for row in episode_summaries
+    ),
+    "episode_weight_sum_min": min(
+      row["episode_weight_sum"] for row in episode_summaries
+    ),
+    "episode_weight_sum_max": max(
+      row["episode_weight_sum"] for row in episode_summaries
+    ),
+    "episodes": episode_summaries,
+  }
 
 
 def _build_adapter_optimizer(
@@ -641,6 +777,17 @@ def main() -> None:
     raise ValueError("v49 reference KL cap must lie in (0, 0.02]")
   if args.geometry_interface != "base-5" and args.adapter_optimizer != "sgd":
     raise ValueError("v93/v94 geometry requires direction-preserving SGD")
+  if args.teacher_target == "paired-trajectory" and (
+    args.geometry_interface != "persistent-10"
+    or args.teacher_episode_scope != "rescued-only"
+    or args.adapter_optimizer != "sgd"
+    or args.paired_pre_horizon < 0
+    or args.paired_post_horizon < 0
+    or not 0.0 < args.paired_pre_decay <= 1.0
+  ):
+    raise ValueError(
+      "v109 paired trajectory requires persistent rescued-only SGD and valid trace"
+    )
   repo = args.repo.resolve()
   checkpoint = args.base_checkpoint.resolve()
   output = args.output_dir.resolve()
@@ -658,7 +805,9 @@ def main() -> None:
     raise FileExistsError(output)
   output.mkdir(parents=True)
   started = time.monotonic()
-  if args.geometry_interface == "persistent-10":
+  if args.teacher_target == "paired-trajectory":
+    method_id = PAIRED_TRAJECTORY_METHOD_ID
+  elif args.geometry_interface == "persistent-10":
     method_id = PERSISTENT_FULL_BATCH_SGD_METHOD_ID
   elif args.geometry_interface == "conditional-16":
     method_id = CONDITIONAL_FULL_BATCH_SGD_METHOD_ID
@@ -680,6 +829,7 @@ def main() -> None:
       "training_seeds": seeds,
       "rollout_conditions": ["filter_off", "filter_on"],
       "teacher_episode_scope": args.teacher_episode_scope,
+      "teacher_target": args.teacher_target,
       "actor_observation_interface": (
         f"405D proprioception + {geometry_dim}D deployable CBF geometry"
       ),
@@ -782,6 +932,7 @@ def main() -> None:
     global_environment_offset = 0
     rescued_episode_count = 0
     shielded_success_episode_count = 0
+    paired_trace_summaries: list[dict[str, Any]] = []
     for seed in seeds:
       off = _collect_first_episodes(
         runner, base_env, action_term, seed=seed, runtime_filter=False
@@ -797,27 +948,47 @@ def main() -> None:
       shielded_success_episode_count += int(shielded_success.sum())
       on_data = on["dataset"]
       ids = on_data["environment_ids"]
-      correction = on_data["safe_actions"] - on_data["nominal_actions"]
-      correction_norm = torch.linalg.vector_norm(correction, dim=-1)
       rescued_transition = rescued[ids]
-      successful_transition = shielded_success[ids]
-      teacher_episode_transition = (
-        rescued_transition
-        if args.teacher_episode_scope == "rescued-only"
-        else successful_transition
-      )
-      effective = (
-        on_data["would_intervene"].float()
-        * teacher_episode_transition.float()
-        * torch.clamp(correction_norm / 0.05, 0.0, 1.0)
-        * (1.0 + rescued_transition.float())
-      )
-      for key in dataset_chunks:
-        value = on_data[key]
-        if key == "environment_ids":
-          value = value + global_environment_offset
-        dataset_chunks[key].append(value)
-      weight_chunks.append(effective)
+      if args.teacher_target == "paired-trajectory":
+        paired_dataset, effective, paired_summary = (
+          _paired_trajectory_rescue_dataset(
+            off,
+            on,
+            rescued,
+            environment_offset=global_environment_offset,
+            pre_horizon=args.paired_pre_horizon,
+            post_horizon=args.paired_post_horizon,
+            pre_decay=args.paired_pre_decay,
+          )
+        )
+        if len(effective):
+          for key in dataset_chunks:
+            dataset_chunks[key].append(paired_dataset[key])
+          weight_chunks.append(effective)
+        paired_trace_summaries.append(
+          {"seed": seed, **paired_summary}
+        )
+      else:
+        correction = on_data["safe_actions"] - on_data["nominal_actions"]
+        correction_norm = torch.linalg.vector_norm(correction, dim=-1)
+        successful_transition = shielded_success[ids]
+        teacher_episode_transition = (
+          rescued_transition
+          if args.teacher_episode_scope == "rescued-only"
+          else successful_transition
+        )
+        effective = (
+          on_data["would_intervene"].float()
+          * teacher_episode_transition.float()
+          * torch.clamp(correction_norm / 0.05, 0.0, 1.0)
+          * (1.0 + rescued_transition.float())
+        )
+        for key in dataset_chunks:
+          value = on_data[key]
+          if key == "environment_ids":
+            value = value + global_environment_offset
+          dataset_chunks[key].append(value)
+        weight_chunks.append(effective)
       on_active = _geometry_active(on_data["observations"])
       off_data = off["dataset"]
       off_success_transition = off["success"][off_data["environment_ids"]]
@@ -898,6 +1069,14 @@ def main() -> None:
         "geometry": geometry,
         "expansion": expansion,
         "training_seeds": seeds,
+        "teacher_target": args.teacher_target,
+        "paired_trace": {
+          "pre_horizon": args.paired_pre_horizon,
+          "post_horizon": args.paired_post_horizon,
+          "pre_decay": args.paired_pre_decay,
+        }
+        if args.teacher_target == "paired-trajectory"
+        else None,
         "offline_gate_passed": offline_gate_passed,
       },
     )
@@ -925,6 +1104,15 @@ def main() -> None:
       "optimization_seed": args.optimization_seed,
       "teacher_eta": args.teacher_eta,
       "teacher_episode_scope": args.teacher_episode_scope,
+      "teacher_target": args.teacher_target,
+      "paired_trace": {
+        "pre_horizon": args.paired_pre_horizon,
+        "post_horizon": args.paired_post_horizon,
+        "pre_decay": args.paired_pre_decay,
+        "seed_summaries": paired_trace_summaries,
+      }
+      if args.teacher_target == "paired-trajectory"
+      else None,
       "actor_learning_rate": args.actor_learning_rate,
       "adapter_optimizer": args.adapter_optimizer,
       "moving_kl_beta": args.moving_kl_beta,

@@ -24,6 +24,10 @@ def _load(name: str, relative: str):
 
 MATH = _load("velocity_cbf_v34_math", "src/tasks/stairs_cbf/velocity_cbf_math.py")
 CBF_MATH = _load("stair_cbf_math", "src/tasks/stairs_cbf/cbf_math.py")
+PAIRED_RESCUE = _load(
+    "paired_rescue_v109_math",
+    "experiments/scripts/paired_rescue_v109_math.py",
+)
 PROTOCOL = _load(
     "velocity_cbf_v34_protocol_test",
     "experiments/scripts/velocity_cbf_v34_protocol.py",
@@ -186,6 +190,68 @@ def test_v94_persistent_geometry_is_visible_before_toe_off() -> None:
         ADAPTER._geometry_active(torch.cat((torch.zeros(2, 405), persistent), dim=1)),
         torch.tensor((True, False)),
     )
+
+
+def test_v109_paired_rescue_traces_first_correction_into_approach() -> None:
+    off_nominal = torch.zeros(6, 2)
+    on_nominal = torch.zeros_like(off_nominal)
+    on_safe = torch.zeros_like(off_nominal)
+    on_safe[3] = torch.tensor((1.0, 0.0))
+    on_safe[4] = torch.tensor((0.0, 2.0))
+    intervened = torch.tensor((False, False, False, True, False, False))
+    trace = PAIRED_RESCUE.paired_rescue_action_trace(
+        off_nominal,
+        on_nominal,
+        on_safe,
+        intervened,
+        pre_horizon=2,
+        post_horizon=2,
+        pre_decay=0.5,
+    )
+    assert torch.equal(trace["indices"], torch.tensor((1, 2, 3, 4)))
+    assert torch.allclose(
+        trace["corrections"],
+        torch.tensor(((0.25, 0.0), (0.5, 0.0), (1.0, 0.0), (0.0, 2.0))),
+    )
+    assert trace["first_intervention_step"] == 3
+    assert trace["pre_transition_count"] == 2
+    assert trace["post_transition_count"] == 2
+    assert torch.isclose(trace["weights"].sum(), torch.tensor(1.0))
+
+
+def test_v109_dataset_uses_off_states_and_on_trajectory_targets() -> None:
+    nominal = torch.zeros(6, 2)
+    on_safe = torch.zeros_like(nominal)
+    on_safe[3] = torch.tensor((1.0, 0.0))
+    on_safe[4] = torch.tensor((0.0, 2.0))
+    common = {
+        "observations": torch.arange(6 * 415, dtype=torch.float32).reshape(6, 415),
+        "nominal_actions": nominal,
+        "safe_actions": nominal.clone(),
+        "would_intervene": torch.zeros(6, dtype=torch.bool),
+        "environment_ids": torch.zeros(6, dtype=torch.long),
+        "episode_steps": torch.arange(6),
+    }
+    off = {"dataset": common}
+    on_data = {key: value.clone() for key, value in common.items()}
+    on_data["safe_actions"] = on_safe
+    on_data["would_intervene"][3] = True
+    on = {"dataset": on_data}
+    dataset, weights, summary = ADAPTER._paired_trajectory_rescue_dataset(
+        off,
+        on,
+        torch.tensor((True,)),
+        environment_offset=7,
+        pre_horizon=2,
+        post_horizon=2,
+        pre_decay=0.5,
+    )
+    assert len(dataset["observations"]) == 4
+    assert torch.equal(dataset["observations"], common["observations"][[1, 2, 3, 4]])
+    assert torch.equal(dataset["environment_ids"], torch.full((4,), 7))
+    assert torch.isclose(weights.sum(), torch.tensor(1.0))
+    assert summary["episode_count"] == 1
+    assert summary["pre_transition_count"] == 2
 
 
 def test_v95_critic_expansion_accepts_ten_persistent_features() -> None:
