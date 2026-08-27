@@ -48,7 +48,21 @@ from velocity_cbf_v34_protocol import CURRENT_CBF_MODE, PROTOCOL_ID
 
 
 METHOD_ID = "filter-off-episodic-residual-ppo-v117"
+FULL_BATCH_METHOD_ID = "filter-off-episodic-full-batch-residual-ppo-v118"
 ACTION_DIM = 12
+
+
+def _build_optimizer(
+  residual: LearnedCbfResidual,
+  *,
+  name: str,
+  learning_rate: float,
+) -> torch.optim.Optimizer:
+  if name == "adam":
+    return torch.optim.Adam(residual.parameters(), lr=learning_rate)
+  if name == "sgd":
+    return torch.optim.SGD(residual.parameters(), lr=learning_rate)
+  raise ValueError("v117/v118 residual optimizer is unsupported")
 
 
 def balanced_outcome_weights(
@@ -100,6 +114,7 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--exploration-std", type=float, default=0.02)
   parser.add_argument("--max-residual", type=float, default=0.10)
   parser.add_argument("--learning-rate", type=float, default=1.0e-3)
+  parser.add_argument("--optimizer", choices=("adam", "sgd"), default="adam")
   parser.add_argument("--epochs", type=int, default=4)
   parser.add_argument("--batch-size", type=int, default=8192)
   parser.add_argument("--clip-ratio", type=float, default=0.2)
@@ -320,6 +335,7 @@ def _fit_residual_ppo(
   advantages: torch.Tensor,
   *,
   exploration_std: float,
+  optimizer_name: str,
   learning_rate: float,
   epochs: int,
   batch_size: int,
@@ -342,7 +358,9 @@ def _fit_residual_ppo(
     device=device,
     batch_size=batch_size,
   )
-  optimizer = torch.optim.Adam(residual.parameters(), lr=learning_rate)
+  optimizer = _build_optimizer(
+    residual, name=optimizer_name, learning_rate=learning_rate
+  )
   updates = 0
   maximum_gradient_norm = 0.0
   residual.train()
@@ -548,6 +566,7 @@ def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
 def main() -> None:
   args = _parse_args()
   seeds = _parse_seeds(args.training_seeds)
+  method_id = FULL_BATCH_METHOD_ID if args.optimizer == "sgd" else METHOD_ID
   if args.num_envs < 2 or not 1 <= args.screen_envs <= args.num_envs:
     raise ValueError("v117 environment counts are invalid")
   if args.epochs < 1 or args.batch_size < 1:
@@ -586,7 +605,7 @@ def main() -> None:
   _atomic_json(
     output / "execution_started.json",
     {
-      "method_id": METHOD_ID,
+      "method_id": method_id,
       "git_commit": source_commit,
       "base_checkpoint_sha256": checkpoint_sha,
       "training_seeds": seeds,
@@ -700,6 +719,12 @@ def main() -> None:
     weights, advantages = balanced_outcome_weights(
       dataset["environment_ids"], episode_success
     )
+    if args.optimizer == "sgd" and (
+      args.epochs != 1 or args.batch_size < len(weights)
+    ):
+      raise ValueError(
+        "v118 SGD requires exactly one epoch and one full transition batch"
+      )
     _seed_everything(args.optimization_seed)
     training, optimizer = _fit_residual_ppo(
       residual,
@@ -707,6 +732,7 @@ def main() -> None:
       weights,
       advantages,
       exploration_std=args.exploration_std,
+      optimizer_name=args.optimizer,
       learning_rate=args.learning_rate,
       epochs=args.epochs,
       batch_size=args.batch_size,
@@ -728,7 +754,7 @@ def main() -> None:
       candidate_path,
       {
         "schema_version": 1,
-        "method_id": METHOD_ID,
+        "method_id": method_id,
         "git_commit": source_commit,
         "base_checkpoint_sha256": checkpoint_sha,
         "base_actor_state_dict": {
@@ -763,7 +789,7 @@ def main() -> None:
 
     summary = {
       "schema_version": 1,
-      "method_id": METHOD_ID,
+      "method_id": method_id,
       "git_commit": source_commit,
       "context": args.context,
       "base_checkpoint_sha256": checkpoint_sha,
@@ -781,6 +807,7 @@ def main() -> None:
       "training_runtime_filter": False,
       "exploration_std": args.exploration_std,
       "max_residual": args.max_residual,
+      "optimizer": args.optimizer,
       "episode_success_count": int(episode_success.sum()),
       "episode_failure_count": int((~episode_success).sum()),
       "training_transition_count": len(weights),

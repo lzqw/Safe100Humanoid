@@ -446,6 +446,20 @@ def test_v117_outcome_credit_is_balanced_and_episode_equal() -> None:
     assert torch.allclose(log_prob, expected)
 
 
+def test_v118_uses_direction_preserving_sgd_without_adam_state() -> None:
+    residual = FILTER_OFF_PPO.LearnedCbfResidual(max_residual=0.1)
+    optimizer = FILTER_OFF_PPO._build_optimizer(
+        residual, name="sgd", learning_rate=0.01
+    )
+    assert isinstance(optimizer, torch.optim.SGD)
+    assert not optimizer.state
+    assert FILTER_OFF_PPO.FULL_BATCH_METHOD_ID.endswith("v118")
+    with pytest.raises(ValueError, match="unsupported"):
+        FILTER_OFF_PPO._build_optimizer(
+            residual, name="sign-adam", learning_rate=0.01
+        )
+
+
 def test_v95_critic_expansion_accepts_ten_persistent_features() -> None:
     source = {"mlp.0.weight": torch.randn(3, 7)}
     target = {"mlp.0.weight": torch.randn(3, 17)}
