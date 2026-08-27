@@ -56,6 +56,12 @@ def _parse_args() -> argparse.Namespace:
     default=4,
     help="Last A2 round for the A2_then_A1 schedule.",
   )
+  parser.add_argument(
+    "--a1-teacher-weight",
+    type=float,
+    default=0.1,
+    help="Full-action A1 loss weight; 0.1 preserves the frozen v31 arm.",
+  )
   parser.add_argument("--rounds", type=int, default=8)
   parser.add_argument("--num-envs", type=int, default=64)
   parser.add_argument("--rollout-steps", type=int, default=1024)
@@ -97,9 +103,16 @@ def _teacher_arms_by_round(
   return ["A2"] * switch_after + ["A1"] * (rounds - switch_after)
 
 
-def _set_teacher_arm(algorithm, arm: str) -> dict[str, Any]:
-  """Switch only the four frozen teacher fields at a round boundary."""
+def _set_teacher_arm(
+  algorithm, arm: str, *, a1_teacher_weight: float
+) -> dict[str, Any]:
+  """Switch the four teacher fields at a recorded round boundary."""
   parameters = arm_parameters(arm)
+  if arm == "A1":
+    parameters["teacher_weight"] = float(a1_teacher_weight)
+    parameters["name"] = (
+      f"full_action_local_success_50_weight_{a1_teacher_weight:g}"
+    )
   algorithm.teacher_mode = parameters["teacher_mode"]
   algorithm.teacher_gate = parameters["teacher_gate"]
   algorithm.teacher_eta = parameters["teacher_eta"]
@@ -111,6 +124,8 @@ def main() -> None:
   args = _parse_args()
   if args.rounds < 1 or args.num_envs < 1 or args.rollout_steps < 1:
     raise ValueError("v35 rounds, environments, and rollout steps must be positive")
+  if not 0.0 < args.a1_teacher_weight <= 0.1:
+    raise ValueError("v35 A1 teacher weight must be in (0, 0.1]")
   teacher_arms = _teacher_arms_by_round(
     rounds=args.rounds,
     teacher_arm=args.teacher_arm,
@@ -180,6 +195,11 @@ def main() -> None:
     warm_start = runner.load_initial_checkpoint(
       str(checkpoint), map_location=args.device
     )
+    initial_teacher_parameters = _set_teacher_arm(
+      runner.alg,
+      teacher_arms[0],
+      a1_teacher_weight=args.a1_teacher_weight,
+    )
     initial_hash = actor_state_sha256(actor_state(runner.alg.actor))
     _save_checkpoint(
       runner,
@@ -190,13 +210,16 @@ def main() -> None:
         "candidate": args.candidate,
         "context": args.context,
         "teacher_arm": teacher_arms[0],
+        "teacher_parameters": initial_teacher_parameters,
         "teacher_arms_by_round": teacher_arms,
       },
     )
     for round_index in range(1, args.rounds + 1):
       round_teacher_arm = teacher_arms[round_index - 1]
       round_teacher_parameters = _set_teacher_arm(
-        runner.alg, round_teacher_arm
+        runner.alg,
+        round_teacher_arm,
+        a1_teacher_weight=args.a1_teacher_weight,
       )
       runner.alg.freeze_round_reference()
       start_hash = actor_state_sha256(actor_state(runner.alg.actor))
@@ -224,6 +247,7 @@ def main() -> None:
           "candidate": args.candidate,
           "context": args.context,
           "teacher_arm": round_teacher_arm,
+          "teacher_parameters": round_teacher_parameters,
           "teacher_arms_by_round": teacher_arms,
         },
       )
@@ -244,6 +268,7 @@ def main() -> None:
       "teacher_switch_after": (
         None if args.teacher_schedule == "fixed" else args.teacher_switch_after
       ),
+      "a1_teacher_weight": args.a1_teacher_weight,
       "teacher_arms_by_round": teacher_arms,
       "seed": args.seed,
       "rounds": args.rounds,
