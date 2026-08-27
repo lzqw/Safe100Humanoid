@@ -29,6 +29,7 @@
 | v100 | 同 seed filter-on 对照中 task-metric CBF 为 46/64，当前 CBF 为 44/64，且脚尖峰值力降低 21.5% | [`task_metric_residual_v100_v101/`](task_metric_residual_v100_v101/) |
 | v101 | task-metric 成功轨迹 residual 的 scale screen 达 49/64，但唯一 unseen filter-off gate 仅 40/64，拒绝 | [`task_metric_residual_v100_v101/`](task_metric_residual_v100_v101/) |
 | v102 | task-metric CBF 接入 paper-dual PPO；修复 mixed mask 路由后最佳对齐 off 133/197=67.51%，拒绝 | [`task_metric_paper_dual_v102/`](task_metric_paper_dual_v102/) |
+| v103 | 1 秒 bounded max swing credit 尺度稳定，但最佳对齐 off 131/193=67.88%，拒绝 | [`swing_credit_v103/`](swing_credit_v103/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -117,3 +118,10 @@ rollout 为 66.01%、66.33%、65.13%、67.51%，最佳 round-3 仅比本次 base
 仍低于 75% 且低于 v79 历史正式结果，因此没有追加独立 gate。该结果排除了“只需把
 task metric 放进现有 PPO 闭环”这一解释，下一步需要跨完整 swing 的安全目标和更稳定的
 episode-level credit，而不是继续静态 metric 或 residual scale 搜索。
+
+v103 新增独立的 bounded full-swing credit：将当前 CBF intervention 向前回传 50 steps，
+以 `max` 聚合避免连续干预重复计数，credit 上限为 1，权重仅 0.01。实测附加 penalty
+约 0.00121/step，低于 Eq. (27) 双奖励约 0.0028/step；因此信号尺度和路由均正确。
+四个对齐 filter-off rollout 为 66.33%、66.15%、67.88%、66.84%，最佳只比本次 base
+高 1.55 pp，未达到 75% 且低于 v79 历史正式结果。v103 已拒绝且未追加 gate；证据表明
+仅扩大 temporal credit 仍不能解决跨 rollout outcome gradient 不一致。

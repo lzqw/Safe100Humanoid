@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "experiment": "bounded_full_swing_credit_v103",
+  "source_commits": [
+    "6dd6923",
+    "637703763f6abb2c9e5d22a7bbf3467ad631c6d3"
+  ],
+  "context": "F2_hard_uniform_18_4cm",
+  "target_filter_off_success_rate": 0.75,
+  "algorithm": {
+    "method_id": "paper-cbf-dual-bounded-swing-credit-v103",
+    "paper_dual_reward": "paper_stair_sloped_unit_balanced",
+    "cbf": "current_velocity_cbf",
+    "runtime_filter_fraction": 0.25,
+    "temporal_credit": {
+      "aggregation": "max",
+      "horizon_steps": 50,
+      "horizon_seconds": 1.0,
+      "decay": 0.95,
+      "weight": 0.01,
+      "bounded_above_by_one": true
+    },
+    "num_envs": 128,
+    "rollout_steps_per_round": 1024,
+    "rounds": 4,
+    "actor_learning_rate": 0.0001
+  },
+  "aligned_rollouts": [
+    {"checkpoint_round": 0, "filter_off_success_count": 130, "filter_off_episode_count": 196, "filter_off_success_rate": 0.6632653061224489, "filter_on_success_count": 50, "filter_on_episode_count": 69, "filter_on_success_rate": 0.7246376811594203, "temporal_penalty_mean": 0.0012072579702362418},
+    {"checkpoint_round": 1, "filter_off_success_count": 127, "filter_off_episode_count": 192, "filter_off_success_rate": 0.6614583333333334, "filter_on_success_count": 48, "filter_on_episode_count": 65, "filter_on_success_rate": 0.7384615384615385, "temporal_penalty_mean": 0.0012034483952447772},
+    {"checkpoint_round": 2, "filter_off_success_count": 131, "filter_off_episode_count": 193, "filter_off_success_rate": 0.6787564766839378, "filter_on_success_count": 44, "filter_on_episode_count": 67, "filter_on_success_rate": 0.6567164179104478, "temporal_penalty_mean": 0.0012150448746979237},
+    {"checkpoint_round": 3, "filter_off_success_count": 129, "filter_off_episode_count": 193, "filter_off_success_rate": 0.6683937823834197, "filter_on_success_count": 45, "filter_on_episode_count": 68, "filter_on_success_rate": 0.6617647058823529, "temporal_penalty_mean": 0.001212123199366033}
+  ],
+  "elapsed_seconds": 100.97764727903996,
+  "decision": {
+    "v103": "rejected",
+    "independent_gate_run": false,
+    "reason": "Best aligned filter-off rollout was 67.88%, below 75% and below historical v79.",
+    "global_selected_version": "v79",
+    "global_selected_aligned_success": "139/193",
+    "global_selected_aligned_success_rate": 0.7202
+  }
+}
