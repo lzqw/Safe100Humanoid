@@ -10,14 +10,26 @@ def dual_cbf_reward(
   intervention_norm: torch.Tensor,
   active: torch.Tensor,
   sigma: float,
+  *,
+  margin_weight: float = 1.0,
+  intervention_weight: float = 1.0,
 ) -> torch.Tensor:
-  """Bounded CBF-RL reward from paper Eq. (23)."""
+  """CBF-RL reward from paper Eq. (23), with explicit term weights.
+
+  The paper writes a single outer weight, while its public navigation demo
+  scales the negative-margin and filter-imitation terms independently. The
+  unit defaults preserve the historical Safe100Humanoid reward exactly.
+  """
   if sigma <= 0.0:
     raise ValueError(f"sigma must be positive, got {sigma}")
-  violation_reward = torch.minimum(
+  if margin_weight < 0.0 or intervention_weight < 0.0:
+    raise ValueError("CBF-RL reward weights must be non-negative")
+  violation_reward = float(margin_weight) * torch.minimum(
     nominal_margin, torch.zeros_like(nominal_margin)
   )
-  imitation_reward = torch.exp(-intervention_norm.square() / sigma**2) - 1.0
+  imitation_reward = float(intervention_weight) * (
+    torch.exp(-intervention_norm.square() / sigma**2) - 1.0
+  )
   return torch.where(active, violation_reward + imitation_reward, 0.0)
 
 

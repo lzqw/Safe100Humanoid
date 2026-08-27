@@ -5,7 +5,6 @@ from __future__ import annotations
 import math
 
 import torch
-
 from mjlab.envs import ManagerBasedRlEnv
 
 from .actions import StairCbfJointPositionAction
@@ -63,15 +62,53 @@ def cbf_dual_reward(
   env: ManagerBasedRlEnv,
   action_name: str = "joint_pos",
   sigma: float = 0.5,
+  margin_weight: float = 1.0,
+  intervention_weight: float = 1.0,
+  correction_space: str = "target",
 ) -> torch.Tensor:
-  """Paper Eq. (23)/(27): violation plus bounded filter-imitation reward."""
+  """Paper Eq. (23)/(27): violation plus filter-imitation reward.
+
+  ``target`` retains the historical joint-target distance. ``raw_action``
+  measures the correction in the policy's native action coordinates, matching
+  the public CBF-RL navigation demo's action-to-filtered-action construction.
+  """
   term = _cbf_term(env, action_name)
   active = torch.isfinite(term.h)
+  if correction_space == "target":
+    correction_norm = term.counterfactual_target_intervention_norm
+  elif correction_space == "raw_action":
+    correction_norm = torch.linalg.vector_norm(
+      term.safe_raw_action - term.nominal_raw_action, dim=-1
+    )
+  else:
+    raise ValueError(
+      "CBF dual correction_space must be 'target' or 'raw_action', got "
+      f"{correction_space!r}"
+    )
   value = dual_cbf_reward(
     term.psi_nominal,
-    term.counterfactual_target_intervention_norm,
+    correction_norm,
     active,
     sigma=sigma,
+    margin_weight=margin_weight,
+    intervention_weight=intervention_weight,
+  )
+  margin_component = float(margin_weight) * torch.minimum(
+    term.psi_nominal, torch.zeros_like(term.psi_nominal)
+  )
+  imitation_component = float(intervention_weight) * (
+    torch.exp(-correction_norm.square() / sigma**2) - 1.0
+  )
+  active_float = active.to(term.psi_nominal.dtype)
+  active_count = active_float.sum().clamp_min(1.0)
+  env.extras["log"]["CBF/reward_margin_component_mean"] = (
+    (margin_component * active_float).sum() / active_count
+  )
+  env.extras["log"]["CBF/reward_imitation_component_mean"] = (
+    (imitation_component * active_float).sum() / active_count
+  )
+  env.extras["log"]["CBF/reward_correction_norm_mean"] = (
+    (correction_norm * active_float).sum() / active_count
   )
   _record_online_cbf_telemetry(env, term, dual_reward=value)
   return value

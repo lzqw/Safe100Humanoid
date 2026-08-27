@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import pytest
 import torch
 
 from src.tasks.stairs_cbf.cbf_math import (
@@ -12,6 +13,9 @@ from src.tasks.stairs_cbf.cbf_math import (
 from src.tasks.stairs_cbf.edge_detection import (
   riser_edges_from_tread_patches,
   select_active_riser,
+)
+from src.tasks.stairs_cbf.paper_dual_v35 import (
+  PAPER_DUAL_CANDIDATES,
 )
 
 
@@ -100,3 +104,42 @@ def test_dual_reward_matches_paper_and_is_bounded_without_violation():
   assert -1.0 <= float(dual_cbf_reward(
     torch.tensor([0.1]), torch.tensor([100.0]), torch.tensor([True]), sigma=0.5
   )[0]) <= 0.0
+
+
+def test_dual_reward_supports_independent_paper_demo_weights():
+  margin = torch.tensor([-0.2, 0.1])
+  correction = torch.tensor([0.5, 0.0])
+  active = torch.tensor([True, True])
+
+  reward = dual_cbf_reward(
+    margin,
+    correction,
+    active,
+    sigma=0.5,
+    margin_weight=10.0,
+    intervention_weight=100.0,
+  )
+
+  expected = 10.0 * margin[0] + 100.0 * (torch.exp(torch.tensor(-1.0)) - 1.0)
+  torch.testing.assert_close(reward[0], expected)
+  assert reward[1] == 0.0
+
+
+def test_dual_reward_rejects_negative_component_weights():
+  with pytest.raises(ValueError, match="weights must be non-negative"):
+    dual_cbf_reward(
+      torch.zeros(1),
+      torch.zeros(1),
+      torch.ones(1, dtype=torch.bool),
+      sigma=0.5,
+      margin_weight=-1.0,
+    )
+
+
+def test_v35_paper_demo_candidate_matches_public_demo_scaling():
+  assert PAPER_DUAL_CANDIDATES["raw_demo"] == {
+    "correction_space": "raw_action",
+    "sigma": 0.5,
+    "margin_weight": 10.0,
+    "intervention_weight": 100.0,
+  }
