@@ -7,9 +7,61 @@ from dataclasses import replace
 import math
 from typing import Any
 
+import torch
+
 PAPER_ARXIV_ID = "2510.14959v6"
 PAPER_DEMO_COMMIT = "68955c8ba9e929d974b6677635370ee93eecc63a"
 PAPER_DOMAIN_RANDOMIZATION_MODES = ("off", "paper_static", "paper_full")
+
+
+def normalize_filter_group_advantages(
+  advantages: torch.Tensor,
+  filter_mask: torch.Tensor,
+) -> tuple[torch.Tensor, dict[str, float]]:
+  """Normalize filtered and nominal rollout advantages independently.
+
+  A mixed rollout intentionally contains two transition kernels: half of the
+  worlds execute the CBF projection and half execute the nominal policy.  A
+  single population normalization lets either reward/return scale dominate
+  the PPO step.  Keeping each fixed environment group at zero mean and unit
+  variance gives the two training distributions equal actor-gradient scale
+  without changing returns used by the critic.
+  """
+  if advantages.ndim != 2:
+    raise ValueError("mixed-filter advantages must have shape [T, N]")
+  if filter_mask.shape != advantages.shape[1:] or filter_mask.dtype != torch.bool:
+    raise ValueError("mixed-filter mask must be boolean with shape [N]")
+  if not bool(filter_mask.any()) or bool(filter_mask.all()):
+    raise ValueError("mixed-filter advantage groups must both be non-empty")
+  if not bool(torch.isfinite(advantages).all()):
+    raise RuntimeError("mixed-filter advantages contain non-finite values")
+
+  output = torch.empty_like(advantages)
+  metrics: dict[str, float] = {}
+  for name, environment_mask in (
+    ("filter_on", filter_mask),
+    ("filter_off", ~filter_mask),
+  ):
+    values = advantages[:, environment_mask]
+    mean = values.mean()
+    std = values.std(unbiased=False)
+    normalized = (values - mean) / (std + 1.0e-8)
+    output[:, environment_mask] = normalized
+    metrics.update(
+      {
+        f"{name}_advantage_count": float(values.numel()),
+        f"{name}_advantage_mean_before": float(mean),
+        f"{name}_advantage_std_before": float(std),
+        f"{name}_advantage_mean_after": float(normalized.mean()),
+        f"{name}_advantage_std_after": float(
+          normalized.std(unbiased=False)
+        ),
+      }
+    )
+  metrics["filter_group_balanced_advantages"] = 1.0
+  metrics["balanced_advantage_mean"] = float(output.mean())
+  metrics["balanced_advantage_std"] = float(output.std(unbiased=False))
+  return output, metrics
 
 # ``raw_demo`` reproduces the two weights and action-coordinate distance used
 # by the authors' public navigation demo. The intermediate variants are needed

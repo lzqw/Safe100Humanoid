@@ -18,6 +18,7 @@ from src.tasks.stairs_cbf.edge_detection import (
 from src.tasks.stairs_cbf.paper_dual_v35 import (
   PAPER_DUAL_CANDIDATES,
   configure_paper_training_domain_randomization,
+  normalize_filter_group_advantages,
 )
 
 
@@ -187,6 +188,33 @@ def test_v35_paper_stair_candidate_uses_reduced_order_foot_distance():
     "margin_weight": 10.0,
     "intervention_weight": 100.0,
   }
+
+
+def test_v67_normalizes_mixed_filter_advantages_per_execution_group():
+  advantages = torch.tensor(
+    [[1.0, 10.0, 3.0, 14.0], [5.0, 18.0, 7.0, 22.0]]
+  )
+  filter_mask = torch.tensor([True, False, True, False])
+
+  normalized, metrics = normalize_filter_group_advantages(
+    advantages, filter_mask
+  )
+
+  for mask in (filter_mask, ~filter_mask):
+    torch.testing.assert_close(normalized[:, mask].mean(), torch.tensor(0.0))
+    torch.testing.assert_close(
+      normalized[:, mask].std(unbiased=False), torch.tensor(1.0)
+    )
+  assert metrics["filter_group_balanced_advantages"] == 1.0
+  assert metrics["filter_on_advantage_count"] == 4.0
+  assert metrics["filter_off_advantage_count"] == 4.0
+
+
+def test_v67_rejects_empty_mixed_filter_advantage_group():
+  with pytest.raises(ValueError, match="both be non-empty"):
+    normalize_filter_group_advantages(
+      torch.ones(2, 3), torch.ones(3, dtype=torch.bool)
+    )
 
 
 def test_v57_restores_native_static_training_domain_randomization():

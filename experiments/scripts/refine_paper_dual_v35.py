@@ -194,6 +194,14 @@ def _parse_args() -> argparse.Namespace:
     ),
   )
   parser.add_argument(
+    "--filter-group-balanced-advantages",
+    action="store_true",
+    help=(
+      "For a fixed mixed filter rollout, normalize PPO advantages separately "
+      "over filtered and nominal environment groups."
+    ),
+  )
+  parser.add_argument(
     "--training-filter-end-fraction",
     type=float,
     default=0.0,
@@ -473,6 +481,13 @@ def main() -> None:
       raise ValueError(
         "filter annealing end fraction must lie in [0, start fraction)"
       )
+  if args.filter_group_balanced_advantages and (
+    args.training_filter_schedule != "fixed"
+    or not 0.0 < training_filter_fraction < 1.0
+  ):
+    raise ValueError(
+      "filter-group-balanced advantages require a fixed mixed filter fraction"
+    )
   teacher_arms = _teacher_arms_by_round(
     rounds=args.rounds,
     teacher_arm=args.teacher_arm,
@@ -573,6 +588,7 @@ def main() -> None:
   from src.tasks.stairs_cbf.paper_dual_v35 import (
     configure_paper_dual_reward,
     configure_paper_training_domain_randomization,
+    normalize_filter_group_advantages,
   )
   from src.tasks.stairs_cbf.teacher_v30 import CbfTeacherV30Runner
   from src.tasks.stairs_cbf.teacher_v30_math import (
@@ -801,6 +817,9 @@ def main() -> None:
         "training_runtime_filter": training_runtime_filter,
         "training_filter_fraction": training_filter_fraction,
         "training_filter_schedule": filter_schedule,
+        "filter_group_balanced_advantages": (
+          args.filter_group_balanced_advantages
+        ),
         "training_action_std": args.training_action_std,
         "actor_learning_rate": args.actor_learning_rate,
         "moving_kl_beta": args.moving_kl_beta,
@@ -842,11 +861,22 @@ def main() -> None:
         device=base_env.device,
       )
       action_term.set_runtime_filter_mask(round_filter_mask)
+      after_compute_returns = None
+      if args.filter_group_balanced_advantages:
+        def after_compute_returns(active_runner):
+          advantages = active_runner.alg.storage.advantages.squeeze(-1)
+          balanced, advantage_metrics = normalize_filter_group_advantages(
+            advantages, round_filter_mask.to(advantages.device)
+          )
+          active_runner.alg.storage.advantages.copy_(balanced.unsqueeze(-1))
+          return advantage_metrics
+
       round_started = time.monotonic()
       metrics = _collect_round(
         runner,
         before_env_step=before_env_step,
         before_process_env_step=before_process_env_step,
+        after_compute_returns=after_compute_returns,
         rollout_group_masks={
           "filter_on": round_filter_mask,
           "filter_off": ~round_filter_mask,
@@ -928,6 +958,9 @@ def main() -> None:
           "training_runtime_filter": training_runtime_filter,
           "training_filter_fraction": training_filter_fraction,
           "training_filter_schedule": filter_schedule,
+          "filter_group_balanced_advantages": (
+            args.filter_group_balanced_advantages
+          ),
           "training_action_std": args.training_action_std,
           "actor_learning_rate": args.actor_learning_rate,
           "moving_kl_beta": args.moving_kl_beta,
@@ -966,6 +999,9 @@ def main() -> None:
       "training_runtime_filter": training_runtime_filter,
       "training_filter_fraction": training_filter_fraction,
       "training_filter_schedule": filter_schedule,
+      "filter_group_balanced_advantages": (
+        args.filter_group_balanced_advantages
+      ),
       "training_action_std": args.training_action_std,
       "actor_learning_rate": args.actor_learning_rate,
       "moving_kl_beta": args.moving_kl_beta,

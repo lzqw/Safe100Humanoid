@@ -480,6 +480,7 @@ def _collect_round(
     *,
     before_env_step=None,
     before_process_env_step=None,
+    after_compute_returns=None,
     rollout_group_masks: dict[str, torch.Tensor] | None = None,
 ) -> dict[str, Any]:
     from rsl_rl.utils import check_nan
@@ -623,9 +624,15 @@ def _collect_round(
             )
         teacher_metrics = runner.alg.relabel_teacher_transitions()
         runner.alg.compute_returns(obs)
+        post_return_metrics = (
+            dict(after_compute_returns(runner))
+            if after_compute_returns is not None
+            else {}
+        )
     update = runner.alg.update()
     update.update(teacher_metrics)
     update.update(rollout)
+    update.update(post_return_metrics)
     transitions = n * runner.cfg["num_steps_per_env"]
     update["cbf_intervention_count"] = round(
         float(teacher_metrics["cbf_intervention_fraction"]) * transitions
