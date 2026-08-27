@@ -34,6 +34,7 @@
 | v105 | 自适应放大 geometry 梯度到 legacy block 的 1:1；最佳 off 138/194=71.13%，仍低于 v79 与 gate | [`persistent_geometry_balanced_v105/`](persistent_geometry_balanced_v105/) |
 | v106 | episode outcome credit 与 GAE 联合训练；本轮峰值 off 68/95=71.58%，提高 2.19 pp 但仍低于 v79 与 gate | [`outcome_geometry_v106/`](outcome_geometry_v106/) |
 | v107 | outcome 权重减半并逐 proposal 事务回滚；4/4 proposal 回落，最终完整恢复输入 actor | [`outcome_transactional_v107/`](outcome_transactional_v107/) |
+| v108 | 回到原生 CBF-dual 并将 std 降至 0.03；4/4 proposal 回落，低探索噪声仍未改善 | [`low_noise_transactional_v108/`](low_noise_transactional_v108/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -163,3 +164,12 @@ v107 将 outcome 权重从 1.0 减到 0.5，并从 v106 最佳 415-D checkpoint 
 outcome-gradient 证据，且问题不能再归因于权重或步长过大。下一步去掉直接 episode
 credit，回到论文原生 GAE + CBF dual reward，并降低近收敛 policy 的 rollout std，
 减少训练与 deterministic filter-off deployment 之间的探索噪声差异。
+
+v108 去掉直接 episode credit，从 v79 重新执行论文原生 GAE + CBF dual PPO，并将
+action std 从 0.05 降到 0.03。std=0.02 诊断先暴露了低方差 Gaussian 的 float32
+log-prob reduction 误差边界，因此没有放宽冻结校验，而是使用有数值余量的 0.03
+完成正式训练。四个 proposal 为 67.71%、58.00%、66.67%、67.02%，全部回落并被
+完整 rollback；保留 anchor pool 为 530/785=67.52%。即使 LR 降到 `3.23e-6`、
+moving KL 低于 `1e-7`，方向仍无改善。由此可排除 action exploration 太高这一充分
+解释；下一步需要 matched filter rescue 的成对反事实轨迹，而不是继续调整同一 PPO
+标量或延长相同训练。
