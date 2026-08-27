@@ -7,6 +7,9 @@ trains only those columns against successful shielded actions.  v93 can instead
 append 16 explicit side/phase-conditioned coordinates so opposite filter
 corrections do not cancel.  v94 can expose bilateral next-riser geometry
 persistently, including before toe-off, so the policy can plan lift earlier.
+v109 adds a time-aligned paired trajectory target, while v110 removes its
+post-divergence state/action mismatch by querying the CBF on each deployment
+trajectory state itself.
 Consequently
 the candidate remains bit-exact to the base policy whenever the CBF geometry is
 inactive, while training still uses the paper's filtered-action distance.
@@ -59,6 +62,9 @@ PERSISTENT_FULL_BATCH_SGD_METHOD_ID = (
 PAIRED_TRAJECTORY_METHOD_ID = (
   "paired-counterfactual-rescue-trajectory-adapter-v109"
 )
+DEPLOYMENT_COUNTERFACTUAL_METHOD_ID = (
+  "deployment-state-counterfactual-rescue-trajectory-adapter-v110"
+)
 LEGACY_ACTOR_OBSERVATION_DIM = 405
 GEOMETRY_OBSERVATION_DIM = 5
 PERSISTENT_GEOMETRY_OBSERVATION_DIM = 10
@@ -96,7 +102,11 @@ def _parse_args() -> argparse.Namespace:
   )
   parser.add_argument(
     "--teacher-target",
-    choices=("instantaneous-filter", "paired-trajectory"),
+    choices=(
+      "instantaneous-filter",
+      "paired-trajectory",
+      "deployment-counterfactual",
+    ),
     default="instantaneous-filter",
   )
   parser.add_argument("--paired-pre-horizon", type=int, default=20)
@@ -332,8 +342,17 @@ def _paired_trajectory_rescue_dataset(
   pre_horizon: int,
   post_horizon: int,
   pre_decay: float,
+  target_mode: str = "paired-trajectory",
 ) -> tuple[dict[str, torch.Tensor], torch.Tensor, dict[str, Any]]:
-  """Build equal-episode causal targets from aligned rescued trajectories."""
+  """Build episode-balanced rescue targets without mixing state coordinates.
+
+  ``paired-trajectory`` preserves the v109 ablation: filter-on actions are
+  indexed onto same-time filter-off observations. ``deployment-counterfactual``
+  instead uses the CBF projection computed on each filter-off state itself, so
+  state and action remain a valid pair after the two trajectories diverge.
+  """
+  if target_mode not in ("paired-trajectory", "deployment-counterfactual"):
+    raise ValueError("rescue trajectory target mode is unsupported")
   off_data = off["dataset"]
   on_data = on["dataset"]
   chunks: dict[str, list[torch.Tensor]] = {
@@ -360,15 +379,30 @@ def _paired_trajectory_rescue_dataset(
       on_data["episode_steps"][on_rows], torch.arange(len(on_rows))
     ):
       raise RuntimeError("v109 paired episode steps are not contiguous")
-    trace = paired_rescue_action_trace(
-      off_data["nominal_actions"][off_rows],
-      on_data["nominal_actions"][on_rows],
-      on_data["safe_actions"][on_rows],
-      on_data["would_intervene"][on_rows],
-      pre_horizon=pre_horizon,
-      post_horizon=post_horizon,
-      pre_decay=pre_decay,
-    )
+    if target_mode == "deployment-counterfactual":
+      trace = paired_rescue_action_trace(
+        off_data["nominal_actions"][off_rows],
+        off_data["nominal_actions"][off_rows],
+        off_data["safe_actions"][off_rows],
+        off_data["would_intervene"][off_rows],
+        pre_horizon=pre_horizon,
+        post_horizon=post_horizon,
+        pre_decay=pre_decay,
+      )
+      intervention_source = off_data
+      intervention_rows = off_rows
+    else:
+      trace = paired_rescue_action_trace(
+        off_data["nominal_actions"][off_rows],
+        on_data["nominal_actions"][on_rows],
+        on_data["safe_actions"][on_rows],
+        on_data["would_intervene"][on_rows],
+        pre_horizon=pre_horizon,
+        post_horizon=post_horizon,
+        pre_decay=pre_decay,
+      )
+      intervention_source = on_data
+      intervention_rows = on_rows
     indices = trace["indices"]
     if not isinstance(indices, torch.Tensor) or not len(indices):
       continue
@@ -384,7 +418,7 @@ def _paired_trajectory_rescue_dataset(
     chunks["nominal_actions"].append(nominal)
     chunks["safe_actions"].append(nominal + correction)
     chunks["would_intervene"].append(
-      on_data["would_intervene"][on_rows[indices]]
+      intervention_source["would_intervene"][intervention_rows[indices]]
     )
     chunks["environment_ids"].append(
       torch.full(
@@ -406,6 +440,7 @@ def _paired_trajectory_rescue_dataset(
         "correction_norm_mean": float(norms.mean()),
         "correction_norm_max": float(norms.max()),
         "episode_weight_sum": float(episode_weights.sum()),
+        "target_mode": target_mode,
       }
     )
   if not weights:
@@ -426,6 +461,7 @@ def _paired_trajectory_rescue_dataset(
   dataset = {key: torch.cat(value) for key, value in chunks.items()}
   combined_weights = torch.cat(weights)
   return dataset, combined_weights, {
+    "target_mode": target_mode,
     "episode_count": len(episode_summaries),
     "teacher_transition_count": len(combined_weights),
     "pre_transition_count": sum(
@@ -777,7 +813,11 @@ def main() -> None:
     raise ValueError("v49 reference KL cap must lie in (0, 0.02]")
   if args.geometry_interface != "base-5" and args.adapter_optimizer != "sgd":
     raise ValueError("v93/v94 geometry requires direction-preserving SGD")
-  if args.teacher_target == "paired-trajectory" and (
+  trajectory_teacher = args.teacher_target in (
+    "paired-trajectory",
+    "deployment-counterfactual",
+  )
+  if trajectory_teacher and (
     args.geometry_interface != "persistent-10"
     or args.teacher_episode_scope != "rescued-only"
     or args.adapter_optimizer != "sgd"
@@ -786,7 +826,7 @@ def main() -> None:
     or not 0.0 < args.paired_pre_decay <= 1.0
   ):
     raise ValueError(
-      "v109 paired trajectory requires persistent rescued-only SGD and valid trace"
+      "v109/v110 trajectory targets require persistent rescued-only SGD and valid trace"
     )
   repo = args.repo.resolve()
   checkpoint = args.base_checkpoint.resolve()
@@ -805,7 +845,9 @@ def main() -> None:
     raise FileExistsError(output)
   output.mkdir(parents=True)
   started = time.monotonic()
-  if args.teacher_target == "paired-trajectory":
+  if args.teacher_target == "deployment-counterfactual":
+    method_id = DEPLOYMENT_COUNTERFACTUAL_METHOD_ID
+  elif args.teacher_target == "paired-trajectory":
     method_id = PAIRED_TRAJECTORY_METHOD_ID
   elif args.geometry_interface == "persistent-10":
     method_id = PERSISTENT_FULL_BATCH_SGD_METHOD_ID
@@ -949,7 +991,7 @@ def main() -> None:
       on_data = on["dataset"]
       ids = on_data["environment_ids"]
       rescued_transition = rescued[ids]
-      if args.teacher_target == "paired-trajectory":
+      if trajectory_teacher:
         paired_dataset, effective, paired_summary = (
           _paired_trajectory_rescue_dataset(
             off,
@@ -959,6 +1001,7 @@ def main() -> None:
             pre_horizon=args.paired_pre_horizon,
             post_horizon=args.paired_post_horizon,
             pre_decay=args.paired_pre_decay,
+            target_mode=args.teacher_target,
           )
         )
         if len(effective):
@@ -1075,7 +1118,7 @@ def main() -> None:
           "post_horizon": args.paired_post_horizon,
           "pre_decay": args.paired_pre_decay,
         }
-        if args.teacher_target == "paired-trajectory"
+        if trajectory_teacher
         else None,
         "offline_gate_passed": offline_gate_passed,
       },
@@ -1111,7 +1154,7 @@ def main() -> None:
         "pre_decay": args.paired_pre_decay,
         "seed_summaries": paired_trace_summaries,
       }
-      if args.teacher_target == "paired-trajectory"
+      if trajectory_teacher
       else None,
       "actor_learning_rate": args.actor_learning_rate,
       "adapter_optimizer": args.adapter_optimizer,

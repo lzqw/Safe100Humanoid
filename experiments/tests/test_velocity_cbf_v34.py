@@ -254,6 +254,47 @@ def test_v109_dataset_uses_off_states_and_on_trajectory_targets() -> None:
     assert summary["pre_transition_count"] == 2
 
 
+def test_v110_dataset_keeps_deployment_states_and_cbf_targets_paired() -> None:
+    nominal = torch.zeros(6, 2)
+    off_safe = nominal.clone()
+    off_safe[3] = torch.tensor((1.0, 0.0))
+    off_safe[4] = torch.tensor((0.0, 2.0))
+    off_data = {
+        "observations": torch.arange(6 * 415, dtype=torch.float32).reshape(6, 415),
+        "nominal_actions": nominal,
+        "safe_actions": off_safe,
+        "would_intervene": torch.tensor((False, False, False, True, False, False)),
+        "environment_ids": torch.zeros(6, dtype=torch.long),
+        "episode_steps": torch.arange(6),
+    }
+    on_data = {key: value.clone() for key, value in off_data.items()}
+    on_data["observations"] += 10000.0
+    on_data["safe_actions"].zero_()
+    on_data["safe_actions"][5] = torch.tensor((9.0, 9.0))
+    on_data["would_intervene"] = torch.tensor(
+        (False, False, False, False, False, True)
+    )
+    dataset, weights, summary = ADAPTER._paired_trajectory_rescue_dataset(
+        {"dataset": off_data},
+        {"dataset": on_data},
+        torch.tensor((True,)),
+        environment_offset=11,
+        pre_horizon=2,
+        post_horizon=2,
+        pre_decay=0.5,
+        target_mode="deployment-counterfactual",
+    )
+    assert torch.equal(dataset["observations"], off_data["observations"][[1, 2, 3, 4]])
+    assert torch.allclose(
+        dataset["safe_actions"] - dataset["nominal_actions"],
+        torch.tensor(((0.25, 0.0), (0.5, 0.0), (1.0, 0.0), (0.0, 2.0))),
+    )
+    assert torch.equal(dataset["environment_ids"], torch.full((4,), 11))
+    assert summary["target_mode"] == "deployment-counterfactual"
+    assert summary["episode_count"] == 1
+    assert torch.isclose(weights.sum(), torch.tensor(1.0))
+
+
 def test_v95_critic_expansion_accepts_ten_persistent_features() -> None:
     source = {"mlp.0.weight": torch.randn(3, 7)}
     target = {"mlp.0.weight": torch.randn(3, 17)}
