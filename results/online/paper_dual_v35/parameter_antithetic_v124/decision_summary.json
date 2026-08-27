@@ -1,0 +1,55 @@
+{
+  "schema_version": "paper_dual_v35.v124.decision.v1",
+  "method_id": "heldout-validated-parameter-antithetic-residual-es-v124",
+  "decision": "parameter_es_rejected_by_negative_heldout_gradient_cosine_and_rolled_back",
+  "reason": "Train parameter gradients had weak positive consistency, but the complete held-out deterministic parameter-return gradient pointed in the opposite direction.",
+  "source_commit": "30d596fdc51ea204124938768bba1326de6c0c98",
+  "targeted_tests_passed": 1,
+  "hardware": "NVIDIA GeForce RTX 4080 SUPER",
+  "input_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "paired_rollout": {
+    "pair_count": 256,
+    "matched_initial_state_signatures": true,
+    "mirrored_parameter_directions": true,
+    "parameter_sigma": 0.02,
+    "plus_success_count": 173,
+    "minus_success_count": 168,
+    "positive_difference_count": 68,
+    "negative_difference_count": 64,
+    "zero_difference_count": 124,
+    "plus_mean_perturbation_residual_norm": 0.03932453867662248,
+    "minus_mean_perturbation_residual_norm": 0.03926821751387993
+  },
+  "gradient_gate": {
+    "train_seed_gradient_norms": [
+      0.36757218837738037,
+      0.424501895904541,
+      0.44554683566093445
+    ],
+    "train_pairwise_cosines": [
+      -0.00909215584397316,
+      -0.062446437776088715,
+      0.22422842681407928
+    ],
+    "mean_train_pairwise_cosine": 0.05089661106467247,
+    "heldout_gradient_cosine": -0.08476519584655762,
+    "minimum_heldout_cosine": 0.05,
+    "offline_gate_passed": false,
+    "transactional_rollback": true,
+    "initial_residual_sha256": "fee8b17b896844dd29410ad4163283bddada1ba4428f9503e28f673d52dabc91",
+    "final_residual_sha256": "fee8b17b896844dd29410ad4163283bddada1ba4428f9503e28f673d52dabc91"
+  },
+  "screen": {
+    "seed": 201354580,
+    "episode_count": 64,
+    "runtime_filter": false,
+    "success_count": 45,
+    "success_rate": 0.703125,
+    "mean_reached_riser": 7.984375,
+    "mean_residual_norm": 0.0,
+    "independent_gate_run": false
+  },
+  "elapsed_seconds": 162.23312001104932,
+  "global_best_changed": false,
+  "next_hypothesis": "Reduce parameter sigma from 0.02 to 0.005 while keeping the direct deterministic-return objective and all gates fixed."
+}

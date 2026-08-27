@@ -1,0 +1,14 @@
+{
+  "schema_version": "paper_dual_v35.v124.checkpoints.v1",
+  "input": {
+    "path_4080": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt",
+    "sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317"
+  },
+  "rolled_back_candidate": {
+    "path_4080": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/parameter_antithetic_v124_30d596f_8x64_s201354500/candidate.pt",
+    "checkpoint_sha256": "e14dbdec615085cc0eda634546705ed3ec6624621d298aee9c18e18aa1ea9007",
+    "residual_state_sha256": "fee8b17b896844dd29410ad4163283bddada1ba4428f9503e28f673d52dabc91",
+    "uploaded": false,
+    "reason": "negative held-out deterministic parameter-gradient cosine; exact zero residual restored"
+  }
+}

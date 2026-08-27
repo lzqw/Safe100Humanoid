@@ -50,6 +50,7 @@
 | v121 | v79 pretrained critic 的逐步 GAE 在 train 改善、held-out 反转；exact rollback 后 screen 41/64=64.06% | [`critic_gae_residual_v121/`](critic_gae_residual_v121/) |
 | v122 | matched `+noise/-noise` 使 held-out unclipped 变正，但 clipped 略负；exact rollback 后 screen 42/64=65.63% | [`antithetic_residual_v122/`](antithetic_residual_v122/) |
 | v123 | joint scale=0.25 使 train/held-out clipped 均改善，但 unseen deterministic screen 仅 38/64=59.38% | [`calibrated_antithetic_v123/`](calibrated_antithetic_v123/) |
+| v124 | 132-D deterministic parameter ES 的 train cosine 为正、held-out 为 -0.0848；rollback 后 screen 45/64=70.31% | [`parameter_antithetic_v124/`](parameter_antithetic_v124/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -304,3 +305,11 @@ deterministic filter-off screen 只有 38/64=59.38%，因此未运行 gate 且�
 这证明 action-space stochastic PPO surrogate 即使在完整 held-out seed 上同向，也仍
 不能预测 deterministic mean-policy 成功率；下一步应直接优化 deterministic residual
 参数的 paired return。当前最佳仍为 v79。
+
+v124 使用 132-D persistent-geometry 线性 residual，并为每个环境固定镜像参数方向，
+直接从 deterministic `theta+sigma*u` / `theta-sigma*u` return 差估计梯度。256 对轨迹
+全部初态和参数方向匹配；三个 train gradient 的平均 pairwise cosine 为 +0.0509，
+但 held-out cosine 为 -0.0848，故 exact rollback。回滚后的 screen 为
+45/64=70.31%，未运行独立 gate。当前 sigma=0.02 使探索 residual norm 约 0.039，
+下一步仅缩小到 sigma=0.005 的局部范围，其余 objective 和 gate 保持不变。
+当前最佳仍为 v79。
