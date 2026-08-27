@@ -1,0 +1,40 @@
+{
+  "schema_version": "paper_dual_v35.v116.decision.v1",
+  "method_id": "causal-outcome-gated-successful-trajectory-residual-v116",
+  "decision": "rejected_screen_regression",
+  "reason": "Replacing same-state counterfactual corrections with the actual successful filter-on trajectory reduced the filter-off screen from v115's 47/64 to 38/64.",
+  "source_commit": "931b88f22b2a68bcd0440e686779e8267802c468",
+  "summary_fix_commit": "171ef70c4830e17c25a7b8d0e2d36bcffdd6094f",
+  "targeted_tests_passed": 1,
+  "hardware": "NVIDIA GeForce RTX 4080 SUPER",
+  "input_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "paired_data": {
+    "training_seeds": [201353700, 201353710, 201353720],
+    "validation_seed": 201353730,
+    "train_filter_off_success_count": 140,
+    "train_filter_on_success_count": 135,
+    "train_rescued_episode_count": 33,
+    "train_harmed_episode_count": 38,
+    "validation_filter_off_success_count": 32,
+    "validation_filter_on_success_count": 47,
+    "validation_rescued_episode_count": 21,
+    "validation_harmed_episode_count": 6
+  },
+  "screen": {
+    "seed": 201353780,
+    "episode_count": 64,
+    "runtime_filter": false,
+    "gate_threshold": 0.6,
+    "success_count": 38,
+    "success_rate": 0.59375,
+    "mean_reached_riser": 8.09375,
+    "gate_active_fraction": 0.037308137580759605,
+    "mean_correction_norm": 0.0003331086100598645,
+    "independent_gate_run": false
+  },
+  "final_summary_write_error": true,
+  "simulation_and_screen_completed_before_error": true,
+  "rerun_for_diagnostics": false,
+  "global_best_changed": false,
+  "next_hypothesis": "Do not imitate post-divergence successful filter-on actions. The next policy objective must remain on-policy in deployment state coordinates and use episode return directly."
+}

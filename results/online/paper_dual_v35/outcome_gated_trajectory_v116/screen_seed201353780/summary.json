@@ -1,0 +1,20 @@
+{
+  "all_finite": true,
+  "candidate_checkpoint_sha256": "253ecbb0e7888382684dd29d7168b81cbc0d11f1daf8a569e84fc3afa624cb36",
+  "causal_gated_residual_sha256": "2386178621b51e395af66a44d82301a0ca7e8b9c3efd4fe40b2fb7a0e0490fea",
+  "fall_count": 26,
+  "fall_rate": 0.40625,
+  "gate_active_fraction": 0.037308137580759605,
+  "gate_threshold": 0.6,
+  "initial_state_signature": "894d3add6b42a8baa0550bc608f07ccc5499204046399100f166fcb562e7e8ed",
+  "mean_correction_norm": 0.0003331086100598645,
+  "mean_gate": 0.004093066102186844,
+  "mean_gate_probability": 0.4851257518124722,
+  "mean_reached_riser": 8.09375,
+  "num_episodes": 64,
+  "passed_75_percent": false,
+  "runtime_filter": false,
+  "seed": 201353780,
+  "success_count": 38,
+  "success_rate": 0.59375
+}

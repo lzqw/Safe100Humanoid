@@ -1,0 +1,15 @@
+{
+  "base_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "gate_threshold": 0.6,
+  "git_commit": "931b88f22b2a68bcd0440e686779e8267802c468",
+  "method_id": "causal-outcome-gated-successful-trajectory-residual-v116",
+  "num_envs": 64,
+  "residual_teacher": "successful-filtered-trajectory",
+  "screen_seed": 201353780,
+  "training_seeds": [
+    201353700,
+    201353710,
+    201353720
+  ],
+  "validation_seed": 201353730
+}

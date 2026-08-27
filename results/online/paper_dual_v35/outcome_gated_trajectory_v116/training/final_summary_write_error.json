@@ -1,0 +1,12 @@
+{
+  "schema_version": "paper_dual_v35.v116.run_error.v1",
+  "phase": "final_training_summary_construction_after_candidate_and_screen_write",
+  "exception": "NameError: name 'false' is not defined",
+  "candidate_written": true,
+  "screen_summary_written": true,
+  "screen_episodes_written": true,
+  "training_summary_written": false,
+  "fixed_in_commit": "171ef70c4830e17c25a7b8d0e2d36bcffdd6094f",
+  "all_lowercase_python_boolean_literals_removed": true,
+  "rerun": false
+}

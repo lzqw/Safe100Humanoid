@@ -42,6 +42,7 @@
 | v113 | 显式 paired treatment gate + bounded residual；gate 仅 54.46% balanced accuracy，screen 42/64=65.63% | [`paired_gated_residual_v113/`](paired_gated_residual_v113/) |
 | v114 | v92 adapter 预声明幅度 screen；四档均低于 75%，最佳为未修改 v79 的 46/64=71.88% | [`observable_adapter_scale_v114/`](observable_adapter_scale_v114/) |
 | v115 | causal GRU 只区分 rescued/harmed，0.6 高置信 gate；screen 恢复到 47/64=73.44%，差 1 episode | [`causal_gated_residual_v115/`](causal_gated_residual_v115/) |
+| v116 | causal gate + 实际成功 filter-on trajectory teacher；state/action mismatch 使 screen 回落到 38/64=59.38% | [`outcome_gated_trajectory_v116/`](outcome_gated_trajectory_v116/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -238,3 +239,11 @@ seed 完整留作离线验证，部署阈值提高到 0.6。唯一 filter-off sc
 NameError；commit `8fc8a3b` 已修复，且没有为补诊断重复 rollout。该结果保留了时序
 高置信 fallback 的价值，但仍说明 instantaneous correction 不是足够的 episode-level
 policy objective。当前正式最佳继续为 v79。
+
+v116 保留 v115 gate，只把 residual teacher 换成 matched-rescue 的实际 filter-on
+成功轨迹。唯一 filter-off screen 从 v115 的 47/64 大幅回落到 38/64=59.38%，即使
+gate 仅在 3.73% transition 激活也无法避免退化。这复现并加强了 v109 的因果问题：
+轨迹分叉后的 filter-on action 不能作为 filter-off state 的稳定监督。最终 summary
+另有第二处 `false` 拼写在 screen 落盘后触发，commit `171ef70` 已清除全部剩余小写
+布尔值，未重复 rollout。下一步必须保持 deployment-state on-policy，并直接使用
+episode return，而不是继续轨迹 action imitation。当前最佳仍为 v79。
