@@ -15,6 +15,7 @@
 | v86 | 100% filtered execution 的 base pooled 789/1094=72.12%；两个 proposal 均回落 | [`full_filter_v86/`](full_filter_v86/) |
 | v87 | 四个 256-env PPO delta 共识；方向 cosine 0.017，独立 off gate 173/256=67.58% | [`consensus_v87/`](consensus_v87/) |
 | v88 | 成功轨迹 sampled-safe-action 模仿的两个 proposal 均回落；base pooled 754/1078=69.94% | [`success_imitation_v88/`](success_imitation_v88/) |
+| v89 | 成功且干预状态的 deterministic safe mean 模仿仍回落；base pooled 775/1092=70.97% | [`success_intervention_v89/`](success_intervention_v89/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -31,3 +32,7 @@ reward-only PPO 的局部梯度主要是 rollout 噪声，继续增加同类样�
 的 transition 真正被 CBF 修正，其余目标主要是 stochastic exploration noise；两个 proposal
 均被 rollback。下一步只训练“成功且实际 CBF 干预”的 transition，并改用同状态
 deterministic safe mean 作为低噪声目标。
+
+v89 完成了上述低噪声路由：teacher transition 只占 5.26%–5.55%，但完整 deterministic
+safe-mean correction norm 高达 0.512–0.524，两个 proposal 仍回落。下一步保留该成功干预
+gate，只应用论文 A2 的 25% bounded deterministic residual，避免直接克隆过大的完整修正。

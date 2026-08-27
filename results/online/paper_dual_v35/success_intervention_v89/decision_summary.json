@@ -1,0 +1,41 @@
+{
+  "schema_version": "paper_dual_v35.v89.decision.v1",
+  "candidate": "success-intervention-deterministic-safe-mean-v89",
+  "decision": "reject_updates_below_filtered_gate",
+  "reason": "Both low-noise deterministic safe-mean proposals regressed; the unchanged base pooled to 775/1092 (70.97%), below the 75% prerequisite for filter-off evaluation.",
+  "source_commit": "fb31dab",
+  "input_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "training": {
+    "seed": 201352635,
+    "num_envs": 256,
+    "rounds": 4,
+    "rollout_steps_per_round": 1024,
+    "elapsed_seconds": 113.21092455997132,
+    "training_filter_fraction": 1.0,
+    "success_imitation_weight": 2.0,
+    "actor_gradient_accumulation_microbatches": 2,
+    "transactional_rollback_count": 2
+  },
+  "aligned_filter_on_rollouts": [
+    {"round": 1, "success_count": 390, "episode_count": 546, "success_rate": 0.7142857142857143, "actor_role": "base"},
+    {"round": 2, "success_count": 378, "episode_count": 542, "success_rate": 0.6974169741697417, "actor_role": "rejected_proposal"},
+    {"round": 3, "success_count": 385, "episode_count": 546, "success_rate": 0.7051282051282052, "actor_role": "base_retry"},
+    {"round": 4, "success_count": 377, "episode_count": 543, "success_rate": 0.6942909760589319, "actor_role": "rejected_proposal"}
+  ],
+  "selected_actor_pooled_evidence": {
+    "success_count": 775,
+    "episode_count": 1092,
+    "success_rate": 0.7097069597069597
+  },
+  "diagnosis": {
+    "eligible_transition_fraction_range": [0.052623748779296875, 0.055545806884765625],
+    "policy_to_target_distance_range": [0.5119800567626953, 0.5237537026405334],
+    "sampled_action_exploration_noise_removed": true,
+    "remaining_problem": "the full deterministic safe-mean correction is too large for direct cloning"
+  },
+  "selected_checkpoint_sha256": "d187b02ccfbaa666a88f2e2ddc9d0db5e2f9e67e742450a5b06b29e44f3abcfe",
+  "selected_actor_sha256": "b0a717cef34d128e4175226b86780e5210cc5287558d78cb5a44e095e37fb600",
+  "deployment_filter_off_gate_run": false,
+  "global_best_changed": false,
+  "next_hypothesis": "Retain the success-and-intervention gate but target reference_mean + 0.25 * deterministic_CBF_correction, matching the bounded A2 residual instead of cloning the full safe mean."
+}
