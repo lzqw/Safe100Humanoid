@@ -295,6 +295,45 @@ def test_v110_dataset_keeps_deployment_states_and_cbf_targets_paired() -> None:
     assert torch.isclose(weights.sum(), torch.tensor(1.0))
 
 
+def test_v111_contrasts_rescued_and_harmed_terminal_pairs() -> None:
+    nominal = torch.zeros(10, 2)
+    off_safe = nominal.clone()
+    off_safe[2] = torch.tensor((1.0, 0.0))
+    off_safe[7] = torch.tensor((0.0, 2.0))
+    environment_ids = torch.tensor((0, 0, 0, 0, 0, 1, 1, 1, 1, 1))
+    episode_steps = torch.tensor((0, 1, 2, 3, 4, 0, 1, 2, 3, 4))
+    intervened = torch.zeros(10, dtype=torch.bool)
+    intervened[[2, 7]] = True
+    off_data = {
+        "observations": torch.arange(10 * 415, dtype=torch.float32).reshape(10, 415),
+        "nominal_actions": nominal,
+        "safe_actions": off_safe,
+        "would_intervene": intervened,
+        "environment_ids": environment_ids,
+        "episode_steps": episode_steps,
+    }
+    on_data = {key: value.clone() for key, value in off_data.items()}
+    dataset, weights, summary = ADAPTER._paired_trajectory_rescue_dataset(
+        {"dataset": off_data},
+        {"dataset": on_data},
+        torch.tensor((True, True)),
+        environment_offset=20,
+        pre_horizon=1,
+        post_horizon=1,
+        pre_decay=0.5,
+        target_mode="paired-outcome-contrast",
+        episode_signs=torch.tensor((1, -1), dtype=torch.int8),
+    )
+    assert torch.allclose(
+        dataset["safe_actions"] - dataset["nominal_actions"],
+        torch.tensor(((0.5, 0.0), (1.0, 0.0), (0.0, -1.0), (0.0, -2.0))),
+    )
+    assert torch.equal(dataset["environment_ids"], torch.tensor((20, 20, 21, 21)))
+    assert summary["positive_episode_count"] == 1
+    assert summary["negative_episode_count"] == 1
+    assert torch.isclose(weights.sum(), torch.tensor(2.0))
+
+
 def test_v95_critic_expansion_accepts_ten_persistent_features() -> None:
     source = {"mlp.0.weight": torch.randn(3, 7)}
     target = {"mlp.0.weight": torch.randn(3, 17)}

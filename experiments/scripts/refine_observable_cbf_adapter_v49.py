@@ -10,6 +10,9 @@ persistently, including before toe-off, so the policy can plan lift earlier.
 v109 adds a time-aligned paired trajectory target, while v110 removes its
 post-divergence state/action mismatch by querying the CBF on each deployment
 trajectory state itself.
+v111 additionally signs the full target trace by the paired terminal outcome,
+learning toward CBF corrections on rescued pairs and away from them on pairs
+where filtering destroys an otherwise successful episode.
 Consequently
 the candidate remains bit-exact to the base policy whenever the CBF geometry is
 inactive, while training still uses the paper's filtered-action distance.
@@ -65,6 +68,9 @@ PAIRED_TRAJECTORY_METHOD_ID = (
 DEPLOYMENT_COUNTERFACTUAL_METHOD_ID = (
   "deployment-state-counterfactual-rescue-trajectory-adapter-v110"
 )
+PAIRED_OUTCOME_CONTRAST_METHOD_ID = (
+  "paired-terminal-outcome-contrast-trajectory-adapter-v111"
+)
 LEGACY_ACTOR_OBSERVATION_DIM = 405
 GEOMETRY_OBSERVATION_DIM = 5
 PERSISTENT_GEOMETRY_OBSERVATION_DIM = 10
@@ -97,7 +103,7 @@ def _parse_args() -> argparse.Namespace:
   )
   parser.add_argument(
     "--teacher-episode-scope",
-    choices=("shielded-success", "rescued-only"),
+    choices=("shielded-success", "rescued-only", "discordant-pairs"),
     default="shielded-success",
   )
   parser.add_argument(
@@ -106,6 +112,7 @@ def _parse_args() -> argparse.Namespace:
       "instantaneous-filter",
       "paired-trajectory",
       "deployment-counterfactual",
+      "paired-outcome-contrast",
     ),
     default="instantaneous-filter",
   )
@@ -343,6 +350,7 @@ def _paired_trajectory_rescue_dataset(
   post_horizon: int,
   pre_decay: float,
   target_mode: str = "paired-trajectory",
+  episode_signs: torch.Tensor | None = None,
 ) -> tuple[dict[str, torch.Tensor], torch.Tensor, dict[str, Any]]:
   """Build episode-balanced rescue targets without mixing state coordinates.
 
@@ -351,8 +359,22 @@ def _paired_trajectory_rescue_dataset(
   instead uses the CBF projection computed on each filter-off state itself, so
   state and action remain a valid pair after the two trajectories diverge.
   """
-  if target_mode not in ("paired-trajectory", "deployment-counterfactual"):
+  if target_mode not in (
+    "paired-trajectory",
+    "deployment-counterfactual",
+    "paired-outcome-contrast",
+  ):
     raise ValueError("rescue trajectory target mode is unsupported")
+  if target_mode == "paired-outcome-contrast":
+    if (
+      episode_signs is None
+      or episode_signs.shape != rescued.shape
+      or not bool(((episode_signs == -1) | (episode_signs == 0) | (episode_signs == 1)).all())
+      or not torch.equal(episode_signs != 0, rescued.bool())
+    ):
+      raise ValueError("v111 outcome signs must exactly select +/- discordant pairs")
+  elif episode_signs is not None:
+    raise ValueError("outcome signs are exclusive to the v111 contrast target")
   off_data = off["dataset"]
   on_data = on["dataset"]
   chunks: dict[str, list[torch.Tensor]] = {
@@ -379,7 +401,10 @@ def _paired_trajectory_rescue_dataset(
       on_data["episode_steps"][on_rows], torch.arange(len(on_rows))
     ):
       raise RuntimeError("v109 paired episode steps are not contiguous")
-    if target_mode == "deployment-counterfactual":
+    if target_mode in (
+      "deployment-counterfactual",
+      "paired-outcome-contrast",
+    ):
       trace = paired_rescue_action_trace(
         off_data["nominal_actions"][off_rows],
         off_data["nominal_actions"][off_rows],
@@ -413,6 +438,11 @@ def _paired_trajectory_rescue_dataset(
       episode_weights, torch.Tensor
     ):
       raise RuntimeError("v109 trace tensors are missing")
+    outcome_sign = 1
+    if target_mode == "paired-outcome-contrast":
+      assert episode_signs is not None
+      outcome_sign = int(episode_signs[environment_id])
+      correction = correction * float(outcome_sign)
     nominal = off_data["nominal_actions"][selected_off_rows]
     chunks["observations"].append(off_data["observations"][selected_off_rows])
     chunks["nominal_actions"].append(nominal)
@@ -441,6 +471,7 @@ def _paired_trajectory_rescue_dataset(
         "correction_norm_max": float(norms.max()),
         "episode_weight_sum": float(episode_weights.sum()),
         "target_mode": target_mode,
+        "paired_outcome_sign": outcome_sign,
       }
     )
   if not weights:
@@ -457,12 +488,23 @@ def _paired_trajectory_rescue_dataset(
       "would_intervene": torch.empty(0, dtype=torch.bool),
       "environment_ids": torch.empty(0, dtype=torch.long),
     }
-    return dataset, torch.empty(0), {"episodes": []}
+    return dataset, torch.empty(0), {
+      "target_mode": target_mode,
+      "positive_episode_count": 0,
+      "negative_episode_count": 0,
+      "episodes": [],
+    }
   dataset = {key: torch.cat(value) for key, value in chunks.items()}
   combined_weights = torch.cat(weights)
   return dataset, combined_weights, {
     "target_mode": target_mode,
     "episode_count": len(episode_summaries),
+    "positive_episode_count": sum(
+      row["paired_outcome_sign"] > 0 for row in episode_summaries
+    ),
+    "negative_episode_count": sum(
+      row["paired_outcome_sign"] < 0 for row in episode_summaries
+    ),
     "teacher_transition_count": len(combined_weights),
     "pre_transition_count": sum(
       row["pre_transition_count"] for row in episode_summaries
@@ -816,17 +858,20 @@ def main() -> None:
   trajectory_teacher = args.teacher_target in (
     "paired-trajectory",
     "deployment-counterfactual",
+    "paired-outcome-contrast",
   )
+  contrast_teacher = args.teacher_target == "paired-outcome-contrast"
   if trajectory_teacher and (
     args.geometry_interface != "persistent-10"
-    or args.teacher_episode_scope != "rescued-only"
+    or args.teacher_episode_scope
+    != ("discordant-pairs" if contrast_teacher else "rescued-only")
     or args.adapter_optimizer != "sgd"
     or args.paired_pre_horizon < 0
     or args.paired_post_horizon < 0
     or not 0.0 < args.paired_pre_decay <= 1.0
   ):
     raise ValueError(
-      "v109/v110 trajectory targets require persistent rescued-only SGD and valid trace"
+      "v109-v111 trajectory targets require their paired scope, persistent SGD, and valid trace"
     )
   repo = args.repo.resolve()
   checkpoint = args.base_checkpoint.resolve()
@@ -845,7 +890,9 @@ def main() -> None:
     raise FileExistsError(output)
   output.mkdir(parents=True)
   started = time.monotonic()
-  if args.teacher_target == "deployment-counterfactual":
+  if args.teacher_target == "paired-outcome-contrast":
+    method_id = PAIRED_OUTCOME_CONTRAST_METHOD_ID
+  elif args.teacher_target == "deployment-counterfactual":
     method_id = DEPLOYMENT_COUNTERFACTUAL_METHOD_ID
   elif args.teacher_target == "paired-trajectory":
     method_id = PAIRED_TRAJECTORY_METHOD_ID
@@ -973,6 +1020,7 @@ def main() -> None:
     rollout_summaries: list[dict[str, Any]] = []
     global_environment_offset = 0
     rescued_episode_count = 0
+    harmed_episode_count = 0
     shielded_success_episode_count = 0
     paired_trace_summaries: list[dict[str, Any]] = []
     for seed in seeds:
@@ -985,23 +1033,31 @@ def main() -> None:
       if off["initial_state_signature"] != on["initial_state_signature"]:
         raise RuntimeError("v49 paired filter-on/off initial states differ")
       rescued = on["success"] & ~off["success"]
+      harmed = off["success"] & ~on["success"]
       shielded_success = on["success"]
       rescued_episode_count += int(rescued.sum())
+      harmed_episode_count += int(harmed.sum())
       shielded_success_episode_count += int(shielded_success.sum())
       on_data = on["dataset"]
       ids = on_data["environment_ids"]
       rescued_transition = rescued[ids]
       if trajectory_teacher:
+        selected_episodes = rescued
+        episode_signs = None
+        if contrast_teacher:
+          selected_episodes = rescued | harmed
+          episode_signs = rescued.to(torch.int8) - harmed.to(torch.int8)
         paired_dataset, effective, paired_summary = (
           _paired_trajectory_rescue_dataset(
             off,
             on,
-            rescued,
+            selected_episodes,
             environment_offset=global_environment_offset,
             pre_horizon=args.paired_pre_horizon,
             post_horizon=args.paired_post_horizon,
             pre_decay=args.paired_pre_decay,
             target_mode=args.teacher_target,
+            episode_signs=episode_signs,
           )
         )
         if len(effective):
@@ -1060,6 +1116,7 @@ def main() -> None:
             "fall_count": on["fall_count"],
             "transition_count": len(on_data["observations"]),
             "rescued_episode_count": int(rescued.sum()),
+            "harmed_episode_count": int(harmed.sum()),
             "teacher_transition_count": int((effective > 0.0).sum()),
           },
         )
@@ -1161,6 +1218,7 @@ def main() -> None:
       "moving_kl_beta": args.moving_kl_beta,
       "max_reference_kl": args.max_reference_kl,
       "rescued_episode_count": rescued_episode_count,
+      "harmed_episode_count": harmed_episode_count,
       "shielded_success_episode_count": shielded_success_episode_count,
       "training_transition_count": len(dataset["observations"]),
       "active_trust_transition_count": len(trust_observations),
