@@ -65,6 +65,7 @@ def _parse_args() -> argparse.Namespace:
       "paper_stair_exact",
       "paper_stair_demo_scale",
       "paper_stair_sloped_exact",
+      "paper_stair_sloped_unit_balanced",
       "paper_stair_sloped_demo_scale",
     ),
     required=True,
@@ -490,6 +491,7 @@ def main() -> None:
   if (
     args.candidate in {
       "paper_stair_sloped_exact",
+      "paper_stair_sloped_unit_balanced",
       "paper_stair_sloped_demo_scale",
     }
     and args.clearance_barrier_slope <= 0.0
@@ -801,6 +803,7 @@ def main() -> None:
     "paper_stair_exact",
     "paper_stair_demo_scale",
     "paper_stair_sloped_exact",
+    "paper_stair_sloped_unit_balanced",
     "paper_stair_sloped_demo_scale",
   }:
     clearance = env_cfg.rewards["foot_clearance"]

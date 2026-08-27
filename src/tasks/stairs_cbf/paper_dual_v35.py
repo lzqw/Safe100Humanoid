@@ -269,6 +269,16 @@ PAPER_DUAL_CANDIDATES: dict[str, dict[str, float | str]] = {
     "margin_weight": 1.0,
     "intervention_weight": 1.0,
   },
+  "paper_stair_sloped_unit_balanced": {
+    # v76 measured velocity-margin penalty at roughly 9x the one-step foot
+    # displacement penalty because the position-setpoint action is converted
+    # to (target-q)/dt for the CBF.  A 0.1 unit bridge makes the two Eq. (27)
+    # components comparable without changing the safety projection itself.
+    "correction_space": "foot_task",
+    "sigma": 0.05,
+    "margin_weight": 0.1,
+    "intervention_weight": 1.0,
+  },
   "paper_stair_sloped_demo_scale": {
     # Keep the paper's reduced-order swing-foot correction and public-demo
     # reward scale, but pair it with the task-compatible sloped clearance CBF.
