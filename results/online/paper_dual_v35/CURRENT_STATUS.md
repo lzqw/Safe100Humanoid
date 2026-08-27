@@ -22,6 +22,7 @@
 | v93 | 16-D 左右脚/phase 条件化 adapter 离线方向改善，但唯一 untouched filter-off 仅 45/64=70.31%，拒绝 | [`conditional_geometry_sgd_v93/`](conditional_geometry_sgd_v93/) |
 | v94 | 10-D persistent 双脚 next-riser 几何使 paired filter-on 达 191/256，但单步 imitation 的 untouched off 仍为 45/64=70.31% | [`persistent_geometry_sgd_v94/`](persistent_geometry_sgd_v94/) |
 | v95 | persistent geometry paired PPO 的 6/6 surrogate 改善，但跨 seed gradient cosine 仅 0.020；untouched off 44/64=68.75% | [`persistent_geometry_ppo_v95/`](persistent_geometry_ppo_v95/) |
+| v96 | persistent geometry + filter-free 成功轨迹自模仿离线方向为正，但 cosine 仅 0.005；唯一 untouched off 35/64=54.69%，拒绝 | [`persistent_geometry_elite_v96/`](persistent_geometry_elite_v96/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -77,3 +78,10 @@ v95 将 persistent geometry 接入上述 paired filter-on/off PPO。49,152 trans
 paired-seed gradient 的平均 cosine 仍只有 0.0202，唯一 untouched filter-off gate
 下降到 44/64=68.75%。因此提前观测解决了信息时序，却没有解决跨 rollout 的 outcome
 gradient 不一致；继续沿同一局部 PPO surrogate 放大或多轮更新没有证据支持。
+
+v96 进一步把 v42 曾短暂达到 75% 的 filter-free 成功轨迹自模仿与 persistent geometry
+结合。四个 stochastic seed 共得到 173/256 成功 episode，只训练成功 episode 的 77,875
+个 transition，并保持旧 405-D actor 路径逐位不变。trust-scaled 更新离线距离下降且 KL
+为 4.9991e-5，但探索方向 cosine 仅 0.0050；唯一 untouched deterministic filter-off gate
+显著降至 35/64=54.69%。这表明把成功条件下的随机动作残差绑定到楼梯几何仍在拟合
+seed-specific exploration noise，不能作为下一轮的可靠训练信号。当前仍选 v79。
