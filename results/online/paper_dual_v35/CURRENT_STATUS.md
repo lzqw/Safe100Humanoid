@@ -16,6 +16,7 @@
 | v87 | 四个 256-env PPO delta 共识；方向 cosine 0.017，独立 off gate 173/256=67.58% | [`consensus_v87/`](consensus_v87/) |
 | v88 | 成功轨迹 sampled-safe-action 模仿的两个 proposal 均回落；base pooled 754/1078=69.94% | [`success_imitation_v88/`](success_imitation_v88/) |
 | v89 | 成功且干预状态的 deterministic safe mean 模仿仍回落；base pooled 775/1092=70.97% | [`success_intervention_v89/`](success_intervention_v89/) |
+| v90 | 25% bounded residual 的本机 32-env 筛选中两个 proposal 均回落；不正式放大 | [`success_residual_v90/`](success_residual_v90/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -36,3 +37,8 @@ deterministic safe mean 作为低噪声目标。
 v89 完成了上述低噪声路由：teacher transition 只占 5.26%–5.55%，但完整 deterministic
 safe-mean correction norm 高达 0.512–0.524，两个 proposal 仍回落。下一步保留该成功干预
 gate，只应用论文 A2 的 25% bounded deterministic residual，避免直接克隆过大的完整修正。
+
+v90 将目标距离按预期缩到 0.128–0.133，但小批量 actor gradient norm 仍达 7.43–9.42
+且全部被裁剪，两个 proposal 均退化。这轮仅是 4080 被占用时的本机方向筛选，不是正式
+gate；结论是下一步必须从 actor 更新中移除 noisy PPO/entropy 梯度，只保留成功干预
+bounded residual 与 moving reference KL。

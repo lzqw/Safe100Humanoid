@@ -1,0 +1,44 @@
+{
+  "schema_version": "paper_dual_v35.v90.decision.v1",
+  "candidate": "success-intervention-bounded-deterministic-residual-v90",
+  "evidence_role": "local_directional_screen_not_formal_gate",
+  "decision": "reject_before_256_env_scale_up",
+  "reason": "Both 32-env bounded-residual proposals regressed, including a 13.38 percentage-point final drop; noisy clipped PPO gradients still dominated the small population-scaled teacher signal.",
+  "source_commit": "2c5e920",
+  "input_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "training": {
+    "seed": 201352636,
+    "hardware": "NVIDIA GeForce GTX 1660 SUPER",
+    "num_envs": 32,
+    "rounds": 4,
+    "rollout_steps_per_round": 1024,
+    "elapsed_seconds": 165.1760637080297,
+    "training_filter_fraction": 1.0,
+    "success_imitation_weight": 2.0,
+    "bounded_residual_fraction": 0.25,
+    "transactional_rollback_count": 2
+  },
+  "aligned_filter_on_rollouts": [
+    {"round": 1, "success_count": 53, "episode_count": 72, "success_rate": 0.7361111111111112, "actor_role": "base"},
+    {"round": 2, "success_count": 47, "episode_count": 67, "success_rate": 0.7014925373134329, "actor_role": "rejected_proposal"},
+    {"round": 3, "success_count": 52, "episode_count": 70, "success_rate": 0.7428571428571429, "actor_role": "base_retry"},
+    {"round": 4, "success_count": 43, "episode_count": 71, "success_rate": 0.6056338028169014, "actor_role": "rejected_proposal"}
+  ],
+  "selected_actor_pooled_evidence": {
+    "success_count": 105,
+    "episode_count": 142,
+    "success_rate": 0.7394366197183099
+  },
+  "diagnosis": {
+    "bounded_target_distance_range": [0.12762004137039185, 0.1332748532295227],
+    "full_correction_norm_range": [0.5104801654815674, 0.5330994129180908],
+    "actor_gradient_norm_range": [7.432003974914551, 9.416146278381348],
+    "actor_gradient_clipped_every_round": true,
+    "remaining_problem": "PPO gradient noise dominates the bounded success-intervention teacher"
+  },
+  "selected_actor_sha256": "b0a717cef34d128e4175226b86780e5210cc5287558d78cb5a44e095e37fb600",
+  "deployment_filter_off_gate_run": false,
+  "formal_256_env_gate_run": false,
+  "global_best_changed": false,
+  "next_hypothesis": "Disable PPO and entropy actor gradients while retaining the bounded success-intervention residual and global moving KL, so the update direction is no longer dominated by noisy rewards."
+}
