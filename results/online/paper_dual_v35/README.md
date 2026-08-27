@@ -1,5 +1,15 @@
 # v35 Paper-Aligned Dual CBF-RL Pilot
 
+## 最新实验：v73 自适应小步长与事务回滚
+
+v73 从 v72 最佳 aligned checkpoint 继续，用下一轮 filter-off rollout 接受或
+回滚 full-batch proposal。首个 `5e-5` 候选从 64.43% 降到 61.86% 后，actor、
+critic 和 optimizer 均成功恢复；LR 降到 `2.5e-5` 后，后续对齐结果达到
+68.21% 和 **69.54%**，最后一轮 filter-on 为 76.19%。moving forward KL 全部
+控制在 `1e-5` 以下，但 off 仍未过 75%，且同一 base actor 在两次 rollout 间有
+3.77 pp 波动。因此未追加独立评估，当前最佳不变。完整证据见
+[`transactional_v73/`](transactional_v73/README.md)。
+
 ## 最新实验：v72 单步 full-batch SGD
 
 v72 保持 v71 的 25% filter-on / 75% filter-off 论文式 CBF-dual PPO 数据流，
