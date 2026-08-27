@@ -621,3 +621,42 @@ def configure_v19_observable_refinement_runner(cfg) -> None:
       "deployable_failure",
     ),
   }
+
+
+def configure_deployable_cbf_geometry_observation(
+  cfg: ManagerBasedRlEnvCfg,
+) -> dict[str, object]:
+  """Append the five mapped-geometry coordinates required by the runtime CBF."""
+  if "cbf_geometry" in cfg.observations:
+    raise ValueError("deployable CBF geometry observation is already configured")
+  cfg.observations["cbf_geometry"] = ObservationGroupCfg(
+    terms={
+      "cbf_geometry": ObservationTermCfg(
+        func=mdp.cbf_deployable_geometry_observation,
+        params={"action_name": "joint_pos", "asset_name": "robot"},
+        history_length=0,
+      )
+    },
+    concatenate_terms=True,
+    enable_corruption=False,
+    history_length=None,
+  )
+  return {
+    "group": "cbf_geometry",
+    "feature_count": mdp.CBF_DEPLOYABLE_GEOMETRY_OBSERVATION_DIM,
+    "source": "current foot FK + contact + mapped stair edges",
+    "future_or_filtered_action_fields": 0,
+    "deployable": True,
+  }
+
+
+def configure_deployable_cbf_geometry_runner(cfg) -> None:
+  """Append geometry after the legacy actor/critic observation prefixes."""
+  actor_groups = tuple(cfg.obs_groups["actor"])
+  critic_groups = tuple(cfg.obs_groups["critic"])
+  if "cbf_geometry" in actor_groups or "cbf_geometry" in critic_groups:
+    raise ValueError("CBF geometry runner group is already configured")
+  cfg.obs_groups = {
+    "actor": (*actor_groups, "cbf_geometry"),
+    "critic": (*critic_groups, "cbf_geometry"),
+  }

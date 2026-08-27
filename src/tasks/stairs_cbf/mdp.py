@@ -8,7 +8,11 @@ import torch
 from mjlab.envs import ManagerBasedRlEnv
 
 from .actions import StairCbfJointPositionAction
-from .cbf_math import dual_cbf_reward
+from .cbf_math import dual_cbf_reward, sloped_toe_clearance_constraint
+from .edge_detection import select_active_riser
+
+
+CBF_DEPLOYABLE_GEOMETRY_OBSERVATION_DIM = 5
 
 
 def _terrain_risers(
@@ -40,6 +44,114 @@ def _cbf_term(env: ManagerBasedRlEnv, action_name: str) -> StairCbfJointPosition
   if not isinstance(term, StairCbfJointPositionAction):
     raise TypeError(f"action {action_name!r} is not StairCbfJointPositionAction")
   return term
+
+
+def cbf_deployable_geometry_observation(
+  env: ManagerBasedRlEnv,
+  action_name: str = "joint_pos",
+  asset_name: str = "robot",
+) -> torch.Tensor:
+  """Expose the five current-state coordinates used to activate the CBF.
+
+  The values are available at deployment from foot forward kinematics, foot
+  contact, and the same mapped stair edges used by the safety filter.  They do
+  not contain a filtered action, intervention label, reward, or future state.
+  Recomputing the geometry here avoids the one-transition delay that would be
+  introduced by exposing fields populated by ``process_actions``.
+
+  Columns are normalized horizontal clearance, normalized vertical clearance,
+  normalized sloped barrier, swing-foot side (-1 left, +1 right), and the
+  geometric-active flag.  Inactive clearance columns are zeroed so the
+  zero-column actor warm start remains local to states in which the CBF itself
+  can act.
+  """
+  term = _cbf_term(env, action_name)
+  robot = env.scene[asset_name]
+  found = term._contact_sensor.data.found
+  if found is None:
+    raise RuntimeError("deployable CBF geometry requires foot contact state")
+  contact = found > 0
+  if contact.ndim > 2:
+    contact = contact.any(dim=tuple(range(2, contact.ndim)))
+  if contact.ndim != 2 or contact.shape[1] != 2:
+    raise RuntimeError("deployable CBF contact state must have shape [N, 2]")
+  in_air = ~contact
+  air_time = term._contact_sensor.data.current_air_time
+  scores = (
+    in_air.float()
+    if air_time is None
+    else torch.where(in_air, air_time, torch.full_like(air_time, -1.0))
+  )
+  selected_foot = scores.argmax(dim=1)
+  has_swing = in_air.any(dim=1)
+  batch = torch.arange(env.num_envs, device=env.device)
+  foot_position = robot.data.site_pos_w[:, term._site_local_ids]
+  selected_position = foot_position[batch, selected_foot]
+
+  terrain = env.scene.terrain
+  if terrain is None:
+    raise RuntimeError("deployable CBF geometry requires stair metadata")
+  edge_x = term._edge_x[terrain.terrain_levels, terrain.terrain_types]
+  edge_top_z = term._edge_top_z[terrain.terrain_levels, terrain.terrain_types]
+  _, horizontal, selected_top_z, edge_active = select_active_riser(
+    selected_position[:, 0],
+    selected_position[:, 2],
+    edge_x,
+    edge_top_z,
+    toe_margin=term.cfg.toe_margin,
+    top_clearance=term.cfg.top_clearance,
+    activation_distance=term.cfg.activation_distance,
+    recovery_distance=term.cfg.recovery_distance,
+  )
+  vertical = selected_position[:, 2] - selected_top_z - float(
+    term.cfg.top_clearance
+  )
+  if term.cfg.clearance_barrier_slope > 0.0:
+    # Only the barrier value is needed here; dummy Jacobians keep the
+    # observation definition exactly tied to the filter's shared CBF helper.
+    dummy = torch.zeros(env.num_envs, 1, device=env.device)
+    barrier, _ = sloped_toe_clearance_constraint(
+      horizontal,
+      selected_position[:, 2],
+      selected_top_z,
+      dummy,
+      dummy,
+      top_clearance=term.cfg.top_clearance,
+      slope=term.cfg.clearance_barrier_slope,
+    )
+  else:
+    barrier = horizontal
+  active = has_swing & edge_active
+  distance_scale = max(
+    float(term.cfg.activation_distance),
+    float(term.cfg.recovery_distance),
+    1.0e-6,
+  )
+  zeros = torch.zeros_like(horizontal)
+  horizontal = torch.where(active, horizontal / distance_scale, zeros)
+  vertical = torch.where(active, vertical / distance_scale, zeros)
+  barrier = torch.where(active, barrier / distance_scale, zeros)
+  swing_side = torch.where(
+    active,
+    selected_foot.to(horizontal.dtype).mul(2.0).sub(1.0),
+    zeros,
+  )
+  observation = torch.stack(
+    (
+      horizontal.clamp(-1.5, 1.5),
+      vertical.clamp(-1.5, 1.5),
+      barrier.clamp(-2.0, 2.0),
+      swing_side,
+      active.to(horizontal.dtype),
+    ),
+    dim=1,
+  )
+  if observation.shape != (
+    env.num_envs,
+    CBF_DEPLOYABLE_GEOMETRY_OBSERVATION_DIM,
+  ):
+    raise RuntimeError("deployable CBF geometry has an unexpected shape")
+  return observation
 
 
 def cbf_violation(env: ManagerBasedRlEnv, action_name: str = "joint_pos") -> torch.Tensor:

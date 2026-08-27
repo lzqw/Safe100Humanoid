@@ -46,6 +46,11 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--policy-label", default="unspecified")
     parser.add_argument("--candidate", default="unspecified")
+    parser.add_argument(
+        "--actor-observation-interface",
+        choices=("original-405", "deployable-cbf-geometry-410"),
+        default="original-405",
+    )
     parser.add_argument("--device", default="cuda:0")
     parser.add_argument("--output-json", type=Path, required=True)
     parser.add_argument("--output-csv", type=Path, required=True)
@@ -119,6 +124,10 @@ def main() -> None:
     from mjlab.tasks.registry import load_env_cfg, load_rl_cfg, load_runner_cls
 
     import src.tasks  # noqa: F401
+    from src.tasks.stairs_cbf.config import (
+        configure_deployable_cbf_geometry_observation,
+        configure_deployable_cbf_geometry_runner,
+    )
     from src.tasks.stairs_cbf.environment_v31 import configure_v31_context
     from src.tasks.stairs_cbf.velocity_cbf_action import (
         InstrumentedCurrentVelocityCbfAction,
@@ -144,10 +153,15 @@ def main() -> None:
         parameters=parameters,
         measure_compute_time=True,
     )
+    geometry_observation = None
+    if args.actor_observation_interface == "deployable-cbf-geometry-410":
+        geometry_observation = configure_deployable_cbf_geometry_observation(env_cfg)
     env_cfg.scene.num_envs = args.num_envs
     env_cfg.seed = args.seed
     base_env = ManagerBasedRlEnv(env_cfg, device=args.device)
     agent_cfg = load_rl_cfg(TASK_ID)
+    if args.actor_observation_interface == "deployable-cbf-geometry-410":
+        configure_deployable_cbf_geometry_runner(agent_cfg)
     env = RslRlVecEnvWrapper(base_env, clip_actions=agent_cfg.clip_actions)
     runner_cls = load_runner_cls(TASK_ID)
     if runner_cls is None:
@@ -161,8 +175,15 @@ def main() -> None:
             strict=True,
             map_location=args.device,
         )
-        if int(runner.alg.actor.obs_dim) != 405:
-            raise RuntimeError("v34 actor is not the original 405-D policy")
+        expected_actor_dim = (
+            410
+            if args.actor_observation_interface == "deployable-cbf-geometry-410"
+            else 405
+        )
+        if int(runner.alg.actor.obs_dim) != expected_actor_dim:
+            raise RuntimeError(
+                "v34 actor observation width differs from its declared interface"
+            )
         actor_state = runner.alg.actor.state_dict()
         actor_hash = actor_state_sha256(actor_state)
         deterministic_hash = actor_state_sha256(
@@ -392,6 +413,9 @@ def main() -> None:
             "episode_reset_after_runner_load": True,
             "runtime_filter": runtime_filter,
             "deterministic_policy_mean": True,
+            "actor_observation_interface": args.actor_observation_interface,
+            "actor_observation_dim": expected_actor_dim,
+            "geometry_observation": geometry_observation,
             "cbf": cbf,
             "shift": shift,
             "success_count": sum(bool(row["success"]) for row in completed),
