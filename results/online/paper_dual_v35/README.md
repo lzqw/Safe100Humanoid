@@ -22,6 +22,16 @@ moving KL 为 0.67–0.71，表明 full-action teacher 更新过强。
 下一步应降低或改写 A1 的高曲率 Gaussian-NLL 更新，并加入从较低台阶到目标
 高度的 curriculum，而不是增加相同配置的重复评估。
 
+### Soft-A1 follow-up（已拒绝）
+
+按实测梯度比例把 A1 teacher weight 从 `0.1` 降到 `0.0075` 后，F2 第 5
+轮 KL 从原方法的 `0.2214` 降至 `0.00497`，最终 KL 从 `0.7107` 降至
+`0.00606`。但同一训练/评估 seed 下，filter-on/off 只有
+62.50%/64.06%，低于 current best 的 70.31%/68.75%。该方向按预设 gate
+停止，没有运行 F3；详见 [`soft_a1_f2_summary.json`](soft_a1_f2_summary.json)。
+这说明单纯抑制策略移动能修复优化诊断，却不能提升困难台阶的任务能力，下一步
+转向 stair-height curriculum。
+
 ## 方法与第一阶段 F1 ablation
 
 本目录发布 v35 第一阶段 F1 pilot 的关键结果。该阶段依据
@@ -56,6 +66,7 @@ winner。后续 staged experiment 解决了 F1 矛盾，并已冻结扩展到 F2
 - [`staged_summary.json`](staged_summary.json): 当前最佳 staged 方法的三 context 汇总。
 - [`staged_eval_summary.csv`](staged_eval_summary.csv): staged 方法的六个 on/off 结果。
 - [`staged_round_metrics.csv`](staged_round_metrics.csv): staged 方法全部 24 轮及 KL 诊断。
+- [`soft_a1_f2_summary.json`](soft_a1_f2_summary.json): 低 KL 但成功率退化的 F2 负结果。
 
 大型 `.pt` checkpoint 没有提交进 Git；其 SHA-256 已写入
 `pilot_summary.json`，原始 checkpoint 和逐 episode 文件保留在 4080 artifact
