@@ -15,6 +15,7 @@ from typing import Any
 import numpy as np
 import torch
 from cbf_teacher_v31_protocol import (
+  BASE_CHECKPOINT_SHA256,
   CLEARANCE_BARRIER_SLOPE,
   FILTER_ALPHA,
   RECOVERY_DISTANCE_M,
@@ -71,6 +72,12 @@ def main() -> None:
   output_dir = args.output_dir.resolve()
   if not checkpoint.is_file():
     raise FileNotFoundError(checkpoint)
+  checkpoint_sha256 = file_sha256(checkpoint)
+  if checkpoint_sha256 != BASE_CHECKPOINT_SHA256:
+    raise RuntimeError(
+      "v35 requires the common 838-D online-refinement base checkpoint: "
+      f"{checkpoint_sha256} != {BASE_CHECKPOINT_SHA256}"
+    )
   if output_dir.exists():
     raise FileExistsError(output_dir)
   if _git(repo, "status", "--porcelain"):
@@ -136,12 +143,17 @@ def main() -> None:
     )
     for round_index in range(1, args.rounds + 1):
       runner.alg.freeze_round_reference()
+      start_hash = actor_state_sha256(actor_state(runner.alg.actor))
       round_started = time.monotonic()
       metrics = _collect_round(runner)
+      end_hash = actor_state_sha256(actor_state(runner.alg.actor))
       record = {
         "round": round_index,
+        "status": "updated",
         "elapsed_seconds": time.monotonic() - round_started,
-        "actor_sha256": actor_state_sha256(actor_state(runner.alg.actor)),
+        "actor_sha256": end_hash,
+        "round_start_actor_sha256": start_hash,
+        "round_end_actor_sha256": end_hash,
         "metrics": metrics,
       }
       records.append(record)
@@ -172,7 +184,7 @@ def main() -> None:
       "shift": shift,
       "reward": reward,
       "warm_start": warm_start,
-      "base_checkpoint_sha256": file_sha256(checkpoint),
+      "base_checkpoint_sha256": checkpoint_sha256,
       "initial_actor_sha256": initial_hash,
       "final_actor_sha256": actor_state_sha256(actor_state(runner.alg.actor)),
       "final_checkpoint": str(final_checkpoint),
