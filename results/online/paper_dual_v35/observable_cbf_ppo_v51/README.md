@@ -7,8 +7,9 @@ gradients within a seed, and then take a coordinate median across seeds.
 Only the five new geometry-input columns are trainable; the original 405-D
 policy is frozen exactly.
 
-This directory currently contains the implementation smoke result, not a
-deployment-qualified checkpoint.
+The implementation smoke and the first formal 49,152-transition run are both
+published here.  The formal checkpoint missed the deployment threshold by one
+episode and is not a final accepted actor.
 
 | Smoke check, 3 seeds x 2 envs x 64 steps | Result |
 |---|---:|
@@ -26,6 +27,34 @@ The very short rollouts have a negative cross-seed paired-gradient cosine
 improves every collected batch under its trust region.  No 64-episode
 deployment evaluation was run for this smoke checkpoint.
 
+## Formal run
+
+The formal RTX 4080 run used three previously unused paired seeds, 16
+environments per condition, and 512 steps per environment.
+
+| Formal check | Result |
+|---|---:|
+| Runtime | 92.73 s |
+| Training transitions | 49,152 |
+| Positive post-update PPO surrogate batches | **6/6** |
+| Mean filter-on surrogate gain | +0.00007335 |
+| Mean filter-off surrogate gain | +0.00002667 |
+| Reference forward KL | 0.00000298 (limit 0.001) |
+| Untouched seed `201350992`, filter off | **47/64 (73.44%)** |
+| Deployment decision | rejected; threshold is 48/64 |
+
+The candidate was one successful episode below the registered 75% gate.
+Filter-on and further seeds were therefore not run.  The formal update used
+only about 0.3% of its KL budget, identifying update magnitude rather than KL
+safety as the next concrete bottleneck.
+
+Formal provenance:
+
+- Training seeds: `201350722, 201350732, 201350742`.
+- Optimization seed: `201350749`.
+- Candidate checkpoint SHA-256: `0945ea857abd584ed6f0144c608a211ff5423fd9334597126455b461aa28ca48`.
+- Candidate actor SHA-256: `30b0fc33e91c9b8a3569f51225171bbaf3d29a831513b34c3a82ea553b7a6ae4`.
+
 Key provenance:
 
 - Source commit: `0043d83982f4041c4a601bd99092dbae2da5db7c`.
@@ -38,4 +67,7 @@ Files:
 - `training_summary.json`: all paired-rollout, GAE, gradient, KL, and integrity diagnostics.
 - `candidate.pt`: exact smoke-only checkpoint; do not treat it as the final actor.
 - `execution_started.json`: immutable launch record.
-
+- `v51_formal_training_summary.json`: full formal paired-rollout and update record.
+- `v51_formal_candidate.pt`: exact formal candidate checkpoint.
+- `v51_formal_execution_started.json`: formal launch record.
+- `untouched_seed201350992_filter_off_{summary.json,episodes.csv}`: failed untouched deployment gate.

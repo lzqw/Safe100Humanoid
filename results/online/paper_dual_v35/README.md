@@ -354,18 +354,23 @@ KL 为 `0.00493496`，旧 actor 参数仍严格不变；RTX 4080 训练耗时 16
 逐 episode 结果和可复现 checkpoint 见
 [`observable_cbf_adapter_v50/`](observable_cbf_adapter_v50/)。
 
-#### Geometry-aware paired CBF PPO v51（smoke 通过，尚未部署验收）
+#### Geometry-aware paired CBF PPO v51（正式 gate 差 1 episode）
 
 v51 不再直接回归 safe action，而是在 410-D 几何可观测 actor 上使用论文式
 filter-on/off 配对 rollout、bounded CBF dual reward、critic GAE 和 PPO
 surrogate。每个 seed 先平均 on/off 梯度，再跨 seed 逐坐标取中位数；仅训练新增
 5 个输入列，旧 405-D 策略严格冻结。
 
-3 seed × 2 env × 64 step 的 RTX 4080 smoke 耗时 20.4 秒，6/6 batch 的
-post-update surrogate 均为正，on/off 梯度平均余弦为 `0.97255`，reference KL
-为 `0.00013189 < 0.001`，offline smoke gate 通过。由于这是极短 smoke，尚未做
-64-episode deployment gate，不能当作最终效果。代码、完整诊断与 smoke checkpoint
-见 [`observable_cbf_ppo_v51/`](observable_cbf_ppo_v51/)。
+3 seed × 2 env × 64 step 的 RTX 4080 smoke 耗时 20.4 秒，offline gate 通过。
+随后正式训练改用 3 个未使用 seed、每条件 16 环境 × 512 step，共 49,152 个
+transition，耗时 92.7 秒；6/6 batch 的 post-update surrogate 均为正，旧策略参数
+保持零变化。在全新 seed `201350992` 上 filter-off 得到 **47/64（73.44%）**，
+距门槛只差 1 个成功 episode，故不追加 filter-on。
+
+正式更新的 reference KL 仅 `2.98e-6`，只使用约 0.3% 的 `0.001` 预算，说明当前
+主要问题是固定 SGD 步长过小，而非 trust-region 饱和。代码、smoke/正式诊断、
+逐 episode 证据和两个 checkpoint 见
+[`observable_cbf_ppo_v51/`](observable_cbf_ppo_v51/)。
 
 ## 方法与第一阶段 F1 ablation
 
