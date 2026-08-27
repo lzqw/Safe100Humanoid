@@ -1,9 +1,10 @@
 """Paper-style paired CBF-dual PPO for the deployable geometry adapter.
 
 v49/v50 showed that the missing CBF geometry is observable and useful, but
-direct safe-action regression did not survive an untouched gate.  v51 keeps
-the exact 405-D base policy and trains only the five appended input columns
-using paired filter-on/off GAE returns from the paper-aligned bounded reward.
+direct safe-action regression did not survive an untouched gate. v51 keeps
+the exact 405-D base policy and trains only appended input columns using paired
+filter-on/off GAE returns from the paper-aligned bounded reward. v95 supports
+the persistent pre-toe-off geometry introduced by v94.
 """
 
 from __future__ import annotations
@@ -33,6 +34,7 @@ from refine_multi_rollout_gae_v46 import _collect_rollout, _policy_metrics
 from refine_observable_cbf_adapter_v49 import (
   GEOMETRY_OBSERVATION_DIM,
   LEGACY_ACTOR_OBSERVATION_DIM,
+  PERSISTENT_GEOMETRY_OBSERVATION_DIM,
   _expand_actor_state,
 )
 from refine_rescue_distill_v36 import (
@@ -45,6 +47,7 @@ from velocity_cbf_v34_protocol import CURRENT_CBF_MODE, PROTOCOL_ID
 
 
 METHOD_ID = "observable-cbf-geometry-paired-dual-gae-v51"
+PERSISTENT_METHOD_ID = "persistent-geometry-paired-dual-gae-v95"
 
 
 def _parse_args() -> argparse.Namespace:
@@ -56,6 +59,11 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--output-dir", type=Path, required=True)
   parser.add_argument("--context", choices=tuple(CONTEXTS), required=True)
   parser.add_argument("--training-seeds", required=True)
+  parser.add_argument(
+    "--geometry-interface",
+    choices=("base-5", "persistent-10"),
+    default="base-5",
+  )
   parser.add_argument("--num-envs", type=int, default=16)
   parser.add_argument("--rollout-steps", type=int, default=512)
   parser.add_argument("--optimization-seed", type=int, required=True)
@@ -99,12 +107,17 @@ def _normalized_sha(value: str) -> str:
 def _expand_critic_state(
   source: dict[str, torch.Tensor], target: dict[str, torch.Tensor]
 ) -> tuple[dict[str, torch.Tensor], dict[str, Any]]:
-  """Append five zero columns to the online critic's legacy prefix."""
+  """Append supported zero geometry columns to the online critic prefix."""
   source_width = int(source["mlp.0.weight"].shape[1])
   target_width = int(target["mlp.0.weight"].shape[1])
-  if target_width - source_width != GEOMETRY_OBSERVATION_DIM:
+  geometry_dim = target_width - source_width
+  if geometry_dim not in (
+    GEOMETRY_OBSERVATION_DIM,
+    PERSISTENT_GEOMETRY_OBSERVATION_DIM,
+  ):
     raise RuntimeError(
-      f"v51 critic expansion requires five columns, got {source_width} -> {target_width}"
+      "v51/v95 critic expansion requires five or ten columns, got "
+      f"{source_width} -> {target_width}"
     )
   if set(source) != set(target):
     raise RuntimeError("v51 critic tensors differ outside their input width")
@@ -137,6 +150,7 @@ def _expand_critic_state(
   return expanded, {
     "source_critic_width": source_width,
     "expanded_critic_width": target_width,
+    "new_feature_count": geometry_dim,
     "legacy_first_layer_copy_max_abs_error": legacy_error,
     "new_first_layer_column_max_abs": zero_error,
     "exact_prefix_expansion": legacy_error == 0.0 and zero_error == 0.0,
@@ -414,9 +428,9 @@ def _robust_adapter_ppo_step(
     )
   )
   return {
-    "actor_update_scope": "five-new-first-layer-input-columns-only",
+    "actor_update_scope": "new-geometry-first-layer-input-columns-only",
     "trainable_parameter_count": first_layer.out_features
-    * GEOMETRY_OBSERVATION_DIM,
+    * (first_layer.in_features - LEGACY_ACTOR_OBSERVATION_DIM),
     "optimizer": "sgd",
     "optimizer_updates": 1,
     "gradient_aggregation": "paired-on-off-mean_then-coordinate-median",
@@ -451,6 +465,10 @@ def main(
 ) -> None:
   args = _parse_args()
   seeds = _parse_seeds(args.training_seeds)
+  if args.geometry_interface == "persistent-10":
+    if method_id != METHOD_ID or require_target_reference_kl:
+      raise ValueError("v95 persistent geometry supports cap-only v51 PPO")
+    method_id = PERSISTENT_METHOD_ID
   if args.num_envs < 2 or args.rollout_steps < 64:
     raise ValueError("v51 rollout dimensions are too small")
   if not 1.0e-5 <= args.actor_learning_rate <= 0.1:
@@ -508,6 +526,7 @@ def main(
   from src.tasks.stairs_cbf.config import (
     configure_deployable_cbf_geometry_observation,
     configure_deployable_cbf_geometry_runner,
+    configure_deployable_cbf_persistent_geometry_observation,
   )
   from src.tasks.stairs_cbf.environment_v31 import configure_v31_context
   from src.tasks.stairs_cbf.paper_dual_v35 import configure_paper_dual_reward
@@ -535,7 +554,11 @@ def main(
   reward = configure_paper_dual_reward(
     env_cfg, "raw_moderate", runtime_filter_during_training=True
   )
-  geometry = configure_deployable_cbf_geometry_observation(env_cfg)
+  geometry = (
+    configure_deployable_cbf_persistent_geometry_observation(env_cfg)
+    if args.geometry_interface == "persistent-10"
+    else configure_deployable_cbf_geometry_observation(env_cfg)
+  )
   env_cfg.scene.num_envs = args.num_envs
   env_cfg.seed = seeds[0]
   agent_cfg = load_rl_cfg(TASK_ID)
@@ -614,8 +637,9 @@ def main(
     candidate_payload["actor_state_dict"] = {
       key: value.detach().cpu() for key, value in final_state.items()
     }
+    geometry_dim = int(geometry["feature_count"])
     candidate_payload["actor_observation_interface"] = (
-      "legacy_405_plus_deployable_cbf_geometry_5"
+      f"legacy_405_plus_deployable_cbf_geometry_{geometry_dim}"
     )
     candidate_payload["observable_cbf_ppo_optimizer_state_dict"] = (
       optimizer.state_dict()
@@ -647,6 +671,8 @@ def main(
       "cbf": cbf,
       "paper_dual_reward": reward,
       "geometry_observation": geometry,
+      "geometry_interface": args.geometry_interface,
+      "actor_observation_dim": LEGACY_ACTOR_OBSERVATION_DIM + geometry_dim,
       "actor_expansion": actor_expansion,
       "critic_expansion": critic_expansion,
       "base_checkpoint_sha256": checkpoint_sha,

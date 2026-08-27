@@ -32,6 +32,10 @@ ADAPTER = _load(
     "observable_cbf_adapter_v49_test",
     "experiments/scripts/refine_observable_cbf_adapter_v49.py",
 )
+OBSERVABLE_PPO = _load(
+    "observable_cbf_ppo_v51_test",
+    "experiments/scripts/refine_observable_cbf_ppo_v51.py",
+)
 
 
 def test_v34_sherman_morrison_matches_dense_solve() -> None:
@@ -182,3 +186,13 @@ def test_v94_persistent_geometry_is_visible_before_toe_off() -> None:
         ADAPTER._geometry_active(torch.cat((torch.zeros(2, 405), persistent), dim=1)),
         torch.tensor((True, False)),
     )
+
+
+def test_v95_critic_expansion_accepts_ten_persistent_features() -> None:
+    source = {"mlp.0.weight": torch.randn(3, 7)}
+    target = {"mlp.0.weight": torch.randn(3, 17)}
+    expanded, metadata = OBSERVABLE_PPO._expand_critic_state(source, target)
+    assert metadata["new_feature_count"] == 10
+    assert torch.equal(expanded["mlp.0.weight"][:, :7], source["mlp.0.weight"])
+    assert torch.count_nonzero(expanded["mlp.0.weight"][:, 7:]) == 0
+    assert OBSERVABLE_PPO.PERSISTENT_METHOD_ID.endswith("v95")
