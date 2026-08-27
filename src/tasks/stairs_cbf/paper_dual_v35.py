@@ -39,7 +39,12 @@ PAPER_DUAL_CANDIDATES: dict[str, dict[str, float | str]] = {
 }
 
 
-def configure_paper_dual_reward(env_cfg, candidate: str) -> dict[str, Any]:
+def configure_paper_dual_reward(
+  env_cfg,
+  candidate: str,
+  *,
+  runtime_filter_during_training: bool = True,
+) -> dict[str, Any]:
   """Install one v35 reward variant without changing the safety filter."""
   if candidate not in PAPER_DUAL_CANDIDATES:
     raise ValueError(f"unknown v35 reward candidate {candidate!r}")
@@ -54,6 +59,6 @@ def configure_paper_dual_reward(env_cfg, candidate: str) -> dict[str, Any]:
     "paper_arxiv_id": PAPER_ARXIV_ID,
     "paper_demo_commit": PAPER_DEMO_COMMIT,
     "reward_parameters": parameters,
-    "runtime_filter_during_training": True,
+    "runtime_filter_during_training": bool(runtime_filter_during_training),
     "historical_default_preserved": candidate == "current",
   }

@@ -101,6 +101,15 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--rollout-steps", type=int, default=1024)
   parser.add_argument("--seed", type=int, required=True)
   parser.add_argument("--device", default="cuda:0")
+  parser.add_argument(
+    "--training-runtime-filter",
+    choices=("on", "off"),
+    default="on",
+    help=(
+      "Execute the CBF projection during rollout, or execute nominal actions "
+      "while retaining the counterfactual CBF dual reward."
+    ),
+  )
   return parser.parse_args()
 
 
@@ -247,6 +256,15 @@ def main() -> None:
   )
   if args.deterministic_mean_teacher and any(arm != "A2" for arm in teacher_arms):
     raise ValueError("v35 deterministic-mean teacher currently requires only A2")
+  if (
+    args.training_runtime_filter == "off"
+    and not args.deterministic_mean_teacher
+    and any(arm != "A0" for arm in teacher_arms)
+  ):
+    raise ValueError(
+      "unshielded v35 training requires A0 unless the explicit "
+      "counterfactual deterministic-mean teacher is enabled"
+    )
   repo = args.repo.resolve()
   checkpoint = args.base_checkpoint.resolve()
   output_dir = args.output_dir.resolve()
@@ -286,16 +304,21 @@ def main() -> None:
   from src.tasks.stairs_cbf.teacher_v30 import CbfTeacherV30Runner
 
   env_cfg = load_env_cfg(TASK_ID, play=True)
+  training_runtime_filter = args.training_runtime_filter == "on"
   shift = configure_v31_context(
     env_cfg,
     context=args.context,
-    runtime_filter=True,
+    runtime_filter=training_runtime_filter,
     context_spec=environment_parameters(args.context),
     clearance_barrier_slope=CLEARANCE_BARRIER_SLOPE,
     recovery_distance_m=RECOVERY_DISTANCE_M,
     filter_alpha=FILTER_ALPHA,
   )
-  reward = configure_paper_dual_reward(env_cfg, args.candidate)
+  reward = configure_paper_dual_reward(
+    env_cfg,
+    args.candidate,
+    runtime_filter_during_training=training_runtime_filter,
+  )
   deterministic_mean_teacher = None
   if args.deterministic_mean_teacher:
     from src.tasks.stairs_cbf.paper_teacher_v35 import (
@@ -371,6 +394,7 @@ def main() -> None:
         "teacher_arms_by_round": teacher_arms,
         "height_curriculum": height_curriculum,
         "deterministic_mean_teacher": deterministic_mean_teacher,
+        "training_runtime_filter": training_runtime_filter,
       },
     )
     for round_index in range(1, args.rounds + 1):
@@ -415,6 +439,7 @@ def main() -> None:
           "teacher_arms_by_round": teacher_arms,
           "height_curriculum": height_curriculum,
           "deterministic_mean_teacher": deterministic_mean_teacher,
+          "training_runtime_filter": training_runtime_filter,
         },
       )
       _atomic_json(output_dir / "round_metrics.json", records)
@@ -439,6 +464,7 @@ def main() -> None:
       "teacher_arms_by_round": teacher_arms,
       "height_curriculum": height_curriculum,
       "deterministic_mean_teacher": deterministic_mean_teacher,
+      "training_runtime_filter": training_runtime_filter,
       "seed": args.seed,
       "rounds": args.rounds,
       "num_envs": args.num_envs,
