@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "experiment": "paper_dual_v35",
+  "version": "v128",
+  "method_id": "paper-cbf-dual-early-start-continuous-ppo-v128",
+  "status": "rejected_screen_below_gate",
+  "source_git_commit": "5f66a7873429d38403b7c9f6f85d63f31848dda3",
+  "target": {
+    "context": "F2",
+    "riser_height_m": 0.184,
+    "runtime_filter_at_deployment": false,
+    "success_threshold": 0.75,
+    "screen_threshold_count": 48,
+    "screen_episode_count": 64
+  },
+  "training": {
+    "seed": 201354900,
+    "num_envs": 64,
+    "rollout_steps": 1024,
+    "rounds": 10,
+    "transition_count": 655360,
+    "elapsed_seconds": 345.76689609803725,
+    "runtime_filter_fraction": 1.0,
+    "continuous_without_rollback": true,
+    "teacher_free": true,
+    "moving_kl_beta": 0.0,
+    "actor_optimizer": "adam",
+    "actor_learning_rate": 5e-06,
+    "actor_updates_per_round": 8,
+    "start_aligned_filter_on": {
+      "success_count": 87,
+      "episode_count": 128,
+      "success_rate": 0.6796875
+    },
+    "selected_aligned_filter_on": {
+      "rollout_round": 7,
+      "checkpoint_round": 6,
+      "success_count": 92,
+      "episode_count": 131,
+      "success_rate": 0.7022900763358778,
+      "mean_reached_riser": 8.01526717557252,
+      "improvement_percentage_points_vs_start": 2.260257633587782
+    },
+    "selection_additional_evaluation_count": 0
+  },
+  "screen": {
+    "seed": 201354980,
+    "policy": "deterministic_mean",
+    "runtime_filter": false,
+    "success_count": 36,
+    "episode_count": 64,
+    "success_rate": 0.5625,
+    "fall_count": 28,
+    "fall_rate": 0.4375,
+    "mean_reached_riser": 7.546875,
+    "mean_return": -5.7368938364088535,
+    "initial_state_signature": "6772a9abfaca3247af3e9dc253be1247bbcd24df5f0d878873461d325f87bfcf"
+  },
+  "gate": {
+    "screen_passed": false,
+    "independent_gate_run": false,
+    "additional_validation_run": false,
+    "reason": "36/64 is below the predeclared 48/64 threshold"
+  },
+  "decision": {
+    "accepted": false,
+    "replaces_v79": false,
+    "formal_best_remains": "v79 aligned filter-off 139/193 = 72.02%",
+    "development_screen_best_remains": "47/64 = 73.44%",
+    "interpretation": "Early-start continuous fully filtered PPO improved its aligned filtered rollout by 2.26 percentage points, but did not transfer that improvement to deterministic filter-off deployment at the tested training scale."
+  }
+}

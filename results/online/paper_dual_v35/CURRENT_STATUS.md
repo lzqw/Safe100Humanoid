@@ -54,6 +54,7 @@
 | v125 | local sigma 使 held-out cosine 变为 +0.0854，但 train pairwise -0.0202 未过门槛；rollback 后 42/64 | [`local_parameter_es_v125/`](local_parameter_es_v125/) |
 | v126 | train tolerance 通过但 held-out cosine 再次为 -0.0950；rollback 后 base screen 47/64=73.44% | [`tolerant_local_es_v126/`](tolerant_local_es_v126/) |
 | v127 | cross-fit state/value occupancy BA 仅 51.2%–52.1%；两个 filtered-GAE proposal 均回退，screen 41/64 | [`state_value_occupancy_v127/`](state_value_occupancy_v127/) |
+| v128 | 原始 nominal 起点做 100% filtered 连续 PPO；训练内峰值 70.23%，但 filter-off screen 仅 36/64 | [`early_continuous_v128/`](early_continuous_v128/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -340,3 +341,12 @@ filter-off 结果分别为 80/128=62.50% 与 79/134=58.96%，均被事务门回�
 “只需对局部 filtered PPO 做状态密度重加权”这一解释；剩余最显著的论文差距是从头或
 更早阶段执行长时程、高并行度的全过滤训练，而非继续在 v79 附近做局部 correction。
 当前正式最佳仍为 v79。
+
+v128 补齐上述最大论文差距：从原始 nominal checkpoint 开始，在固定 F2 上执行
+10×64×1024 的 100% safety-filtered 连续 clipped PPO；PPO 保存 nominal action，使用
+Eq. (27) unit-balanced dual reward，无 teacher、moving-KL、DR 或事务回滚。训练内
+filtered rollout 从 87/128=67.97% 提高到 round-6 actor 的 92/131=70.23%，但唯一
+deterministic filter-off screen 只有 36/64=56.25%，未触发独立 gate。因而“只需把
+full-filter paper PPO 移到更早起点”在当前 655,360-transition 规模下也不足以产生部署
+内化；下一步若继续该方向，关键变量应是接近论文的训练规模/课程，而不是再加局部
+correction 或 checkpoint 回滚。当前正式最佳仍为 v79。
