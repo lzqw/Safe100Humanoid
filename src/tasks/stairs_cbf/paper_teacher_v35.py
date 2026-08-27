@@ -1,7 +1,7 @@
 """Deterministic-policy CBF teacher for the paper-aligned v35 study.
 
-The rollout still executes the CBF-filtered stochastic PPO action.  In
-parallel, the action term projects the frozen round-reference policy mean at
+The rollout can execute either the filtered or nominal stochastic PPO action.
+In parallel, the action term projects the frozen round-reference policy mean at
 the identical pre-step state.  The auxiliary target therefore teaches only a
 correction that the deployable deterministic actor itself requires, rather
 than conditioning its mean on exploration noise that happened to trigger the
@@ -65,6 +65,7 @@ def configure_v35_mean_teacher_telemetry(
   *,
   runtime_filter_during_training: bool,
   failure_only: bool = False,
+  failure_focused_actor: bool = False,
 ) -> dict[str, Any]:
   """Replace only the training telemetry function; action execution is fixed."""
   action = env_cfg.actions.get("joint_pos")
@@ -90,6 +91,14 @@ def configure_v35_mean_teacher_telemetry(
     "loss": "weighted_smooth_l1_per_action_mean",
     "eligibility": "deterministic_mean_cbf_interventions_only",
     "outcome_gate": "failed_episodes" if failure_only else "none",
+    "actor_ppo_scope": (
+      "failed_episodes" if failure_focused_actor else "all_transitions"
+    ),
+    "successful_episode_actor_objective": (
+      "round_reference_KL_only"
+      if failure_focused_actor
+      else "PPO_plus_round_reference_KL"
+    ),
   }
 
 
@@ -106,7 +115,11 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
   """Use a same-state filtered deterministic mean as the A2 target."""
 
   def __init__(
-    self, *args, v35_failure_only_mean_teacher: bool = False, **kwargs
+    self,
+    *args,
+    v35_failure_only_mean_teacher: bool = False,
+    v35_failure_focused_actor: bool = False,
+    **kwargs,
   ) -> None:
     super().__init__(*args, **kwargs)
     if self.teacher_mode != "residual" or self.teacher_gate != "all_interventions":
@@ -116,6 +129,11 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     self.v35_failure_only_mean_teacher = bool(
       v35_failure_only_mean_teacher
     )
+    self.v35_failure_focused_actor = bool(v35_failure_focused_actor)
+    if self.v35_failure_focused_actor and not self.v35_failure_only_mean_teacher:
+      raise ValueError(
+        "v35 failure-focused actor requires failure-only mean teacher"
+      )
     t = self.storage.num_transitions_per_env
     n = self.storage.num_envs
     action_dim = self.storage.actions.shape[-1]
@@ -165,19 +183,19 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     self, correction_norm: torch.Tensor
   ) -> tuple[torch.Tensor, torch.Tensor, dict[str, torch.Tensor]]:
     del correction_norm
+    t, n = self.teacher_episode_ids.shape
+    environment = torch.arange(n, device=self.device).expand(t, n)
+    composite_episode = self.teacher_episode_ids * n + environment
+    failed_terminal = self.storage.dones.squeeze(-1).bool() & self.fall_events
+    failed_episode_ids = composite_episode[failed_terminal]
+    failed_transition = (
+      torch.isin(composite_episode, failed_episode_ids)
+      if failed_episode_ids.numel()
+      else torch.zeros_like(self.v35_mean_intervened)
+    )
+    self.v35_failed_episode_transition.copy_(failed_transition)
     gated_intervention = self.v35_mean_intervened
     if self.v35_failure_only_mean_teacher:
-      t, n = self.teacher_episode_ids.shape
-      environment = torch.arange(n, device=self.device).expand(t, n)
-      composite_episode = self.teacher_episode_ids * n + environment
-      failed_terminal = self.storage.dones.squeeze(-1).bool() & self.fall_events
-      failed_episode_ids = composite_episode[failed_terminal]
-      failed_transition = (
-        torch.isin(composite_episode, failed_episode_ids)
-        if failed_episode_ids.numel()
-        else torch.zeros_like(self.v35_mean_intervened)
-      )
-      self.v35_failed_episode_transition.copy_(failed_transition)
       gated_intervention = gated_intervention & failed_transition
     eligible, weights = intervention_teacher_weights(
       gated_intervention,
@@ -197,6 +215,11 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
       "terminal_observed_within_horizon": zeros,
       "magnitude_weight": weights,
     }
+
+  def _actor_ppo_transition_mask(self) -> torch.Tensor:
+    if self.v35_failure_focused_actor:
+      return self.v35_failed_episode_transition
+    return super()._actor_ppo_transition_mask()
 
   def relabel_teacher_transitions(self) -> dict[str, Any]:
     if not bool(self.v35_mean_telemetry_present.all()):
@@ -259,6 +282,7 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
         "v35_failure_only_mean_teacher": (
           self.v35_failure_only_mean_teacher
         ),
+        "v35_failure_focused_actor": self.v35_failure_focused_actor,
         "v35_failed_episode_count": float(
           (self.storage.dones.squeeze(-1).bool() & self.fall_events).sum()
         ),
@@ -317,4 +341,5 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     output["v35_failure_only_mean_teacher"] = (
       self.v35_failure_only_mean_teacher
     )
+    output["v35_failure_focused_actor"] = self.v35_failure_focused_actor
     return output

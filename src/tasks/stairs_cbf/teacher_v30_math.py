@@ -6,6 +6,21 @@ import torch
 import torch.nn.functional as F
 
 
+def masked_transition_mean(
+    values: torch.Tensor, mask: torch.Tensor
+) -> torch.Tensor:
+    """Average selected transition losses with an exact differentiable zero."""
+    if values.ndim != 1 or mask.shape != values.shape:
+        raise ValueError("v35 masked actor terms must share one-dimensional shape")
+    if mask.dtype != torch.bool:
+        raise TypeError("v35 actor transition mask must be boolean")
+    if not bool(torch.isfinite(values).all()):
+        raise RuntimeError("v35 masked actor objective contains non-finite values")
+    if not bool(mask.any()):
+        return values.sum() * 0.0
+    return values[mask].mean()
+
+
 def residual_teacher_target(
     reference_mean: torch.Tensor,
     safe_actor_action: torch.Tensor,

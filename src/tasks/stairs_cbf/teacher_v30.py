@@ -21,6 +21,7 @@ from .teacher_v29 import (
 )
 from .teacher_v30_math import (
     intervention_teacher_weights,
+    masked_transition_mean,
     residual_teacher_target,
     weighted_action_errors,
     weighted_smooth_l1_teacher_loss,
@@ -180,6 +181,10 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
                 epsilon=1.0e-8,
             )
         raise RuntimeError(f"unsupported v30 teacher mode {self.teacher_mode!r}")
+
+    def _actor_ppo_transition_mask(self) -> torch.Tensor:
+        """Select transitions that contribute PPO and entropy actor gradients."""
+        return torch.ones_like(self.teacher_eligible, dtype=torch.bool)
 
     @staticmethod
     def _weighted_mean(values: torch.Tensor, weights: torch.Tensor) -> torch.Tensor:
@@ -358,6 +363,12 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
         teacher_targets = self.v30_teacher_targets.flatten(0, 1).detach()
         teacher_eligible = self.teacher_eligible.flatten().detach()
         teacher_weights = self.teacher_weights.flatten().detach()
+        actor_ppo_mask = self._actor_ppo_transition_mask().flatten().detach()
+        if (
+            actor_ppo_mask.shape != advantages.shape
+            or actor_ppo_mask.dtype != torch.bool
+        ):
+            raise RuntimeError("v30 actor PPO mask must be boolean with shape [T*N]")
         if not bool(torch.isfinite(advantages).all()):
             raise ProximalHardRollback("non-finite v30 advantages")
 
@@ -402,6 +413,8 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
         clipped_gradient_updates = 0
         teacher_minibatches_with_signal = 0
         teacher_minibatches_without_signal = 0
+        actor_ppo_minibatches_with_signal = 0
+        actor_ppo_minibatches_without_signal = 0
         minibatch_diagnostics: list[dict[str, float | int]] = []
         epoch_moving_kl: list[float] = []
         batch_size = actions.shape[0]
@@ -426,7 +439,16 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
                 surrogate_clipped = -advantage * torch.clamp(
                     ratio, 1.0 - self.clip_param, 1.0 + self.clip_param
                 )
-                ppo_loss = torch.maximum(surrogate, surrogate_clipped).mean()
+                batch_actor_ppo_mask = actor_ppo_mask[indices]
+                ppo_loss = masked_transition_mean(
+                    torch.maximum(surrogate, surrogate_clipped),
+                    batch_actor_ppo_mask,
+                )
+                has_actor_ppo_signal = bool(batch_actor_ppo_mask.any())
+                actor_ppo_minibatches_with_signal += int(has_actor_ppo_signal)
+                actor_ppo_minibatches_without_signal += int(
+                    not has_actor_ppo_signal
+                )
                 moving_kl_loss = diagonal_gaussian_forward_kl(
                     current_params,
                     tuple(value[indices] for value in reference_params),
@@ -443,7 +465,9 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
                 has_signal = bool((batch_weights * batch_eligible).sum() > 0.0)
                 teacher_minibatches_with_signal += int(has_signal)
                 teacher_minibatches_without_signal += int(not has_signal)
-                entropy = self.actor.output_entropy.mean()
+                entropy = masked_transition_mean(
+                    self.actor.output_entropy.flatten(), batch_actor_ppo_mask
+                )
                 actor_loss = (
                     ppo_loss
                     + self.moving_kl_beta * moving_kl_loss
@@ -595,6 +619,17 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
             "teacher_smooth_l1_beta": self.teacher_smooth_l1_beta,
             "teacher_minibatches_with_signal": teacher_minibatches_with_signal,
             "teacher_minibatches_without_signal": teacher_minibatches_without_signal,
+            "actor_ppo_transition_count": int(actor_ppo_mask.sum()),
+            "actor_ppo_transition_fraction": float(actor_ppo_mask.float().mean()),
+            "actor_ppo_minibatches_with_signal": (
+                actor_ppo_minibatches_with_signal
+            ),
+            "actor_ppo_minibatches_without_signal": (
+                actor_ppo_minibatches_without_signal
+            ),
+            "actor_entropy_uses_ppo_transition_mask": True,
+            "moving_kl_uses_all_transitions": True,
+            "critic_uses_all_transitions": True,
             "value": critic_loss_total / critic_updates,
             "entropy": totals["entropy"] / actor_updates,
             "moving_kl_beta": self.moving_kl_beta,

@@ -91,6 +91,24 @@ def test_v30_empty_teacher_loss_is_exact_differentiable_zero() -> None:
     assert torch.equal(mean.grad, torch.zeros_like(mean))
 
 
+def test_v35_masked_actor_mean_excludes_successes_and_handles_empty_mask() -> None:
+    values = torch.tensor((2.0, 100.0, 4.0), requires_grad=True)
+    selected = MATH.masked_transition_mean(
+        values, torch.tensor((True, False, True))
+    )
+    assert float(selected) == pytest.approx(3.0)
+    selected.backward()
+    assert torch.equal(values.grad, torch.tensor((0.5, 0.0, 0.5)))
+
+    empty_values = torch.ones(3, requires_grad=True)
+    empty = MATH.masked_transition_mean(
+        empty_values, torch.zeros(3, dtype=torch.bool)
+    )
+    assert float(empty) == 0.0
+    empty.backward()
+    assert torch.equal(empty_values.grad, torch.zeros_like(empty_values))
+
+
 def test_v30_update_has_no_kl_threshold_control_flow() -> None:
     source = (REPO / "src/tasks/stairs_cbf/teacher_v30.py").read_text()
     tree = ast.parse(source)

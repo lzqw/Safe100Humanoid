@@ -98,6 +98,14 @@ def _parse_args() -> argparse.Namespace:
     ),
   )
   parser.add_argument(
+    "--failure-focused-actor",
+    action="store_true",
+    help=(
+      "Use PPO and entropy actor gradients only on complete failed episodes; "
+      "successful episodes retain only the moving round-reference KL."
+    ),
+  )
+  parser.add_argument(
     "--height-curriculum",
     action="store_true",
     help="Train uniform contexts on ordered stair heights up to the target.",
@@ -284,6 +292,10 @@ def main() -> None:
     raise ValueError("failure-only mean teacher requires deterministic mean labels")
   if args.failure_only_mean_teacher and args.training_runtime_filter != "off":
     raise ValueError("failure-only mean teacher requires unshielded training")
+  if args.failure_focused_actor and not args.failure_only_mean_teacher:
+    raise ValueError(
+      "failure-focused actor requires the failure-only mean teacher"
+    )
   if (
     args.training_runtime_filter == "off"
     and not args.deterministic_mean_teacher
@@ -357,6 +369,7 @@ def main() -> None:
       env_cfg,
       runtime_filter_during_training=training_runtime_filter,
       failure_only=args.failure_only_mean_teacher,
+      failure_focused_actor=args.failure_focused_actor,
     )
   height_curriculum = None
   if args.height_curriculum:
@@ -389,6 +402,9 @@ def main() -> None:
   if args.deterministic_mean_teacher:
     runner_cfg["algorithm"]["v35_failure_only_mean_teacher"] = (
       args.failure_only_mean_teacher
+    )
+    runner_cfg["algorithm"]["v35_failure_focused_actor"] = (
+      args.failure_focused_actor
     )
   runner = CbfTeacherV30Runner(
     env, runner_cfg, log_dir=None, device=args.device
@@ -435,6 +451,7 @@ def main() -> None:
         "teacher_arms_by_round": teacher_arms,
         "height_curriculum": height_curriculum,
         "deterministic_mean_teacher": deterministic_mean_teacher,
+        "failure_focused_actor": args.failure_focused_actor,
         "training_runtime_filter": training_runtime_filter,
         "training_action_std": args.training_action_std,
         "actor_learning_rate": args.actor_learning_rate,
@@ -482,6 +499,7 @@ def main() -> None:
           "teacher_arms_by_round": teacher_arms,
           "height_curriculum": height_curriculum,
           "deterministic_mean_teacher": deterministic_mean_teacher,
+          "failure_focused_actor": args.failure_focused_actor,
           "training_runtime_filter": training_runtime_filter,
           "training_action_std": args.training_action_std,
           "actor_learning_rate": args.actor_learning_rate,
@@ -509,6 +527,7 @@ def main() -> None:
       "teacher_arms_by_round": teacher_arms,
       "height_curriculum": height_curriculum,
       "deterministic_mean_teacher": deterministic_mean_teacher,
+      "failure_focused_actor": args.failure_focused_actor,
       "training_runtime_filter": training_runtime_filter,
       "training_action_std": args.training_action_std,
       "actor_learning_rate": args.actor_learning_rate,
