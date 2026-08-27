@@ -1,0 +1,41 @@
+{
+  "schema_version": "paper_dual_v35.v113.decision.v1",
+  "method_id": "paired-treatment-gated-cbf-residual-v113",
+  "decision": "rejected_screen_below_absolute_filter_off_gate",
+  "reason": "The explicit treatment gate reached only 54.46% balanced training accuracy and the single deterministic filter-off screen reached 42/64=65.625%.",
+  "source_commit": "85556ef348bef0b5d312f292137caed3a062589e",
+  "targeted_tests_passed": 1,
+  "hardware": "NVIDIA GeForce RTX 4080 SUPER",
+  "input_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "training": {
+    "training_seeds": [201353500, 201353510, 201353520, 201353530],
+    "paired_episode_count": 256,
+    "filter_off_success_count": 177,
+    "filter_on_success_count": 195,
+    "rescued_episode_count": 54,
+    "harmed_episode_count": 36,
+    "gate_transition_count": 18176,
+    "residual_transition_count": 3561,
+    "trust_transition_count": 80118,
+    "trainable_parameter_count": 40141,
+    "elapsed_seconds": 202.81794793100562
+  },
+  "offline_fit": {
+    "gate_balanced_accuracy": 0.5445828437805176,
+    "gate_positive_probability_mean": 0.5017110705375671,
+    "gate_negative_probability_mean": 0.4903671145439148,
+    "residual_target_distance_before": 0.05757501390245226,
+    "residual_target_distance_after": 0.03342658943600125
+  },
+  "screen": {
+    "seed": 201353580,
+    "episode_count": 64,
+    "runtime_filter": false,
+    "success_count": 42,
+    "success_rate": 0.65625,
+    "mean_reached_riser": 7.703125,
+    "independent_gate_run": false
+  },
+  "global_best_changed": false,
+  "next_hypothesis": "Use causal temporal context for treatment prediction or predeclare a held-out scale screen around the v92 adapter that was one episode below threshold."
+}

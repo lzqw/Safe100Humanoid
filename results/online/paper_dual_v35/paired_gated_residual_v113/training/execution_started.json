@@ -1,0 +1,15 @@
+{
+  "base_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "gate_threshold": 0.5,
+  "git_commit": "85556ef348bef0b5d312f292137caed3a062589e",
+  "method_id": "paired-treatment-gated-cbf-residual-v113",
+  "num_envs": 64,
+  "screen_envs": 64,
+  "screen_seed": 201353580,
+  "training_seeds": [
+    201353500,
+    201353510,
+    201353520,
+    201353530
+  ]
+}

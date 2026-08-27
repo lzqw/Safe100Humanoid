@@ -39,6 +39,7 @@
 | v110 | 修正 v109 分叉后的状态/动作错配；离线方向更好但 screen 降至 36/64=56.25%，拒绝 | [`deployment_counterfactual_v110/`](deployment_counterfactual_v110/) |
 | v111 | paired terminal outcome 正负对比；rescued/harmed 方向近乎抵消，screen 38/64=59.38% | [`paired_outcome_contrast_v111/`](paired_outcome_contrast_v111/) |
 | v112 | 正负对比开放完整第一层状态条件化；平均到达更远但 screen 仍为 38/64=59.38% | [`state_conditioned_outcome_v112/`](state_conditioned_outcome_v112/) |
+| v113 | 显式 paired treatment gate + bounded residual；gate 仅 54.46% balanced accuracy，screen 42/64=65.63% | [`paired_gated_residual_v113/`](paired_gated_residual_v113/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -213,3 +214,11 @@ v112 将 v111 的正负 outcome contrast 从 10 个 geometry 列扩展到完整 
 从 v111 的 7.625 提高到 8.234，但登顶数没有增加。因此不运行独立 gate，并可排除
 “只因第一层条件化容量不足”这一解释。下一步应把 paired treatment-effect 分类与
 action residual 预测拆成显式 gate + residual 两个头。当前最佳仍为 v79。
+
+v113 完成上述双头拆分：冻结 v79 actor，使用 256 个 paired initial states 训练
+treatment gate，并只让 bounded residual 拟合 54 个 matched rescue。residual distance
+从 0.05758 降到 0.03343，但 gate 对 18,176 条状态的 balanced accuracy 只有 54.46%，
+正负概率均值也仅相差 0.0113；唯一 filter-off screen 为 42/64=65.63%。因此没有运行
+独立 gate。该结果说明消除全局符号抵消仍不足以从局部状态可靠预测终局 treatment
+effect；下一步应加入因果时序上下文，或对曾达到 47/64 的 v92 方向做预先限定的幅度
+筛选。当前最佳仍为 v79。
