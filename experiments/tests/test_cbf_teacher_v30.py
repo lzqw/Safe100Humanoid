@@ -295,12 +295,61 @@ def test_v72_uses_one_direction_preserving_full_batch_sgd_actor_step() -> None:
     source = (REPO / "src/tasks/stairs_cbf/paper_full_batch_v72.py").read_text()
     assert "self.actor_optimizer = torch.optim.SGD(" in source
     assert '"actor_optimizer_updates_per_round": 1' in source
-    assert 'self.num_learning_epochs != 1 or self.num_mini_batches != 1' in source
+    assert "self.num_learning_epochs != 1" in source
+    assert "self.num_mini_batches != 1" in source
     script = (REPO / "experiments/scripts/refine_paper_dual_v35.py").read_text()
     assert '"--full-batch-sgd-actor"' in script
     assert "agent_cfg.algorithm.num_learning_epochs = 1" in script
-    assert "agent_cfg.algorithm.num_mini_batches = 1" in script
+    assert "args.actor_gradient_accumulation_microbatches" in script
     assert "paper_full_batch_v72:PaperFullBatchV72PPO" in script
+
+
+def test_v82_accumulates_equal_chunk_gradients_before_one_sgd_step() -> None:
+    torch.manual_seed(82)
+    full = torch.nn.Linear(5, 3, bias=True, dtype=torch.float64)
+    accumulated = torch.nn.Linear(5, 3, bias=True, dtype=torch.float64)
+    accumulated.load_state_dict(full.state_dict())
+    observations = torch.randn(10, 5, dtype=torch.float64)
+    targets = torch.randn(10, 3, dtype=torch.float64)
+    weights = torch.tensor(
+        (1.0, 0.0, 0.5, 1.0, 1.0, 0.25, 0.0, 1.0, 0.75, 1.0),
+        dtype=torch.float64,
+    )
+
+    full_losses = (full(observations) - targets).square().mean(dim=-1) * weights
+    full_losses.mean().backward()
+    for observation_chunk, target_chunk, weight_chunk in zip(
+        observations.chunk(2), targets.chunk(2), weights.chunk(2), strict=True
+    ):
+        chunk_losses = (
+            (accumulated(observation_chunk) - target_chunk)
+            .square()
+            .mean(dim=-1)
+            * weight_chunk
+        )
+        (chunk_losses.mean() / 2).backward()
+
+    for full_parameter, accumulated_parameter in zip(
+        full.parameters(), accumulated.parameters(), strict=True
+    ):
+        assert torch.allclose(
+            full_parameter.grad,
+            accumulated_parameter.grad,
+            rtol=1.0e-12,
+            atol=1.0e-12,
+        )
+
+    update = (REPO / "src/tasks/stairs_cbf/teacher_v30.py").read_text()
+    algorithm = (
+        REPO / "src/tasks/stairs_cbf/paper_accumulated_v82.py"
+    ).read_text()
+    script = (REPO / "experiments/scripts/refine_paper_dual_v35.py").read_text()
+    assert "actor_loss=actor_loss * actor_loss_scale" in update
+    assert "mini_batch + 1 == self.num_mini_batches" in update
+    assert '"actor_optimizer_updates_completed"' in update
+    assert "accumulate_actor_microbatch_gradients = True" in algorithm
+    assert '"--actor-gradient-accumulation-microbatches"' in script
+    assert "paper_accumulated_v82:PaperAccumulatedV82PPO" in script
 
 
 def test_v35_filter_dropout_mask_is_balanced_and_rotates() -> None:

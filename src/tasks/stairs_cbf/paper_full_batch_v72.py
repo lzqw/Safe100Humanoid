@@ -18,8 +18,13 @@ class PaperFullBatchV72PPO(CbfTeacherV30PPO):
     super().__init__(*args, **kwargs)
     if self.teacher_mode != "none" or self.teacher_distillation_weight != 0.0:
       raise ValueError("v72 full-batch SGD requires the teacher-free A0 arm")
-    if self.num_learning_epochs != 1 or self.num_mini_batches != 1:
-      raise ValueError("v72 requires exactly one full-batch actor update")
+    if self.num_learning_epochs != 1:
+      raise ValueError("v72 requires exactly one actor learning epoch")
+    if self.accumulate_actor_microbatch_gradients:
+      if self.num_mini_batches < 2:
+        raise ValueError("accumulated full-batch SGD requires at least two chunks")
+    elif self.num_mini_batches != 1:
+      raise ValueError("v72 requires exactly one materialized full batch")
     if not 1.0e-6 <= float(self.actor_learning_rate) <= 1.0e-3:
       raise ValueError("v72 SGD learning rate must lie in [1e-6, 1e-3]")
 

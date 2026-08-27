@@ -244,6 +244,15 @@ def _parse_args() -> argparse.Namespace:
     ),
   )
   parser.add_argument(
+    "--actor-gradient-accumulation-microbatches",
+    type=int,
+    default=1,
+    help=(
+      "Split one full-rollout actor gradient into this many equal backward "
+      "chunks, then clip and execute one SGD step. Requires full-batch SGD."
+    ),
+  )
+  parser.add_argument(
     "--transactional-rollout-acceptance",
     action="store_true",
     help=(
@@ -515,6 +524,13 @@ def main() -> None:
     raise ValueError("v35 actor learning rate must lie in [1e-7, 5e-6]")
   if not 0.0 <= args.moving_kl_beta <= 0.5:
     raise ValueError("v35 moving KL beta must lie in [0, 0.5]")
+  if args.actor_gradient_accumulation_microbatches < 1:
+    raise ValueError("actor gradient accumulation chunks must be positive")
+  if (
+    args.actor_gradient_accumulation_microbatches > 1
+    and not args.full_batch_sgd_actor
+  ):
+    raise ValueError("actor gradient accumulation requires full-batch SGD")
   if (
     args.training_domain_randomization_refresh == "round"
     and args.training_domain_randomization == "off"
@@ -879,13 +895,20 @@ def main() -> None:
   agent_cfg.algorithm.minimum_std = float(args.training_action_std)
   agent_cfg.algorithm.maximum_std = float(args.training_action_std)
   if args.full_batch_sgd_actor:
-    agent_cfg.algorithm.class_name = (
-      "src.tasks.stairs_cbf.paper_full_filter_v75:PaperFullFilterV75PPO"
-      if fully_filtered_full_batch_actor
-      else "src.tasks.stairs_cbf.paper_full_batch_v72:PaperFullBatchV72PPO"
-    )
+    if args.actor_gradient_accumulation_microbatches > 1:
+      agent_cfg.algorithm.class_name = (
+        "src.tasks.stairs_cbf.paper_accumulated_v82:PaperAccumulatedV82PPO"
+      )
+    else:
+      agent_cfg.algorithm.class_name = (
+        "src.tasks.stairs_cbf.paper_full_filter_v75:PaperFullFilterV75PPO"
+        if fully_filtered_full_batch_actor
+        else "src.tasks.stairs_cbf.paper_full_batch_v72:PaperFullBatchV72PPO"
+      )
     agent_cfg.algorithm.num_learning_epochs = 1
-    agent_cfg.algorithm.num_mini_batches = 1
+    agent_cfg.algorithm.num_mini_batches = (
+      args.actor_gradient_accumulation_microbatches
+    )
   elif args.deterministic_mean_teacher:
     agent_cfg.algorithm.class_name = (
       "src.tasks.stairs_cbf.paper_teacher_v35:PaperMeanTeacherV35PPO"
@@ -1014,6 +1037,9 @@ def main() -> None:
           args.teacher_gradient_target_ratio
         ),
         "full_batch_sgd_actor": args.full_batch_sgd_actor,
+        "actor_gradient_accumulation_microbatches": (
+          args.actor_gradient_accumulation_microbatches
+        ),
         "fully_filtered_full_batch_actor": fully_filtered_full_batch_actor,
         "transactional_rollout_acceptance": (
           args.transactional_rollout_acceptance
@@ -1291,6 +1317,9 @@ def main() -> None:
             args.teacher_gradient_target_ratio
           ),
           "full_batch_sgd_actor": args.full_batch_sgd_actor,
+          "actor_gradient_accumulation_microbatches": (
+            args.actor_gradient_accumulation_microbatches
+          ),
           "fully_filtered_full_batch_actor": fully_filtered_full_batch_actor,
           "transactional_rollout_acceptance": (
             args.transactional_rollout_acceptance
@@ -1351,6 +1380,9 @@ def main() -> None:
         args.teacher_gradient_target_ratio
       ),
       "full_batch_sgd_actor": args.full_batch_sgd_actor,
+      "actor_gradient_accumulation_microbatches": (
+        args.actor_gradient_accumulation_microbatches
+      ),
       "fully_filtered_full_batch_actor": fully_filtered_full_batch_actor,
       "transactional_rollout_acceptance": (
         args.transactional_rollout_acceptance

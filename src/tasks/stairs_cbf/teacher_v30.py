@@ -53,6 +53,8 @@ class CbfTeacherV30PpoAlgorithmCfg(CbfTeacherV29PpoAlgorithmCfg):
 class CbfTeacherV30PPO(CbfTeacherV29PPO):
     """Complete two actor epochs while treating moving KL only as a loss."""
 
+    accumulate_actor_microbatch_gradients = False
+
     def __init__(
         self,
         *args,
@@ -460,6 +462,7 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
             "entropy": 0.0,
         }
         actor_updates = 0
+        actor_backward_passes = 0
         actor_gradient_norm_max = 0.0
         clipped_gradient_updates = 0
         teacher_minibatches_with_signal = 0
@@ -472,11 +475,19 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
         epoch_moving_kl: list[float] = []
         batch_size = actions.shape[0]
         if batch_size % self.num_mini_batches:
-            raise RuntimeError("v30 rollout must divide into four minibatches")
+            raise RuntimeError("v30 rollout must divide evenly into minibatches")
         mini_batch_size = batch_size // self.num_mini_batches
+        accumulate_actor_gradients = bool(
+            self.accumulate_actor_microbatch_gradients
+        )
+        actor_loss_scale = (
+            1.0 / self.num_mini_batches if accumulate_actor_gradients else 1.0
+        )
 
         for epoch in range(self.num_learning_epochs):
             permutation = torch.randperm(batch_size, device=self.device)
+            if accumulate_actor_gradients:
+                self.actor_optimizer.zero_grad(set_to_none=True)
             for mini_batch in range(self.num_mini_batches):
                 start = mini_batch * mini_batch_size
                 indices = permutation[start : start + mini_batch_size]
@@ -536,63 +547,23 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
                 if not bool(torch.isfinite(actor_loss)):
                     raise ProximalHardRollback("non-finite v30 actor loss")
                 actor_parameters = list(self.actor.mlp.parameters())
-                self.actor_optimizer.zero_grad(set_to_none=True)
+                if not accumulate_actor_gradients:
+                    self.actor_optimizer.zero_grad(set_to_none=True)
                 objective_gradient_diagnostics = (
                     self._backward_actor_objectives(
                         actor_parameters=actor_parameters,
-                        actor_loss=actor_loss,
-                        ppo_loss=ppo_loss,
-                        moving_kl_loss=moving_kl_loss,
-                        local_kl_loss=local_kl_loss,
-                        teacher_loss=teacher_loss,
-                        entropy=entropy,
+                        actor_loss=actor_loss * actor_loss_scale,
+                        ppo_loss=ppo_loss * actor_loss_scale,
+                        moving_kl_loss=moving_kl_loss * actor_loss_scale,
+                        local_kl_loss=local_kl_loss * actor_loss_scale,
+                        teacher_loss=teacher_loss * actor_loss_scale,
+                        entropy=entropy * actor_loss_scale,
                         actor_local_kl_beta=actor_local_kl_beta,
                     )
                 )
+                actor_backward_passes += 1
                 if not self._finite_gradients(actor_parameters):
                     raise ProximalHardRollback("non-finite v30 actor gradient")
-                gradient_norm = torch.nn.utils.clip_grad_norm_(
-                    actor_parameters, self.max_grad_norm
-                )
-                if not bool(torch.isfinite(gradient_norm)):
-                    raise ProximalHardRollback("non-finite v30 actor gradient norm")
-                clipped_gradient_updates += int(
-                    float(gradient_norm) > self.max_grad_norm
-                )
-                self.actor_optimizer.step()
-                self._raise_if_corrupt(
-                    f"v30 actor epoch {epoch + 1} minibatch {mini_batch + 1}"
-                )
-                with torch.inference_mode():
-                    self.actor(batch_observations, stochastic_output=True)
-                    post_params = tuple(self.actor.output_distribution_params)
-                    post_log_prob = self.actor.get_output_log_prob(batch_actions)
-                    post_log_ratio = post_log_prob - old_log_prob[indices]
-                    post_ratio = torch.exp(post_log_ratio)
-                    diagnostic = {
-                        "epoch": epoch + 1,
-                        "minibatch": mini_batch + 1,
-                        "moving_forward_kl": float(
-                            diagonal_gaussian_forward_kl(
-                                post_params,
-                                tuple(value[indices] for value in reference_params),
-                            ).mean()
-                        ),
-                        "behavior_approximate_kl": float((-post_log_ratio).mean()),
-                        "clip_fraction": float(
-                            (torch.abs(post_ratio - 1.0) > self.clip_param)
-                            .float()
-                            .mean()
-                        ),
-                        "action_mean_shift": float(
-                            torch.linalg.vector_norm(
-                                post_params[0] - reference_params[0][indices],
-                                dim=-1,
-                            ).mean()
-                        ),
-                        "actor_gradient_norm_pre_clip": float(gradient_norm),
-                        **objective_gradient_diagnostics,
-                    }
                 if objective_gradient_diagnostics:
                     actor_objective_diagnostic_updates += 1
                     for name, value in objective_gradient_diagnostics.items():
@@ -605,23 +576,94 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
                             actor_objective_diagnostic_totals.get(name, 0.0)
                             + numeric
                         )
-                if not all(
-                    math.isfinite(float(value))
-                    for key, value in diagnostic.items()
-                    if key not in ("epoch", "minibatch")
-                ):
-                    raise ProximalHardRollback("non-finite v30 minibatch diagnostic")
-                minibatch_diagnostics.append(diagnostic)
-                actor_updates += 1
-                totals["actor"] += float(actor_loss.detach())
-                totals["ppo"] += float(ppo_loss.detach())
-                totals["moving_kl"] += float(moving_kl_loss.detach())
-                totals["local_kl"] += float(local_kl_loss.detach())
-                totals["teacher"] += float(teacher_loss.detach())
-                totals["entropy"] += float(entropy.detach())
-                actor_gradient_norm_max = max(
-                    actor_gradient_norm_max, float(gradient_norm)
+                totals["actor"] += actor_loss_scale * float(actor_loss.detach())
+                totals["ppo"] += actor_loss_scale * float(ppo_loss.detach())
+                totals["moving_kl"] += (
+                    actor_loss_scale * float(moving_kl_loss.detach())
                 )
+                totals["local_kl"] += (
+                    actor_loss_scale * float(local_kl_loss.detach())
+                )
+                totals["teacher"] += (
+                    actor_loss_scale * float(teacher_loss.detach())
+                )
+                totals["entropy"] += actor_loss_scale * float(entropy.detach())
+                should_step_actor = (
+                    not accumulate_actor_gradients
+                    or mini_batch + 1 == self.num_mini_batches
+                )
+                if should_step_actor:
+                    gradient_norm = torch.nn.utils.clip_grad_norm_(
+                        actor_parameters, self.max_grad_norm
+                    )
+                    if not bool(torch.isfinite(gradient_norm)):
+                        raise ProximalHardRollback(
+                            "non-finite v30 actor gradient norm"
+                        )
+                    clipped_gradient_updates += int(
+                        float(gradient_norm) > self.max_grad_norm
+                    )
+                    self.actor_optimizer.step()
+                    self._raise_if_corrupt(
+                        f"v30 actor epoch {epoch + 1} optimizer step"
+                    )
+                    with torch.inference_mode():
+                        self.actor(batch_observations, stochastic_output=True)
+                        post_params = tuple(self.actor.output_distribution_params)
+                        post_log_prob = self.actor.get_output_log_prob(batch_actions)
+                        post_log_ratio = post_log_prob - old_log_prob[indices]
+                        post_ratio = torch.exp(post_log_ratio)
+                        diagnostic = {
+                            "epoch": epoch + 1,
+                            "minibatch": mini_batch + 1,
+                            "accumulated_microbatches": (
+                                self.num_mini_batches
+                                if accumulate_actor_gradients
+                                else 1
+                            ),
+                            "moving_forward_kl": float(
+                                diagonal_gaussian_forward_kl(
+                                    post_params,
+                                    tuple(
+                                        value[indices]
+                                        for value in reference_params
+                                    ),
+                                ).mean()
+                            ),
+                            "behavior_approximate_kl": float(
+                                (-post_log_ratio).mean()
+                            ),
+                            "clip_fraction": float(
+                                (torch.abs(post_ratio - 1.0) > self.clip_param)
+                                .float()
+                                .mean()
+                            ),
+                            "action_mean_shift": float(
+                                torch.linalg.vector_norm(
+                                    post_params[0] - reference_params[0][indices],
+                                    dim=-1,
+                                ).mean()
+                            ),
+                            "actor_gradient_norm_pre_clip": float(gradient_norm),
+                            **objective_gradient_diagnostics,
+                        }
+                    if not all(
+                        math.isfinite(float(value))
+                        for key, value in diagnostic.items()
+                        if key not in (
+                            "epoch",
+                            "minibatch",
+                            "accumulated_microbatches",
+                        )
+                    ):
+                        raise ProximalHardRollback(
+                            "non-finite v30 minibatch diagnostic"
+                        )
+                    minibatch_diagnostics.append(diagnostic)
+                    actor_updates += 1
+                    actor_gradient_norm_max = max(
+                        actor_gradient_norm_max, float(gradient_norm)
+                    )
             epoch_metrics = self._whole_batch_policy_metrics(
                 observations, actions, old_log_prob, reference_params
             )
@@ -663,10 +705,16 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
                     critic_gradient_norm_max, float(gradient_norm)
                 )
 
-        expected_actor_updates = self.num_learning_epochs * self.num_mini_batches
+        expected_actor_backward_passes = (
+            self.num_learning_epochs * self.num_mini_batches
+        )
+        expected_actor_updates = self.num_learning_epochs * (
+            1 if accumulate_actor_gradients else self.num_mini_batches
+        )
         expected_critic_updates = self.critic_learning_epochs * self.num_mini_batches
         if (
-            actor_updates != expected_actor_updates
+            actor_backward_passes != expected_actor_backward_passes
+            or actor_updates != expected_actor_updates
             or critic_updates != expected_critic_updates
         ):
             raise ProximalHardRollback("v30 did not complete every optimizer step")
@@ -731,7 +779,12 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
             "hard_kl_rollback_enabled": False,
             "actor_epochs_completed": self.num_learning_epochs,
             "critic_epochs_completed": self.critic_learning_epochs,
-            "actor_minibatches_completed": actor_updates,
+            "actor_minibatches_completed": actor_backward_passes,
+            "actor_optimizer_updates_completed": actor_updates,
+            "actor_gradient_accumulation_enabled": accumulate_actor_gradients,
+            "actor_gradient_accumulation_microbatches": (
+                self.num_mini_batches if accumulate_actor_gradients else 1
+            ),
             "critic_minibatches_completed": critic_updates,
             "epoch_moving_forward_kl": epoch_moving_kl,
             "minibatch_diagnostics": minibatch_diagnostics,
