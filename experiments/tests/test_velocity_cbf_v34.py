@@ -416,6 +416,16 @@ def test_v115_gate_is_causal_and_balances_discordant_episodes() -> None:
     assert torch.isclose(weights[2].sum(), torch.tensor(0.25))
 
 
+def test_v116_routes_residual_to_actual_successful_filtered_trajectory() -> None:
+    method_id, trace_mode = CAUSAL_GATE.residual_teacher_configuration(
+        "successful-filtered-trajectory"
+    )
+    assert method_id.endswith("v116")
+    assert trace_mode == "paired-trajectory"
+    with pytest.raises(ValueError, match="unsupported"):
+        CAUSAL_GATE.residual_teacher_configuration("unsigned-local-filter")
+
+
 def test_v95_critic_expansion_accepts_ten_persistent_features() -> None:
     source = {"mlp.0.weight": torch.randn(3, 7)}
     target = {"mlp.0.weight": torch.randn(3, 17)}

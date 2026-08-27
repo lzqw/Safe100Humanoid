@@ -60,7 +60,19 @@ from velocity_cbf_v34_protocol import CURRENT_CBF_MODE, PROTOCOL_ID
 
 
 METHOD_ID = "causal-discordant-treatment-gated-cbf-residual-v115"
+SUCCESSFUL_TRAJECTORY_METHOD_ID = (
+  "causal-outcome-gated-successful-trajectory-residual-v116"
+)
 GATE_HIDDEN_DIM = 64
+
+
+def residual_teacher_configuration(name: str) -> tuple[str, str]:
+  """Map the public v115/v116 teacher name to method and trace identifiers."""
+  if name == "deployment-counterfactual":
+    return METHOD_ID, "deployment-counterfactual"
+  if name == "successful-filtered-trajectory":
+    return SUCCESSFUL_TRAJECTORY_METHOD_ID, "paired-trajectory"
+  raise ValueError("v115/v116 residual teacher is unsupported")
 
 
 class CausalGatedResidual(torch.nn.Module):
@@ -167,6 +179,11 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--paired-post-horizon", type=int, default=50)
   parser.add_argument("--paired-pre-decay", type=float, default=0.9)
   parser.add_argument("--teacher-eta", type=float, default=0.25)
+  parser.add_argument(
+    "--residual-teacher",
+    choices=("deployment-counterfactual", "successful-filtered-trajectory"),
+    default="deployment-counterfactual",
+  )
   parser.add_argument("--max-residual", type=float, default=0.25)
   parser.add_argument("--gate-threshold", type=float, default=0.6)
   parser.add_argument("--gate-learning-rate", type=float, default=1.0e-3)
@@ -595,6 +612,9 @@ def main() -> None:
   args = _parse_args()
   seeds = _parse_seeds(args.training_seeds)
   validation_seed = seeds[-1]
+  method_id, residual_trace_mode = residual_teacher_configuration(
+    args.residual_teacher
+  )
   if args.num_envs < 2 or not 1 <= args.screen_envs <= args.num_envs:
     raise ValueError("v115 environment counts are invalid")
   if min(args.gate_epochs, args.residual_epochs, args.gate_batch_episodes) < 1:
@@ -631,7 +651,7 @@ def main() -> None:
   _atomic_json(
     output / "execution_started.json",
     {
-      "method_id": METHOD_ID,
+      "method_id": method_id,
       "git_commit": source_commit,
       "base_checkpoint_sha256": checkpoint_sha,
       "training_seeds": seeds[:-1],
@@ -639,6 +659,7 @@ def main() -> None:
       "num_envs": args.num_envs,
       "screen_seed": args.screen_seed,
       "gate_threshold": args.gate_threshold,
+      "residual_teacher": args.residual_teacher,
     },
   )
 
@@ -765,7 +786,7 @@ def main() -> None:
             pre_horizon=args.paired_pre_horizon,
             post_horizon=args.paired_post_horizon,
             pre_decay=args.paired_pre_decay,
-            target_mode="deployment-counterfactual",
+            target_mode=residual_trace_mode,
           )
         )
         if len(residual_weights):
@@ -886,7 +907,7 @@ def main() -> None:
       candidate_path,
       {
         "schema_version": 1,
-        "method_id": METHOD_ID,
+        "method_id": method_id,
         "git_commit": source_commit,
         "base_checkpoint_sha256": checkpoint_sha,
         "base_actor_state_dict": {
@@ -925,7 +946,7 @@ def main() -> None:
 
     summary = {
       "schema_version": 1,
-      "method_id": METHOD_ID,
+      "method_id": method_id,
       "git_commit": source_commit,
       "context": args.context,
       "base_checkpoint_sha256": checkpoint_sha,
@@ -950,6 +971,8 @@ def main() -> None:
         "pre_decay": args.paired_pre_decay,
       },
       "teacher_eta": args.teacher_eta,
+      "residual_teacher": args.residual_teacher,
+      "residual_trace_mode": residual_trace_mode,
       "max_residual": args.max_residual,
       "gate_threshold": args.gate_threshold,
       "rollout_summaries": rollout_summaries,
