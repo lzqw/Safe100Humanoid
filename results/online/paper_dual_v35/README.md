@@ -277,6 +277,23 @@ v43 新增 3 个训练 seed 的 96 个无过滤探索 episode（64 个成功）�
 filter-on 或额外 seed，也不选择该 actor。代码提交、训练摘要及逐 episode 证据见
 [`elite_self_imitation_v43_6seed/`](elite_self_imitation_v43_6seed/)。
 
+把同一 elite 更新的 KL 上限从 `1e-4` 提高到 `2e-4` 后，该 seed 降至
+42/64，证明不是继续增大成功轨迹拟合步长即可解决。
+
+#### Episode-balanced outcome PPO（最佳点 47/64，仍未通过）
+
+v44 把六个训练 seed 的成功/失败 episode 做中心化 PPO 优势，每个 episode 等权，
+并用逐坐标 trimmed mean 聚合 seed gradient。离线 6/6 seed surrogate 均改善，
+但 seed gradient 平均余弦只有 `-0.0032`。Adam 候选在 gate seed `201350922`
+达到 48/64，却在 untouched seed `201350932` 从 base 的 46/64 降到 37/64，
+说明 Adam 第一步的逐坐标符号缩放放大了不一致梯度。
+
+v45 改用保留梯度幅度的 SGD trust-region step。KL=`2.5e-5` 时，同一独立对照从
+46/64 小幅提高到 **47/64（73.44%）**；将 KL 增至 `5e-5` 后反而降到 42/64。
+因此 47/64 是该路线最佳点，但仍比 75% gate 少一个 episode，按计划停止且不跑
+filter-on。完整离线诊断、base 对照和逐 episode 证据见
+[`outcome_ppo_v44_v45/`](outcome_ppo_v44_v45/)。
+
 ## 方法与第一阶段 F1 ablation
 
 本目录发布 v35 第一阶段 F1 pilot 的关键结果。该阶段依据
@@ -321,6 +338,8 @@ winner。后续 staged experiment 解决了 F1 矛盾，并已冻结扩展到 F2
 - [`filtered_ppo_v39/`](filtered_ppo_v39/): 论文式 filtered PPO continuation、checkpoint 对齐及失败的 hard-seed filter-off gate。
 - [`last_layer_rescue_v40/`](last_layer_rescue_v40/): 输出层局部更新、离线 KL 审计及失败的 hard-seed gate。
 - [`elite_self_imitation_v41_v42/`](elite_self_imitation_v41_v42/): 无过滤成功轨迹收集、full-batch 更新、成功的 paired gate 与失败的 untouched-seed 确认。
+- [`elite_self_imitation_v43_6seed/`](elite_self_imitation_v43_6seed/): 六训练 seed 合并、KL 放大负结果及稳定 seed gate。
+- [`outcome_ppo_v44_v45/`](outcome_ppo_v44_v45/): episode-balanced outcome PPO、Adam 泛化失败、SGD trust-region 最佳点与独立 base 对照。
 
 大型 `.pt` checkpoint 没有提交进 Git；其 SHA-256 已写入
 `pilot_summary.json`，原始 checkpoint 和逐 episode 文件保留在 4080 artifact

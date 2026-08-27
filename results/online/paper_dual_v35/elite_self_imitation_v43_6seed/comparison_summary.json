@@ -47,6 +47,15 @@
     "filter_on_run": false,
     "early_stop_reason": "filter_off_below_75_percent_gate"
   },
+  "higher_kl_ablation": {
+    "max_reference_kl": 0.0002,
+    "candidate_actor_sha256": "9fef52da06db9fe22a2dafc1f64bc9cef3d4f2a699a89788e0abb51c5b727962",
+    "candidate_checkpoint_sha256": "afb948c96bae9a22d93cfa565192a8bafdf27ee49842e2e66c7759535cd30ae6",
+    "gate_seed": 201350922,
+    "candidate_filter_off_success_count": 42,
+    "candidate_filter_off_success_rate": 0.65625,
+    "decision": "rejected_stronger_elite_update_regressed"
+  },
   "candidate_actor_sha256": "06ece92c81765305d2b518dcdcb45e1df7681f0db0e07a3d2db26b1be488d749",
   "candidate_checkpoint_sha256": "41b0aed76754f28c8f6a9bda4ed3cb524a1051e1ed153e498d66937ae8476746"
 }

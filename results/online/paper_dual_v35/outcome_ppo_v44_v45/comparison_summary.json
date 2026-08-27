@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "method_family": "episode-balanced-filter-free-outcome-ppo",
+  "decision": "promising_sgd_step_but_rejected_below_75_percent_gate",
+  "source_git_commits": {
+    "adam_outcome_ppo": "62eeddd",
+    "raw_gradient_sgd": "64dda2b"
+  },
+  "training_data": {
+    "training_seeds": [
+      201350342,
+      201350352,
+      201350362,
+      201350392,
+      201350402,
+      201350412
+    ],
+    "episode_count": 192,
+    "dataset_transition_count": 80044,
+    "successful_episode_transition_count": 60976
+  },
+  "v44_adam_coordinate_trimmed": {
+    "reference_forward_kl": 0.00009996586549848603,
+    "positive_training_seed_count": 6,
+    "training_seed_count": 6,
+    "minimum_seed_surrogate_gain": 0.00019533932209014893,
+    "pairwise_gradient_cosine_mean": -0.0032224259339272976,
+    "gate_seed_201350922_filter_off_success_count": 48,
+    "gate_seed_201350922_filter_off_success_rate": 0.75,
+    "untouched_seed_201350932_filter_off_success_count": 37,
+    "untouched_seed_201350932_filter_off_success_rate": 0.578125,
+    "untouched_seed_201350932_base_success_count": 46,
+    "candidate_actor_sha256": "10ec813ed77a30504914d728012447f57ca80a2ee600c5b578b5996b7bd02449",
+    "candidate_checkpoint_sha256": "73d399b2a41868303c464161ae8822cb0f3b907d941eedbadb6088e638b51603",
+    "decision": "rejected_untouched_seed_regressed_by_9"
+  },
+  "v45_sgd_coordinate_trimmed": {
+    "reason": "preserve aggregate gradient magnitudes instead of Adam first-step signs",
+    "kl_2_5e_5": {
+      "reference_forward_kl": 0.00002493039104905266,
+      "positive_training_seed_count": 6,
+      "gate_seed": 201350932,
+      "base_filter_off_success_count": 46,
+      "candidate_filter_off_success_count": 47,
+      "candidate_filter_off_success_rate": 0.734375,
+      "candidate_actor_sha256": "ca0b9031db67cdf3837852061f17085f42da6462359d858965633029e8e32c68",
+      "candidate_checkpoint_sha256": "afed8a89b1a3ad3433dee2fbf5b6e09d3d1ffd1ed9fb6db5bbbc2484ccbc6ccd",
+      "decision": "best_v45_point_but_one_episode_below_gate"
+    },
+    "kl_5e_5": {
+      "reference_forward_kl": 0.00004988051081554422,
+      "gate_seed": 201350932,
+      "candidate_filter_off_success_count": 42,
+      "candidate_filter_off_success_rate": 0.65625,
+      "candidate_actor_sha256": "f5176b6feb119468ab7051fe0995dcc47555404175a57fa21a8c5560f33fbc91",
+      "candidate_checkpoint_sha256": "9e582d4b59be9c2c76e22ee86ff55c06c7c33e2db4ecfd2db593d0ea87def1d3",
+      "decision": "rejected_larger_step_regressed"
+    }
+  },
+  "filter_on_runs": 0,
+  "early_stop_reason": "no_candidate_passed_the_independent_filter_off_gate"
+}
