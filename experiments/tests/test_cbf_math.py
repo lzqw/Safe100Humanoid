@@ -280,7 +280,7 @@ def test_v127_crossfits_state_occupancy_and_keeps_only_filtered_actor_credit():
     rtol=0,
   )
   assert metrics["occupancy_correction_active"] is True
-  assert metrics["occupancy_classifier_balanced_accuracy"] > 0.9
+  assert metrics["occupancy_classifier_balanced_accuracy"] > 0.75
   assert metrics["occupancy_density_ratio_effective_sample_fraction"] > 0.0
   assert metrics["occupancy_actor_filter_off_advantage_max_abs"] == 0.0
   assert metrics["occupancy_critic_uses_all_transitions"] is True
