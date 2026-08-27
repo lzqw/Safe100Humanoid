@@ -61,7 +61,10 @@ def v35_mean_teacher_telemetry(
 
 
 def configure_v35_mean_teacher_telemetry(
-  env_cfg, *, runtime_filter_during_training: bool
+  env_cfg,
+  *,
+  runtime_filter_during_training: bool,
+  failure_only: bool = False,
 ) -> dict[str, Any]:
   """Replace only the training telemetry function; action execution is fixed."""
   action = env_cfg.actions.get("joint_pos")
@@ -86,6 +89,7 @@ def configure_v35_mean_teacher_telemetry(
     ),
     "loss": "weighted_smooth_l1_per_action_mean",
     "eligibility": "deterministic_mean_cbf_interventions_only",
+    "outcome_gate": "failed_episodes" if failure_only else "none",
   }
 
 
@@ -101,12 +105,17 @@ class PaperMeanTeacherV35PpoAlgorithmCfg(CbfTeacherV30PpoAlgorithmCfg):
 class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
   """Use a same-state filtered deterministic mean as the A2 target."""
 
-  def __init__(self, *args, **kwargs) -> None:
+  def __init__(
+    self, *args, v35_failure_only_mean_teacher: bool = False, **kwargs
+  ) -> None:
     super().__init__(*args, **kwargs)
     if self.teacher_mode != "residual" or self.teacher_gate != "all_interventions":
       raise ValueError(
         "v35 deterministic-mean teacher requires residual/all_interventions"
       )
+    self.v35_failure_only_mean_teacher = bool(
+      v35_failure_only_mean_teacher
+    )
     t = self.storage.num_transitions_per_env
     n = self.storage.num_envs
     action_dim = self.storage.actions.shape[-1]
@@ -118,6 +127,9 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     self.v35_mean_correction_norm = torch.zeros(t, n, device=self.device)
     self.v35_mean_nominal_margin = torch.zeros(t, n, device=self.device)
     self.v35_mean_telemetry_present = torch.zeros(
+      t, n, dtype=torch.bool, device=self.device
+    )
+    self.v35_failed_episode_transition = torch.zeros(
       t, n, dtype=torch.bool, device=self.device
     )
 
@@ -153,8 +165,22 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     self, correction_norm: torch.Tensor
   ) -> tuple[torch.Tensor, torch.Tensor, dict[str, torch.Tensor]]:
     del correction_norm
+    gated_intervention = self.v35_mean_intervened
+    if self.v35_failure_only_mean_teacher:
+      t, n = self.teacher_episode_ids.shape
+      environment = torch.arange(n, device=self.device).expand(t, n)
+      composite_episode = self.teacher_episode_ids * n + environment
+      failed_terminal = self.storage.dones.squeeze(-1).bool() & self.fall_events
+      failed_episode_ids = composite_episode[failed_terminal]
+      failed_transition = (
+        torch.isin(composite_episode, failed_episode_ids)
+        if failed_episode_ids.numel()
+        else torch.zeros_like(self.v35_mean_intervened)
+      )
+      self.v35_failed_episode_transition.copy_(failed_transition)
+      gated_intervention = gated_intervention & failed_transition
     eligible, weights = intervention_teacher_weights(
-      self.v35_mean_intervened,
+      gated_intervention,
       self.v35_mean_correction_norm,
       correction_scale=self.teacher_correction_scale,
     )
@@ -206,6 +232,7 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
       flat_weights,
     )
     intervened_count = int(self.v35_mean_intervened.sum())
+    eligible_count = int(self.teacher_eligible.sum())
     weighted_count = float(effective.sum())
     mean_weighted_correction = (
       float(
@@ -229,6 +256,15 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
         "v35_policy_mean_nominal_margin_min": float(
           self.v35_mean_nominal_margin.min()
         ),
+        "v35_failure_only_mean_teacher": (
+          self.v35_failure_only_mean_teacher
+        ),
+        "v35_failed_episode_count": float(
+          (self.storage.dones.squeeze(-1).bool() & self.fall_events).sum()
+        ),
+        "v35_failed_episode_transition_fraction": float(
+          self.v35_failed_episode_transition.float().mean()
+        ),
         "teacher_eligible_fraction_among_interventions": (
           int(self.teacher_eligible.sum()) / max(1, intervened_count)
         ),
@@ -236,9 +272,9 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
           self.v35_mean_correction_norm.mean()
         ),
         "mean_policy_to_teacher_action_distance": float(
-          self.v35_mean_correction_norm[self.v35_mean_intervened].mean()
+          self.v35_mean_correction_norm[self.teacher_eligible].mean()
         )
-        if intervened_count
+        if eligible_count
         else 0.0,
         "mean_weighted_policy_to_teacher_action_distance": (
           mean_weighted_correction
@@ -270,11 +306,15 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     self.v35_mean_correction_norm.zero_()
     self.v35_mean_nominal_margin.zero_()
     self.v35_mean_telemetry_present.zero_()
+    self.v35_failed_episode_transition.zero_()
 
   def save(self) -> dict[str, Any]:
     output = super().save()
     output["proximal_method_id"] = METHOD_ID
     output["v35_teacher_target_source"] = (
       "same_state_cbf_projection_of_round_reference_mean"
+    )
+    output["v35_failure_only_mean_teacher"] = (
+      self.v35_failure_only_mean_teacher
     )
     return output

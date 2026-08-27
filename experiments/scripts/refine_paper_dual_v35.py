@@ -90,6 +90,14 @@ def _parse_args() -> argparse.Namespace:
     ),
   )
   parser.add_argument(
+    "--failure-only-mean-teacher",
+    action="store_true",
+    help=(
+      "Gate deterministic-mean CBF labels to transitions from unshielded "
+      "episodes that actually end in a fall."
+    ),
+  )
+  parser.add_argument(
     "--height-curriculum",
     action="store_true",
     help="Train uniform contexts on ordered stair heights up to the target.",
@@ -272,6 +280,10 @@ def main() -> None:
   )
   if args.deterministic_mean_teacher and any(arm != "A2" for arm in teacher_arms):
     raise ValueError("v35 deterministic-mean teacher currently requires only A2")
+  if args.failure_only_mean_teacher and not args.deterministic_mean_teacher:
+    raise ValueError("failure-only mean teacher requires deterministic mean labels")
+  if args.failure_only_mean_teacher and args.training_runtime_filter != "off":
+    raise ValueError("failure-only mean teacher requires unshielded training")
   if (
     args.training_runtime_filter == "off"
     and not args.deterministic_mean_teacher
@@ -344,6 +356,7 @@ def main() -> None:
     deterministic_mean_teacher = configure_v35_mean_teacher_telemetry(
       env_cfg,
       runtime_filter_during_training=training_runtime_filter,
+      failure_only=args.failure_only_mean_teacher,
     )
   height_curriculum = None
   if args.height_curriculum:
@@ -372,8 +385,13 @@ def main() -> None:
   started = time.monotonic()
   base_env = ManagerBasedRlEnv(env_cfg, device=args.device)
   env = RslRlVecEnvWrapper(base_env, clip_actions=agent_cfg.clip_actions)
+  runner_cfg = asdict(agent_cfg)
+  if args.deterministic_mean_teacher:
+    runner_cfg["algorithm"]["v35_failure_only_mean_teacher"] = (
+      args.failure_only_mean_teacher
+    )
   runner = CbfTeacherV30Runner(
-    env, asdict(agent_cfg), log_dir=None, device=args.device
+    env, runner_cfg, log_dir=None, device=args.device
   )
   action_term = base_env.action_manager.get_term("joint_pos")
 
