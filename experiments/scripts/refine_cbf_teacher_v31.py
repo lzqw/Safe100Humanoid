@@ -324,8 +324,15 @@ def _resume_boundary(
 
 ROUND_FIELDS = (
     "round",
+    "configured_runtime_filter_fraction",
     "rollout_success_rate",
     "rollout_fall_rate",
+    "rollout_filter_on_episode_count",
+    "rollout_filter_on_success_rate",
+    "rollout_filter_on_fall_rate",
+    "rollout_filter_off_episode_count",
+    "rollout_filter_off_success_rate",
+    "rollout_filter_off_fall_rate",
     "rollout_mean_return",
     "rollout_mean_reached_riser",
     "actor_loss",
@@ -370,8 +377,29 @@ def _write_round_csv(path: Path, records: list[dict[str, Any]]) -> None:
         after_errors = metrics.get("per_action_teacher_error_after_update", [])
         row = {
             "round": record["round"],
+            "configured_runtime_filter_fraction": metrics.get(
+                "configured_runtime_filter_fraction"
+            ),
             "rollout_success_rate": metrics.get("rollout_success_rate"),
             "rollout_fall_rate": metrics.get("rollout_fall_rate"),
+            "rollout_filter_on_episode_count": metrics.get(
+                "rollout_filter_on_episode_count"
+            ),
+            "rollout_filter_on_success_rate": metrics.get(
+                "rollout_filter_on_success_rate"
+            ),
+            "rollout_filter_on_fall_rate": metrics.get(
+                "rollout_filter_on_fall_rate"
+            ),
+            "rollout_filter_off_episode_count": metrics.get(
+                "rollout_filter_off_episode_count"
+            ),
+            "rollout_filter_off_success_rate": metrics.get(
+                "rollout_filter_off_success_rate"
+            ),
+            "rollout_filter_off_fall_rate": metrics.get(
+                "rollout_filter_off_fall_rate"
+            ),
             "rollout_mean_return": metrics.get("rollout_mean_return"),
             "rollout_mean_reached_riser": metrics.get("rollout_mean_reached_riser"),
             "actor_loss": metrics.get("actor_loss"),
@@ -448,7 +476,11 @@ def _write_round_csv(path: Path, records: list[dict[str, Any]]) -> None:
 
 
 def _collect_round(
-    runner, *, before_env_step=None, before_process_env_step=None
+    runner,
+    *,
+    before_env_step=None,
+    before_process_env_step=None,
+    rollout_group_masks: dict[str, torch.Tensor] | None = None,
 ) -> dict[str, Any]:
     from rsl_rl.utils import check_nan
 
@@ -462,6 +494,24 @@ def _collect_round(
     completed_returns: list[float] = []
     completed_risers: list[int] = []
     episode_count = success_count = fall_count = timeout_count = 0
+    group_masks: dict[str, torch.Tensor] = {}
+    group_stats: dict[str, dict[str, Any]] = {}
+    for name, mask in (rollout_group_masks or {}).items():
+        if not name.replace("_", "").isalnum():
+            raise ValueError(f"rollout group name is not metric-safe: {name!r}")
+        if mask.shape != (n,) or mask.dtype != torch.bool:
+            raise ValueError(
+                f"rollout group {name!r} must be a boolean [num_envs] mask"
+            )
+        group_masks[name] = mask.to(runner.env.device).detach().clone()
+        group_stats[name] = {
+            "episode_count": 0,
+            "success_count": 0,
+            "fall_count": 0,
+            "timeout_count": 0,
+            "returns": [],
+            "risers": [],
+        }
     reward_sum = 0.0
     with torch.no_grad():
         for _ in range(runner.cfg["num_steps_per_env"]):
@@ -499,6 +549,22 @@ def _collect_round(
                 success_count += int((done_mask & success).sum())
                 fall_count += int((done_mask & fell).sum())
                 timeout_count += int((done_mask & timeouts).sum())
+                for name, mask in group_masks.items():
+                    grouped_done = done_mask & mask
+                    grouped_ids = grouped_done.nonzero(as_tuple=False).flatten()
+                    stats = group_stats[name]
+                    stats["episode_count"] += len(grouped_ids)
+                    stats["success_count"] += int((grouped_done & success).sum())
+                    stats["fall_count"] += int((grouped_done & fell).sum())
+                    stats["timeout_count"] += int((grouped_done & timeouts).sum())
+                    stats["returns"].extend(
+                        float(episode_returns[index])
+                        for index in grouped_ids.tolist()
+                    )
+                    stats["risers"].extend(
+                        int(episode_max_riser[index])
+                        for index in grouped_ids.tolist()
+                    )
                 episode_returns[ids] = 0.0
                 episode_max_riser[ids] = 0
             obs = next_obs.to(runner.device)
@@ -529,6 +595,29 @@ def _collect_round(
             / (n * runner.cfg["num_steps_per_env"]),
             "performance_gate_used": False,
         }
+        for name, stats in group_stats.items():
+            count = int(stats["episode_count"])
+            prefix = f"rollout_{name}"
+            rollout.update(
+                {
+                    f"{prefix}_episode_count": count,
+                    f"{prefix}_success_count": int(stats["success_count"]),
+                    f"{prefix}_fall_count": int(stats["fall_count"]),
+                    f"{prefix}_timeout_count": int(stats["timeout_count"]),
+                    f"{prefix}_success_rate": (
+                        float(stats["success_count"]) / count if count else None
+                    ),
+                    f"{prefix}_fall_rate": (
+                        float(stats["fall_count"]) / count if count else None
+                    ),
+                    f"{prefix}_mean_return": (
+                        sum(stats["returns"]) / count if count else None
+                    ),
+                    f"{prefix}_mean_reached_riser": (
+                        sum(stats["risers"]) / count if count else None
+                    ),
+                }
+            )
         teacher_metrics = runner.alg.relabel_teacher_transitions()
         runner.alg.compute_returns(obs)
     update = runner.alg.update()

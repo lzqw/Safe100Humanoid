@@ -174,6 +174,21 @@ def _parse_args() -> argparse.Namespace:
     ),
   )
   parser.add_argument(
+    "--training-filter-schedule",
+    choices=("fixed", "linear_to_off"),
+    default="fixed",
+    help=(
+      "Keep one execution fraction, or anneal it linearly to a final "
+      "unshielded rollout while retaining the counterfactual CBF reward."
+    ),
+  )
+  parser.add_argument(
+    "--training-filter-end-fraction",
+    type=float,
+    default=0.0,
+    help="Final execution fraction for linear_to_off (normally 0).",
+  )
+  parser.add_argument(
     "--training-action-std",
     type=float,
     default=0.05,
@@ -351,11 +366,19 @@ def main() -> None:
   ) if args.training_filter_fraction is None else float(
     args.training_filter_fraction
   )
-  if training_runtime_filter:
-    if not 0.0 < training_filter_fraction <= 1.0:
-      raise ValueError("enabled training filter fraction must lie in (0, 1]")
-  elif training_filter_fraction != 0.0:
+  if not math.isfinite(training_filter_fraction) or not (
+    0.0 <= training_filter_fraction <= 1.0
+  ):
+    raise ValueError("training filter fraction must lie in [0, 1]")
+  if not training_runtime_filter and training_filter_fraction != 0.0:
     raise ValueError("disabled training filter requires fraction 0")
+  if args.training_filter_schedule == "linear_to_off":
+    if not training_runtime_filter:
+      raise ValueError("filter annealing requires the CBF execution path enabled")
+    if not 0.0 <= args.training_filter_end_fraction < training_filter_fraction:
+      raise ValueError(
+        "filter annealing end fraction must lie in [0, start fraction)"
+      )
   teacher_arms = _teacher_arms_by_round(
     rounds=args.rounds,
     teacher_arm=args.teacher_arm,
@@ -372,7 +395,10 @@ def main() -> None:
     raise ValueError("success-only mean teacher requires deterministic mean labels")
   if args.failure_only_mean_teacher and args.success_only_mean_teacher:
     raise ValueError("mean-teacher outcome gates are mutually exclusive")
-  if args.success_only_mean_teacher and training_filter_fraction != 1.0:
+  if args.success_only_mean_teacher and (
+    args.training_filter_schedule != "fixed"
+    or training_filter_fraction != 1.0
+  ):
     raise ValueError("success-only mean teacher requires fully shielded training")
   if args.failure_focused_actor and not args.failure_only_mean_teacher:
     raise ValueError(
@@ -440,7 +466,18 @@ def main() -> None:
   from src.tasks.stairs_cbf.paper_dual_v35 import configure_paper_dual_reward
   from src.tasks.stairs_cbf.teacher_v30 import CbfTeacherV30Runner
   from src.tasks.stairs_cbf.teacher_v30_math import (
+    linear_filter_fraction_schedule,
     rotating_environment_filter_mask,
+  )
+
+  training_filter_fractions = (
+    linear_filter_fraction_schedule(
+      args.rounds,
+      training_filter_fraction,
+      args.training_filter_end_fraction,
+    )
+    if args.training_filter_schedule == "linear_to_off"
+    else (training_filter_fraction,) * args.rounds
   )
 
   env_cfg = load_env_cfg(TASK_ID, play=True)
@@ -470,8 +507,17 @@ def main() -> None:
       "lookahead_distance_m": 0.60,
       "persists_after_cbf_deactivation": True,
     }
+  filter_schedule = {
+    "name": args.training_filter_schedule,
+    "fractions_by_round": list(training_filter_fractions),
+    "start_fraction": training_filter_fractions[0],
+    "end_fraction": training_filter_fractions[-1],
+    "counterfactual_cbf_reward_retained_when_unshielded": True,
+  }
   shift["runtime_filter_fraction"] = training_filter_fraction
+  shift["runtime_filter_schedule"] = filter_schedule
   reward["runtime_filter_fraction"] = training_filter_fraction
+  reward["runtime_filter_schedule"] = filter_schedule
   deterministic_mean_teacher = None
   if args.deterministic_mean_teacher:
     from src.tasks.stairs_cbf.paper_teacher_v35 import (
@@ -597,6 +643,7 @@ def main() -> None:
         "success_local_kl_beta": args.success_local_kl_beta,
         "training_runtime_filter": training_runtime_filter,
         "training_filter_fraction": training_filter_fraction,
+        "training_filter_schedule": filter_schedule,
         "training_action_std": args.training_action_std,
         "actor_learning_rate": args.actor_learning_rate,
         "moving_kl_beta": args.moving_kl_beta,
@@ -612,9 +659,10 @@ def main() -> None:
       )
       runner.alg.freeze_round_reference()
       start_hash = actor_state_sha256(actor_state(runner.alg.actor))
+      round_filter_fraction = training_filter_fractions[round_index - 1]
       round_filter_mask = rotating_environment_filter_mask(
         args.num_envs,
-        training_filter_fraction,
+        round_filter_fraction,
         round_index,
         device=base_env.device,
       )
@@ -624,7 +672,22 @@ def main() -> None:
         runner,
         before_env_step=before_env_step,
         before_process_env_step=before_process_env_step,
+        rollout_group_masks={
+          "filter_on": round_filter_mask,
+          "filter_off": ~round_filter_mask,
+        },
       )
+      for count_name in ("episode", "success", "fall", "timeout"):
+        grouped_count = (
+          metrics[f"rollout_filter_on_{count_name}_count"]
+          + metrics[f"rollout_filter_off_{count_name}_count"]
+        )
+        total_count = metrics[f"rollout_{count_name}_count"]
+        if grouped_count != total_count:
+          raise RuntimeError(
+            f"filter subgroup {count_name} count mismatch: "
+            f"groups={grouped_count}, total={total_count}"
+          )
       if height_curriculum is not None:
         metrics.update(
           _terrain_level_metrics(base_env, num_rows=args.curriculum_rows)
@@ -654,6 +717,7 @@ def main() -> None:
         "rollout_checkpoint_round": round_index - 1,
         "rollout_precedes_update": True,
         "runtime_filter_mask_rotation_round": round_index,
+        "scheduled_runtime_filter_fraction": round_filter_fraction,
         "teacher_arm": round_teacher_arm,
         "teacher_parameters": round_teacher_parameters,
         "metrics": metrics,
@@ -678,6 +742,7 @@ def main() -> None:
           "success_local_kl_beta": args.success_local_kl_beta,
           "training_runtime_filter": training_runtime_filter,
           "training_filter_fraction": training_filter_fraction,
+          "training_filter_schedule": filter_schedule,
           "training_action_std": args.training_action_std,
           "actor_learning_rate": args.actor_learning_rate,
           "moving_kl_beta": args.moving_kl_beta,
@@ -714,6 +779,7 @@ def main() -> None:
       ),
       "training_runtime_filter": training_runtime_filter,
       "training_filter_fraction": training_filter_fraction,
+      "training_filter_schedule": filter_schedule,
       "training_action_std": args.training_action_std,
       "actor_learning_rate": args.actor_learning_rate,
       "moving_kl_beta": args.moving_kl_beta,

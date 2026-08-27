@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+
 import torch
 import torch.nn.functional as F
 
@@ -89,6 +91,27 @@ def rotating_environment_filter_mask(
     offset = ((round_index - 1) * enabled_count) % num_envs
     environment_ids = torch.arange(num_envs, device=device)
     return ((environment_ids - offset) % num_envs) < enabled_count
+
+
+def linear_filter_fraction_schedule(
+    rounds: int,
+    start_fraction: float,
+    end_fraction: float,
+) -> tuple[float, ...]:
+    """Linearly anneal the executed-filter fraction across rollout rounds."""
+    values = (float(start_fraction), float(end_fraction))
+    if rounds < 2:
+        raise ValueError("v56 filter annealing requires at least two rounds")
+    if not all(math.isfinite(value) and 0.0 <= value <= 1.0 for value in values):
+        raise ValueError("v56 filter fractions must be finite and lie in [0, 1]")
+    if start_fraction <= end_fraction:
+        raise ValueError("v56 filter annealing must strictly decrease")
+    denominator = rounds - 1
+    return tuple(
+        float(start_fraction)
+        + (float(end_fraction) - float(start_fraction)) * index / denominator
+        for index in range(rounds)
+    )
 
 
 def filter_rescued_episode_mask(

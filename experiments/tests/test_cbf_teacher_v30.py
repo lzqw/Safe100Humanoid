@@ -159,6 +159,18 @@ def test_v35_filter_dropout_mask_is_balanced_and_rotates() -> None:
     )
 
 
+def test_v56_filter_fraction_schedule_reaches_pure_unshielded_rollout() -> None:
+    schedule = MATH.linear_filter_fraction_schedule(4, 1.0, 0.0)
+    assert schedule == pytest.approx((1.0, 2.0 / 3.0, 1.0 / 3.0, 0.0))
+    assert int(
+        MATH.rotating_environment_filter_mask(
+            64, schedule[-1], 4, device="cpu"
+        ).sum()
+    ) == 0
+    with pytest.raises(ValueError, match="strictly decrease"):
+        MATH.linear_filter_fraction_schedule(4, 0.5, 0.5)
+
+
 def test_v36_rescue_gate_uses_matched_on_success_off_failure() -> None:
     on = torch.tensor((True, True, False, False))
     off = torch.tensor((False, True, False, True))
