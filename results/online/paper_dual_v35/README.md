@@ -308,6 +308,12 @@ seed `201350932` 上，candidate 与 base 仍同为 46/64（71.875%）。两者�
 filter-off control，因此不运行 filter-on。完整训练与逐 episode 证据见
 [`multi_rollout_gae_v46_v47/`](multi_rollout_gae_v46_v47/)。
 
+v48 将每批从 `16×512` 扩大为 `32×1024`，总数据增加到 196,608 transitions。
+全 batch、paired on/off、paired seed 的平均梯度余弦分别提高到
+`0.0624/0.1251/0.0827`，且 paired-seed 最差余弦也为正；训练耗时 181.1 秒。
+尽管离线信号明显更一致，同一开发 seed 的 filter-off 仍从 base 46/64 降到
+44/64。因此停止继续放大局部 GAE surrogate；这条负结果也收录在同一证据目录。
+
 ## 方法与第一阶段 F1 ablation
 
 本目录发布 v35 第一阶段 F1 pilot 的关键结果。该阶段依据
