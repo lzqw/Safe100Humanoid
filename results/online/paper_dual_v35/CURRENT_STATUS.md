@@ -35,6 +35,7 @@
 | v106 | episode outcome credit 与 GAE 联合训练；本轮峰值 off 68/95=71.58%，提高 2.19 pp 但仍低于 v79 与 gate | [`outcome_geometry_v106/`](outcome_geometry_v106/) |
 | v107 | outcome 权重减半并逐 proposal 事务回滚；4/4 proposal 回落，最终完整恢复输入 actor | [`outcome_transactional_v107/`](outcome_transactional_v107/) |
 | v108 | 回到原生 CBF-dual 并将 std 降至 0.03；4/4 proposal 回落，低探索噪声仍未改善 | [`low_noise_transactional_v108/`](low_noise_transactional_v108/) |
+| v109 | 成对 filter-off 观测/filter-on 安全轨迹训练；screen 仅 41/64=64.06%，未触发独立 gate | [`paired_rescue_trajectory_v109/`](paired_rescue_trajectory_v109/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -173,3 +174,14 @@ log-prob reduction 误差边界，因此没有放宽冻结校验，而是使用�
 moving KL 低于 `1e-7`，方向仍无改善。由此可排除 action exploration 太高这一充分
 解释；下一步需要 matched filter rescue 的成对反事实轨迹，而不是继续调整同一 PPO
 标量或延长相同训练。
+
+v109 实现了上述成对反事实轨迹：部署时的 filter-off observation 与同一初始状态、
+同一时刻的 filter-on safe action 精确配对，并从首次真实 CBF 干预向前回溯 20 steps、
+向后跟踪 50 steps。8x32 paired initial states 中，filter-off 为 161/256=62.89%，
+filter-on 为 184/256=71.88%，69 个 matched rescue 共给出 4,899 条 teacher target。
+一次仅更新新增 10-D geometry 首层列的 full-batch SGD 将 teacher distance 从 0.126094
+降到 0.125850，KL 限制为 5e-5；但对齐的 deterministic filter-off screen 只有
+41/64=64.06%。因此没有触发独立 gate，v109 已拒绝，当前最佳仍为 v79。该结果表明
+即使把真实安全轨迹延伸到干预前，局部 action imitation 仍不是稳定的部署成功方向；
+下一步需要 sequence-level counterfactual outcome/value objective，而不是继续扩大同类
+teacher 数据或重复局部拟合。
