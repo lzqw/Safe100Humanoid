@@ -169,7 +169,10 @@ def main() -> None:
             {k: v for k, v in actor_state.items() if not k.startswith("distribution.")}
         )
         policy = runner.get_inference_policy(args.device)
-        obs, _ = env.reset()
+        # Runner construction and checkpoint loading may consume global torch
+        # RNG state.  Seed the actual evaluated reset explicitly so identical
+        # --seed values select identical episodes across actors/source commits.
+        obs, _ = env.reset(seed=args.seed)
         term = base_env.action_manager.get_term("joint_pos")
         if not isinstance(
             term,
@@ -382,6 +385,8 @@ def main() -> None:
             "num_envs": args.num_envs,
             "num_episodes": len(completed),
             "initial_state_signature": initial_signature,
+            "explicit_episode_reset_seed": args.seed,
+            "episode_reset_after_runner_load": True,
             "runtime_filter": runtime_filter,
             "deterministic_policy_mean": True,
             "cbf": cbf,
