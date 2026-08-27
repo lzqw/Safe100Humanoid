@@ -132,6 +132,24 @@ class StairCbfJointPositionAction(JointPositionAction):
     self.nominal_raw_action = torch.zeros_like(self.nominal_target)
     self.safe_raw_action = torch.zeros_like(self.nominal_target)
     self.executed_raw_action = torch.zeros_like(self.nominal_target)
+    # Optional shadow projection used by v35 to filter the deterministic policy
+    # mean at the exact same pre-step state as the sampled rollout action.  It
+    # never changes the action sent to the simulator.
+    self.counterfactual_policy_action = torch.zeros_like(self.nominal_target)
+    self.counterfactual_safe_policy_action = torch.zeros_like(self.nominal_target)
+    self.counterfactual_policy_intervened = torch.zeros(
+      shape, dtype=torch.bool, device=self.device
+    )
+    self.counterfactual_policy_correction_norm = torch.zeros(
+      shape, device=self.device
+    )
+    self.counterfactual_policy_nominal_margin = torch.zeros(
+      shape, device=self.device
+    )
+    self.counterfactual_policy_projection_valid = torch.zeros(
+      shape, dtype=torch.bool, device=self.device
+    )
+    self._counterfactual_policy_action_staged = False
     if cfg.deployment_action_delay_steps < 0:
       raise ValueError("deployment action delay must be non-negative")
     if not 0.0 < cfg.deployment_action_gain <= 2.0:
@@ -205,6 +223,23 @@ class StairCbfJointPositionAction(JointPositionAction):
       self.num_envs, cfg.safety_history_length, device=self.device
     )
     self.correction_history = torch.zeros_like(self.h_history)
+
+  def stage_counterfactual_policy_action(self, actions: torch.Tensor) -> None:
+    """Stage a shadow actor action for projection during the next env step."""
+    if actions.shape != self.counterfactual_policy_action.shape:
+      raise ValueError(
+        "counterfactual policy action shape differs from the environment action "
+        f"shape: {tuple(actions.shape)} != "
+        f"{tuple(self.counterfactual_policy_action.shape)}"
+      )
+    if not bool(torch.isfinite(actions).all()):
+      raise RuntimeError("counterfactual policy action contains non-finite values")
+    if self.cfg.deployment_action_delay_steps:
+      raise RuntimeError(
+        "same-state counterfactual policy projection forbids action delay"
+      )
+    self.counterfactual_policy_action.copy_(actions.detach())
+    self._counterfactual_policy_action_staged = True
 
   def _foot_xz_jacobians(self, foot_pos: torch.Tensor) -> torch.Tensor:
     jacobians = []
@@ -345,6 +380,54 @@ class StairCbfJointPositionAction(JointPositionAction):
       (psi_nominal < -self.cfg.intervention_epsilon)
       | (counterfactual_target_norm > self.cfg.intervention_epsilon)
     )
+    self.counterfactual_policy_projection_valid.zero_()
+    if self._counterfactual_policy_action_staged:
+      shadow_deployment_action = (
+        self.cfg.deployment_action_gain
+        * self._deployment_action_scale
+        * self.counterfactual_policy_action
+        + self._deployment_action_bias
+      )
+      shadow_target = shadow_deployment_action * self.scale + self.offset
+      shadow_qdot = (shadow_target - q) / self._env.step_dt
+      shadow_projected_qdot, shadow_margin, _ = project_halfspace(
+        shadow_qdot, normal, rhs, active=active
+      )
+      shadow_projected_target = q + self._env.step_dt * shadow_projected_qdot
+      shadow_safe_deployment_action = (
+        shadow_projected_target - self.offset
+      ) / self.scale
+      shadow_safe_policy_action = (
+        shadow_safe_deployment_action - self._deployment_action_bias
+      ) / (
+        self.cfg.deployment_action_gain * self._deployment_action_scale
+      )
+      shadow_correction_norm = torch.linalg.vector_norm(
+        shadow_safe_policy_action - self.counterfactual_policy_action,
+        dim=1,
+      )
+      self.counterfactual_safe_policy_action.copy_(
+        shadow_safe_policy_action.detach()
+      )
+      self.counterfactual_policy_intervened.copy_(
+        active
+        & (
+          (shadow_margin < -self.cfg.intervention_epsilon)
+          | (shadow_correction_norm > self.cfg.intervention_epsilon)
+        )
+      )
+      self.counterfactual_policy_correction_norm.copy_(shadow_correction_norm)
+      self.counterfactual_policy_nominal_margin.copy_(
+        torch.where(active, shadow_margin, torch.zeros_like(shadow_margin))
+      )
+      self.counterfactual_policy_projection_valid.fill_(True)
+      self._counterfactual_policy_action_staged = False
+    else:
+      self.counterfactual_policy_action.zero_()
+      self.counterfactual_safe_policy_action.zero_()
+      self.counterfactual_policy_intervened.zero_()
+      self.counterfactual_policy_correction_norm.zero_()
+      self.counterfactual_policy_nominal_margin.zero_()
     executed_qdot = projected_qdot if self.cfg.enabled else qdot_nominal
     psi_executed = psi_projected if self.cfg.enabled else psi_nominal
 
@@ -423,6 +506,13 @@ class StairCbfJointPositionAction(JointPositionAction):
     self.nominal_raw_action[env_ids] = 0.0
     self.safe_raw_action[env_ids] = 0.0
     self.executed_raw_action[env_ids] = 0.0
+    self.counterfactual_policy_action[env_ids] = 0.0
+    self.counterfactual_safe_policy_action[env_ids] = 0.0
+    self.counterfactual_policy_intervened[env_ids] = False
+    self.counterfactual_policy_correction_norm[env_ids] = 0.0
+    self.counterfactual_policy_nominal_margin[env_ids] = 0.0
+    self.counterfactual_policy_projection_valid[env_ids] = False
+    self._counterfactual_policy_action_staged = False
     self._deployment_action_queue[env_ids] = 0.0
     self._deployment_contact_queue[env_ids] = False
     self._deployment_contact_queue_initialized[env_ids] = False

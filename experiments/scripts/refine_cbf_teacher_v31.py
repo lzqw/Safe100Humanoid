@@ -447,7 +447,7 @@ def _write_round_csv(path: Path, records: list[dict[str, Any]]) -> None:
     temporary.replace(path)
 
 
-def _collect_round(runner) -> dict[str, Any]:
+def _collect_round(runner, *, before_env_step=None) -> dict[str, Any]:
     from rsl_rl.utils import check_nan
 
     runner.alg.clear_cbf_rollout()
@@ -464,6 +464,8 @@ def _collect_round(runner) -> dict[str, Any]:
     with torch.no_grad():
         for _ in range(runner.cfg["num_steps_per_env"]):
             raw_actions = runner.alg.act(obs)
+            if before_env_step is not None:
+                before_env_step(runner, raw_actions)
             next_obs, rewards, dones, extras = runner.env.step(
                 raw_actions.to(runner.env.device)
             )

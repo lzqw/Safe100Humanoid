@@ -82,6 +82,14 @@ def _parse_args() -> argparse.Namespace:
     ),
   )
   parser.add_argument(
+    "--deterministic-mean-teacher",
+    action="store_true",
+    help=(
+      "Project the frozen deterministic policy mean at the rollout state and "
+      "use that counterfactual safe mean as the A2 target."
+    ),
+  )
+  parser.add_argument(
     "--height-curriculum",
     action="store_true",
     help="Train uniform contexts on ordered stair heights up to the target.",
@@ -237,6 +245,8 @@ def main() -> None:
     teacher_schedule=args.teacher_schedule,
     switch_after=args.teacher_switch_after,
   )
+  if args.deterministic_mean_teacher and any(arm != "A2" for arm in teacher_arms):
+    raise ValueError("v35 deterministic-mean teacher currently requires only A2")
   repo = args.repo.resolve()
   checkpoint = args.base_checkpoint.resolve()
   output_dir = args.output_dir.resolve()
@@ -286,6 +296,13 @@ def main() -> None:
     filter_alpha=FILTER_ALPHA,
   )
   reward = configure_paper_dual_reward(env_cfg, args.candidate)
+  deterministic_mean_teacher = None
+  if args.deterministic_mean_teacher:
+    from src.tasks.stairs_cbf.paper_teacher_v35 import (
+      configure_v35_mean_teacher_telemetry,
+    )
+
+    deterministic_mean_teacher = configure_v35_mean_teacher_telemetry(env_cfg)
   height_curriculum = None
   if args.height_curriculum:
     height_curriculum = _configure_height_curriculum(
@@ -300,6 +317,10 @@ def main() -> None:
   agent_cfg.seed = args.seed
   agent_cfg.num_steps_per_env = args.rollout_steps
   _configure_algorithm(agent_cfg, teacher_arms[0], preflight=False)
+  if args.deterministic_mean_teacher:
+    agent_cfg.algorithm.class_name = (
+      "src.tasks.stairs_cbf.paper_teacher_v35:PaperMeanTeacherV35PPO"
+    )
 
   output_dir.mkdir(parents=True)
   started = time.monotonic()
@@ -307,6 +328,23 @@ def main() -> None:
   env = RslRlVecEnvWrapper(base_env, clip_actions=agent_cfg.clip_actions)
   runner = CbfTeacherV30Runner(
     env, asdict(agent_cfg), log_dir=None, device=args.device
+  )
+  action_term = base_env.action_manager.get_term("joint_pos")
+
+  def stage_deterministic_policy_mean(active_runner, _raw_actions) -> None:
+    step = active_runner.alg.storage.step
+    present = active_runner.alg.v30_reference_mean_present[step]
+    if not bool(present.all()):
+      missing = int((~present).sum())
+      raise RuntimeError(f"v35 round-reference mean missing for {missing} envs")
+    action_term.stage_counterfactual_policy_action(
+      active_runner.alg.v30_reference_means[step]
+    )
+
+  before_env_step = (
+    stage_deterministic_policy_mean
+    if args.deterministic_mean_teacher
+    else None
   )
   records: list[dict[str, Any]] = []
   try:
@@ -332,6 +370,7 @@ def main() -> None:
         "teacher_parameters": initial_teacher_parameters,
         "teacher_arms_by_round": teacher_arms,
         "height_curriculum": height_curriculum,
+        "deterministic_mean_teacher": deterministic_mean_teacher,
       },
     )
     for round_index in range(1, args.rounds + 1):
@@ -345,7 +384,7 @@ def main() -> None:
       runner.alg.freeze_round_reference()
       start_hash = actor_state_sha256(actor_state(runner.alg.actor))
       round_started = time.monotonic()
-      metrics = _collect_round(runner)
+      metrics = _collect_round(runner, before_env_step=before_env_step)
       if height_curriculum is not None:
         metrics.update(
           _terrain_level_metrics(base_env, num_rows=args.curriculum_rows)
@@ -375,6 +414,7 @@ def main() -> None:
           "teacher_parameters": round_teacher_parameters,
           "teacher_arms_by_round": teacher_arms,
           "height_curriculum": height_curriculum,
+          "deterministic_mean_teacher": deterministic_mean_teacher,
         },
       )
       _atomic_json(output_dir / "round_metrics.json", records)
@@ -398,6 +438,7 @@ def main() -> None:
       "a2_teacher_eta": args.a2_teacher_eta,
       "teacher_arms_by_round": teacher_arms,
       "height_curriculum": height_curriculum,
+      "deterministic_mean_teacher": deterministic_mean_teacher,
       "seed": args.seed,
       "rounds": args.rounds,
       "num_envs": args.num_envs,
