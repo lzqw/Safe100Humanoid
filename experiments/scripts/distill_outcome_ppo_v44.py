@@ -33,6 +33,7 @@ from refine_rescue_distill_v36 import (
 )
 
 METHOD_ID = "episode-balanced-filter-free-outcome-ppo-v44"
+SGD_METHOD_ID = "episode-balanced-filter-free-outcome-ppo-sgd-v45"
 
 
 def _parse_args() -> argparse.Namespace:
@@ -46,6 +47,7 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--context", choices=tuple(CONTEXTS), required=True)
   parser.add_argument("--optimization-seed", type=int, required=True)
   parser.add_argument("--actor-learning-rate", type=float, default=5.0e-6)
+  parser.add_argument("--optimizer", choices=("adam", "sgd"), default="adam")
   parser.add_argument("--moving-kl-beta", type=float, default=0.5)
   parser.add_argument("--max-reference-kl", type=float, default=1.0e-4)
   parser.add_argument("--clip-ratio", type=float, default=0.2)
@@ -256,6 +258,7 @@ def _distill_outcome_ppo(
   max_reference_kl: float,
   clip_ratio: float,
   gradient_aggregation: str,
+  optimizer_name: str,
   max_grad_norm: float,
   device: str,
 ) -> tuple[dict[str, Any], torch.optim.Optimizer]:
@@ -276,7 +279,12 @@ def _distill_outcome_ppo(
   parameters = list(linear_layers[-1].parameters())
   for parameter in parameters:
     parameter.requires_grad_(True)
-  optimizer = torch.optim.Adam(parameters, lr=learning_rate)
+  if optimizer_name == "adam":
+    optimizer = torch.optim.Adam(parameters, lr=learning_rate)
+  elif optimizer_name == "sgd":
+    optimizer = torch.optim.SGD(parameters, lr=learning_rate)
+  else:
+    raise ValueError(f"unknown v44 optimizer {optimizer_name!r}")
   batch_size = math.ceil(len(dataset["observations"]) / seed_count)
   before = _outcome_metrics(
     actor,
@@ -439,6 +447,7 @@ def _distill_outcome_ppo(
     "trainable_parameter_count": sum(parameter.numel() for parameter in parameters),
     "optimizer_updates": 1,
     "gradient_aggregation": gradient_aggregation,
+    "optimizer": optimizer_name,
     "per_seed_policy_loss_before": losses_by_seed,
     "per_seed_gradient_norm": norms.tolist(),
     "pairwise_gradient_cosine_min": float(off_diagonal.min()),
@@ -464,7 +473,7 @@ def main() -> None:
   args = _parse_args()
   if len(args.dataset) != len(args.expected_dataset_sha256):
     raise ValueError("v44 requires one expected SHA-256 per dataset")
-  if not 1.0e-6 <= args.actor_learning_rate <= 1.0e-4:
+  if not 1.0e-6 <= args.actor_learning_rate <= 1.0e-3:
     raise ValueError("v44 actor learning rate is outside the safe range")
   if not 0.0 <= args.moving_kl_beta <= 4.0:
     raise ValueError("v44 moving KL beta must lie in [0, 4]")
@@ -518,17 +527,19 @@ def main() -> None:
     payloads.append(payload)
   dataset, seed_summaries, source_training_seeds = _episode_balanced_dataset(payloads)
   seed_count = len(seed_summaries)
+  method_id = SGD_METHOD_ID if args.optimizer == "sgd" else METHOD_ID
   output.mkdir(parents=True)
   started = time.monotonic()
   _atomic_json(
     output / "execution_started.json",
     {
-      "method_id": METHOD_ID,
+      "method_id": method_id,
       "git_commit": _git(repo, "rev-parse", "HEAD"),
       "source_dataset_sha256s": dataset_shas,
       "base_checkpoint_sha256": checkpoint_sha,
       "optimization_seed": args.optimization_seed,
       "gradient_aggregation": args.gradient_aggregation,
+      "optimizer": args.optimizer,
     },
   )
 
@@ -578,6 +589,7 @@ def main() -> None:
       max_reference_kl=args.max_reference_kl,
       clip_ratio=args.clip_ratio,
       gradient_aggregation=args.gradient_aggregation,
+      optimizer_name=args.optimizer,
       max_grad_norm=args.max_grad_norm,
       device=args.device,
     )
@@ -597,13 +609,19 @@ def main() -> None:
     source_payload["outcome_ppo_optimizer_state_dict"] = optimizer.state_dict()
     source_payload["iter"] = int(source_payload.get("iter", 0)) + 1
     infos = dict(source_payload.get("infos") or {})
-    infos["episode_balanced_outcome_ppo_v44"] = {
-      "method_id": METHOD_ID,
+    info_key = (
+      "episode_balanced_outcome_ppo_sgd_v45"
+      if args.optimizer == "sgd"
+      else "episode_balanced_outcome_ppo_v44"
+    )
+    infos[info_key] = {
+      "method_id": method_id,
       "source_git_commit": _git(repo, "rev-parse", "HEAD"),
       "source_dataset_sha256s": dataset_shas,
       "source_training_seeds": source_training_seeds,
       "optimization_seed": args.optimization_seed,
       "gradient_aggregation": args.gradient_aggregation,
+      "optimizer": args.optimizer,
       "offline_gate_passed": offline_gate_passed,
     }
     source_payload["infos"] = infos
@@ -611,7 +629,7 @@ def main() -> None:
     _atomic_torch(candidate_path, source_payload)
     summary = {
       "schema_version": 1,
-      "method_id": METHOD_ID,
+      "method_id": method_id,
       "git_commit": _git(repo, "rev-parse", "HEAD"),
       "context": args.context,
       "source_datasets": [str(path) for path in dataset_paths],
@@ -629,6 +647,7 @@ def main() -> None:
       "max_reference_kl": args.max_reference_kl,
       "clip_ratio": args.clip_ratio,
       "gradient_aggregation": args.gradient_aggregation,
+      "optimizer": args.optimizer,
       "offline_gate_passed": offline_gate_passed,
       "training": training,
       "elapsed_seconds": time.monotonic() - started,
