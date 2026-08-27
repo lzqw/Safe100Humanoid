@@ -176,6 +176,16 @@ def test_v68_routes_mixed_execution_actor_objectives_before_update() -> None:
     assert "runner.alg.set_v35_filter_execution_environment_mask(" in script
 
 
+def test_v69_routes_actor_backward_through_task_priority_gradient_surgery() -> None:
+    source = (REPO / "src/tasks/stairs_cbf/paper_teacher_v35.py").read_text()
+    assert "task_priority_project_auxiliary_gradients(" in source
+    assert "deployment_loss = (" in source
+    assert "parameter.grad = deployment + teacher" in source
+    script = (REPO / "experiments/scripts/refine_paper_dual_v35.py").read_text()
+    assert '"--task-priority-gradient-surgery"' in script
+    assert 'runner_cfg["algorithm"]["v35_task_priority_gradient_surgery"]' in script
+
+
 def test_v35_filter_dropout_mask_is_balanced_and_rotates() -> None:
     first = MATH.rotating_environment_filter_mask(
         4, 0.5, 1, device="cpu"

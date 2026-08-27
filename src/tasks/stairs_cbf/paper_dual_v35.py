@@ -79,6 +79,85 @@ def split_filter_actor_objective_masks(
   ppo = ~teacher
   return ppo, teacher
 
+
+def task_priority_project_auxiliary_gradients(
+  primary_gradients: tuple[torch.Tensor, ...],
+  auxiliary_gradients: tuple[torch.Tensor, ...],
+  *,
+  epsilon: float = 1.0e-12,
+) -> tuple[tuple[torch.Tensor, ...], dict[str, float]]:
+  """Remove only the auxiliary component that opposes the primary objective.
+
+  The projection is global across all actor parameters.  When the dot product
+  is negative, ``g_aux`` is projected onto the half-space whose first-order
+  effect cannot increase the primary loss.  Aligned gradients are untouched.
+  """
+  if not primary_gradients or len(primary_gradients) != len(auxiliary_gradients):
+    raise ValueError("gradient surgery requires two non-empty matched tuples")
+  if not math.isfinite(epsilon) or epsilon <= 0.0:
+    raise ValueError("gradient surgery epsilon must be finite and positive")
+  for primary, auxiliary in zip(primary_gradients, auxiliary_gradients):
+    if primary.shape != auxiliary.shape:
+      raise ValueError("gradient surgery tensor shapes must match")
+    if primary.device != auxiliary.device or primary.dtype != auxiliary.dtype:
+      raise ValueError("gradient surgery tensors must share device and dtype")
+    if not bool(torch.isfinite(primary).all()) or not bool(
+      torch.isfinite(auxiliary).all()
+    ):
+      raise RuntimeError("gradient surgery received non-finite gradients")
+
+  zero = primary_gradients[0].new_zeros(())
+  primary_squared = sum(
+    (gradient.square().sum() for gradient in primary_gradients), zero
+  )
+  auxiliary_squared = sum(
+    (gradient.square().sum() for gradient in auxiliary_gradients), zero
+  )
+  dot = sum(
+    (
+      (primary * auxiliary).sum()
+      for primary, auxiliary in zip(primary_gradients, auxiliary_gradients)
+    ),
+    zero,
+  )
+  conflict = bool(dot < 0.0) and bool(primary_squared > epsilon)
+  coefficient = (
+    dot / (primary_squared + epsilon)
+    if conflict
+    else zero
+  )
+  projected = tuple(
+    auxiliary - coefficient * primary
+    for primary, auxiliary in zip(primary_gradients, auxiliary_gradients)
+  )
+  projected_squared = sum(
+    (gradient.square().sum() for gradient in projected), zero
+  )
+  projected_dot = sum(
+    (
+      (primary * auxiliary).sum()
+      for primary, auxiliary in zip(primary_gradients, projected)
+    ),
+    zero,
+  )
+  cosine = dot / torch.sqrt(
+    primary_squared * auxiliary_squared + epsilon
+  )
+  retained_fraction = torch.sqrt(projected_squared) / (
+    torch.sqrt(auxiliary_squared) + epsilon
+  )
+  return projected, {
+    "primary_gradient_norm": float(torch.sqrt(primary_squared)),
+    "auxiliary_gradient_norm": float(torch.sqrt(auxiliary_squared)),
+    "projected_auxiliary_gradient_norm": float(torch.sqrt(projected_squared)),
+    "primary_auxiliary_gradient_dot": float(dot),
+    "primary_auxiliary_gradient_cosine": float(cosine),
+    "projected_primary_auxiliary_gradient_dot": float(projected_dot),
+    "auxiliary_gradient_projection_coefficient": float(coefficient),
+    "auxiliary_gradient_retained_fraction": float(retained_fraction),
+    "auxiliary_gradient_conflict": float(conflict),
+  }
+
 # ``raw_demo`` reproduces the two weights and action-coordinate distance used
 # by the authors' public navigation demo. The intermediate variants are needed
 # because humanoid reward rates and action geometry differ from a 2-D point

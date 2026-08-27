@@ -345,6 +345,36 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
         self.last_update_metrics.update(metrics)
         return metrics
 
+    def _backward_actor_objectives(
+        self,
+        *,
+        actor_parameters: list[torch.nn.Parameter],
+        actor_loss: torch.Tensor,
+        ppo_loss: torch.Tensor,
+        moving_kl_loss: torch.Tensor,
+        local_kl_loss: torch.Tensor,
+        teacher_loss: torch.Tensor,
+        entropy: torch.Tensor,
+        actor_local_kl_beta: float,
+    ) -> dict[str, float]:
+        """Backpropagate the historical summed objective.
+
+        Subclasses may override this narrow hook to compose objective gradients
+        while leaving rollout alignment, optimizer stepping, clipping, and all
+        critic semantics owned by the frozen v30 update.
+        """
+        del (
+            actor_parameters,
+            ppo_loss,
+            moving_kl_loss,
+            local_kl_loss,
+            teacher_loss,
+            entropy,
+            actor_local_kl_beta,
+        )
+        actor_loss.backward()
+        return {}
+
     def update(self) -> dict[str, Any]:
         """Run exactly two actor epochs; KL is never a stop or rollback gate."""
         if self.round_reference_actor is None:
@@ -436,6 +466,8 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
         teacher_minibatches_without_signal = 0
         actor_ppo_minibatches_with_signal = 0
         actor_ppo_minibatches_without_signal = 0
+        actor_objective_diagnostic_updates = 0
+        actor_objective_diagnostic_totals: dict[str, float] = {}
         minibatch_diagnostics: list[dict[str, float | int]] = []
         epoch_moving_kl: list[float] = []
         batch_size = actions.shape[0]
@@ -503,9 +535,20 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
                 )
                 if not bool(torch.isfinite(actor_loss)):
                     raise ProximalHardRollback("non-finite v30 actor loss")
-                self.actor_optimizer.zero_grad(set_to_none=True)
-                actor_loss.backward()
                 actor_parameters = list(self.actor.mlp.parameters())
+                self.actor_optimizer.zero_grad(set_to_none=True)
+                objective_gradient_diagnostics = (
+                    self._backward_actor_objectives(
+                        actor_parameters=actor_parameters,
+                        actor_loss=actor_loss,
+                        ppo_loss=ppo_loss,
+                        moving_kl_loss=moving_kl_loss,
+                        local_kl_loss=local_kl_loss,
+                        teacher_loss=teacher_loss,
+                        entropy=entropy,
+                        actor_local_kl_beta=actor_local_kl_beta,
+                    )
+                )
                 if not self._finite_gradients(actor_parameters):
                     raise ProximalHardRollback("non-finite v30 actor gradient")
                 gradient_norm = torch.nn.utils.clip_grad_norm_(
@@ -548,7 +591,20 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
                             ).mean()
                         ),
                         "actor_gradient_norm_pre_clip": float(gradient_norm),
+                        **objective_gradient_diagnostics,
                     }
+                if objective_gradient_diagnostics:
+                    actor_objective_diagnostic_updates += 1
+                    for name, value in objective_gradient_diagnostics.items():
+                        numeric = float(value)
+                        if not math.isfinite(numeric):
+                            raise ProximalHardRollback(
+                                "non-finite actor objective-gradient diagnostic"
+                            )
+                        actor_objective_diagnostic_totals[name] = (
+                            actor_objective_diagnostic_totals.get(name, 0.0)
+                            + numeric
+                        )
                 if not all(
                     math.isfinite(float(value))
                     for key, value in diagnostic.items()
@@ -683,6 +739,9 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
             "actor_gradient_clipped_fraction": (
                 clipped_gradient_updates / actor_updates
             ),
+            "actor_objective_gradient_surgery_enabled": (
+                actor_objective_diagnostic_updates > 0
+            ),
             "critic_gradient_norm_pre_clip_max": critic_gradient_norm_max,
             "behavior_reference_distribution_param_max_abs_error": (
                 reference_param_error
@@ -706,6 +765,12 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
             **final_policy,
             **rollout_metrics,
         }
+        if actor_objective_diagnostic_updates:
+            for name, total in actor_objective_diagnostic_totals.items():
+                suffix = "fraction" if name.endswith("_conflict") else "mean"
+                result[f"{name}_{suffix}"] = (
+                    total / actor_objective_diagnostic_updates
+                )
         result["mean_kl"] = result["moving_forward_kl"]
         self.storage.clear()
         self.clear_cbf_rollout()

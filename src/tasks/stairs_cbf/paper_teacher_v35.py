@@ -16,7 +16,10 @@ from typing import Any
 
 import torch
 
-from .paper_dual_v35 import split_filter_actor_objective_masks
+from .paper_dual_v35 import (
+  split_filter_actor_objective_masks,
+  task_priority_project_auxiliary_gradients,
+)
 from .teacher_v26 import HigherRiserCbfAction, v26_online_safety_telemetry
 from .teacher_v30 import CbfTeacherV30PPO, CbfTeacherV30PpoAlgorithmCfg
 from .teacher_v30_math import (
@@ -75,6 +78,7 @@ def configure_v35_mean_teacher_telemetry(
   distill_only_actor: bool = False,
   success_local_kl_beta: float = 0.0,
   split_filter_actor_objectives: bool = False,
+  task_priority_gradient_surgery: bool = False,
 ) -> dict[str, Any]:
   """Replace only the training telemetry function; action execution is fixed."""
   action = env_cfg.actions.get("joint_pos")
@@ -132,6 +136,9 @@ def configure_v35_mean_teacher_telemetry(
     ),
     "success_local_kl_beta": float(success_local_kl_beta),
     "split_filter_actor_objectives": bool(split_filter_actor_objectives),
+    "task_priority_gradient_surgery": bool(
+      task_priority_gradient_surgery
+    ),
     "filtered_transition_actor_objective": (
       "deterministic_mean_CBF_teacher_plus_global_round_reference_KL"
       if split_filter_actor_objectives
@@ -147,6 +154,7 @@ class PaperMeanTeacherV35PpoAlgorithmCfg(CbfTeacherV30PpoAlgorithmCfg):
   class_name: str = (
     "src.tasks.stairs_cbf.paper_teacher_v35:PaperMeanTeacherV35PPO"
   )
+  v35_task_priority_gradient_surgery: bool = False
 
 
 class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
@@ -161,6 +169,7 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     v35_distill_only_actor: bool = False,
     v35_success_local_kl_beta: float = 0.0,
     v35_split_filter_actor_objectives: bool = False,
+    v35_task_priority_gradient_surgery: bool = False,
     **kwargs,
   ) -> None:
     super().__init__(*args, **kwargs)
@@ -178,6 +187,9 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     self.v35_distill_only_actor = bool(v35_distill_only_actor)
     self.v35_split_filter_actor_objectives = bool(
       v35_split_filter_actor_objectives
+    )
+    self.v35_task_priority_gradient_surgery = bool(
+      v35_task_priority_gradient_surgery
     )
     self.v35_success_local_kl_beta = float(v35_success_local_kl_beta)
     if (
@@ -199,6 +211,13 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     ):
       raise ValueError(
         "v68 split filter actor objectives require ungated mixed A2 training"
+      )
+    if (
+      self.v35_task_priority_gradient_surgery
+      and not self.v35_split_filter_actor_objectives
+    ):
+      raise ValueError(
+        "v69 task-priority gradient surgery requires v68 split objectives"
       )
     t = self.storage.num_transitions_per_env
     n = self.storage.num_envs
@@ -357,6 +376,92 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
   def _actor_local_kl_beta(self) -> float:
     return self.v35_success_local_kl_beta
 
+  def _backward_actor_objectives(
+    self,
+    *,
+    actor_parameters: list[torch.nn.Parameter],
+    actor_loss: torch.Tensor,
+    ppo_loss: torch.Tensor,
+    moving_kl_loss: torch.Tensor,
+    local_kl_loss: torch.Tensor,
+    teacher_loss: torch.Tensor,
+    entropy: torch.Tensor,
+    actor_local_kl_beta: float,
+  ) -> dict[str, float]:
+    if not self.v35_task_priority_gradient_surgery:
+      return super()._backward_actor_objectives(
+        actor_parameters=actor_parameters,
+        actor_loss=actor_loss,
+        ppo_loss=ppo_loss,
+        moving_kl_loss=moving_kl_loss,
+        local_kl_loss=local_kl_loss,
+        teacher_loss=teacher_loss,
+        entropy=entropy,
+        actor_local_kl_beta=actor_local_kl_beta,
+      )
+
+    # PPO on nominal worlds plus both reference anchors is the protected
+    # deployment objective.  The filtered-world CBF teacher remains intact
+    # when aligned, but loses the component that would increase this loss to
+    # first order when the two gradients conflict.
+    del actor_loss
+    deployment_loss = (
+      ppo_loss
+      + self.moving_kl_beta * moving_kl_loss
+      + actor_local_kl_beta * local_kl_loss
+      - self.entropy_coef * entropy
+    )
+    teacher_objective = self.teacher_distillation_weight * teacher_loss
+    deployment_gradients = tuple(
+      torch.autograd.grad(
+        deployment_loss,
+        actor_parameters,
+        retain_graph=True,
+      )
+    )
+    teacher_gradients = tuple(
+      torch.autograd.grad(teacher_objective, actor_parameters)
+    )
+    projected_teacher, diagnostics = (
+      task_priority_project_auxiliary_gradients(
+        deployment_gradients,
+        teacher_gradients,
+      )
+    )
+    for parameter, deployment, teacher in zip(
+      actor_parameters, deployment_gradients, projected_teacher
+    ):
+      parameter.grad = deployment + teacher
+    return {
+      "actor_deployment_gradient_norm": diagnostics[
+        "primary_gradient_norm"
+      ],
+      "actor_teacher_gradient_norm": diagnostics[
+        "auxiliary_gradient_norm"
+      ],
+      "actor_projected_teacher_gradient_norm": diagnostics[
+        "projected_auxiliary_gradient_norm"
+      ],
+      "actor_deployment_teacher_gradient_dot": diagnostics[
+        "primary_auxiliary_gradient_dot"
+      ],
+      "actor_deployment_teacher_gradient_cosine": diagnostics[
+        "primary_auxiliary_gradient_cosine"
+      ],
+      "actor_projected_deployment_teacher_gradient_dot": diagnostics[
+        "projected_primary_auxiliary_gradient_dot"
+      ],
+      "actor_teacher_gradient_projection_coefficient": diagnostics[
+        "auxiliary_gradient_projection_coefficient"
+      ],
+      "actor_teacher_gradient_retained_fraction": diagnostics[
+        "auxiliary_gradient_retained_fraction"
+      ],
+      "actor_teacher_gradient_conflict": diagnostics[
+        "auxiliary_gradient_conflict"
+      ],
+    }
+
   def relabel_teacher_transitions(self) -> dict[str, Any]:
     if not bool(self.v35_mean_telemetry_present.all()):
       missing = int((~self.v35_mean_telemetry_present).sum())
@@ -442,6 +547,9 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
         "v35_split_filter_actor_objectives": (
           self.v35_split_filter_actor_objectives
         ),
+        "v35_task_priority_gradient_surgery": (
+          self.v35_task_priority_gradient_surgery
+        ),
         "v35_ppo_environment_transition_fraction": float(
           ppo_environment.float().mean()
         ),
@@ -525,5 +633,8 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     output["v35_success_local_kl_beta"] = self.v35_success_local_kl_beta
     output["v35_split_filter_actor_objectives"] = (
       self.v35_split_filter_actor_objectives
+    )
+    output["v35_task_priority_gradient_surgery"] = (
+      self.v35_task_priority_gradient_surgery
     )
     return output

@@ -20,6 +20,7 @@ from src.tasks.stairs_cbf.paper_dual_v35 import (
   configure_paper_training_domain_randomization,
   normalize_filter_group_advantages,
   split_filter_actor_objective_masks,
+  task_priority_project_auxiliary_gradients,
 )
 
 
@@ -234,6 +235,39 @@ def test_v68_rejects_single_execution_group_actor_routing():
     split_filter_actor_objective_masks(
       torch.zeros(4, dtype=torch.bool), 2
     )
+
+
+def test_v69_projects_only_conflicting_teacher_gradient_component():
+  deployment = (torch.tensor([1.0, 0.0]), torch.tensor([0.0, 2.0]))
+  teacher = (torch.tensor([-1.0, 1.0]), torch.tensor([0.0, 0.2]))
+
+  projected, metrics = task_priority_project_auxiliary_gradients(
+    deployment, teacher
+  )
+
+  original_dot = sum(
+    (left * right).sum() for left, right in zip(deployment, teacher)
+  )
+  projected_dot = sum(
+    (left * right).sum() for left, right in zip(deployment, projected)
+  )
+  assert original_dot < 0.0
+  torch.testing.assert_close(projected_dot, torch.tensor(0.0), atol=1.0e-6, rtol=0)
+  assert metrics["auxiliary_gradient_conflict"] == 1.0
+  assert 0.0 < metrics["auxiliary_gradient_retained_fraction"] < 1.0
+
+
+def test_v69_leaves_aligned_teacher_gradient_unchanged():
+  deployment = (torch.tensor([1.0, 2.0]),)
+  teacher = (torch.tensor([3.0, 4.0]),)
+
+  projected, metrics = task_priority_project_auxiliary_gradients(
+    deployment, teacher
+  )
+
+  torch.testing.assert_close(projected[0], teacher[0])
+  assert metrics["auxiliary_gradient_conflict"] == 0.0
+  assert metrics["auxiliary_gradient_retained_fraction"] == pytest.approx(1.0)
 
 
 def test_v57_restores_native_static_training_domain_randomization():
