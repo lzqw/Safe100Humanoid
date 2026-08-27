@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "method_id": "deployable-cbf-geometry-residual-adapter-v49",
-  "status": "single_seed_paired_gate_passed_pending_untouched_confirmation",
+  "status": "untouched_filter_off_confirmation_failed",
   "source_commits": {
     "geometry_adapter": "dbe8d14",
     "paired_reset_fix": "ac0fcb8",
@@ -78,7 +78,18 @@
     "filter_off_improvement_over_base_successes": 2,
     "filter_on_minus_off_successes": 3,
     "filter_on_minus_off_percentage_points": 4.6875,
-    "filter_off_75_percent_gate_passed": true
+    "filter_off_75_percent_gate_passed": true,
+    "untouched_filter_off": {
+      "seed": 201350952,
+      "initial_state_signature": "c7e555f2ef599521d3fc42781404394893ad667f00f103bb3a14a1e1c2a87dc9",
+      "success_count": 45,
+      "success_rate": 0.703125,
+      "fall_rate": 0.296875,
+      "mean_reached_riser": 8.265625,
+      "runtime_filter": false,
+      "filter_on_not_run_after_failed_gate": true,
+      "decision": "failed_absolute_75_percent_gate"
+    }
   },
   "candidate": {
     "file": "v49b_candidate.pt",
@@ -86,7 +97,7 @@
     "actor_state_sha256": "53f568f5f430ffae316574cdcaba0c174a5da28a750d579927169c216dce174f"
   },
   "limitations": [
-    "The 75% result is one 64-episode paired seed and is not yet an untouched multi-seed robustness claim.",
+    "The 75% result did not transfer to untouched seed 201350952, where filter-off reached only 45/64.",
     "GPU-parallel physics produced some outcome variability despite identical initial-state signatures; exact JSON and per-episode CSV evidence is retained.",
     "This result establishes the first observability-corrected F2 threshold hit, not completion of all F1/F2/F3 paper-level replication requirements."
   ]

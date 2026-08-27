@@ -20,11 +20,14 @@ unchanged.
 | v49, all shielded successes as teachers | 44/64 (68.75%) | not run | rejected |
 | v49b, matched rescued episodes only | **48/64 (75.00%)** | **51/64 (79.69%)** | paired gate passed |
 
-The accepted pilot improves filter-off by two successes over the exact base
+The paired pilot improves filter-off by two successes over the exact base
 control and leaves only a three-episode (4.69 pp) filter-on/off gap.  It is the
 first F2 candidate in this sequence to reach the 75% deployment gate while
-also keeping the paired filtered result above the gate.  This is still a
-single-seed pilot, not an untouched multi-seed robustness claim.
+also keeping the paired filtered result above the gate.  However, the
+prospectively unused seed `201350952` then reached only **45/64 (70.31%)**
+filter-off.  Its filter-on condition was not run after this failed gate.
+Therefore v49b is retained as a positive observability ablation but rejected
+as the final robust actor.
 
 Key provenance:
 
@@ -41,6 +44,7 @@ Files:
 - `v49b_training_summary.json`: exact training configuration and offline metrics.
 - `v49b_gate_seed201350932_filter_{off,on}_summary.json`: aggregate gates.
 - `v49b_gate_seed201350932_filter_{off,on}_episodes.csv`: episode-level evidence.
+- `v49b_untouched_seed201350952_filter_off_{summary.json,episodes.csv}`: failed untouched confirmation.
 - `v49b_candidate.pt`: exact 410-D candidate checkpoint.
 - `v49_all_success_*`: rejected ablation that learned from every shielded success.
 

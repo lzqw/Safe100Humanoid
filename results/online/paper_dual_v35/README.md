@@ -335,10 +335,11 @@ transition；教师方向余弦从 0 提高到 0.8355，所有旧 actor 参数�
 | v49b rescued-only geometry adapter | **79.69% (51/64)** | **75.00% (48/64)** | 4.69 pp | paired gate passed |
 
 这是当前序列中首个在 F2 同时达到 filter-off 75% 且 paired filter-on 也高于
-75% 的 actor，filter-off 相对精确 base 对照增加 2 个成功 episode。但结果仍只有
-一个 64-episode seed，尚未通过 untouched 多 seed 稳健性确认，因此记录为
-provisional threshold hit，而不是宣称整个论文复现完成。checkpoint、训练摘要和
-逐 episode 证据见
+75% 的 actor，filter-off 相对精确 base 对照增加 2 个成功 episode。但在预先未
+使用的 seed `201350952` 上，filter-off 只有 45/64（70.31%），未达到门槛，因而
+不运行该 seed 的 filter-on 并拒绝将 v49b 作为最终稳健 actor。这表明加入正确的
+几何可观测性是有效方向，但 4 个 rescue episode、190 个 teacher transition 仍
+不足以泛化。checkpoint、训练摘要和逐 episode 证据见
 [`observable_cbf_adapter_v49/`](observable_cbf_adapter_v49/)。
 
 ## 方法与第一阶段 F1 ablation
