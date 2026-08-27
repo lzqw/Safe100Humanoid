@@ -99,6 +99,21 @@ episode 过滤 teacher label 均未改善训练 gate 或 paired 结果，已停�
 4080 做低价值重复验证。精确训练配置、逐轮指标、checkpoint/actor SHA-256 与这些
 负结果见 [`unshielded_f2_summary.json`](unshielded_f2_summary.json)。
 
+#### Failure-focused actor ablation（已拒绝）
+
+为直接保护成功轨迹，又尝试只让完整失败 episode 进入 PPO 与 mean-CBF teacher；
+成功 episode 只保留 round-reference KL，critic 仍使用全部 transition。两种损失
+归一化都从当前最佳 checkpoint 独立训练 3 轮：
+
+| PPO mask normalization | Round 1 | Round 2 | Round 3 | Decision |
+|---|---:|---:|---:|---|
+| failed-transition mean | 68.46% | 68.61% | 68.70% | rejected，全部 actor step gradient-clipped |
+| full-rollout mean | 66.67% | 65.89% | 64.71% | rejected，成功率持续下降 |
+
+第一种做法因失败 transition 只占约 20% 而将 PPO 梯度隐式放大约 5 倍；第二种
+修正尺度后虽降低了梯度范数，仍未恢复任务成功率。这说明问题不是简单的成功样本
+覆盖失败信号；该方向已按训练 gate 停止，未追加 paired 评估，当前最佳不变。
+
 ## 方法与第一阶段 F1 ablation
 
 本目录发布 v35 第一阶段 F1 pilot 的关键结果。该阶段依据

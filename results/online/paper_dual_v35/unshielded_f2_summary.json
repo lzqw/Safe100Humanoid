@@ -157,6 +157,50 @@
       "run": "raw_moderate_mean_cbf_std002_lr2e6x3",
       "source_git_commit": "1230f98243bfc8f8242896dcab3bb8a5abbaf31b",
       "reason": "Noise-scaled learning rate peaked at 0.6947 rollout success; paired evaluation was skipped."
+    },
+    {
+      "run": "raw_moderate_failure_focused_actor_mean_cbf_x3",
+      "source_git_commit": "1f7c513a8c5b437d7f5413cc601901729285a010",
+      "training_seed": 201350222,
+      "training_elapsed_seconds": 106.19794299197383,
+      "base_checkpoint_sha256": "3ec45cd196447901cf815d0fa1ff400af1b519ed2bb85c2fc179458ce3e81d3f",
+      "final_actor_sha256": "4a712fd8e732e2f55f04f4595f4de7effb11650e8c67daa6a6c4fae4293879fe",
+      "final_checkpoint_sha256": "e4b25ddb55bbcffe2b246d3d9ccd9be5b6e171c082fee14ba1be2ad7f8a9a3db",
+      "actor_objective": {
+        "ppo_scope": "complete_failed_episodes_only",
+        "teacher_scope": "intervened_transitions_from_failed_episodes_only",
+        "successful_episode_objective": "round_reference_KL_only",
+        "masked_ppo_normalization": "selected_transition_count"
+      },
+      "round_metrics": [
+        {"round": 1, "actor_sha256": "dfce3622e77540a9489ca5607c3dd7acf6c7f30fcc538af819728fa0553b0cce", "rollout_success_rate": 0.6846153846153846, "rollout_fall_rate": 0.3153846153846154, "actor_ppo_transition_fraction": 0.1991119384765625, "moving_forward_kl": 0.003314744448289275, "clip_fraction": 0.4962310791015625, "actor_gradient_clipped_fraction": 1.0, "actor_gradient_norm_pre_clip_max": 60.949825286865234, "teacher_loss": 0.011762501089833677},
+        {"round": 2, "actor_sha256": "7af459ee4f5d9117e1d02775f92daf99e95e41934aaf5160bc75f3381bab7b63", "rollout_success_rate": 0.6861313868613139, "rollout_fall_rate": 0.31386861313868614, "actor_ppo_transition_fraction": 0.212432861328125, "moving_forward_kl": 0.0018791346810758114, "clip_fraction": 0.3812103271484375, "actor_gradient_clipped_fraction": 1.0, "actor_gradient_norm_pre_clip_max": 73.18145751953125, "teacher_loss": 0.012656536302529275},
+        {"round": 3, "actor_sha256": "4a712fd8e732e2f55f04f4595f4de7effb11650e8c67daa6a6c4fae4293879fe", "rollout_success_rate": 0.6870229007633588, "rollout_fall_rate": 0.31297709923664124, "actor_ppo_transition_fraction": 0.2147064208984375, "moving_forward_kl": 0.002121626865118742, "clip_fraction": 0.38897705078125, "actor_gradient_clipped_fraction": 1.0, "actor_gradient_norm_pre_clip_max": 56.13420104980469, "teacher_loss": 0.014512738911435008}
+      ],
+      "evaluation": null,
+      "reason": "Conditional normalization amplified the approximately 20% failed-transition PPO subset by about five times. Every actor minibatch was gradient-clipped and rollout success stayed below 0.69, so paired evaluation was skipped."
+    },
+    {
+      "run": "raw_moderate_failure_weighted_actor_mean_cbf_x3",
+      "source_git_commit": "556d0b31bd89ec1b810813705027c42482bd8c9f",
+      "training_seed": 201350232,
+      "training_elapsed_seconds": 96.63977403996978,
+      "base_checkpoint_sha256": "3ec45cd196447901cf815d0fa1ff400af1b519ed2bb85c2fc179458ce3e81d3f",
+      "final_actor_sha256": "26083d068a8e5a754f3a5057f6e2e4fae689a0703f043498f9585df00cbb4486",
+      "final_checkpoint_sha256": "23e7a45d5cfc603d98c4f9f37453c55f37399bc9eae20b8e92365e996b66b8a7",
+      "actor_objective": {
+        "ppo_scope": "complete_failed_episodes_only",
+        "teacher_scope": "intervened_transitions_from_failed_episodes_only",
+        "successful_episode_objective": "round_reference_KL_only",
+        "masked_ppo_normalization": "full_rollout_transition_count"
+      },
+      "round_metrics": [
+        {"round": 1, "actor_sha256": "8702b870731292e38b71b235e40a28e08ffc36c87faaae8791165d5eb8230215", "rollout_success_rate": 0.6666666666666666, "rollout_fall_rate": 0.3333333333333333, "actor_ppo_transition_fraction": 0.226226806640625, "moving_forward_kl": 0.002548791468143463, "clip_fraction": 0.4330596923828125, "actor_gradient_clipped_fraction": 1.0, "actor_gradient_norm_pre_clip_max": 27.20620346069336, "teacher_loss": 0.015587168047204614},
+        {"round": 2, "actor_sha256": "fde99767ba63211a0f0f71040a47f50c4222ee72d432f7316535837fae8071dc", "rollout_success_rate": 0.6589147286821705, "rollout_fall_rate": 0.34108527131782945, "actor_ppo_transition_fraction": 0.23260498046875, "moving_forward_kl": 0.0013137126807123423, "clip_fraction": 0.30096435546875, "actor_gradient_clipped_fraction": 1.0, "actor_gradient_norm_pre_clip_max": 17.362525939941406, "teacher_loss": 0.01177456637378782},
+        {"round": 3, "actor_sha256": "26083d068a8e5a754f3a5057f6e2e4fae689a0703f043498f9585df00cbb4486", "rollout_success_rate": 0.6470588235294118, "rollout_fall_rate": 0.35294117647058826, "actor_ppo_transition_fraction": 0.2210235595703125, "moving_forward_kl": 0.0007311098743230104, "clip_fraction": 0.1758270263671875, "actor_gradient_clipped_fraction": 1.0, "actor_gradient_norm_pre_clip_max": 13.549437522888184, "teacher_loss": 0.012412008712999523}
+      ],
+      "evaluation": null,
+      "reason": "Population normalization reduced gradient norms but success declined from 0.6667 to 0.6471 and every actor minibatch still clipped. Failure-only PPO was rejected without paired evaluation."
     }
   ],
   "current_best": {
