@@ -40,6 +40,8 @@ from refine_cbf_teacher_v31 import (
   _save_checkpoint,
   _write_round_csv,
 )
+from refine_observable_cbf_adapter_v49 import _expand_actor_state
+from refine_observable_cbf_ppo_v51 import _expand_critic_state
 
 
 def _parse_args() -> argparse.Namespace:
@@ -91,6 +93,17 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument(
     "--cbf-parameters-json",
     help="Frozen v34 task-metric parameters when --cbf-mode is optimized.",
+  )
+  parser.add_argument(
+    "--actor-observation-interface",
+    choices=("original-405", "deployable-cbf-persistent-geometry-415"),
+    default="original-405",
+    help=(
+      "Keep the historical blind 405-D actor, or append the deployable 10-D "
+      "bilateral next-riser geometry used by v94/v95. The appended interface "
+      "is warm-started with zero input columns, then the complete actor is "
+      "trained by the paper-dual PPO objective."
+    ),
   )
   parser.add_argument("--teacher-arm", choices=("A0", "A1", "A2"), default="A0")
   parser.add_argument(
@@ -396,6 +409,72 @@ def _git(repo: Path, *args: str) -> str:
   return subprocess.run(
     ["git", *args], cwd=repo, check=True, capture_output=True, text=True
   ).stdout.strip()
+
+
+def _load_initial_checkpoint(
+  runner,
+  checkpoint: Path,
+  *,
+  map_location: str,
+  actor_observation_interface: str,
+) -> dict[str, Any]:
+  """Warm-start either the historical actor or the v104 415-D actor.
+
+  The legacy runner deliberately rejects shape changes.  v104 needs one
+  narrowly supported 405 -> 415 actor and 838 -> 848 critic prefix append.
+  Both new input blocks start at zero so the initial nominal policy is exactly
+  the accepted 405-D policy, while all MLP parameters remain trainable.
+  """
+  if actor_observation_interface == "original-405":
+    warm_start = runner.load_initial_checkpoint(
+      str(checkpoint), map_location=map_location
+    )
+    warm_start["actor_observation_interface"] = actor_observation_interface
+    return warm_start
+  if actor_observation_interface != "deployable-cbf-persistent-geometry-415":
+    raise ValueError(
+      f"unsupported actor observation interface {actor_observation_interface!r}"
+    )
+
+  loaded = torch.load(checkpoint, map_location="cpu", weights_only=False)
+  expanded_actor, actor_expansion = _expand_actor_state(
+    loaded["actor_state_dict"], runner.alg.actor.state_dict()
+  )
+  expanded_critic, critic_expansion = _expand_critic_state(
+    loaded["critic_state_dict"], runner.alg.critic.state_dict()
+  )
+  if (
+    actor_expansion["new_feature_count"] != 10
+    or critic_expansion["new_feature_count"] != 10
+    or not actor_expansion["pi0_exact_preservation_proof"]
+    or not critic_expansion["exact_prefix_expansion"]
+  ):
+    raise RuntimeError("v104 persistent-geometry prefix expansion is not exact")
+  runner.alg.actor.load_state_dict(expanded_actor, strict=True)
+  runner.alg.critic.load_state_dict(expanded_critic, strict=True)
+  runner.alg._std_initialized = False
+  runner.alg.initialize_online_std()
+  for parameter in runner.alg.actor.distribution.parameters():
+    parameter.requires_grad_(False)
+  runner.alg.reset_proximal_optimizers()
+  runner.current_learning_iteration = 0
+  actor_mlp_parameters = list(runner.alg.actor.mlp.parameters())
+  if not actor_mlp_parameters or not all(
+    parameter.requires_grad for parameter in actor_mlp_parameters
+  ):
+    raise RuntimeError("v104 requires the complete 415-D actor MLP to train")
+  return {
+    **actor_expansion,
+    **{f"critic_{key}": value for key, value in critic_expansion.items()},
+    "source_iteration": int(loaded.get("iter", -1)),
+    "actor_observation_interface": actor_observation_interface,
+    "actor_mlp_trainable_parameter_count": sum(
+      parameter.numel() for parameter in actor_mlp_parameters
+    ),
+    "complete_actor_mlp_trainable": True,
+    "source_optimizer_discarded": True,
+    "source_auxiliary_heads_ignored": True,
+  }
 
 
 def _teacher_arms_by_round(
@@ -927,6 +1006,10 @@ def main() -> None:
   from mjlab.tasks.registry import load_env_cfg, load_rl_cfg
 
   import src.tasks  # noqa: F401
+  from src.tasks.stairs_cbf.config import (
+    configure_deployable_cbf_geometry_runner,
+    configure_deployable_cbf_persistent_geometry_observation,
+  )
   from src.tasks.stairs_cbf.environment_v31 import configure_v31_context
   from src.tasks.stairs_cbf.paper_dual_v35 import (
     configure_paper_dual_reward,
@@ -981,6 +1064,16 @@ def main() -> None:
     runtime_filter_during_training=training_runtime_filter,
   )
   reward["training_cbf"] = training_cbf
+  geometry_observation = None
+  if (
+    args.actor_observation_interface
+    == "deployable-cbf-persistent-geometry-415"
+  ):
+    geometry_observation = (
+      configure_deployable_cbf_persistent_geometry_observation(env_cfg)
+    )
+  shift["actor_observation_interface"] = args.actor_observation_interface
+  shift["actor_geometry_observation"] = geometry_observation
   training_domain_randomization = (
     configure_paper_training_domain_randomization(
       env_cfg,
@@ -1101,6 +1194,8 @@ def main() -> None:
   env_cfg.scene.num_envs = args.num_envs
   env_cfg.seed = args.seed
   agent_cfg = load_rl_cfg(TASK_ID)
+  if geometry_observation is not None:
+    configure_deployable_cbf_geometry_runner(agent_cfg)
   agent_cfg.seed = args.seed
   agent_cfg.num_steps_per_env = args.rollout_steps
   _configure_algorithm(agent_cfg, teacher_arms[0], preflight=False)
@@ -1262,8 +1357,11 @@ def main() -> None:
       parameter_group["lr"] = float(learning_rate)
 
   try:
-    warm_start = runner.load_initial_checkpoint(
-      str(checkpoint), map_location=args.device
+    warm_start = _load_initial_checkpoint(
+      runner,
+      checkpoint,
+      map_location=args.device,
+      actor_observation_interface=args.actor_observation_interface,
     )
     initial_teacher_parameters = _set_teacher_arm(
       runner.alg,
@@ -1342,6 +1440,8 @@ def main() -> None:
         "training_action_std": args.training_action_std,
         "actor_learning_rate": args.actor_learning_rate,
         "moving_kl_beta": args.moving_kl_beta,
+        "actor_observation_interface": args.actor_observation_interface,
+        "actor_geometry_observation": geometry_observation,
         "temporal_safety_credit": temporal_safety_credit,
         "training_domain_randomization": training_domain_randomization,
       },
@@ -1647,6 +1747,8 @@ def main() -> None:
           "training_action_std": args.training_action_std,
           "actor_learning_rate": args.actor_learning_rate,
           "moving_kl_beta": args.moving_kl_beta,
+          "actor_observation_interface": args.actor_observation_interface,
+          "actor_geometry_observation": geometry_observation,
           "temporal_safety_credit": temporal_safety_credit,
           "training_domain_randomization": training_domain_randomization,
         },
@@ -1769,6 +1871,8 @@ def main() -> None:
       "training_action_std": args.training_action_std,
       "actor_learning_rate": args.actor_learning_rate,
       "moving_kl_beta": args.moving_kl_beta,
+      "actor_observation_interface": args.actor_observation_interface,
+      "actor_geometry_observation": geometry_observation,
       "temporal_safety_credit": temporal_safety_credit,
       "training_domain_randomization": training_domain_randomization,
       "seed": args.seed,
