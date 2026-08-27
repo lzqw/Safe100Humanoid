@@ -68,6 +68,12 @@ def _parse_args() -> argparse.Namespace:
     default="teacher",
     help="Dataset used by the post-update KL projection.",
   )
+  parser.add_argument(
+    "--actor-update-scope",
+    choices=("all", "last-layer"),
+    default="all",
+    help="Train the complete actor MLP or only its final linear layer.",
+  )
   parser.add_argument("--epochs", type=int, default=1)
   parser.add_argument("--minibatches", type=int, default=4)
   parser.add_argument("--max-grad-norm", type=float, default=0.5)
@@ -378,6 +384,7 @@ def _distill_actor(
   learning_rate: float,
   moving_kl_beta: float,
   max_reference_kl: float,
+  actor_update_scope: str,
   epochs: int,
   minibatches: int,
   max_grad_norm: float,
@@ -399,7 +406,21 @@ def _distill_actor(
   weights = eligible.float() * torch.clamp(correction_norm / 0.05, 0.0, 1.0)
   if not bool(eligible.any()):
     raise RuntimeError("v36 matched rescue dataset has no CBF intervention labels")
-  parameters = list(actor.mlp.parameters())
+  if actor_update_scope == "all":
+    parameters = list(actor.mlp.parameters())
+  elif actor_update_scope == "last-layer":
+    linear_layers = [
+      module for module in actor.mlp.modules() if isinstance(module, torch.nn.Linear)
+    ]
+    if not linear_layers:
+      raise RuntimeError("v40 actor MLP has no linear output layer")
+    for parameter in actor.mlp.parameters():
+      parameter.requires_grad_(False)
+    parameters = list(linear_layers[-1].parameters())
+    for parameter in parameters:
+      parameter.requires_grad_(True)
+  else:
+    raise ValueError(f"unknown actor update scope {actor_update_scope!r}")
   optimizer = torch.optim.Adam(parameters, lr=learning_rate)
   total = len(eligible)
   batch_size = math.ceil(total / minibatches)
@@ -555,6 +576,8 @@ def _distill_actor(
     "teacher_transition_fraction": float(eligible.float().mean()),
     "teacher_weight_sum": float(weights.sum()),
     "teacher_eta": eta,
+    "actor_update_scope": actor_update_scope,
+    "trainable_parameter_count": sum(parameter.numel() for parameter in parameters),
     "moving_kl_beta": moving_kl_beta,
     "epochs": epochs,
     "minibatches": minibatches,
@@ -797,6 +820,7 @@ def main() -> None:
     learning_rate=args.actor_learning_rate,
     moving_kl_beta=args.moving_kl_beta,
     max_reference_kl=args.max_reference_kl,
+    actor_update_scope=args.actor_update_scope,
     epochs=args.epochs,
     minibatches=args.minibatches,
     max_grad_norm=args.max_grad_norm,
@@ -830,6 +854,7 @@ def main() -> None:
     "moving_kl_beta": args.moving_kl_beta,
     "teacher_state_source": args.teacher_state_source,
     "trust_state_source": args.trust_state_source,
+    "actor_update_scope": args.actor_update_scope,
     "max_reference_kl": args.max_reference_kl,
     "rescued_environment_ids": rescued_env_ids.tolist(),
   }
@@ -882,6 +907,7 @@ def main() -> None:
     "moving_kl_beta": args.moving_kl_beta,
     "teacher_state_source": args.teacher_state_source,
     "trust_state_source": args.trust_state_source,
+    "actor_update_scope": args.actor_update_scope,
     "max_reference_kl": args.max_reference_kl,
     "epochs": args.epochs,
     "minibatches": args.minibatches,
