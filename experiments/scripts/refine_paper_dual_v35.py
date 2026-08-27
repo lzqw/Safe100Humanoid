@@ -110,6 +110,12 @@ def _parse_args() -> argparse.Namespace:
       "while retaining the counterfactual CBF dual reward."
     ),
   )
+  parser.add_argument(
+    "--training-action-std",
+    type=float,
+    default=0.05,
+    help="Fixed stochastic rollout std; evaluation remains deterministic.",
+  )
   return parser.parse_args()
 
 
@@ -248,6 +254,8 @@ def main() -> None:
     raise ValueError("v35 A1 teacher weight must be in (0, 0.1]")
   if args.curriculum_rows < 2:
     raise ValueError("v35 curriculum rows must be at least two")
+  if not 0.01 <= args.training_action_std <= 0.05:
+    raise ValueError("v35 training action std must lie in [0.01, 0.05]")
   teacher_arms = _teacher_arms_by_round(
     rounds=args.rounds,
     teacher_arm=args.teacher_arm,
@@ -343,6 +351,8 @@ def main() -> None:
   agent_cfg.seed = args.seed
   agent_cfg.num_steps_per_env = args.rollout_steps
   _configure_algorithm(agent_cfg, teacher_arms[0], preflight=False)
+  agent_cfg.algorithm.minimum_std = float(args.training_action_std)
+  agent_cfg.algorithm.maximum_std = float(args.training_action_std)
   if args.deterministic_mean_teacher:
     agent_cfg.algorithm.class_name = (
       "src.tasks.stairs_cbf.paper_teacher_v35:PaperMeanTeacherV35PPO"
@@ -398,6 +408,7 @@ def main() -> None:
         "height_curriculum": height_curriculum,
         "deterministic_mean_teacher": deterministic_mean_teacher,
         "training_runtime_filter": training_runtime_filter,
+        "training_action_std": args.training_action_std,
       },
     )
     for round_index in range(1, args.rounds + 1):
@@ -443,6 +454,7 @@ def main() -> None:
           "height_curriculum": height_curriculum,
           "deterministic_mean_teacher": deterministic_mean_teacher,
           "training_runtime_filter": training_runtime_filter,
+          "training_action_std": args.training_action_std,
         },
       )
       _atomic_json(output_dir / "round_metrics.json", records)
@@ -468,6 +480,7 @@ def main() -> None:
       "height_curriculum": height_curriculum,
       "deterministic_mean_teacher": deterministic_mean_teacher,
       "training_runtime_filter": training_runtime_filter,
+      "training_action_std": args.training_action_std,
       "seed": args.seed,
       "rounds": args.rounds,
       "num_envs": args.num_envs,
