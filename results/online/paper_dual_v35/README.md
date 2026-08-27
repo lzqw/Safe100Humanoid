@@ -415,6 +415,22 @@ slope=0.8 为 27/32；前者把 intervention steps/riser 从 4.4569 降至 1.650
 episode 记录和精确 checkpoint 见
 [`paper_exact_cbf_ppo_v54/`](paper_exact_cbf_ppo_v54/)。
 
+#### Persistent next-riser clearance + demo-scale CBF PPO v55（已拒绝）
+
+v55 修正了论文对齐审计中的下一处训练信号偏差：足端 clearance 参考高度不再只在
+短暂 CBF 激活窗口内使用，而是在完整摆动期间持续跟随机器人前方的下一 riser，
+越过最后一级后继续使用顶层平台高度。同时保留 Eq. (27) 的摆动脚任务空间距离，
+但采用作者公开 demo 的 margin `10×` / proximity `100×` 比例，并去掉额外的
+moving-reference KL，恢复标准 clipped PPO。
+
+65,536-transition smoke 中，第一次更新后的对齐 rollout 从 39/61（63.93%）升至
+42/59（71.19%）。独立正式训练原计划 8 轮；由于 round-1 checkpoint 对应的下一轮
+rollout 达到 91/132（68.94%）后，后续四个 checkpoint 均更低，故在 6 轮、393,216
+transitions 时早停。选中的 `round_01.pt` 在全新 seed `201352112` 的 deterministic
+filter-off gate 为 **42/64（65.63%）**，低于 48/64 门槛，因此不运行 filter-on
+或额外 seed。完整早停轨迹、smoke、逐 episode 证据和 checkpoint 见
+[`paper_demo_clearance_v55/`](paper_demo_clearance_v55/)。
+
 ## 方法与第一阶段 F1 ablation
 
 本目录发布 v35 第一阶段 F1 pilot 的关键结果。该阶段依据
@@ -468,11 +484,12 @@ winner。后续 staged experiment 解决了 F1 矛盾，并已冻结扩展到 F2
 - [`observable_cbf_ppo_v52/`](observable_cbf_ppo_v52/): KL 目标线搜索、6/6 离线 surrogate 改善、失败的 untouched filter-off gate 与 rejected checkpoint。
 - [`observable_cbf_ppo_v53/`](observable_cbf_ppo_v53/): 四轮刷新 on-policy rollout、逐轮 actor/critic 更新、98,304-transition 诊断、失败的 untouched gate 与 checkpoint。
 - [`paper_exact_cbf_ppo_v54/`](paper_exact_cbf_ppo_v54/): paper-exact 水平台阶 CBF、摆动脚任务空间 dual reward、524,288-transition 正式训练、失败的 untouched gate 与精确 checkpoint。
+- [`paper_demo_clearance_v55/`](paper_demo_clearance_v55/): 持续 next-riser clearance、demo-scale CBF reward、标准 PPO、393,216-transition 早停轨迹、失败的 untouched gate 与精确 checkpoint。
 
 历史大型 `.pt` checkpoint 没有提交进 Git；其 SHA-256 已写入相应 summary。
-v49b、v50、v51 smoke、v53 与 v54 的候选 checkpoint 已随各自结果目录提交，
-便于精确复现；其中 v50、v53 与 v54 已被 untouched gate 拒绝，v51 仅为 smoke，
-均不是最终稳健 actor。
+v49b、v50、v51 smoke、v53、v54 与 v55 的候选 checkpoint 已随各自结果目录
+提交，便于精确复现；其中 v50、v53、v54 与 v55 已被 untouched gate 拒绝，
+v51 仅为 smoke，均不是最终稳健 actor。
 
 ## Reproduction boundary
 

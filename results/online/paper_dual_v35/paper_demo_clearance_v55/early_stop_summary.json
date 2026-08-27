@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "experiment": "paper_demo_clearance_v55",
+  "git_commit": "345f6a7c4d03b75685715c7d10f33231221783ac",
+  "base_checkpoint_sha256": "3ec45cd196447901cf815d0fa1ff400af1b519ed2bb85c2fc179458ce3e81d3f",
+  "base_actor_sha256": "3964c0ef24707addbaa0dacfd4fd627882bd8b45a2c9799142710fa45bc29499",
+  "context": "F2",
+  "candidate": "paper_stair_demo_scale",
+  "formal_seed": 201352001,
+  "configuration": {
+    "clearance_barrier_slope": 0.0,
+    "clearance_reference_mode": "next_riser",
+    "clearance_lookahead_distance_m": 0.6,
+    "clearance_reference_persists_after_cbf_deactivation": true,
+    "correction_space": "foot_task",
+    "sigma": 0.05,
+    "margin_weight": 10.0,
+    "intervention_weight": 100.0,
+    "training_runtime_filter": true,
+    "training_filter_fraction": 1.0,
+    "actor_learning_rate": 1e-06,
+    "moving_kl_beta": 0.0,
+    "training_action_std": 0.05,
+    "num_envs": 64,
+    "rollout_steps": 1024
+  },
+  "intended_rounds": 8,
+  "completed_rounds": 6,
+  "completed_transitions": 393216,
+  "measured_round_time_seconds": 161.0958358120406,
+  "early_stopped": true,
+  "early_stop_reason": "The aligned filtered rollout peaked at checkpoint round 1, then four subsequent aligned rollouts remained lower; continuing would only increase policy drift.",
+  "round_metric_alignment": "round_N_rollout_uses_round_N_minus_1_checkpoint",
+  "rounds": [
+    {"round": 1, "rollout_checkpoint_round": 0, "success_count": 82, "episode_count": 135, "success_rate": 0.6074074074074074, "moving_forward_kl": 0.00041929195867851377, "clip_fraction": 0.08343505859375},
+    {"round": 2, "rollout_checkpoint_round": 1, "success_count": 91, "episode_count": 132, "success_rate": 0.6893939393939394, "moving_forward_kl": 0.00046067297807894647, "clip_fraction": 0.0991363525390625},
+    {"round": 3, "rollout_checkpoint_round": 2, "success_count": 83, "episode_count": 131, "success_rate": 0.6335877862595419, "moving_forward_kl": 0.0004279069835320115, "clip_fraction": 0.0878448486328125},
+    {"round": 4, "rollout_checkpoint_round": 3, "success_count": 78, "episode_count": 132, "success_rate": 0.5909090909090909, "moving_forward_kl": 0.0005076390225440264, "clip_fraction": 0.11328125},
+    {"round": 5, "rollout_checkpoint_round": 4, "success_count": 90, "episode_count": 136, "success_rate": 0.6617647058823529, "moving_forward_kl": 0.000576481397729367, "clip_fraction": 0.1402130126953125},
+    {"round": 6, "rollout_checkpoint_round": 5, "success_count": 81, "episode_count": 131, "success_rate": 0.6183206106870229, "moving_forward_kl": 0.0004277931875549257, "clip_fraction": 0.088287353515625}
+  ],
+  "selection": {
+    "rule": "highest aligned filtered rollout success rate",
+    "selected_checkpoint_round": 1,
+    "selected_checkpoint_sha256": "9c207de0b0b9868ee76c3f2ba8e6d22c281d022116de5e4d949d899744a13e85",
+    "selected_actor_sha256": "c64424fa6613428548802f253448cbed505d57b4c45eacbf8f7119bdc8c9ca49",
+    "selection_rollout_round": 2,
+    "selection_rollout_success_rate": 0.6893939393939394
+  },
+  "untouched_filter_off_gate": {
+    "seed": 201352112,
+    "success_count": 42,
+    "episode_count": 64,
+    "success_rate": 0.65625,
+    "fall_rate": 0.34375,
+    "threshold_success_count": 48,
+    "passed": false,
+    "filter_on_run": false
+  },
+  "decision": "rejected"
+}
