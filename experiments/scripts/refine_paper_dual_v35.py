@@ -342,6 +342,18 @@ def _parse_args() -> argparse.Namespace:
       "PPO without the historical continuation anchor."
     ),
   )
+  parser.add_argument("--pre-intervention-horizon", type=int, default=10)
+  parser.add_argument("--pre-intervention-decay", type=float, default=0.8)
+  parser.add_argument("--pre-intervention-weight", type=float, default=0.2)
+  parser.add_argument(
+    "--pre-intervention-aggregation",
+    choices=("sum", "max"),
+    default="sum",
+    help=(
+      "Historical per-frame sum, or bounded max credit over the configured "
+      "pre-intervention window."
+    ),
+  )
   parser.add_argument(
     "--training-domain-randomization",
     choices=("off", "paper_static", "paper_full"),
@@ -627,6 +639,12 @@ def main() -> None:
     raise ValueError("v35 actor learning rate must lie in [1e-7, 5e-6]")
   if not 0.0 <= args.moving_kl_beta <= 0.5:
     raise ValueError("v35 moving KL beta must lie in [0, 0.5]")
+  if args.pre_intervention_horizon < 1:
+    raise ValueError("v35 pre-intervention horizon must be positive")
+  if not 0.0 < args.pre_intervention_decay <= 1.0:
+    raise ValueError("v35 pre-intervention decay must lie in (0, 1]")
+  if not 0.0 <= args.pre_intervention_weight <= 0.2:
+    raise ValueError("v35 pre-intervention weight must lie in [0, 0.2]")
   if args.actor_gradient_accumulation_microbatches < 1:
     raise ValueError("actor gradient accumulation chunks must be positive")
   if (
@@ -1075,8 +1093,28 @@ def main() -> None:
   agent_cfg.algorithm.learning_rate = float(args.actor_learning_rate)
   agent_cfg.algorithm.actor_learning_rate = float(args.actor_learning_rate)
   agent_cfg.algorithm.moving_kl_beta = float(args.moving_kl_beta)
+  agent_cfg.algorithm.pre_intervention_horizon = int(
+    args.pre_intervention_horizon
+  )
+  agent_cfg.algorithm.pre_intervention_decay = float(
+    args.pre_intervention_decay
+  )
+  agent_cfg.algorithm.pre_intervention_weight = float(
+    args.pre_intervention_weight
+  )
+  agent_cfg.algorithm.pre_intervention_aggregation = (
+    args.pre_intervention_aggregation
+  )
   agent_cfg.algorithm.minimum_std = float(args.training_action_std)
   agent_cfg.algorithm.maximum_std = float(args.training_action_std)
+  temporal_safety_credit = {
+    "aggregation": args.pre_intervention_aggregation,
+    "horizon_steps": args.pre_intervention_horizon,
+    "horizon_seconds": args.pre_intervention_horizon * 0.02,
+    "decay": args.pre_intervention_decay,
+    "weight": args.pre_intervention_weight,
+    "bounded_above_by_one": args.pre_intervention_aggregation == "max",
+  }
   if args.success_safe_action_imitation:
     agent_cfg.algorithm.class_name = (
       "src.tasks.stairs_cbf.paper_success_residual_only_v91:"
@@ -1285,6 +1323,7 @@ def main() -> None:
         "training_action_std": args.training_action_std,
         "actor_learning_rate": args.actor_learning_rate,
         "moving_kl_beta": args.moving_kl_beta,
+        "temporal_safety_credit": temporal_safety_credit,
         "training_domain_randomization": training_domain_randomization,
       },
     )
@@ -1589,6 +1628,7 @@ def main() -> None:
           "training_action_std": args.training_action_std,
           "actor_learning_rate": args.actor_learning_rate,
           "moving_kl_beta": args.moving_kl_beta,
+          "temporal_safety_credit": temporal_safety_credit,
           "training_domain_randomization": training_domain_randomization,
         },
       )
@@ -1710,6 +1750,7 @@ def main() -> None:
       "training_action_std": args.training_action_std,
       "actor_learning_rate": args.actor_learning_rate,
       "moving_kl_beta": args.moving_kl_beta,
+      "temporal_safety_credit": temporal_safety_credit,
       "training_domain_randomization": training_domain_randomization,
       "seed": args.seed,
       "rounds": args.rounds,

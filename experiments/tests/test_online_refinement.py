@@ -168,6 +168,23 @@ def test_credit_does_not_cross_episode_boundary() -> None:
   assert torch.allclose(credit[:, 0], torch.tensor([0.0, 0.0, 0.0, 0.8, 1.0]))
 
 
+def test_max_credit_bounds_repeated_intervention_over_full_swing() -> None:
+  magnitude = torch.full((8, 1), 0.05)
+  intervened = torch.ones(8, 1, dtype=torch.bool)
+  dones = torch.zeros(8, 1, dtype=torch.bool)
+  credit = backward_intervention_credit(
+    magnitude,
+    intervened,
+    dones,
+    horizon=8,
+    decay=0.95,
+    magnitude_scale=0.05,
+    aggregation="max",
+  )
+  assert torch.allclose(credit, torch.ones_like(credit))
+  assert float(credit.max()) == 1.0
+
+
 def test_brief_dual_reward_schedule_is_task_first() -> None:
   assert [brief_dual_reward_weight(index) for index in range(1, 6)] == [
     0.0,

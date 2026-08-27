@@ -665,10 +665,20 @@ def backward_intervention_credit(
   horizon: int,
   decay: float,
   magnitude_scale: float,
+  aggregation: str = "sum",
 ) -> torch.Tensor:
-  """Assign an intervention to preceding actions without crossing episode ends."""
+  """Assign an intervention to preceding actions without crossing episode ends.
+
+  ``sum`` preserves the historical per-frame accumulation. ``max`` treats a
+  contiguous intervention as one bounded safety demand, preventing repeated
+  filtered frames from multiplying the same swing-level credit above one.
+  """
   if magnitude.shape != intervened.shape or magnitude.shape != dones.shape:
     raise ValueError("magnitude, intervened, and dones must have identical [T, N] shapes")
+  if horizon < 1 or not 0.0 < decay <= 1.0 or magnitude_scale <= 0.0:
+    raise ValueError("intervention credit parameters are outside their domains")
+  if aggregation not in {"sum", "max"}:
+    raise ValueError("intervention credit aggregation must be sum or max")
   normalized = torch.clamp(magnitude / magnitude_scale, 0.0, 1.0)
   normalized = normalized * intervened.float()
   credit = torch.zeros_like(normalized)
@@ -680,7 +690,11 @@ def backward_intervention_credit(
       source = event_step - lag
       if lag > 0:
         alive &= ~dones[source].bool()
-      credit[source] += decay**lag * normalized[event_step] * alive.float()
+      contribution = decay**lag * normalized[event_step] * alive.float()
+      if aggregation == "sum":
+        credit[source] += contribution
+      else:
+        credit[source] = torch.maximum(credit[source], contribution)
   return credit
 
 
@@ -1534,6 +1548,7 @@ class OnlineSafePpoAlgorithmCfg(RslRlPpoAlgorithmCfg):
   pre_intervention_horizon: int = 10
   pre_intervention_decay: float = 0.8
   pre_intervention_weight: float = 0.20
+  pre_intervention_aggregation: str = "sum"
   intervention_magnitude_scale: float = 0.05
   base_anchor_weight: float = 0.01
   d0_retention_anchor_weight: float = 0.0
@@ -1617,6 +1632,7 @@ class OnlineSafePPO(PPO):
     pre_intervention_horizon: int = 10,
     pre_intervention_decay: float = 0.8,
     pre_intervention_weight: float = 0.20,
+    pre_intervention_aggregation: str = "sum",
     intervention_magnitude_scale: float = 0.05,
     base_anchor_weight: float = 0.01,
     d0_retention_anchor_weight: float = 0.0,
@@ -1672,7 +1688,16 @@ class OnlineSafePPO(PPO):
     self.pre_intervention_horizon = pre_intervention_horizon
     self.pre_intervention_decay = pre_intervention_decay
     self.pre_intervention_weight = pre_intervention_weight
+    self.pre_intervention_aggregation = pre_intervention_aggregation
     self.intervention_magnitude_scale = intervention_magnitude_scale
+    if self.pre_intervention_horizon < 1:
+      raise ValueError("pre-intervention horizon must be positive")
+    if not 0.0 < self.pre_intervention_decay <= 1.0:
+      raise ValueError("pre-intervention decay must be in (0, 1]")
+    if self.pre_intervention_weight < 0.0:
+      raise ValueError("pre-intervention weight must be non-negative")
+    if self.pre_intervention_aggregation not in {"sum", "max"}:
+      raise ValueError("pre-intervention aggregation must be sum or max")
     self.base_anchor_weight = base_anchor_weight
     self.d0_retention_anchor_weight = d0_retention_anchor_weight
     self.neighbor_retention_anchor_weight = neighbor_retention_anchor_weight
@@ -2969,6 +2994,7 @@ class OnlineSafePPO(PPO):
       horizon=self.pre_intervention_horizon,
       decay=self.pre_intervention_decay,
       magnitude_scale=self.intervention_magnitude_scale,
+      aggregation=self.pre_intervention_aggregation,
     )
     self.pre_intervention_cost.copy_(credit)
     if not self.task_first_constrained:
@@ -3001,6 +3027,13 @@ class OnlineSafePPO(PPO):
       "cbf_credit_is_counterfactual": float(self.use_counterfactual_cbf_credit),
       "pre_intervention_cost_mean": float(credit.mean()),
       "pre_intervention_cost_max": float(credit.max()),
+      "pre_intervention_aggregation": self.pre_intervention_aggregation,
+      "pre_intervention_horizon": float(self.pre_intervention_horizon),
+      "pre_intervention_decay": float(self.pre_intervention_decay),
+      "pre_intervention_weight": float(self.pre_intervention_weight),
+      "pre_intervention_reward_penalty_mean": float(
+        self.pre_intervention_weight * credit.mean()
+      ),
       "fall_event_count": float(self.fall_events.sum()),
       "fall_event_fraction": float(self.fall_events.float().mean()),
       "task_reward_excludes_fixed_safety_shaping": float(
