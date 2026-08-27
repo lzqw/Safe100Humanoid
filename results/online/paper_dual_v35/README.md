@@ -1,5 +1,14 @@
 # v35 Paper-Aligned Dual CBF-RL Pilot
 
+## 最新实验：v65 介入局部安全蒸馏
+
+v65 隔离了 actor 的 PPO 梯度，只在 deterministic mean 的 CBF 介入状态做
+低学习率 residual 蒸馏。`round_01.pt` 在下一轮新 DR 的 filtered rollout 从
+66.42% 提高到 **71.11%**，但单次 128-episode deterministic filter-off gate
+只有 **76/128（59.38%）**，未通过 75% 门槛。完整训练、checkpoint、逐 episode
+结果及同时到顶/跌倒标签修复见
+[`intervention_local_distill_v65/`](intervention_local_distill_v65/README.md)。
+
 ## 最新实验：v63--v64 全过滤 Eq. (27) continuation
 
 从 v60 目标高度 checkpoint 出发，v63 用论文水平 CBF、v64 用高台阶适配的
