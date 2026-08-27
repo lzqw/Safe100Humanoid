@@ -372,6 +372,18 @@ transition，耗时 92.7 秒；6/6 batch 的 post-update surrogate 均为正，�
 逐 episode 证据和两个 checkpoint 见
 [`observable_cbf_ppo_v51/`](observable_cbf_ppo_v51/)。
 
+#### KL-targeted paired CBF PPO v52（离线改善、部署退化）
+
+v52 针对 v51 只使用 0.3% KL 预算的问题，沿同一 paired consensus gradient
+自适应放大步长，同时要求全部 6 个 on/off rollout 的 PPO surrogate 保持为正。
+正式运行选择 `14.0923×` 步长，reference KL 达到 `0.000249991`，6/6 batch
+均改善，最差 surrogate gain 仍为 `+0.00026076`。
+
+然而在全新 seed `201351012` 上，filter-off 只有 **42/64（65.63%）**，因此立即
+停止且不运行 filter-on。这证明扩大训练 batch 上的局部 surrogate 改善不能解决
+部署泛化；完整线搜索轨迹、checkpoint 与逐 episode 证据见
+[`observable_cbf_ppo_v52/`](observable_cbf_ppo_v52/)。
+
 ## 方法与第一阶段 F1 ablation
 
 本目录发布 v35 第一阶段 F1 pilot 的关键结果。该阶段依据
@@ -421,7 +433,8 @@ winner。后续 staged experiment 解决了 F1 矛盾，并已冻结扩展到 F2
 - [`multi_rollout_gae_v46_v47/`](multi_rollout_gae_v46_v47/): 配对 on/off CBF-dual GAE、两级梯度共识及与 base 持平的独立 gate。
 - [`observable_cbf_adapter_v49/`](observable_cbf_adapter_v49/): 410-D 可部署 CBF 几何 actor、被拒绝的 all-success ablation、达到 75% 的 rescued-only paired gate、逐 episode 证据与候选 checkpoint。
 - [`observable_cbf_adapter_v50/`](observable_cbf_adapter_v50/): 六训练 seed rescued-only 扩展、失败的 untouched filter-off gate、逐 episode 证据与 rejected checkpoint。
-- [`observable_cbf_ppo_v51/`](observable_cbf_ppo_v51/): 论文式几何感知 paired on/off GAE-PPO 实现 smoke、完整离线诊断与 smoke-only checkpoint。
+- [`observable_cbf_ppo_v51/`](observable_cbf_ppo_v51/): 论文式几何感知 paired on/off GAE-PPO、正式 49,152-transition 训练、47/64 untouched gate 与 checkpoint。
+- [`observable_cbf_ppo_v52/`](observable_cbf_ppo_v52/): KL 目标线搜索、6/6 离线 surrogate 改善、失败的 untouched filter-off gate 与 rejected checkpoint。
 
 历史大型 `.pt` checkpoint 没有提交进 Git；其 SHA-256 已写入相应 summary。
 v49b、v50 与 v51 smoke 的候选 checkpoint 已随各自结果目录提交，便于精确复现；
