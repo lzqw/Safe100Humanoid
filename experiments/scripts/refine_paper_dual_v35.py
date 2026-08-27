@@ -33,6 +33,9 @@ from paper_transactional_v73_math import (
   adaptive_actor_learning_rate,
   rollout_candidate_decision,
 )
+from src.tasks.stairs_cbf.paper_early_start_v128 import (
+  aligned_filtered_rollout_decision,
+)
 from velocity_cbf_v34_protocol import CURRENT_CBF_MODE, OPTIMIZED_CBF_MODE
 from refine_cbf_teacher_v31 import (
   _collect_round,
@@ -284,6 +287,15 @@ def _parse_args() -> argparse.Namespace:
       "v127: cross-fit d_filter_off(s)/d_filter_on(s) from a balanced mixed "
       "rollout, apply weighted GAE only to filtered actor transitions, and "
       "retain every transition for critic learning."
+    ),
+  )
+  parser.add_argument(
+    "--paper-early-continuous-training",
+    action="store_true",
+    help=(
+      "v128: start from the original nominal checkpoint and run continuous "
+      "two-epoch Adam PPO on fixed F2 with every rollout action safety "
+      "filtered, Eq. (27) unit-balanced reward, and no moving KL anchor."
     ),
   )
   parser.add_argument(
@@ -1117,6 +1129,96 @@ def main() -> None:
       "v35 base checkpoint does not match the explicitly expected SHA-256: "
       f"{checkpoint_sha256} != {expected_base_sha256}"
     )
+  paper_early_continuous_training = None
+  if args.paper_early_continuous_training:
+    incompatible_options = {
+      "height_curriculum": args.height_curriculum,
+      "filter_group_balanced_advantages": args.filter_group_balanced_advantages,
+      "state_value_occupancy_correction": args.state_value_occupancy_correction,
+      "deterministic_mean_teacher": args.deterministic_mean_teacher,
+      "success_safe_action_imitation": args.success_safe_action_imitation,
+      "failure_only_mean_teacher": args.failure_only_mean_teacher,
+      "success_only_mean_teacher": args.success_only_mean_teacher,
+      "failure_focused_actor": args.failure_focused_actor,
+      "distill_only_actor": args.distill_only_actor,
+      "split_filter_actor_objectives": args.split_filter_actor_objectives,
+      "task_priority_gradient_surgery": args.task_priority_gradient_surgery,
+      "full_batch_sgd_actor": args.full_batch_sgd_actor,
+      "persistent_geometry_gradient_balance": (
+        args.persistent_geometry_gradient_balance
+      ),
+      "outcome_centered_episode_advantage": (
+        args.outcome_centered_episode_advantage
+      ),
+      "conservative_outcome_advantage": args.conservative_outcome_advantage,
+      "transactional_rollout_acceptance": args.transactional_rollout_acceptance,
+    }
+    enabled_incompatible = sorted(
+      name for name, enabled in incompatible_options.items() if enabled
+    )
+    contract_checks = {
+      "original_nominal_checkpoint": checkpoint_sha256 == BASE_CHECKPOINT_SHA256,
+      "fixed_f2": args.context == "F2",
+      "unit_balanced_eq27_reward": (
+        args.candidate == "paper_stair_sloped_unit_balanced"
+      ),
+      "task_compatible_cbf_geometry": math.isclose(
+        args.clearance_barrier_slope,
+        CLEARANCE_BARRIER_SLOPE,
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
+      ),
+      "current_cbf": args.cbf_mode == CURRENT_CBF_MODE,
+      "fully_filtered_fixed_rollout": (
+        training_runtime_filter
+        and args.training_filter_schedule == "fixed"
+        and training_filter_fraction == 1.0
+      ),
+      "teacher_free_a0": all(arm == "A0" for arm in teacher_arms),
+      "original_actor_interface": args.actor_observation_interface == "original-405",
+      "continuous_standard_ppo": not enabled_incompatible,
+      "standard_actor_learning_rate": math.isclose(
+        args.actor_learning_rate, 5.0e-6, rel_tol=0.0, abs_tol=1.0e-15
+      ),
+      "continuation_kl_disabled": args.moving_kl_beta == 0.0,
+      "fixed_rollout_std": args.training_action_std == 0.05,
+      "no_auxiliary_credit": (
+        args.pre_intervention_weight == 0.0
+        and args.success_local_kl_beta == 0.0
+        and args.teacher_gradient_target_ratio == 0.0
+      ),
+      "standard_minibatching": (
+        args.actor_gradient_accumulation_microbatches == 1
+      ),
+      "fixed_nominal_dynamics": args.training_domain_randomization == "off",
+      "minimum_training_horizon": args.rounds >= 8,
+      "full_rollout_length": args.rollout_steps == 1024,
+    }
+    failed_checks = sorted(
+      name for name, passed in contract_checks.items() if not passed
+    )
+    if failed_checks:
+      raise ValueError(
+        "v128 early continuous training contract differs: "
+        f"failed={failed_checks}, incompatible={enabled_incompatible}"
+      )
+    paper_early_continuous_training = {
+      "method_id": (
+        "paper-cbf-dual-early-start-continuous-ppo-v128"
+      ),
+      "contract_checks": contract_checks,
+      "base_role": "original_nominal_pre_refinement_policy",
+      "training_trajectory": "continuous_without_acceptance_or_rollback",
+      "actor_optimizer": "adam",
+      "actor_epochs": 2,
+      "actor_minibatches_per_epoch": 4,
+      "actor_updates_per_round": 8,
+      "moving_kl_beta": 0.0,
+      "aligned_checkpoint_selection": (
+        "training_rollout_success_then_progress_then_later"
+      ),
+      "selection_additional_evaluation_count": 0,
+    }
   if output_dir.exists():
     raise FileExistsError(output_dir)
   if _git(repo, "status", "--porcelain"):
@@ -1353,7 +1455,12 @@ def main() -> None:
     "weight": args.pre_intervention_weight,
     "bounded_above_by_one": args.pre_intervention_aggregation == "max",
   }
-  if args.success_safe_action_imitation:
+  if args.paper_early_continuous_training:
+    agent_cfg.algorithm.class_name = (
+      "src.tasks.stairs_cbf.paper_early_start_v128:"
+      "PaperEarlyStartV128PPO"
+    )
+  elif args.success_safe_action_imitation:
     agent_cfg.algorithm.class_name = (
       "src.tasks.stairs_cbf.paper_success_residual_only_v91:"
       "PaperSuccessResidualOnlyV91PPO"
@@ -1506,6 +1613,7 @@ def main() -> None:
   accepted_success_rate: float | None = None
   accepted_checkpoint: Path | None = None
   accepted_rollout_round: int | None = None
+  selected_mean_reached_riser: float | None = None
   transactional_rollback_count = 0
 
   def set_actor_learning_rate(learning_rate: float) -> None:
@@ -1573,6 +1681,7 @@ def main() -> None:
         "state_value_occupancy_correction": (
           args.state_value_occupancy_correction
         ),
+        "paper_early_continuous_training": paper_early_continuous_training,
         "split_filter_actor_objectives": (
           args.split_filter_actor_objectives
         ),
@@ -1741,8 +1850,53 @@ def main() -> None:
       metrics["configured_runtime_filter_count"] = int(round_filter_mask.sum())
       post_update_hash = actor_state_sha256(actor_state(runner.alg.actor))
       candidate_decision = None
+      aligned_selection_decision = None
       transactional_rollback_applied = False
       next_actor_learning_rate = actor_learning_rate_used
+      if args.paper_early_continuous_training:
+        aligned_selection_decision = aligned_filtered_rollout_decision(
+          candidate_round=round_index,
+          success_count=int(metrics["rollout_filter_on_success_count"]),
+          episode_count=int(metrics["rollout_filter_on_episode_count"]),
+          mean_reached_riser=float(
+            metrics["rollout_filter_on_mean_reached_riser"]
+          ),
+          incumbent_round=accepted_rollout_round,
+          incumbent_success_count=accepted_success_count,
+          incumbent_episode_count=accepted_episode_count,
+          incumbent_mean_reached_riser=selected_mean_reached_riser,
+        )
+        if aligned_selection_decision["selected"]:
+          accepted_actor_sha256 = start_hash
+          accepted_checkpoint = candidate_checkpoint
+          accepted_rollout_round = round_index
+          accepted_success_count = int(
+            metrics["rollout_filter_on_success_count"]
+          )
+          accepted_episode_count = int(
+            metrics["rollout_filter_on_episode_count"]
+          )
+          accepted_success_rate = float(
+            metrics["rollout_filter_on_success_rate"]
+          )
+          selected_mean_reached_riser = float(
+            metrics["rollout_filter_on_mean_reached_riser"]
+          )
+        metrics.update(
+          {
+            "v128_aligned_checkpoint_selection": True,
+            "v128_aligned_candidate_selected": bool(
+              aligned_selection_decision["selected"]
+            ),
+            "v128_aligned_selection_reason": aligned_selection_decision[
+              "reason"
+            ],
+            "v128_selected_rollout_round_after": accepted_rollout_round,
+            "v128_selected_success_rate_after": accepted_success_rate,
+            "v128_selection_additional_evaluation_count": 0,
+            "v128_selection_changes_training_trajectory": False,
+          }
+        )
       if args.transactional_rollout_acceptance:
         candidate_decision = rollout_candidate_decision(
           actor_sha256=start_hash,
@@ -1854,6 +2008,9 @@ def main() -> None:
         "teacher_arm": round_teacher_arm,
         "teacher_parameters": round_teacher_parameters,
         "transactional_candidate_decision": candidate_decision,
+        "aligned_training_rollout_selection_decision": (
+          aligned_selection_decision
+        ),
         "transactional_rollback_applied": transactional_rollback_applied,
         "actor_learning_rate_used": actor_learning_rate_used,
         "next_actor_learning_rate": next_actor_learning_rate,
@@ -1902,6 +2059,7 @@ def main() -> None:
           "state_value_occupancy_correction": (
             args.state_value_occupancy_correction
           ),
+          "paper_early_continuous_training": paper_early_continuous_training,
           "split_filter_actor_objectives": (
             args.split_filter_actor_objectives
           ),
@@ -1997,6 +2155,7 @@ def main() -> None:
       "state_value_occupancy_correction": (
         args.state_value_occupancy_correction
       ),
+      "paper_early_continuous_training": paper_early_continuous_training,
       "split_filter_actor_objectives": (
         args.split_filter_actor_objectives
       ),
@@ -2067,11 +2226,22 @@ def main() -> None:
       ),
       "selected_filter_on_success_rate": (
         accepted_success_rate
-        if transactional_acceptance_group == "filter_on"
-        and args.transactional_rollout_acceptance
+        if (
+          (
+            transactional_acceptance_group == "filter_on"
+            and args.transactional_rollout_acceptance
+          )
+          or args.paper_early_continuous_training
+        )
         else None
       ),
       "selected_rollout_round": accepted_rollout_round,
+      "selected_checkpoint_round": (
+        accepted_rollout_round - 1
+        if accepted_rollout_round is not None
+        else None
+      ),
+      "selected_mean_reached_riser": selected_mean_reached_riser,
       "training_action_std": args.training_action_std,
       "actor_learning_rate": args.actor_learning_rate,
       "moving_kl_beta": args.moving_kl_beta,

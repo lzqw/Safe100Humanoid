@@ -26,6 +26,9 @@ from src.tasks.stairs_cbf.paper_dual_v35 import (
 from src.tasks.stairs_cbf.paper_occupancy_corrected_v127 import (
   crossfit_occupancy_corrected_advantages,
 )
+from src.tasks.stairs_cbf.paper_early_start_v128 import (
+  aligned_filtered_rollout_decision,
+)
 
 
 def test_halfspace_projection_repairs_violation():
@@ -284,6 +287,47 @@ def test_v127_crossfits_state_occupancy_and_keeps_only_filtered_actor_credit():
   assert metrics["occupancy_density_ratio_effective_sample_fraction"] > 0.0
   assert metrics["occupancy_actor_filter_off_advantage_max_abs"] == 0.0
   assert metrics["occupancy_critic_uses_all_transitions"] is True
+
+
+def test_v128_selects_only_the_best_aligned_filtered_training_rollout():
+  first = aligned_filtered_rollout_decision(
+    candidate_round=1,
+    success_count=80,
+    episode_count=120,
+    mean_reached_riser=8.0,
+    incumbent_round=None,
+    incumbent_success_count=None,
+    incumbent_episode_count=None,
+    incumbent_mean_reached_riser=None,
+  )
+  assert first["selected"] is True
+  assert first["selection_uses_training_rollout_only"] is True
+  assert first["selection_changes_training_trajectory"] is False
+
+  worse_progress = aligned_filtered_rollout_decision(
+    candidate_round=2,
+    success_count=100,
+    episode_count=150,
+    mean_reached_riser=7.9,
+    incumbent_round=1,
+    incumbent_success_count=80,
+    incumbent_episode_count=120,
+    incumbent_mean_reached_riser=8.0,
+  )
+  assert worse_progress["selected"] is False
+
+  better_rate = aligned_filtered_rollout_decision(
+    candidate_round=3,
+    success_count=101,
+    episode_count=150,
+    mean_reached_riser=7.8,
+    incumbent_round=1,
+    incumbent_success_count=80,
+    incumbent_episode_count=120,
+    incumbent_mean_reached_riser=8.0,
+  )
+  assert better_rate["selected"] is True
+  assert better_rate["reason"] == "higher_success_rate"
 
 
 def test_v68_routes_nominal_worlds_to_ppo_and_filtered_worlds_to_teacher():
