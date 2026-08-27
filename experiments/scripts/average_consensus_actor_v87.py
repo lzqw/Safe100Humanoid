@@ -25,7 +25,6 @@ CONSENSUS_SIGNATURE_FIELDS = (
   "rollout_steps",
   "training_runtime_filter",
   "training_filter_fraction",
-  "training_filter_schedule",
   "filter_group_balanced_advantages",
   "training_action_std",
   "actor_learning_rate",
@@ -33,6 +32,33 @@ CONSENSUS_SIGNATURE_FIELDS = (
   "full_batch_sgd_actor",
   "actor_gradient_accumulation_microbatches",
 )
+
+
+def consensus_training_signature(summary: dict[str, Any]) -> dict[str, Any]:
+  """Canonicalize only first-update settings, independent of run length."""
+  signature = {name: summary.get(name) for name in CONSENSUS_SIGNATURE_FIELDS}
+  schedule = summary.get("training_filter_schedule")
+  if not isinstance(schedule, dict) or schedule.get("name") != "fixed":
+    raise ValueError("v87 requires a fixed execution-filter schedule")
+  fractions = schedule.get("fractions_by_round")
+  if not isinstance(fractions, list) or not fractions:
+    raise ValueError("v87 member lacks per-round filter fractions")
+  configured_fraction = float(summary["training_filter_fraction"])
+  if any(
+    not math.isclose(
+      float(value), configured_fraction, rel_tol=0.0, abs_tol=1.0e-12
+    )
+    for value in fractions
+  ):
+    raise ValueError("v87 member filter fraction changes across rounds")
+  signature["training_filter_schedule"] = {
+    "name": "fixed",
+    "first_update_fraction": configured_fraction,
+    "counterfactual_cbf_reward_retained_when_unshielded": bool(
+      schedule.get("counterfactual_cbf_reward_retained_when_unshielded")
+    ),
+  }
+  return signature
 
 
 def average_actor_deltas(
@@ -192,7 +218,7 @@ def main() -> None:
     summary = json.loads(summary_path.read_text())
     if summary.get("base_checkpoint_sha256") != args.expected_base_sha256:
       raise ValueError(f"v87 member base file hash differs: {proposal}")
-    signature = {name: summary.get(name) for name in CONSENSUS_SIGNATURE_FIELDS}
+    signature = consensus_training_signature(summary)
     if reference_signature is None:
       reference_signature = signature
     elif signature != reference_signature:
@@ -266,4 +292,3 @@ def main() -> None:
 
 if __name__ == "__main__":
   main()
-

@@ -62,3 +62,29 @@ def test_v87_rejects_member_that_changes_frozen_normalizer() -> None:
   changed["obs_normalizer._mean"] += 0.1
   with pytest.raises(ValueError, match="changed frozen actor state"):
     MODULE.average_actor_deltas(base, [changed, changed])
+
+
+def test_v87_signature_ignores_fixed_schedule_run_length() -> None:
+  common = {
+    name: None for name in MODULE.CONSENSUS_SIGNATURE_FIELDS
+  }
+  common["training_filter_fraction"] = 0.25
+  short = {
+    **common,
+    "training_filter_schedule": {
+      "name": "fixed",
+      "fractions_by_round": [0.25],
+      "counterfactual_cbf_reward_retained_when_unshielded": True,
+    },
+  }
+  long = {
+    **common,
+    "training_filter_schedule": {
+      "name": "fixed",
+      "fractions_by_round": [0.25, 0.25, 0.25, 0.25],
+      "counterfactual_cbf_reward_retained_when_unshielded": True,
+    },
+  }
+  assert MODULE.consensus_training_signature(short) == (
+    MODULE.consensus_training_signature(long)
+  )
