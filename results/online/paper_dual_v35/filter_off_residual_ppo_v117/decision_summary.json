@@ -1,0 +1,36 @@
+{
+  "schema_version": "paper_dual_v35.v117.decision.v1",
+  "method_id": "filter-off-episodic-residual-ppo-v117",
+  "decision": "rejected_negative_clipped_surrogate_and_screen_below_gate",
+  "reason": "Minibatch Adam produced a negative clipped surrogate and the deterministic filter-off screen reached only 44/64=68.75%.",
+  "source_commit": "64c7158de0caa7dcd09e2c52d132156132609cce",
+  "targeted_tests_passed": 1,
+  "hardware": "NVIDIA GeForce RTX 4080 SUPER",
+  "input_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "training": {
+    "training_seeds": [201353800, 201353810, 201353820, 201353830],
+    "episode_count": 256,
+    "success_count": 168,
+    "failure_count": 88,
+    "transition_count": 87624,
+    "optimizer": "Adam",
+    "optimizer_updates": 44,
+    "clipped_surrogate_after": -0.016664306803925683,
+    "unclipped_surrogate_after": 0.00009063235450300442,
+    "reference_forward_kl": 0.01996446463292664,
+    "parameter_interpolation_scale": 0.055419921875,
+    "offline_gate_passed": false
+  },
+  "screen": {
+    "seed": 201353880,
+    "episode_count": 64,
+    "runtime_filter": false,
+    "success_count": 44,
+    "success_rate": 0.6875,
+    "mean_reached_riser": 7.828125,
+    "independent_gate_run": false
+  },
+  "elapsed_seconds": 131.02531877497677,
+  "global_best_changed": false,
+  "next_hypothesis": "Use one full-batch direction-preserving SGD update so the accepted proposal must retain a positive clipped surrogate before screening."
+}

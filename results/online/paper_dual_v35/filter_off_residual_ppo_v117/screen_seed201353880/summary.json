@@ -1,0 +1,16 @@
+{
+  "all_finite": true,
+  "candidate_checkpoint_sha256": "46e1703aa81647ee3f085cf03a6fa9c202a91f6606563ebef7431629da357f63",
+  "fall_count": 20,
+  "fall_rate": 0.3125,
+  "initial_state_signature": "84eaf7ce698f1796125b6d26e50b63987819c5f4139e4122168270c8b8fd2f0e",
+  "mean_reached_riser": 7.828125,
+  "mean_residual_norm": 0.0032174257504477776,
+  "num_episodes": 64,
+  "passed_75_percent": false,
+  "residual_state_sha256": "224bd8415a6f3522ac649e91c2f18fbee6040f383fdc331d59bdd158b6239c20",
+  "runtime_filter": false,
+  "seed": 201353880,
+  "success_count": 44,
+  "success_rate": 0.6875
+}

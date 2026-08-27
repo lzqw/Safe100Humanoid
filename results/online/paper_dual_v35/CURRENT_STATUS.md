@@ -43,6 +43,7 @@
 | v114 | v92 adapter 预声明幅度 screen；四档均低于 75%，最佳为未修改 v79 的 46/64=71.88% | [`observable_adapter_scale_v114/`](observable_adapter_scale_v114/) |
 | v115 | causal GRU 只区分 rescued/harmed，0.6 高置信 gate；screen 恢复到 47/64=73.44%，差 1 episode | [`causal_gated_residual_v115/`](causal_gated_residual_v115/) |
 | v116 | causal gate + 实际成功 filter-on trajectory teacher；state/action mismatch 使 screen 回落到 38/64=59.38% | [`outcome_gated_trajectory_v116/`](outcome_gated_trajectory_v116/) |
+| v117 | filter-off deployment-state episodic residual PPO；Adam 后 clipped surrogate 为负，screen 44/64=68.75% | [`filter_off_residual_ppo_v117/`](filter_off_residual_ppo_v117/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -247,3 +248,10 @@ gate 仅在 3.73% transition 激活也无法避免退化。这复现并加强了
 另有第二处 `false` 拼写在 screen 落盘后触发，commit `171ef70` 已清除全部剩余小写
 布尔值，未重复 rollout。下一步必须保持 deployment-state on-policy，并直接使用
 episode return，而不是继续轨迹 action imitation。当前最佳仍为 v79。
+
+v117 首次完全去掉 action teacher，让 residual 在 filter-off deployment states 中探索，
+并用 episode-balanced 成功/失败 advantage 做 PPO。256 episode 中 168 成功，87,624
+条 active-geometry transition；unclipped surrogate 为正，但 44 次 Adam minibatch 后
+clipped surrogate 变成 -0.01666，KL 投影只保留 5.54% delta。screen 为
+44/64=68.75%，离线和在线均拒绝。下一步保留相同 on-policy objective，只改成一次
+full-batch direction-preserving SGD，避免优化器扭曲方向。当前最佳仍为 v79。
