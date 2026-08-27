@@ -1,0 +1,236 @@
+{
+  "actor_expansion": {
+    "expanded_actor_width": 415,
+    "inactive_geometry_exact_base_policy": true,
+    "legacy_first_layer_copy_max_abs_error": 0.0,
+    "new_feature_count": 10,
+    "new_first_layer_column_max_abs": 0.0,
+    "pi0_exact_preservation_proof": true,
+    "source_actor_width": 405
+  },
+  "base_actor_sha256": "c08c387c0939a0774904cd8f3ccc3d459acc5134f26c5dd44ae411a9eb005188",
+  "base_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "candidate_checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/progress_residual_v120_c95455e_4x64_s201354100/candidate.pt",
+  "candidate_checkpoint_sha256": "5beeb4246ac1719160980d080353f1e5cbc7374bf3f271773e12dcfd7fbc33d3",
+  "cbf": {
+    "acceleration_or_drift_model": false,
+    "actor_observation_changed": false,
+    "critic_observation_changed": false,
+    "current_CBF0_source_unchanged": true,
+    "mode": "current_velocity_cbf",
+    "parameters": {
+      "alpha": 10.0,
+      "barrier_slope": 0.8,
+      "lambda_s": 0.0,
+      "lambda_x": 0.0,
+      "metric": "euclidean",
+      "toe_margin": 0.08,
+      "top_clearance": 0.025
+    },
+    "plant_action_transform": "identity",
+    "runtime_filter": false
+  },
+  "context": "F2",
+  "elapsed_seconds": 106.75279024301562,
+  "episode_credit": "terminal-progress-standardized",
+  "episode_failure_count": 87,
+  "episode_success_count": 169,
+  "exploration_std": 0.02,
+  "final_residual_sha256": "8c09b452a9d802e7ee072144c983cc3c1ca4f56ab218ce6d09e4b93d0fc0e7ca",
+  "geometry_observation": {
+    "deployable": true,
+    "feature_count": 10,
+    "features_per_foot": [
+      "horizontal",
+      "vertical",
+      "barrier",
+      "contact",
+      "valid"
+    ],
+    "future_or_filtered_action_fields": 0,
+    "group": "cbf_geometry",
+    "source": "current bilateral foot FK + contact + mapped next-riser edges",
+    "timing": "persistent approach and swing, including pre-toe-off"
+  },
+  "git_commit": "c95455e0ba4a26cf856207556a1e647d18466606",
+  "independent_gate_policy": "run separately only if screen_rate_gte_0.75",
+  "independent_gate_run": false,
+  "initial_residual_sha256": "8c09b452a9d802e7ee072144c983cc3c1ca4f56ab218ce6d09e4b93d0fc0e7ca",
+  "max_residual": 0.1,
+  "method_id": "heldout-validated-terminal-progress-residual-ppo-v120",
+  "num_envs": 64,
+  "offline_gate_passed": false,
+  "optimization_seed": 201354193,
+  "optimizer": "sgd",
+  "optimizer_parameter_state_count": 0,
+  "optimizer_state_in_candidate": false,
+  "paper_dual_reward": {
+    "candidate": "raw_moderate",
+    "historical_default_preserved": false,
+    "paper_arxiv_id": "2510.14959v6",
+    "paper_demo_commit": "68955c8ba9e929d974b6677635370ee93eecc63a",
+    "reward_parameters": {
+      "correction_space": "raw_action",
+      "intervention_weight": 10.0,
+      "margin_weight": 1.0,
+      "sigma": 0.5
+    },
+    "runtime_filter_during_training": false
+  },
+  "rollout_summaries": [
+    {
+      "active_geometry_transition_count": 22405,
+      "fall_count": 13,
+      "initial_state_signature": "715190b0b7f458962538ff9f0f52920b780a8c66e7d185ff3d65704dbe755e1b",
+      "mean_reached_riser": 8.375,
+      "seed": 201354100,
+      "success_count": 51
+    },
+    {
+      "active_geometry_transition_count": 23739,
+      "fall_count": 27,
+      "initial_state_signature": "e65735dcc86d145e8a5dda01e176ef0907b59199870f902e20890202c3ebd7d8",
+      "mean_reached_riser": 7.5,
+      "seed": 201354110,
+      "success_count": 37
+    },
+    {
+      "active_geometry_transition_count": 21439,
+      "fall_count": 21,
+      "initial_state_signature": "3f183de41450cb889f7d12027f6bb215a10ab995bccb7334c7042759901ae330",
+      "mean_reached_riser": 7.765625,
+      "seed": 201354120,
+      "success_count": 43
+    },
+    {
+      "active_geometry_transition_count": 22439,
+      "fall_count": 26,
+      "initial_state_signature": "4a7c2403c773a49a516e7b389c0d459a8af26d62b90924fdead6f90eae9ac100",
+      "mean_reached_riser": 7.953125,
+      "seed": 201354130,
+      "success_count": 38
+    }
+  ],
+  "schema_version": 1,
+  "screen": {
+    "all_finite": true,
+    "candidate_checkpoint_sha256": "5beeb4246ac1719160980d080353f1e5cbc7374bf3f271773e12dcfd7fbc33d3",
+    "fall_count": 18,
+    "fall_rate": 0.28125,
+    "initial_state_signature": "59a222cd407ed314e342dbaa1014aca2de521b18dcf81848fa2256395e4388d4",
+    "mean_reached_riser": 8.0,
+    "mean_residual_norm": 0.0,
+    "num_episodes": 64,
+    "passed_75_percent": false,
+    "residual_state_sha256": "8c09b452a9d802e7ee072144c983cc3c1ca4f56ab218ce6d09e4b93d0fc0e7ca",
+    "runtime_filter": false,
+    "seed": 201354180,
+    "success_count": 46,
+    "success_rate": 0.71875
+  },
+  "shift": {
+    "actor_observation_fields_added": 0,
+    "baseline_riser_height_m": 0.13,
+    "cbf_geometry_exact": true,
+    "clearance_barrier": "sloped_xz",
+    "clearance_barrier_slope": 0.8,
+    "command_changed": false,
+    "context": "F2",
+    "context_name": "hard_uniform_18_4cm",
+    "controller_changed": false,
+    "filter_alpha": 10.0,
+    "fixed_deployment_environment": {
+      "actor_observation_corruption_disabled": true,
+      "base_com_randomization_absent": true,
+      "curriculum_disabled": true,
+      "encoder_bias_absent": true,
+      "friction_randomization_absent": true,
+      "push_randomization_absent": true,
+      "registered_environment_variant": "fixed_deployment_play",
+      "reset_events_exact": true,
+      "retained_fresh_initial_state_events": [
+        "reset_base",
+        "reset_robot_joints"
+      ]
+    },
+    "friction_changed": false,
+    "num_risers": 9,
+    "plant_action_transform": "identity",
+    "recovery_distance_m": 0.15,
+    "riser_height_m": 0.184,
+    "riser_profile_m": null,
+    "runtime_filter": false,
+    "shift": "fixed_uniform_higher_riser",
+    "stair_riser_patch_slots": 9,
+    "stair_target_patch_slots": 10,
+    "terrain_geometry_changed": true,
+    "top_platform_patch_included": true
+  },
+  "success_bonus": 1.0,
+  "trainable_parameter_count": 28364,
+  "training": {
+    "after": {
+      "clipped_surrogate": 0.0007415525615215302,
+      "importance_ratio_mean": 1.0000286102294922,
+      "reference_forward_kl": 0.004908594768494368,
+      "transition_count": 67583,
+      "unclipped_surrogate": 0.0024130791425704956,
+      "weight_sum": 1.0
+    },
+    "before": {
+      "clipped_surrogate": 1.6763806343078613e-08,
+      "importance_ratio_mean": 1.0,
+      "reference_forward_kl": 0.0,
+      "transition_count": 67583,
+      "unclipped_surrogate": 1.6763806343078613e-08,
+      "weight_sum": 1.0
+    },
+    "epochs": 1,
+    "maximum_gradient_norm_pre_clip": 4.985742092132568,
+    "optimizer_updates": 1,
+    "trust_region": {
+      "max_reference_kl": 0.005,
+      "parameter_interpolation_scale": 0.010009765625,
+      "projection_iterations": 12
+    },
+    "unprojected_after": {
+      "clipped_surrogate": -0.3782743811607361,
+      "importance_ratio_mean": 0.1386478841304779,
+      "reference_forward_kl": 28.979223251342773,
+      "transition_count": 67583,
+      "unclipped_surrogate": -0.022387120872735977,
+      "weight_sum": 1.0
+    }
+  },
+  "training_runtime_filter": false,
+  "training_seed_count": 3,
+  "training_seeds": [
+    201354100,
+    201354110,
+    201354120,
+    201354130
+  ],
+  "training_transition_count": 67583,
+  "transactional_rollback": true,
+  "validation": {
+    "after": {
+      "clipped_surrogate": -0.0018416457975891708,
+      "importance_ratio_mean": 1.0009945035573544,
+      "reference_forward_kl": 0.004894832906564051,
+      "transition_count": 22439,
+      "unclipped_surrogate": -0.0003909953171608041,
+      "weight_sum": 0.9999999403953552
+    },
+    "before": {
+      "clipped_surrogate": 1.490116208202613e-08,
+      "importance_ratio_mean": 1.0,
+      "reference_forward_kl": 0.0,
+      "transition_count": 22439,
+      "unclipped_surrogate": 1.490116208202613e-08,
+      "weight_sum": 0.9999999403953552
+    }
+  },
+  "validation_last_seed": true,
+  "validation_seed": 201354130,
+  "validation_transition_count": 22439
+}

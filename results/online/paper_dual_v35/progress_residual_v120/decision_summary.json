@@ -1,0 +1,36 @@
+{
+  "schema_version": "paper_dual_v35.v120.decision.v1",
+  "method_id": "heldout-validated-terminal-progress-residual-ppo-v120",
+  "decision": "progress_proposal_rejected_by_heldout_surrogate_and_rolled_back",
+  "reason": "Standardized terminal progress improved the train surrogate but decreased the complete held-out seed surrogate, triggering exact rollback.",
+  "source_commit": "c95455e0ba4a26cf856207556a1e647d18466606",
+  "targeted_tests_passed": 1,
+  "hardware": "NVIDIA GeForce RTX 4080 SUPER",
+  "input_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "training": {
+    "episode_credit": "terminal-progress-standardized",
+    "success_bonus": 1.0,
+    "train_transition_count": 67583,
+    "validation_transition_count": 22439,
+    "train_clipped_surrogate_after": 0.0007415525615215302,
+    "validation_clipped_surrogate_after": -0.0018416457975891708,
+    "reference_forward_kl": 0.004908594768494368,
+    "offline_gate_passed": false,
+    "transactional_rollback": true,
+    "initial_residual_sha256": "8c09b452a9d802e7ee072144c983cc3c1ca4f56ab218ce6d09e4b93d0fc0e7ca",
+    "final_residual_sha256": "8c09b452a9d802e7ee072144c983cc3c1ca4f56ab218ce6d09e4b93d0fc0e7ca"
+  },
+  "screen": {
+    "seed": 201354180,
+    "episode_count": 64,
+    "runtime_filter": false,
+    "success_count": 46,
+    "success_rate": 0.71875,
+    "mean_reached_riser": 8.0,
+    "mean_residual_norm": 0.0,
+    "independent_gate_run": false
+  },
+  "elapsed_seconds": 106.75279024301562,
+  "global_best_changed": false,
+  "next_hypothesis": "Stop changing scalar episode credit. Use a state-action critic/GAE for residual actions or substantially increase independent on-policy data before another update."
+}

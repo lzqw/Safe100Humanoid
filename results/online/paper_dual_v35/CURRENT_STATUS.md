@@ -46,6 +46,7 @@
 | v117 | filter-off deployment-state episodic residual PPO；Adam 后 clipped surrogate 为负，screen 44/64=68.75% | [`filter_off_residual_ppo_v117/`](filter_off_residual_ppo_v117/) |
 | v118 | 一次 full-batch SGD 修复离线 surrogate，但新 seed screen 仅 40/64=62.50% | [`filter_off_full_batch_v118/`](filter_off_full_batch_v118/) |
 | v119 | 完整 seed held-out surrogate 为负，事务回滚 exact zero residual；base screen 46/64=71.88% | [`heldout_residual_v119/`](heldout_residual_v119/) |
+| v120 | 连续 reached-riser credit 的 held-out surrogate 仍为负；exact rollback 后 base screen 46/64=71.88% | [`progress_residual_v120/`](progress_residual_v120/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -269,3 +270,9 @@ v119 将第 4 个 rollout seed 完整留作 validation。前三个 seed surrogat
 initial/final residual SHA 完全相同，mean residual norm 为 0。回滚后的 v79 screen
 为 46/64=71.88%。这直接证明二元 outcome gradient 跨 seed 反向；下一步保留事务
 协议，改用连续 reached-riser credit 降低方差。当前最佳仍为 v79。
+
+v120 用每 seed 标准化的 terminal reached-riser + success bonus 取代二元标签。train
+surrogate 为 +0.000742，但 held-out seed 仍为 -0.001842，故再次 exact rollback；
+screen 是未修改 v79 的 46/64=71.88%。连续 credit 也不能稳定 residual score-function
+gradient，后续不再继续替换同类标量，而应引入 state-action critic/GAE 或显著扩大真正
+独立的 on-policy batch。当前最佳仍为 v79。

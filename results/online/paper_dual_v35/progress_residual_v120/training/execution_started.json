@@ -1,0 +1,17 @@
+{
+  "base_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "episode_credit": "terminal-progress-standardized",
+  "git_commit": "c95455e0ba4a26cf856207556a1e647d18466606",
+  "method_id": "heldout-validated-terminal-progress-residual-ppo-v120",
+  "num_envs": 64,
+  "screen_seed": 201354180,
+  "success_bonus": 1.0,
+  "training_runtime_filter": false,
+  "training_seeds": [
+    201354100,
+    201354110,
+    201354120,
+    201354130
+  ],
+  "validation_last_seed": true
+}
