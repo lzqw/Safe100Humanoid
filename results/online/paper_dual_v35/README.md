@@ -1,5 +1,13 @@
 # v35 Paper-Aligned Dual CBF-RL Pilot
 
+## 最新实验：v62 每轮物理域随机化刷新
+
+v62 在单调 18.4 cm 目标高度课程中，每轮刷新 friction、base COM 和 encoder
+bias；6 轮产生 6 个不同物理状态哈希、共 768 个环境级抽样。最终纯无过滤训练
+rollout 为 **176/264（66.67%）**，未达到 75% 门槛，也略低于 v60 的
+175/260（67.31%），因此未做额外独立评估。完整配置、逐轮指标和对齐 checkpoint
+见 [`dr_refresh_v62/`](dr_refresh_v62/README.md)。
+
 ## 当前最佳结果：A2×4 → A1×4
 
 第一阶段 ablation 后冻结 `raw_moderate` reward，并将前四轮 A2 residual
