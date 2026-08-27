@@ -48,6 +48,10 @@ ADAPTER_CALIBRATION = _load(
     "observable_adapter_calibration_v114_test",
     "experiments/scripts/calibrate_observable_adapter_v114.py",
 )
+CAUSAL_GATE = _load(
+    "causal_gated_residual_v115_test",
+    "experiments/scripts/train_causal_gated_residual_v115.py",
+)
 
 
 def test_v34_sherman_morrison_matches_dense_solve() -> None:
@@ -389,6 +393,27 @@ def test_v114_interpolation_preserves_endpoints_and_allows_bounded_extrapolation
     assert torch.equal(one["weight"], adapter["weight"])
     assert torch.allclose(extrapolated["weight"], torch.tensor((4.0, -1.0)))
     assert extrapolated["count"] == 3
+
+
+def test_v115_gate_is_causal_and_balances_discordant_episodes() -> None:
+    torch.manual_seed(115)
+    model = CAUSAL_GATE.CausalGatedResidual(max_residual=0.25)
+    prefix = torch.randn(1, 3, CAUSAL_GATE.FEATURE_DIM)
+    first = torch.cat((prefix, torch.zeros(1, 2, CAUSAL_GATE.FEATURE_DIM)), dim=1)
+    second = torch.cat((prefix, torch.randn(1, 2, CAUSAL_GATE.FEATURE_DIM)), dim=1)
+    first_logits = model.gate_logits_sequence(first, torch.tensor((5,)))
+    second_logits = model.gate_logits_sequence(second, torch.tensor((5,)))
+    assert torch.allclose(first_logits[:, :3], second_logits[:, :3])
+    labels = torch.tensor((True, False, False))
+    masks = [
+        torch.tensor((False, True, True)),
+        torch.tensor((True,)),
+        torch.tensor((False, True, True, True)),
+    ]
+    weights = CAUSAL_GATE.balanced_sequence_weights(labels, masks)
+    assert torch.isclose(weights[0].sum(), torch.tensor(0.5))
+    assert torch.isclose(weights[1].sum(), torch.tensor(0.25))
+    assert torch.isclose(weights[2].sum(), torch.tensor(0.25))
 
 
 def test_v95_critic_expansion_accepts_ten_persistent_features() -> None:
