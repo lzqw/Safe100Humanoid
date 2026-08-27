@@ -138,6 +138,14 @@ def _parse_args() -> argparse.Namespace:
     ),
   )
   parser.add_argument(
+    "--success-intervention-bounded-residual",
+    action="store_true",
+    help=(
+      "v90: replace full safe-mean cloning with the configured bounded A2 "
+      "fraction of the deterministic CBF correction."
+    ),
+  )
+  parser.add_argument(
     "--failure-only-mean-teacher",
     action="store_true",
     help=(
@@ -641,6 +649,11 @@ def main() -> None:
     and not args.success_safe_action_imitation
   ):
     raise ValueError("v89 safe-mean restriction requires v88 success imitation")
+  if (
+    args.success_intervention_bounded_residual
+    and not args.success_intervention_safe_mean_only
+  ):
+    raise ValueError("v90 bounded residual requires v89 success interventions")
   if args.failure_only_mean_teacher and not args.deterministic_mean_teacher:
     raise ValueError("failure-only mean teacher requires deterministic mean labels")
   if args.failure_only_mean_teacher and args.training_runtime_filter != "off":
@@ -965,6 +978,9 @@ def main() -> None:
     deterministic_mean_teacher["success_intervention_safe_mean_only"] = (
       args.success_intervention_safe_mean_only
     )
+    deterministic_mean_teacher["success_intervention_bounded_residual"] = (
+      args.success_intervention_bounded_residual
+    )
   height_curriculum = None
   if args.height_curriculum:
     height_curriculum = _configure_height_curriculum(
@@ -987,12 +1003,17 @@ def main() -> None:
   agent_cfg.algorithm.maximum_std = float(args.training_action_std)
   if args.success_safe_action_imitation:
     agent_cfg.algorithm.class_name = (
-      "src.tasks.stairs_cbf.paper_success_intervention_v89:"
-      "PaperSuccessInterventionV89PPO"
-      if args.success_intervention_safe_mean_only
+      "src.tasks.stairs_cbf.paper_success_residual_v90:"
+      "PaperSuccessResidualV90PPO"
+      if args.success_intervention_bounded_residual
       else (
-        "src.tasks.stairs_cbf.paper_success_imitation_v88:"
-        "PaperSuccessImitationV88PPO"
+        "src.tasks.stairs_cbf.paper_success_intervention_v89:"
+        "PaperSuccessInterventionV89PPO"
+        if args.success_intervention_safe_mean_only
+        else (
+          "src.tasks.stairs_cbf.paper_success_imitation_v88:"
+          "PaperSuccessImitationV88PPO"
+        )
       )
     )
     agent_cfg.algorithm.num_learning_epochs = 1
@@ -1135,6 +1156,9 @@ def main() -> None:
         "success_safe_action_imitation": args.success_safe_action_imitation,
         "success_intervention_safe_mean_only": (
           args.success_intervention_safe_mean_only
+        ),
+        "success_intervention_bounded_residual": (
+          args.success_intervention_bounded_residual
         ),
         "success_imitation_weight": (
           args.success_imitation_weight
@@ -1435,6 +1459,9 @@ def main() -> None:
           "success_intervention_safe_mean_only": (
             args.success_intervention_safe_mean_only
           ),
+          "success_intervention_bounded_residual": (
+            args.success_intervention_bounded_residual
+          ),
           "success_imitation_weight": (
             args.success_imitation_weight
             if args.success_safe_action_imitation
@@ -1506,6 +1533,9 @@ def main() -> None:
       "success_safe_action_imitation": args.success_safe_action_imitation,
       "success_intervention_safe_mean_only": (
         args.success_intervention_safe_mean_only
+      ),
+      "success_intervention_bounded_residual": (
+        args.success_intervention_bounded_residual
       ),
       "success_imitation_weight": (
         args.success_imitation_weight

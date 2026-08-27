@@ -402,6 +402,17 @@ def test_v89_removes_sampled_action_noise_from_success_imitation() -> None:
     assert "paper_success_intervention_v89:" in script
 
 
+def test_v90_bounds_success_intervention_to_a2_residual() -> None:
+    algorithm = (
+        REPO / "src/tasks/stairs_cbf/paper_success_residual_v90.py"
+    ).read_text()
+    script = (REPO / "experiments/scripts/refine_paper_dual_v35.py").read_text()
+    assert "float(self.teacher_eta) * full_correction" in algorithm
+    assert "v90_full_safe_mean_cloning_disabled" in algorithm
+    assert '"--success-intervention-bounded-residual"' in script
+    assert "paper_success_residual_v90:" in script
+
+
 def test_v35_filter_dropout_mask_is_balanced_and_rotates() -> None:
     first = MATH.rotating_environment_filter_mask(
         4, 0.5, 1, device="cpu"
