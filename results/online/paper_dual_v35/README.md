@@ -184,6 +184,28 @@ CBF teacher transition，并用全数据 reference KL 约束一次 actor 更新�
 训练、配对样本与逐 episode 结果见
 [`rescue_distill_v36/`](rescue_distill_v36/)。
 
+#### Matched-rescue shielded distillation + trust region（当前固定协议 F2 最佳）
+
+v36 的逐 episode 对比显示，它虽然救回 12 个基线失败 episode，却破坏了 13 个
+原成功 episode；平均 forward-KL `0.00455` 对当前 humanoid policy 仍然过大。
+v37 因此改用更贴近论文训练分布的 filter-on 成功 rescue 轨迹作为 teacher 状态，
+并在更新后用二分参数投影把数据集平均 KL 硬限制为 `2.5e-4`。32-env 短 pilot
+识别出 7 个 matched rescue episode 和 291 个 teacher transition；未投影更新的
+KL 为 `0.004827`，最终只保留 `22.75%` 参数位移，实际 KL 为 `0.00024986`。
+
+| Stable-reset F2 | Filter on | Filter off | Off - on | Decision |
+|---|---:|---:|---:|---|
+| 固定基线 | 75.00% (48/64) | 68.75% (44/64) | -6.25 pp | superseded |
+| **matched-rescue shielded v37** | **81.25% (52/64)** | **75.00% (48/64)** | **-6.25 pp** | **current best; off gate passed** |
+
+候选相对基线在 filter-on 与 filter-off 各净增 4 个成功 episode，并首次在固定
+reset 协议下达到预设 `filter-off >= 75%` 部署 gate。两条件使用同一评估 seed
+`201350902` 与同一初始状态签名；actor SHA-256 为
+`fdc872355f38a31f7c35d16e1ee5f151d156ae2907cf2f5cf8492f7d18891733`。
+这是一次自适应 64-episode paired pilot，尚不是多 seed 的论文级统计复现；完整
+训练摘要、比较摘要和 on/off 逐 episode 证据见
+[`rescue_shielded_v37/`](rescue_shielded_v37/)。
+
 ## 方法与第一阶段 F1 ablation
 
 本目录发布 v35 第一阶段 F1 pilot 的关键结果。该阶段依据
@@ -223,6 +245,7 @@ winner。后续 staged experiment 解决了 F1 矛盾，并已冻结扩展到 F2
 - [`continuation_f2_summary.json`](continuation_f2_summary.json): 三个固定目标 continuation 的 gate、早停决定与 provenance。
 - [`unshielded_f2_summary.json`](unshielded_f2_summary.json): 无过滤 rollout、反事实 mean-CBF DAgger、模型哈希、paired 评估及训练 gate 负结果。
 - [`rescue_distill_v36/`](rescue_distill_v36/): matched filter-rescue 训练摘要、配对结果及留出 filter-off 逐 episode 证据。
+- [`rescue_shielded_v37/`](rescue_shielded_v37/): 当前固定协议 F2 最佳；包含 trust-region 训练、基线比较及 paired on/off 逐 episode 证据。
 
 大型 `.pt` checkpoint 没有提交进 Git；其 SHA-256 已写入
 `pilot_summary.json`，原始 checkpoint 和逐 episode 文件保留在 4080 artifact

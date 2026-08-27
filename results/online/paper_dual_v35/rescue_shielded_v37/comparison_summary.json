@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "method_id": "matched-filter-rescue-shielded-state-distillation-v37",
+  "source_git_commit": "f4a8e65e23b316fcb3a53d88fd5518568c4c7208",
+  "decision": "selected_as_current_stable_reset_f2_best",
+  "training": {
+    "seed": 201350282,
+    "num_envs": 32,
+    "filter_rescued_episode_count": 7,
+    "teacher_transition_count": 291,
+    "teacher_state_source": "filter_on_successful_rescue_trajectories",
+    "teacher_weighted_distance_before": 0.12940672068857154,
+    "teacher_weighted_distance_after": 0.12841751343929642,
+    "unprojected_reference_forward_kl": 0.004826840378029439,
+    "projected_reference_forward_kl": 0.0002498576048933243,
+    "parameter_interpolation_scale": 0.2275390625,
+    "elapsed_seconds": 49.087358696968295
+  },
+  "heldout_evaluation": {
+    "seed": 201350902,
+    "num_episodes_per_condition": 64,
+    "initial_state_signature": "bc4c4cd08aef0d22b69dbf985eaef78a226c402428c72b1ea431593dda42b22c",
+    "baseline": {
+      "filter_on_success_count": 48,
+      "filter_on_success_rate": 0.75,
+      "filter_off_success_count": 44,
+      "filter_off_success_rate": 0.6875
+    },
+    "candidate": {
+      "filter_on_success_count": 52,
+      "filter_on_success_rate": 0.8125,
+      "filter_off_success_count": 48,
+      "filter_off_success_rate": 0.75,
+      "filter_off_minus_on_percentage_points": -6.25,
+      "filter_on_success_delta_count": 4,
+      "filter_off_success_delta_count": 4,
+      "both_success_count": 39,
+      "filter_on_only_success_count": 13,
+      "filter_off_only_success_count": 9,
+      "both_failure_count": 3
+    }
+  },
+  "candidate_actor_sha256": "fdc872355f38a31f7c35d16e1ee5f151d156ae2907cf2f5cf8492f7d18891733",
+  "candidate_checkpoint_sha256": "483ea5f137cc6cdca8e098500f45e6e347f8f74085fa32b0656322813697a357",
+  "claim_boundary": "This is one adaptive 64-episode paired pilot. It reaches the preset F2 deployment gate, but it is not a multi-seed paper-level statistical reproduction."
+}
