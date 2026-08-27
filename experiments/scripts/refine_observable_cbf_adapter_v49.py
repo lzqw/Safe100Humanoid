@@ -42,6 +42,9 @@ from velocity_cbf_v34_protocol import CURRENT_CBF_MODE, PROTOCOL_ID
 
 
 METHOD_ID = "deployable-cbf-geometry-residual-adapter-v49"
+FULL_BATCH_SGD_METHOD_ID = (
+  "full-batch-sgd-deployable-cbf-geometry-residual-adapter-v92"
+)
 LEGACY_ACTOR_OBSERVATION_DIM = 405
 GEOMETRY_OBSERVATION_DIM = 5
 
@@ -64,6 +67,15 @@ def _parse_args() -> argparse.Namespace:
     default="shielded-success",
   )
   parser.add_argument("--actor-learning-rate", type=float, default=1.0e-3)
+  parser.add_argument(
+    "--adapter-optimizer",
+    choices=("adam", "sgd"),
+    default="adam",
+    help=(
+      "Optimize the five geometry columns with historical Adam or with "
+      "direction-preserving SGD. Use SGD with one full batch for v92."
+    ),
+  )
   parser.add_argument("--moving-kl-beta", type=float, default=0.1)
   parser.add_argument("--max-reference-kl", type=float, default=0.003)
   parser.add_argument("--epochs", type=int, default=8)
@@ -255,6 +267,19 @@ def _distribution_parameters(actor, flat: torch.Tensor):
   return tuple(value for value in actor.output_distribution_params)
 
 
+def _build_adapter_optimizer(
+  parameters: list[torch.nn.Parameter],
+  *,
+  optimizer_name: str,
+  learning_rate: float,
+) -> torch.optim.Optimizer:
+  if optimizer_name == "adam":
+    return torch.optim.Adam(parameters, lr=learning_rate)
+  if optimizer_name == "sgd":
+    return torch.optim.SGD(parameters, lr=learning_rate)
+  raise ValueError(f"unknown v49/v92 adapter optimizer {optimizer_name!r}")
+
+
 def _trust_metrics(
   actor,
   reference_actor,
@@ -337,6 +362,7 @@ def _train_adapter(
   *,
   eta: float,
   learning_rate: float,
+  optimizer_name: str,
   moving_kl_beta: float,
   max_reference_kl: float,
   epochs: int,
@@ -357,10 +383,20 @@ def _train_adapter(
   )
   first_layer.weight.requires_grad_(True)
   reference_weight = first_layer.weight.detach().clone()
-  optimizer = torch.optim.Adam([first_layer.weight], lr=learning_rate)
+  optimizer = _build_adapter_optimizer(
+    [first_layer.weight],
+    optimizer_name=optimizer_name,
+    learning_rate=learning_rate,
+  )
   eligible_indices = (weights > 0.0).nonzero(as_tuple=False).flatten()
   if not len(eligible_indices):
     raise RuntimeError("v49 has no successful shielded intervention targets")
+  if optimizer_name == "sgd" and (
+    epochs != 1 or batch_size < len(eligible_indices)
+  ):
+    raise ValueError(
+      "v92 SGD requires exactly one epoch and one full eligible batch"
+    )
   if not len(trust_observations):
     raise RuntimeError("v49 has no active geometry trust states")
   before_teacher = _teacher_metrics(
@@ -506,7 +542,7 @@ def _train_adapter(
   return {
     "actor_update_scope": "five-new-first-layer-input-columns-only",
     "trainable_parameter_count": int(first_layer.out_features * 5),
-    "optimizer": "adam",
+    "optimizer": optimizer_name,
     "optimizer_updates": update_count,
     "epochs": epochs,
     "batch_size": batch_size,
@@ -531,13 +567,14 @@ def _checkpoint_payload(
   source: dict[str, Any],
   state: dict[str, torch.Tensor],
   *,
+  method_id: str = METHOD_ID,
   metadata: dict[str, Any],
 ) -> dict[str, Any]:
   output = copy.deepcopy(source)
   output["actor_state_dict"] = {key: value.detach().cpu() for key, value in state.items()}
   output["actor_observation_interface"] = "legacy_405_plus_deployable_cbf_geometry_5"
   infos = dict(output.get("infos") or {})
-  infos[METHOD_ID] = metadata
+  infos[method_id] = metadata
   output["infos"] = infos
   return output
 
@@ -572,10 +609,15 @@ def main() -> None:
     raise FileExistsError(output)
   output.mkdir(parents=True)
   started = time.monotonic()
+  method_id = (
+    FULL_BATCH_SGD_METHOD_ID
+    if args.adapter_optimizer == "sgd"
+    else METHOD_ID
+  )
   _atomic_json(
     output / "execution_started.json",
     {
-      "method_id": METHOD_ID,
+      "method_id": method_id,
       "git_commit": _git(repo, "rev-parse", "HEAD"),
       "base_checkpoint_sha256": checkpoint_sha,
       "training_seeds": seeds,
@@ -651,6 +693,7 @@ def main() -> None:
     base_expanded_payload = _checkpoint_payload(
       source_payload,
       initial_state,
+      method_id=method_id,
       metadata={
         "boundary": "zero_adapter_base",
         "geometry": geometry,
@@ -762,6 +805,7 @@ def main() -> None:
       trust_observations,
       eta=args.teacher_eta,
       learning_rate=args.actor_learning_rate,
+      optimizer_name=args.adapter_optimizer,
       moving_kl_beta=args.moving_kl_beta,
       max_reference_kl=args.max_reference_kl,
       epochs=args.epochs,
@@ -782,6 +826,7 @@ def main() -> None:
     candidate_payload = _checkpoint_payload(
       source_payload,
       final_state,
+      method_id=method_id,
       metadata={
         "boundary": "trained_candidate",
         "geometry": geometry,
@@ -797,7 +842,7 @@ def main() -> None:
     _atomic_torch(candidate_path, candidate_payload)
     summary = {
       "schema_version": 1,
-      "method_id": METHOD_ID,
+      "method_id": method_id,
       "git_commit": _git(repo, "rev-parse", "HEAD"),
       "context": args.context,
       "base_checkpoint_sha256": checkpoint_sha,
@@ -814,6 +859,7 @@ def main() -> None:
       "teacher_eta": args.teacher_eta,
       "teacher_episode_scope": args.teacher_episode_scope,
       "actor_learning_rate": args.actor_learning_rate,
+      "adapter_optimizer": args.adapter_optimizer,
       "moving_kl_beta": args.moving_kl_beta,
       "max_reference_kl": args.max_reference_kl,
       "rescued_episode_count": rescued_episode_count,

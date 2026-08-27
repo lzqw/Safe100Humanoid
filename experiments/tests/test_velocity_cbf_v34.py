@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import torch
+import pytest
 
 REPO = Path(__file__).resolve().parents[2]
 SCRIPTS = REPO / "experiments/scripts"
@@ -25,6 +26,10 @@ MATH = _load("velocity_cbf_v34_math", "src/tasks/stairs_cbf/velocity_cbf_math.py
 PROTOCOL = _load(
     "velocity_cbf_v34_protocol_test",
     "experiments/scripts/velocity_cbf_v34_protocol.py",
+)
+ADAPTER = _load(
+    "observable_cbf_adapter_v49_test",
+    "experiments/scripts/refine_observable_cbf_adapter_v49.py",
 )
 
 
@@ -111,3 +116,16 @@ def test_v34_final_identity_seeds_are_absent_from_search_protocol() -> None:
     source = (SCRIPTS / "velocity_cbf_v34_protocol.py").read_text()
     assert "final_target_seed" not in source
     assert "final_d0_seed" not in source
+
+
+def test_v92_geometry_adapter_supports_direction_preserving_sgd() -> None:
+    parameter = torch.nn.Parameter(torch.zeros(2))
+    optimizer = ADAPTER._build_adapter_optimizer(
+        [parameter], optimizer_name="sgd", learning_rate=0.1
+    )
+    assert isinstance(optimizer, torch.optim.SGD)
+    assert ADAPTER.FULL_BATCH_SGD_METHOD_ID.endswith("adapter-v92")
+    with pytest.raises(ValueError, match="unknown v49/v92 adapter optimizer"):
+        ADAPTER._build_adapter_optimizer(
+            [parameter], optimizer_name="invalid", learning_rate=0.1
+        )
