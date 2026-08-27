@@ -4,10 +4,10 @@
 
 v76 改用 Eq. (27) reduced-order swing-foot proximity 与 next-riser clearance，
 aligned filter-on 从 70.18% 逐轮到 73.96%；但同 seed v77 只复现 70.79%，下一
-proposal 降到 68.82% 并回滚，故没有部署 gate。新增精确 telemetry 显示 nominal
-reward 为 `+0.766`–`+0.854/step`，margin penalty 却为 `-0.769`–`-0.680`，
-proximity 仅约 `-0.080`：真正主导更新的是未归一化 barrier margin。下一步检查
-论文 velocity control 与当前 position-setpoint action 的单位映射。完整证据见
+proposal 降到 68.82% 并回滚，故没有部署 gate。按 MJLab RewardManager 的
+`step_dt=0.02` 修正后，nominal reward 为 `+0.0203`–`+0.0216/step`，margin
+contribution 为 `-0.0154`–`-0.0136`，proximity 约 `-0.0016`；margin 占 CBF
+penalty 约 90%。完整证据与对先前未乘 `dt` 推断的更正见
 [`sloped_exact_v76_v77/`](sloped_exact_v76_v77/README.md)。
 
 ## 最新实验：v75 论文式 100% safety-filtered PPO

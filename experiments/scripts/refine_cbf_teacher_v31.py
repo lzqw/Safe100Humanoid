@@ -647,16 +647,43 @@ def _collect_round(
             )
             active_sum = cbf_reward_telemetry_sums["cbf_reward_active"]
             total_reward_mean = reward_sum / expected_transition_count
+            # MJLab multiplies every configured reward term by environment
+            # step_dt inside RewardManager.  The tensors emitted by the term
+            # function are pre-manager raw values, so apply the same scale
+            # before comparing them with the reward received by PPO.
+            reward_manager_dt_scale = float(runner.env.unwrapped.step_dt)
+            weighted_margin_mean = margin_mean * reward_manager_dt_scale
+            weighted_proximity_mean = proximity_mean * reward_manager_dt_scale
+            weighted_dual_mean = dual_mean * reward_manager_dt_scale
             rollout.update(
                 {
                     "rollout_cbf_reward_telemetry_transition_count": dual_count,
-                    "rollout_cbf_margin_reward_mean_per_transition": margin_mean,
-                    "rollout_cbf_proximity_reward_mean_per_transition": (
+                    "rollout_cbf_reward_manager_dt_scale": (
+                        reward_manager_dt_scale
+                    ),
+                    "rollout_cbf_margin_reward_raw_mean_per_transition": (
+                        margin_mean
+                    ),
+                    "rollout_cbf_proximity_reward_raw_mean_per_transition": (
                         proximity_mean
                     ),
-                    "rollout_cbf_dual_reward_mean_per_transition": dual_mean,
-                    "rollout_cbf_reward_component_sum_max_abs_error": abs(
+                    "rollout_cbf_dual_reward_raw_mean_per_transition": dual_mean,
+                    "rollout_cbf_margin_reward_mean_per_transition": (
+                        weighted_margin_mean
+                    ),
+                    "rollout_cbf_proximity_reward_mean_per_transition": (
+                        weighted_proximity_mean
+                    ),
+                    "rollout_cbf_dual_reward_mean_per_transition": (
+                        weighted_dual_mean
+                    ),
+                    "rollout_cbf_reward_raw_component_sum_max_abs_error": abs(
                         margin_mean + proximity_mean - dual_mean
+                    ),
+                    "rollout_cbf_reward_component_sum_max_abs_error": abs(
+                        weighted_margin_mean
+                        + weighted_proximity_mean
+                        - weighted_dual_mean
                     ),
                     "rollout_cbf_reward_active_fraction": (
                         active_sum / dual_count
@@ -668,7 +695,7 @@ def _collect_round(
                         / max(1.0, active_sum)
                     ),
                     "rollout_nominal_reward_mean_per_transition": (
-                        total_reward_mean - dual_mean
+                        total_reward_mean - weighted_dual_mean
                     ),
                 }
             )

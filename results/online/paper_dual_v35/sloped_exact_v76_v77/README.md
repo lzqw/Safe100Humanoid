@@ -24,21 +24,24 @@ filter-off 评估，当前正式最佳不变。
 
 ## reward 数值分解
 
-新增 telemetry 对每个 transition 精确分解 `r = r_nominal + r_margin +
-r_proximity`。v76 四轮范围为：
+新增 telemetry 对每个 transition 精确分解 CBF reward。原始 v76 JSON 中这些
+CBF 分量是 reward-term 函数返回值，而 `rollout_mean_reward_per_transition` 是
+MJLab RewardManager 乘 `step_dt=0.02` 后交给 PPO 的值；因此不能直接相减。
+下面是补上 manager `dt` 尺度后的正确分解：
 
 | 分量 | Mean / transition |
 |---|---:|
-| nominal task + regularization | `+0.766` 到 `+0.854` |
-| Eq. (22) barrier margin | **`-0.769` 到 `-0.680`** |
-| Eq. (23)/(27) foot proximity | `-0.081` 到 `-0.080` |
-| CBF reward total | `-0.850` 到 `-0.760` |
+| nominal task + regularization | `+0.0203` 到 `+0.0216` |
+| Eq. (22) barrier margin contribution | **`-0.0154` 到 `-0.0136`** |
+| Eq. (23)/(27) foot proximity contribution | `-0.00162` 到 `-0.00160` |
+| CBF reward contribution | `-0.0170` 到 `-0.0152` |
+| PPO 实收 total reward | `+0.00361` 到 `+0.00561` |
 
-分量重构最大误差仅 `2.18e-9`。barrier active fraction 为 27.15%–27.40%，active
-foot correction norm 为 0.0435–0.0494。结果推翻了“proximity 权重主导”的假设：
-即使 margin weight 为 1，未归一化 margin 仍占 CBF penalty 的约 90%，几乎逐步
-抵消整个 nominal reward。下一步必须检查论文 joint-velocity `v` 与当前 joint-position
-setpoint/action Jacobian 的单位映射，而不是继续搜索 proximity 权重。
+原始分量重构最大误差仅 `2.18e-9`。barrier active fraction 为 27.15%–27.40%，
+active foot correction norm 为 0.0435–0.0494。margin 仍占 CBF penalty 的约 90%，
+整个 CBF contribution 约为 nominal reward 的 73%–82%；此前未乘 manager `dt`
+而得到的“nominal +0.8/step”结论已在本说明中明确撤回。下一步按实测 9:1 比例
+平衡 velocity margin 与 one-step displacement proximity，而不是继续放大 proximity。
 
 ## 文件与溯源
 

@@ -129,6 +129,8 @@ def test_v76_records_exact_cbf_reward_decomposition() -> None:
     assert 'env.extras["cbf_reward_proximity_component"]' in reward
     assert '"rollout_cbf_reward_component_sum_max_abs_error"' in collection
     assert '"rollout_nominal_reward_mean_per_transition"' in collection
+    assert "reward_manager_dt_scale = float(runner.env.unwrapped.step_dt)" in collection
+    assert '"rollout_cbf_dual_reward_raw_mean_per_transition"' in collection
 
 
 def test_v30_residual_target_uses_round_reference_and_sample_correction() -> None:

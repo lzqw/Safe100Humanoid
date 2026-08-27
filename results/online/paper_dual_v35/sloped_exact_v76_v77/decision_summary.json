@@ -23,12 +23,17 @@
     "selected_actor_sha256": "05d1367150dff23f709a3a187ecb3124fc9b44737c3149a6644c4678900aa549"
   },
   "reward_decomposition": {
+    "correction_note": "Raw CBF term telemetry must be multiplied by MJLab RewardManager step_dt=0.02 before subtraction from rollout total reward.",
+    "reward_manager_dt_scale": 0.02,
     "telemetry_transition_count_per_round": 131072,
     "component_sum_max_abs_error_max": 2.175966073991731e-09,
-    "nominal_reward_mean_per_transition_by_round": [0.853691012467948, 0.7659908499609855, 0.7958287649519207, 0.8077144719048306],
-    "margin_reward_mean_per_transition_by_round": [-0.769230398776017, -0.6804423104558737, -0.7108065475363219, -0.7221731865074617],
-    "proximity_reward_mean_per_transition_by_round": [-0.08085071016330403, -0.07994208014224569, -0.08054466180237796, -0.08001052434201483],
-    "dual_reward_mean_per_transition_by_round": [-0.8500811096296275, -0.7603843905426402, -0.7913512096338309, -0.8021837130254426],
+    "raw_margin_reward_term_mean_per_transition_by_round": [-0.769230398776017, -0.6804423104558737, -0.7108065475363219, -0.7221731865074617],
+    "raw_proximity_reward_term_mean_per_transition_by_round": [-0.08085071016330403, -0.07994208014224569, -0.08054466180237796, -0.08001052434201483],
+    "raw_dual_reward_term_mean_per_transition_by_round": [-0.8500811096296275, -0.7603843905426402, -0.7913512096338309, -0.8021837130254426],
+    "weighted_nominal_reward_mean_per_transition_by_round": [0.020611525030913073, 0.020814147229198172, 0.020304579510766415, 0.021574433139896883],
+    "weighted_margin_reward_mean_per_transition_by_round": [-0.01538460797552034, -0.013608846209117474, -0.014216130950726437, -0.014443463730149233],
+    "weighted_proximity_reward_mean_per_transition_by_round": [-0.0016170142032660806, -0.0015988416028449137, -0.0016108932360475593, -0.0016002104868402967],
+    "weighted_dual_reward_mean_per_transition_by_round": [-0.01700162219259255, -0.015207687810852804, -0.015827024192676616, -0.01604367426050885],
     "active_fraction_by_round": [0.27152252197265625, 0.27397918701171875, 0.2720794677734375, 0.2723541259765625]
   },
   "deployment_filter_off_gate": {
