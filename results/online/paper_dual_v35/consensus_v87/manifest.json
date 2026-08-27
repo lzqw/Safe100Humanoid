@@ -1,0 +1,90 @@
+{
+  "base_actor_sha256": "b0a717cef34d128e4175226b86780e5210cc5287558d78cb5a44e095e37fb600",
+  "base_checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt",
+  "base_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "consensus_actor_sha256": "27e7bb145ba4aea1091e9bc106ed147c14b7095db845e5978013da1c8d6df364",
+  "consensus_checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/consensus_v87_910be4d/consensus.pt",
+  "consensus_checkpoint_sha256": "e1f538b5d528a7f656e59866ccc2ebf0ff403d4ed6660afdaa0a01e8952b71ac",
+  "critic_and_optimizer_source": "unchanged_base_checkpoint",
+  "diagnostics": {
+    "consensus_delta_l2_norm": 1.2819773575801747e-05,
+    "consensus_to_mean_member_norm_ratio": 0.5125913976934888,
+    "maximum_absolute_consensus_delta": 1.317821443080902e-06,
+    "maximum_pairwise_delta_cosine": 0.08810025132600989,
+    "mean_pairwise_delta_cosine": 0.016999833038908178,
+    "member_count": 4,
+    "member_delta_l2_norms": [
+      2.5009735363142823e-05,
+      2.5009629691861927e-05,
+      2.5009569078673803e-05,
+      2.5009994599710067e-05
+    ],
+    "minimum_pairwise_delta_cosine": -0.102980824195427,
+    "pairwise_delta_cosines": [
+      -0.027362046953590864,
+      0.042189828709033705,
+      0.07627584929026018,
+      0.025775940057163153,
+      0.08810025132600989,
+      -0.102980824195427
+    ],
+    "trainable_tensor_count": 8
+  },
+  "effective_transition_count": 1048576,
+  "members": [
+    {
+      "actor_sha256": "dd910a37584ec0c6f123f6a1a96a1b20eb709aa99713b850ac0fc40a50617a76",
+      "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/pooled_256_v82_7faad93_s201352625/round_01.pt",
+      "checkpoint_sha256": "15dc76e1224f00a2cdec3f0a01ef232e0e0f84785d2c4a00218a6e016670b244",
+      "rollout_filter_off_episode_count": 397,
+      "rollout_filter_off_success_count": 251,
+      "seed": 201352625
+    },
+    {
+      "actor_sha256": "ac9d6266cebd2f2c1d57461b0dc558c33676c2ea62c300c26e50de16336c4689",
+      "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/consensus_member_v87_ac102c2_s201352630/round_01.pt",
+      "checkpoint_sha256": "9b5f53a04a4a2f7a41c7222e2e269c740d676256cf20c457d17908a17680c3fe",
+      "rollout_filter_off_episode_count": 390,
+      "rollout_filter_off_success_count": 265,
+      "seed": 201352630
+    },
+    {
+      "actor_sha256": "611e75f2bcd101417dc96ff3a902f809e362aa0bf88a9657f0467fae91862b08",
+      "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/consensus_member_v87_ac102c2_s201352631/round_01.pt",
+      "checkpoint_sha256": "391d6a5146503e06db2dcdd778598e6ce06e65a55c7c8cbf831129feaffd5f4b",
+      "rollout_filter_off_episode_count": 389,
+      "rollout_filter_off_success_count": 259,
+      "seed": 201352631
+    },
+    {
+      "actor_sha256": "9f3386ccf19357749609d556e5e9a272316ef0e8089d152cdf7ca5bda02f17ac",
+      "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/consensus_member_v87_ac102c2_s201352632/round_01.pt",
+      "checkpoint_sha256": "c10a829ab03c70d51099ddd0a0428a1cfe7337b53e0a4e9254fbc0ca931a0809",
+      "rollout_filter_off_episode_count": 386,
+      "rollout_filter_off_success_count": 253,
+      "seed": 201352632
+    }
+  ],
+  "method_id": "paper-cbf-consensus-rollout-delta-v87",
+  "schema_version": "paper_dual_v35.v87.consensus.v1",
+  "training_configuration": {
+    "actor_gradient_accumulation_microbatches": 2,
+    "actor_learning_rate": 5e-05,
+    "candidate": "paper_stair_sloped_unit_balanced",
+    "context": "F2",
+    "filter_group_balanced_advantages": true,
+    "full_batch_sgd_actor": true,
+    "moving_kl_beta": 0.5,
+    "num_envs": 256,
+    "rollout_steps": 1024,
+    "teacher_arm": "A0",
+    "training_action_std": 0.05,
+    "training_filter_fraction": 0.25,
+    "training_filter_schedule": {
+      "counterfactual_cbf_reward_retained_when_unshielded": true,
+      "first_update_fraction": 0.25,
+      "name": "fixed"
+    },
+    "training_runtime_filter": true
+  }
+}

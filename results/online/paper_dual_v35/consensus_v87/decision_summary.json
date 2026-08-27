@@ -1,0 +1,31 @@
+{
+  "schema_version": "paper_dual_v35.v87.decision.v1",
+  "candidate": "four-rollout-consensus-delta-v87",
+  "decision": "reject_below_filter_off_gate",
+  "reason": "Averaging four independent 256-env PPO deltas reduced rollout noise, but the consensus actor achieved only 173/256 (67.58%) on the independent F2 filter-off gate.",
+  "implementation_commits": ["b6783f6", "910be4d"],
+  "base_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "effective_transition_count": 1048576,
+  "member_count": 4,
+  "delta_geometry": {
+    "mean_pairwise_cosine": 0.016999833038908178,
+    "minimum_pairwise_cosine": -0.102980824195427,
+    "maximum_pairwise_cosine": 0.08810025132600989,
+    "consensus_to_mean_member_norm_ratio": 0.5125913976934888
+  },
+  "consensus_checkpoint_sha256": "e1f538b5d528a7f656e59866ccc2ebf0ff403d4ed6660afdaa0a01e8952b71ac",
+  "consensus_actor_sha256": "27e7bb145ba4aea1091e9bc106ed147c14b7095db845e5978013da1c8d6df364",
+  "filter_off_gate": {
+    "seed": 201352633,
+    "episode_count": 256,
+    "success_count": 173,
+    "success_rate": 0.67578125,
+    "fall_count": 83,
+    "fall_rate": 0.32421875,
+    "threshold": 0.75,
+    "passed": false
+  },
+  "confirmation_gate_run": false,
+  "global_best_changed": false,
+  "next_hypothesis": "Use success-conditioned imitation of executed safe actions from fully filtered successful episodes, alongside PPO and moving KL, instead of relying on noisy reward-only policy gradients."
+}

@@ -13,6 +13,7 @@
 | v84 | Eq. (27) margin 0.1→0.25 后峰值仅 67.59%，第 4 轮回落并 rollback | [`mid_margin_v84/`](mid_margin_v84/) |
 | v85 | Eq. (23) proximity 1→2 后单轮 69.49%；同 actor pooled 526/777=67.70% | [`proximity_v85/`](proximity_v85/) |
 | v86 | 100% filtered execution 的 base pooled 789/1094=72.12%；两个 proposal 均回落 | [`full_filter_v86/`](full_filter_v86/) |
+| v87 | 四个 256-env PPO delta 共识；方向 cosine 0.017，独立 off gate 173/256=67.58% | [`consensus_v87/`](consensus_v87/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -22,8 +23,9 @@ SHA-256 为 `9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317`�
 v82/v83 已证明 microbatch 路径稳定：每轮多个等权 backward chunks、一次全局梯度裁剪、
 一次 SGD step，256-environment 训练没有再发生 OOM。v83 在新 seed 上先升后退，rollback
 后的 accepted actor 两次 rollout 合并仅 66.75%，说明同配置 continuation 已进入噪声平台。
-v86 使用论文的 100% filtered execution，同时 PPO 存 nominal action，但两个 proposal
-都不如未更新 base；base 的两次 filter-on rollout pooled 为 72.12%。下一步用四个独立
-256-environment rollout 从同一个 v79 actor 产生 PPO delta，再平均 delta 后评估。这把有效
-batch 扩到约一百万 transitions，更接近论文的大规模并行训练并降低单 seed 梯度噪声。
+v87 将有效 PPO batch 扩到 1,048,576 transitions。四个 delta 的平均 pairwise cosine 仅
+0.017，共识范数也只有单成员平均的 51.3%；独立 filter-off gate 仍只有 67.58%。这证明
+reward-only PPO 的局部梯度主要是 rollout 噪声，继续增加同类样本不会解决问题。下一步改为
+成功 filtered trajectory 的 safe-action 自模仿：只克隆真正到顶 episode 中执行过的安全
+动作，并保留 PPO、moving KL 和事务 rollback。
 
