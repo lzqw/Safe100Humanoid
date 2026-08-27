@@ -1,5 +1,14 @@
 # v35 Paper-Aligned Dual CBF-RL Pilot
 
+## 最新实验：v69 任务优先 CBF teacher 梯度投影
+
+v69 显式分开 filter-off PPO+KL 与 filter-on CBF teacher 的全参数梯度，并只在
+点积为负时投影 teacher。实测每轮 25%–62.5% minibatch 存在冲突，但 teacher
+梯度仍保留 98.3%–100%，说明相反方向分量不是主要瓶颈；deployment 梯度约为
+teacher 的 5 倍且仍全量触发裁剪。最佳对齐 off/on 为 **72.44%/72.39%**，未过
+75% 门槛，因此没有追加评估或上传 checkpoint。完整证据见
+[`task_priority_surgery_v69/`](task_priority_surgery_v69/README.md)。
+
 ## 最新实验：v68 混合过滤分流 actor 目标
 
 v68 将 filter-off transition 只用于 PPO actor，将 filter-on 环境的 CBF 介入只

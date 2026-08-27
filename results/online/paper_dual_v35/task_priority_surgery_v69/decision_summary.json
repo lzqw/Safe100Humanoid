@@ -1,0 +1,90 @@
+{
+  "schema_version": "paper_dual_v35.v69.decision.v1",
+  "candidate": "task-priority-cbf-teacher-gradient-surgery-v69",
+  "decision": "rejected_at_training_gate",
+  "reason": "The best rollout-aligned filter-off rate was 72.44%, below the predeclared 75% gate. Projection removed genuine conflicts, but retained 98.3%-100% of teacher norm and did not resolve deployment-gradient dominance.",
+  "source_commit": "2c60a251d2ce462b39c176129156a4b10fe4e83e",
+  "base_checkpoint_sha256": "3ec45cd196447901cf815d0fa1ff400af1b519ed2bb85c2fc179458ce3e81d3f",
+  "training": {
+    "seed": 201352616,
+    "num_envs": 128,
+    "filter_on_envs": 64,
+    "filter_off_envs": 64,
+    "rounds": 4,
+    "rollout_steps_per_round": 1024,
+    "elapsed_seconds": 131.9786700400291,
+    "actor_learning_rate": 2.5e-7,
+    "moving_kl_beta": 0.5,
+    "filter_group_balanced_advantages": true,
+    "split_filter_actor_objectives": true,
+    "task_priority_gradient_surgery": true,
+    "domain_randomization": false
+  },
+  "rollout_checkpoint_alignment": "round_N_rollout_uses_round_N_minus_1_checkpoint",
+  "aligned_rollouts": [
+    {
+      "rollout_round": 1,
+      "checkpoint_round": 0,
+      "filter_off_success_count": 90,
+      "filter_off_episode_count": 135,
+      "filter_off_success_rate": 0.6666666666666666,
+      "filter_on_success_count": 99,
+      "filter_on_episode_count": 135,
+      "filter_on_success_rate": 0.7333333333333333
+    },
+    {
+      "rollout_round": 2,
+      "checkpoint_round": 1,
+      "filter_off_success_count": 82,
+      "filter_off_episode_count": 126,
+      "filter_off_success_rate": 0.6507936507936508,
+      "filter_on_success_count": 97,
+      "filter_on_episode_count": 134,
+      "filter_on_success_rate": 0.7238805970149254
+    },
+    {
+      "rollout_round": 3,
+      "checkpoint_round": 2,
+      "filter_off_success_count": 82,
+      "filter_off_episode_count": 129,
+      "filter_off_success_rate": 0.6356589147286822,
+      "filter_on_success_count": 90,
+      "filter_on_episode_count": 141,
+      "filter_on_success_rate": 0.6382978723404256
+    },
+    {
+      "rollout_round": 4,
+      "checkpoint_round": 3,
+      "filter_off_success_count": 92,
+      "filter_off_episode_count": 127,
+      "filter_off_success_rate": 0.7244094488188977,
+      "filter_on_success_count": 97,
+      "filter_on_episode_count": 134,
+      "filter_on_success_rate": 0.7238805970149254
+    }
+  ],
+  "best_aligned_checkpoint": {
+    "checkpoint_round": 3,
+    "checkpoint_sha256": "edff41ebb9f5a978dc0411176d6c6ccd8c12d408629b86ced59d221b1d9471fc",
+    "actor_sha256": "e3c2d926dcc49f3bff523d0081ebf255fed8d6a4ab62c5c0d30d0741dadbc061",
+    "filter_off_success_rate": 0.7244094488188977,
+    "selected": false,
+    "uploaded": false
+  },
+  "gradient_diagnostics": {
+    "conflict_fraction_by_round": [0.625, 0.375, 0.5, 0.25],
+    "deployment_teacher_cosine_mean_by_round": [-0.09602259279927239, 0.04415090809925459, -0.05973116960376501, 0.004286974377464503],
+    "teacher_gradient_retained_fraction_by_round": [0.9833468124270439, 0.9998604655265808, 0.9920284822583199, 0.9926736131310463],
+    "deployment_gradient_norm_mean_by_round": [5.942562580108643, 6.0236228704452515, 5.368679702281952, 5.530851185321808],
+    "teacher_gradient_norm_mean_by_round": [1.1004615277051926, 1.1027915179729462, 1.075555682182312, 1.1110449731349945],
+    "actor_gradient_clipped_fraction_by_round": [1.0, 1.0, 1.0, 1.0]
+  },
+  "deployment_filter_off_gate": {
+    "planned_episode_count": 128,
+    "success_threshold": 0.75,
+    "run": false,
+    "reason": "training_gate_failed"
+  },
+  "current_best_changed": false,
+  "next_hypothesis": "After task-priority projection, norm-balance the retained teacher gradient to a capped fraction of deployment-gradient norm so safety supervision receives a stable share before global clipping."
+}
