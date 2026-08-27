@@ -30,6 +30,7 @@
 | v101 | task-metric 成功轨迹 residual 的 scale screen 达 49/64，但唯一 unseen filter-off gate 仅 40/64，拒绝 | [`task_metric_residual_v100_v101/`](task_metric_residual_v100_v101/) |
 | v102 | task-metric CBF 接入 paper-dual PPO；修复 mixed mask 路由后最佳对齐 off 133/197=67.51%，拒绝 | [`task_metric_paper_dual_v102/`](task_metric_paper_dual_v102/) |
 | v103 | 1 秒 bounded max swing credit 尺度稳定，但最佳对齐 off 131/193=67.88%，拒绝 | [`swing_credit_v103/`](swing_credit_v103/) |
+| v104 | 415-D persistent geometry 接入完整 PPO；8 轮最佳 off 132/200=66.00%，新增几何列几乎未被利用，拒绝 | [`persistent_paper_dual_v104/`](persistent_paper_dual_v104/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -125,3 +126,12 @@ v103 新增独立的 bounded full-swing credit：将当前 CBF intervention 向�
 四个对齐 filter-off rollout 为 66.33%、66.15%、67.88%、66.84%，最佳只比本次 base
 高 1.55 pp，未达到 75% 且低于 v79 历史正式结果。v103 已拒绝且未追加 gate；证据表明
 仅扩大 temporal credit 仍不能解决跨 rollout outcome gradient 不一致。
+
+v104 将 persistent bilateral next-riser geometry 正式接入完整 paper-dual PPO：v79
+actor 405→415、critic 838→848 都以零列 exact prefix expansion warm-start，且不再像
+v95 那样冻结 legacy actor。8 轮共 1,048,576 transitions，最佳更新后 checkpoint 的
+filter-off 仅 132/200=66.00%，比本次零列 baseline 高 0.52 pp，低于 v79 历史结果，
+因此未运行独立 gate。最佳 checkpoint 中新增 geometry 权重最大仅 2.23e-7，而深层
+MLP 变化达 8.88e-6，证明普通 PPO 几乎没有利用新增观测。下一步应保留完整 actor
+训练，同时显式放大 geometry-relative gradient 或增加与 episode outcome 对齐的几何
+auxiliary objective；不能再简单重复纯 adapter 或无差别全网络 PPO。

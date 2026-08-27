@@ -1,0 +1,32 @@
+{
+  "schema_version": "paper_dual_v35.v104.decision.v1",
+  "candidate": "persistent-geometry-complete-paper-dual-ppo-v104",
+  "context": "F2_18.4cm",
+  "deployment_filter": "off",
+  "gate_threshold": 0.75,
+  "training_transition_count": 1048576,
+  "aligned_rollout_count": 8,
+  "zero_column_baseline": {
+    "checkpoint_round": 0,
+    "success_count": 129,
+    "episode_count": 197,
+    "success_rate": 0.6548223350253807
+  },
+  "best_aligned_result": {
+    "rollout_round": 6,
+    "checkpoint_round": 5,
+    "success_count": 132,
+    "episode_count": 200,
+    "success_rate": 0.66,
+    "improvement_percentage_points_over_run_baseline": 0.5177664974619254,
+    "checkpoint_sha256": "20d9ae29cd82c5ab59c57409d6fc6a0451660a61ddb3d074aba0b117edcfcf20",
+    "actor_sha256": "ef1a7e3008f568eef6b02f88983febce6903dc38c928f68632de80566cd10ada"
+  },
+  "historical_best_success_rate": 0.7202072538860104,
+  "historical_best_version": "v79",
+  "training_threshold_passed": false,
+  "independent_gate_run": false,
+  "accepted": false,
+  "global_selection": "v79",
+  "reason": "Best aligned filter-off result was 66.00%, below both the 75% gate and v79's historical 72.02%."
+}
