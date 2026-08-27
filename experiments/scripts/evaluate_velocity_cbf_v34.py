@@ -41,6 +41,15 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--parameters-json")
     parser.add_argument("--runtime-filter", choices=("on", "off"), required=True)
+    parser.add_argument(
+        "--clearance-barrier-slope",
+        type=float,
+        default=CLEARANCE_BARRIER_SLOPE,
+        help=(
+            "CBF x-z boundary slope. Use 0 for the paper's horizontal "
+            "next-riser hyperplane; the historical protocol uses 0.8."
+        ),
+    )
     parser.add_argument("--num-envs", type=int, required=True)
     parser.add_argument("--num-episodes", type=int, required=True)
     parser.add_argument("--seed", type=int, required=True)
@@ -100,6 +109,8 @@ def main() -> None:
     args = _parse_args()
     if args.num_envs != args.num_episodes or args.num_envs < 1:
         raise ValueError("v34 uses one initial episode per environment")
+    if not 0.0 <= args.clearance_barrier_slope <= 2.0:
+        raise ValueError("v34 clearance barrier slope must lie in [0, 2]")
     repo = args.repo.resolve()
     checkpoint = args.checkpoint.resolve()
     config_path = args.search_config.resolve()
@@ -142,7 +153,7 @@ def main() -> None:
         context=args.context,
         runtime_filter=runtime_filter,
         context_spec=environment_parameters(args.context),
-        clearance_barrier_slope=CLEARANCE_BARRIER_SLOPE,
+        clearance_barrier_slope=args.clearance_barrier_slope,
         recovery_distance_m=RECOVERY_DISTANCE_M,
         filter_alpha=FILTER_ALPHA,
     )
