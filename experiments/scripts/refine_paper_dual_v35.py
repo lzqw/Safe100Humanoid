@@ -502,17 +502,30 @@ def main() -> None:
     raise ValueError("distillation-only actor requires deterministic mean labels")
   if not 0.0 <= args.success_local_kl_beta <= 4.0:
     raise ValueError("success-local KL beta must lie in [0, 4]")
-  if args.success_local_kl_beta > 0.0 and (
-    not args.deterministic_mean_teacher
-    or args.failure_only_mean_teacher
-    or args.success_only_mean_teacher
-    or args.failure_focused_actor
-    or args.distill_only_actor
-    or args.training_runtime_filter != "off"
-  ):
-    raise ValueError(
-      "success-local KL requires unshielded all-intervention mean-CBF training"
+  if args.success_local_kl_beta > 0.0:
+    if (
+      not args.deterministic_mean_teacher
+      or args.failure_only_mean_teacher
+      or args.success_only_mean_teacher
+      or args.failure_focused_actor
+    ):
+      raise ValueError(
+        "success-local KL requires all-intervention deterministic-mean labels"
+      )
+    shielded_distillation = (
+      args.distill_only_actor
+      and args.training_runtime_filter == "on"
+      and args.training_filter_schedule == "fixed"
+      and training_filter_fraction == 1.0
     )
+    unshielded_ppo = (
+      not args.distill_only_actor and args.training_runtime_filter == "off"
+    )
+    if not (shielded_distillation or unshielded_ppo):
+      raise ValueError(
+        "success-local KL requires either unshielded PPO or fully shielded "
+        "distillation-only training"
+      )
   if (
     args.training_runtime_filter == "off"
     and not args.deterministic_mean_teacher

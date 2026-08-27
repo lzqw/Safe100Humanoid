@@ -157,6 +157,16 @@ def test_v35_joint_top_and_fall_terminal_gets_success_priority() -> None:
     assert not bool((failed & successful).any())
 
 
+def test_v66_allows_success_local_kl_for_shielded_distillation_only() -> None:
+    source = (REPO / "experiments/scripts/refine_paper_dual_v35.py").read_text()
+    assert "shielded_distillation = (" in source
+    assert "args.distill_only_actor" in source
+    assert 'args.training_runtime_filter == "on"' in source
+    assert 'args.training_filter_schedule == "fixed"' in source
+    assert "training_filter_fraction == 1.0" in source
+    assert "shielded_distillation or unshielded_ppo" in source
+
+
 def test_v35_filter_dropout_mask_is_balanced_and_rotates() -> None:
     first = MATH.rotating_environment_filter_mask(
         4, 0.5, 1, device="cpu"

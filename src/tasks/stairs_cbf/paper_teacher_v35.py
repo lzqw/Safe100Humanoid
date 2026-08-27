@@ -112,7 +112,11 @@ def configure_v35_mean_teacher_telemetry(
       else "all_transitions"
     ),
     "successful_episode_actor_objective": (
-      "mean_CBF_distillation_plus_global_round_reference_KL"
+      (
+        "mean_CBF_distillation_plus_global_and_success_local_round_reference_KL"
+        if success_local_kl_beta > 0.0
+        else "mean_CBF_distillation_plus_global_round_reference_KL"
+      )
       if distill_only_actor
       else "round_reference_KL_only"
       if failure_focused_actor
