@@ -514,6 +514,19 @@ def _collect_round(
             "risers": [],
         }
     reward_sum = 0.0
+    cbf_reward_telemetry_names = (
+        "cbf_reward_margin_component",
+        "cbf_reward_proximity_component",
+        "cbf_reward_dual_component",
+        "cbf_reward_active",
+        "cbf_reward_correction_norm",
+    )
+    cbf_reward_telemetry_sums = {
+        name: 0.0 for name in cbf_reward_telemetry_names
+    }
+    cbf_reward_telemetry_counts = {
+        name: 0 for name in cbf_reward_telemetry_names
+    }
     with torch.no_grad():
         for _ in range(runner.cfg["num_steps_per_env"]):
             raw_actions = runner.alg.act(obs)
@@ -524,6 +537,15 @@ def _collect_round(
             )
             check_nan(next_obs, rewards, dones)
             extras = dict(extras)
+            for name in cbf_reward_telemetry_names:
+                value = extras.get(name)
+                if value is None:
+                    continue
+                value = torch.as_tensor(value)
+                if not bool(torch.isfinite(value).all()):
+                    raise RuntimeError(f"non-finite CBF reward telemetry: {name}")
+                cbf_reward_telemetry_sums[name] += float(value.sum())
+                cbf_reward_telemetry_counts[name] += int(value.numel())
             if before_process_env_step is not None:
                 before_process_env_step(runner, dones, extras)
             episode_returns += rewards
@@ -599,6 +621,57 @@ def _collect_round(
             / (n * runner.cfg["num_steps_per_env"]),
             "performance_gate_used": False,
         }
+        dual_count = cbf_reward_telemetry_counts[
+            "cbf_reward_dual_component"
+        ]
+        expected_transition_count = n * runner.cfg["num_steps_per_env"]
+        if dual_count:
+            if any(
+                count != expected_transition_count
+                for count in cbf_reward_telemetry_counts.values()
+            ):
+                raise RuntimeError(
+                    "CBF reward telemetry did not cover every transition"
+                )
+            margin_mean = (
+                cbf_reward_telemetry_sums["cbf_reward_margin_component"]
+                / dual_count
+            )
+            proximity_mean = (
+                cbf_reward_telemetry_sums["cbf_reward_proximity_component"]
+                / dual_count
+            )
+            dual_mean = (
+                cbf_reward_telemetry_sums["cbf_reward_dual_component"]
+                / dual_count
+            )
+            active_sum = cbf_reward_telemetry_sums["cbf_reward_active"]
+            total_reward_mean = reward_sum / expected_transition_count
+            rollout.update(
+                {
+                    "rollout_cbf_reward_telemetry_transition_count": dual_count,
+                    "rollout_cbf_margin_reward_mean_per_transition": margin_mean,
+                    "rollout_cbf_proximity_reward_mean_per_transition": (
+                        proximity_mean
+                    ),
+                    "rollout_cbf_dual_reward_mean_per_transition": dual_mean,
+                    "rollout_cbf_reward_component_sum_max_abs_error": abs(
+                        margin_mean + proximity_mean - dual_mean
+                    ),
+                    "rollout_cbf_reward_active_fraction": (
+                        active_sum / dual_count
+                    ),
+                    "rollout_cbf_reward_correction_norm_mean_active": (
+                        cbf_reward_telemetry_sums[
+                            "cbf_reward_correction_norm"
+                        ]
+                        / max(1.0, active_sum)
+                    ),
+                    "rollout_nominal_reward_mean_per_transition": (
+                        total_reward_mean - dual_mean
+                    ),
+                }
+            )
         for name, stats in group_stats.items():
             count = int(stats["episode_count"])
             prefix = f"rollout_{name}"

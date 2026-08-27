@@ -64,6 +64,7 @@ def _parse_args() -> argparse.Namespace:
       "raw_demo",
       "paper_stair_exact",
       "paper_stair_demo_scale",
+      "paper_stair_sloped_exact",
       "paper_stair_sloped_demo_scale",
     ),
     required=True,
@@ -487,7 +488,10 @@ def main() -> None:
   ):
     raise ValueError("paper stair candidates require the horizontal barrier (slope 0)")
   if (
-    args.candidate == "paper_stair_sloped_demo_scale"
+    args.candidate in {
+      "paper_stair_sloped_exact",
+      "paper_stair_sloped_demo_scale",
+    }
     and args.clearance_barrier_slope <= 0.0
   ):
     raise ValueError("sloped paper stair candidate requires a positive barrier slope")
@@ -794,7 +798,9 @@ def main() -> None:
     shift["physical_parameter_randomization_changed"] = True
   shift["training_domain_randomization"] = training_domain_randomization
   if args.candidate in {
+    "paper_stair_exact",
     "paper_stair_demo_scale",
+    "paper_stair_sloped_exact",
     "paper_stair_sloped_demo_scale",
   }:
     clearance = env_cfg.rewards["foot_clearance"]

@@ -260,6 +260,15 @@ PAPER_DUAL_CANDIDATES: dict[str, dict[str, float | str]] = {
     "margin_weight": 10.0,
     "intervention_weight": 100.0,
   },
+  "paper_stair_sloped_exact": {
+    # Eq. (27) uses the reduced-order swing-foot displacement with unit
+    # component weights.  Retain the task-compatible anticipatory barrier
+    # needed by the 18.4 cm target stair instead of changing reward geometry.
+    "correction_space": "foot_task",
+    "sigma": 0.05,
+    "margin_weight": 1.0,
+    "intervention_weight": 1.0,
+  },
   "paper_stair_sloped_demo_scale": {
     # Keep the paper's reduced-order swing-foot correction and public-demo
     # reward scale, but pair it with the task-compatible sloped clearance CBF.

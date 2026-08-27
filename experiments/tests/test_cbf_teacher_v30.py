@@ -120,6 +120,17 @@ def test_v75_full_batch_allows_paper_fully_filtered_execution() -> None:
     assert "paper_ppo_storage_uses_nominal_policy_action" in algorithm
 
 
+def test_v76_records_exact_cbf_reward_decomposition() -> None:
+    reward = (REPO / "src/tasks/stairs_cbf/mdp.py").read_text()
+    collection = (
+        REPO / "experiments/scripts/refine_cbf_teacher_v31.py"
+    ).read_text()
+    assert 'env.extras["cbf_reward_margin_component"]' in reward
+    assert 'env.extras["cbf_reward_proximity_component"]' in reward
+    assert '"rollout_cbf_reward_component_sum_max_abs_error"' in collection
+    assert '"rollout_nominal_reward_mean_per_transition"' in collection
+
+
 def test_v30_residual_target_uses_round_reference_and_sample_correction() -> None:
     reference = torch.tensor(((1.0, -2.0),), requires_grad=True)
     raw = torch.tensor(((0.2, 0.4),), requires_grad=True)

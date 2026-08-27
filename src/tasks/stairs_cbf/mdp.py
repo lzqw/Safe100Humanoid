@@ -219,15 +219,30 @@ def cbf_dual_reward(
     torch.exp(-correction_norm.square() / sigma**2) - 1.0
   )
   active_float = active.to(term.psi_nominal.dtype)
+  active_margin_component = margin_component * active_float
+  active_imitation_component = imitation_component * active_float
   active_count = active_float.sum().clamp_min(1.0)
   env.extras["log"]["CBF/reward_margin_component_mean"] = (
-    (margin_component * active_float).sum() / active_count
+    active_margin_component.sum() / active_count
   )
   env.extras["log"]["CBF/reward_imitation_component_mean"] = (
-    (imitation_component * active_float).sum() / active_count
+    active_imitation_component.sum() / active_count
   )
   env.extras["log"]["CBF/reward_correction_norm_mean"] = (
     (correction_norm * active_float).sum() / active_count
+  )
+  # Keep exact per-environment values outside the scalar logger so short
+  # experiments can audit the numerical decomposition of Eq. (22)-(23).
+  env.extras["cbf_reward_margin_component"] = (
+    active_margin_component.detach().clone()
+  )
+  env.extras["cbf_reward_proximity_component"] = (
+    active_imitation_component.detach().clone()
+  )
+  env.extras["cbf_reward_dual_component"] = value.detach().clone()
+  env.extras["cbf_reward_active"] = active_float.detach().clone()
+  env.extras["cbf_reward_correction_norm"] = (
+    (correction_norm * active_float).detach().clone()
   )
   _record_online_cbf_telemetry(env, term, dual_reward=value)
   return value
