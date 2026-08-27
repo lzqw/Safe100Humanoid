@@ -33,6 +33,7 @@ from paper_transactional_v73_math import (
   adaptive_actor_learning_rate,
   rollout_candidate_decision,
 )
+from velocity_cbf_v34_protocol import CURRENT_CBF_MODE, OPTIMIZED_CBF_MODE
 from refine_cbf_teacher_v31 import (
   _collect_round,
   _configure_algorithm,
@@ -77,6 +78,19 @@ def _parse_args() -> argparse.Namespace:
     type=float,
     default=CLEARANCE_BARRIER_SLOPE,
     help="Use 0 for the paper's horizontal next-riser hyperplane.",
+  )
+  parser.add_argument(
+    "--cbf-mode",
+    choices=(CURRENT_CBF_MODE, OPTIMIZED_CBF_MODE),
+    default=CURRENT_CBF_MODE,
+    help=(
+      "Safety projection used by the paper-dual rollout. The default keeps "
+      "all historical v35 runs unchanged."
+    ),
+  )
+  parser.add_argument(
+    "--cbf-parameters-json",
+    help="Frozen v34 task-metric parameters when --cbf-mode is optimized.",
   )
   parser.add_argument("--teacher-arm", choices=("A0", "A1", "A2"), default="A0")
   parser.add_argument(
@@ -539,6 +553,41 @@ def main() -> None:
     raise ValueError("v35 rounds, environments, and rollout steps must be positive")
   if not 0.0 <= args.clearance_barrier_slope <= 2.0:
     raise ValueError("v35 clearance barrier slope must lie in [0, 2]")
+  cbf_parameters = None
+  if args.cbf_mode == OPTIMIZED_CBF_MODE:
+    if args.cbf_parameters_json is None:
+      raise ValueError("task-metric v35 training requires CBF parameters")
+    try:
+      cbf_parameters = json.loads(args.cbf_parameters_json)
+    except json.JSONDecodeError as exc:
+      raise ValueError("v35 CBF parameters must be valid JSON") from exc
+    if not isinstance(cbf_parameters, dict):
+      raise ValueError("v35 CBF parameters must be a JSON object")
+    required_cbf_parameters = {
+      "alpha",
+      "barrier_slope",
+      "swing_knee_weight",
+      "swing_ankle_pitch_weight",
+      "swing_hip_pitch_weight",
+      "stance_leg_weight",
+      "hip_roll_yaw_weight",
+      "other_joint_weight",
+      "lambda_x",
+      "lambda_s",
+      "toe_margin",
+      "top_clearance",
+    }
+    if set(cbf_parameters) != required_cbf_parameters:
+      raise ValueError("v35 task-metric CBF parameter fields differ")
+    if not math.isclose(
+      float(cbf_parameters["barrier_slope"]),
+      args.clearance_barrier_slope,
+      rel_tol=0.0,
+      abs_tol=1.0e-12,
+    ):
+      raise ValueError("v35 reward and task-metric CBF barrier slopes differ")
+  elif args.cbf_parameters_json is not None:
+    raise ValueError("current v35 CBF does not accept optimized parameters")
   if (
     args.candidate in {"paper_stair_exact", "paper_stair_demo_scale"}
     and args.clearance_barrier_slope != 0.0
@@ -858,6 +907,7 @@ def main() -> None:
     rotating_environment_filter_mask,
     target_terrain_floor_schedule,
   )
+  from src.tasks.stairs_cbf.velocity_cbf_action import configure_v34_cbf
 
   training_filter_fractions = (
     linear_filter_fraction_schedule(
@@ -884,11 +934,21 @@ def main() -> None:
     recovery_distance_m=RECOVERY_DISTANCE_M,
     filter_alpha=FILTER_ALPHA,
   )
+  training_cbf = configure_v34_cbf(
+    env_cfg,
+    mode=args.cbf_mode,
+    runtime_filter=training_runtime_filter,
+    parameters=cbf_parameters,
+    measure_compute_time=False,
+  )
+  training_cbf["paper_dual_execution_fraction"] = training_filter_fraction
+  shift["training_cbf"] = training_cbf
   reward = configure_paper_dual_reward(
     env_cfg,
     args.candidate,
     runtime_filter_during_training=training_runtime_filter,
   )
+  reward["training_cbf"] = training_cbf
   training_domain_randomization = (
     configure_paper_training_domain_randomization(
       env_cfg,
@@ -1191,6 +1251,7 @@ def main() -> None:
         "distill_only_actor": args.distill_only_actor,
         "success_local_kl_beta": args.success_local_kl_beta,
         "training_runtime_filter": training_runtime_filter,
+        "training_cbf": training_cbf,
         "training_filter_fraction": training_filter_fraction,
         "training_filter_schedule": filter_schedule,
         "filter_group_balanced_advantages": (
@@ -1494,6 +1555,7 @@ def main() -> None:
           "distill_only_actor": args.distill_only_actor,
           "success_local_kl_beta": args.success_local_kl_beta,
           "training_runtime_filter": training_runtime_filter,
+          "training_cbf": training_cbf,
           "training_filter_fraction": training_filter_fraction,
           "training_filter_schedule": filter_schedule,
           "filter_group_balanced_advantages": (
@@ -1573,6 +1635,7 @@ def main() -> None:
         "round_N_rollout_uses_round_N_minus_1_checkpoint"
       ),
       "training_runtime_filter": training_runtime_filter,
+      "training_cbf": training_cbf,
       "training_filter_fraction": training_filter_fraction,
       "training_filter_schedule": filter_schedule,
       "filter_group_balanced_advantages": (
