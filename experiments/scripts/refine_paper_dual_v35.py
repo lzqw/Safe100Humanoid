@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import random
 import subprocess
 import sys
 import time
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
 from typing import Any
 
@@ -62,6 +63,13 @@ def _parse_args() -> argparse.Namespace:
     default=0.1,
     help="Full-action A1 loss weight; 0.1 preserves the frozen v31 arm.",
   )
+  parser.add_argument(
+    "--height-curriculum",
+    action="store_true",
+    help="Train uniform contexts on ordered stair heights up to the target.",
+  )
+  parser.add_argument("--curriculum-start-height", type=float, default=0.13)
+  parser.add_argument("--curriculum-rows", type=int, default=5)
   parser.add_argument("--rounds", type=int, default=8)
   parser.add_argument("--num-envs", type=int, default=64)
   parser.add_argument("--rollout-steps", type=int, default=1024)
@@ -120,12 +128,82 @@ def _set_teacher_arm(
   return parameters
 
 
+def _configure_height_curriculum(
+  env_cfg,
+  shift: dict[str, Any],
+  *,
+  start_height: float,
+  num_rows: int,
+) -> dict[str, Any]:
+  """Turn one fixed uniform target into an ordered training curriculum."""
+  from mjlab.managers.curriculum_manager import CurriculumTermCfg
+
+  from src.tasks.velocity.mdp.curriculums import terrain_levels_vel
+
+  target_height = shift.get("riser_height_m")
+  if target_height is None or shift.get("riser_profile_m") is not None:
+    raise ValueError("v35 height curriculum currently requires a uniform context")
+  start = float(start_height)
+  target = float(target_height)
+  if not math.isfinite(start) or not 0.02 <= start < target:
+    raise ValueError("curriculum start height must lie in [0.02, target)")
+  if num_rows < 2:
+    raise ValueError("height curriculum requires at least two terrain rows")
+  terrain_cfg = env_cfg.scene.terrain
+  generator = None if terrain_cfg is None else terrain_cfg.terrain_generator
+  if generator is None or set(generator.sub_terrains) != {"forward_stairs"}:
+    raise RuntimeError("v35 curriculum requires one forward-stair terrain")
+  stairs = generator.sub_terrains["forward_stairs"]
+  if stairs.step_height_profile is not None:
+    raise RuntimeError("v35 curriculum cannot vary an explicit riser profile")
+  generator.sub_terrains["forward_stairs"] = replace(
+    stairs,
+    step_height_range=(start, target),
+    step_height_profile=None,
+  )
+  generator.curriculum = True
+  generator.num_rows = int(num_rows)
+  terrain_cfg.max_init_terrain_level = 0
+  env_cfg.curriculum = {
+    "terrain_levels": CurriculumTermCfg(
+      func=terrain_levels_vel,
+      params={"command_name": "twist"},
+    )
+  }
+  return {
+    "enabled": True,
+    "start_height_m": start,
+    "target_height_m": target,
+    "num_rows": int(num_rows),
+    "initial_level": 0,
+    "promotion_rule": "terrain_levels_vel",
+    "exact_per_level_cbf_geometry": True,
+    "target_evaluation_remains_fixed": True,
+  }
+
+
+def _terrain_level_metrics(base_env, *, num_rows: int) -> dict[str, Any]:
+  terrain = base_env.scene.terrain
+  if terrain is None or terrain.terrain_levels is None:
+    raise RuntimeError("height curriculum terrain levels are unavailable")
+  levels = terrain.terrain_levels.detach()
+  histogram = torch.bincount(levels, minlength=num_rows)
+  return {
+    "terrain_level_mean": float(levels.float().mean()),
+    "terrain_level_min": int(levels.min()),
+    "terrain_level_max": int(levels.max()),
+    "terrain_level_histogram": [int(value) for value in histogram.tolist()],
+  }
+
+
 def main() -> None:
   args = _parse_args()
   if args.rounds < 1 or args.num_envs < 1 or args.rollout_steps < 1:
     raise ValueError("v35 rounds, environments, and rollout steps must be positive")
   if not 0.0 < args.a1_teacher_weight <= 0.1:
     raise ValueError("v35 A1 teacher weight must be in (0, 0.1]")
+  if args.curriculum_rows < 2:
+    raise ValueError("v35 curriculum rows must be at least two")
   teacher_arms = _teacher_arms_by_round(
     rounds=args.rounds,
     teacher_arm=args.teacher_arm,
@@ -176,6 +254,14 @@ def main() -> None:
     filter_alpha=FILTER_ALPHA,
   )
   reward = configure_paper_dual_reward(env_cfg, args.candidate)
+  height_curriculum = None
+  if args.height_curriculum:
+    height_curriculum = _configure_height_curriculum(
+      env_cfg,
+      shift,
+      start_height=args.curriculum_start_height,
+      num_rows=args.curriculum_rows,
+    )
   env_cfg.scene.num_envs = args.num_envs
   env_cfg.seed = args.seed
   agent_cfg = load_rl_cfg(TASK_ID)
@@ -212,6 +298,7 @@ def main() -> None:
         "teacher_arm": teacher_arms[0],
         "teacher_parameters": initial_teacher_parameters,
         "teacher_arms_by_round": teacher_arms,
+        "height_curriculum": height_curriculum,
       },
     )
     for round_index in range(1, args.rounds + 1):
@@ -225,6 +312,10 @@ def main() -> None:
       start_hash = actor_state_sha256(actor_state(runner.alg.actor))
       round_started = time.monotonic()
       metrics = _collect_round(runner)
+      if height_curriculum is not None:
+        metrics.update(
+          _terrain_level_metrics(base_env, num_rows=args.curriculum_rows)
+        )
       end_hash = actor_state_sha256(actor_state(runner.alg.actor))
       record = {
         "round": round_index,
@@ -249,6 +340,7 @@ def main() -> None:
           "teacher_arm": round_teacher_arm,
           "teacher_parameters": round_teacher_parameters,
           "teacher_arms_by_round": teacher_arms,
+          "height_curriculum": height_curriculum,
         },
       )
       _atomic_json(output_dir / "round_metrics.json", records)
@@ -270,6 +362,7 @@ def main() -> None:
       ),
       "a1_teacher_weight": args.a1_teacher_weight,
       "teacher_arms_by_round": teacher_arms,
+      "height_curriculum": height_curriculum,
       "seed": args.seed,
       "rounds": args.rounds,
       "num_envs": args.num_envs,
