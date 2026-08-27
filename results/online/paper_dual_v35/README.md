@@ -314,6 +314,33 @@ v48 将每批从 `16×512` 扩大为 `32×1024`，总数据增加到 196,608 tra
 尽管离线信号明显更一致，同一开发 seed 的 filter-off 仍从 base 46/64 降到
 44/64。因此停止继续放大局部 GAE surrogate；这条负结果也收录在同一证据目录。
 
+#### Deployable CBF-geometry actor adapter（单 seed paired gate 通过）
+
+v48 的大 batch 已把 paired-seed 梯度余弦提高到正值，但部署结果仍下降。进一步
+审计发现根本的信息缺口：runtime CBF 使用摆动脚尖与下一台阶边缘的相对 x/z
+几何，而 405-D actor 只有五帧本体感知历史，没有该相对位置。v49 因此追加 5 个
+可部署量：水平/垂直 clearance、sloped barrier、摆动脚侧别和 geometric-active。
+旧 actor 的新增输入列严格初始化为零；CBF 未激活时五个量也全为零，所以这些状态
+中的候选动作与 base 完全一致。
+
+3 个训练 seed × 8 环境的配对短训练耗时 89.1 秒。最初模仿所有 shielded-success
+轨迹的 candidate 在 seed `201350932` 上只有 44/64，低于 base 46/64。v49b 随后
+只学习同初始状态下“off 失败、on 成功”的 matched-rescue 轨迹，共 190 个 teacher
+transition；教师方向余弦从 0 提高到 0.8355，所有旧 actor 参数保持不变。
+
+| F2 stable-reset seed `201350932` | Filter on | Filter off | On - off | Decision |
+|---|---:|---:|---:|---|
+| 405-D base control | not rerun | 71.88% (46/64) | — | comparison control |
+| v49 all-success teacher | not run | 68.75% (44/64) | — | rejected |
+| v49b rescued-only geometry adapter | **79.69% (51/64)** | **75.00% (48/64)** | 4.69 pp | paired gate passed |
+
+这是当前序列中首个在 F2 同时达到 filter-off 75% 且 paired filter-on 也高于
+75% 的 actor，filter-off 相对精确 base 对照增加 2 个成功 episode。但结果仍只有
+一个 64-episode seed，尚未通过 untouched 多 seed 稳健性确认，因此记录为
+provisional threshold hit，而不是宣称整个论文复现完成。checkpoint、训练摘要和
+逐 episode 证据见
+[`observable_cbf_adapter_v49/`](observable_cbf_adapter_v49/)。
+
 ## 方法与第一阶段 F1 ablation
 
 本目录发布 v35 第一阶段 F1 pilot 的关键结果。该阶段依据
@@ -361,10 +388,11 @@ winner。后续 staged experiment 解决了 F1 矛盾，并已冻结扩展到 F2
 - [`elite_self_imitation_v43_6seed/`](elite_self_imitation_v43_6seed/): 六训练 seed 合并、KL 放大负结果及稳定 seed gate。
 - [`outcome_ppo_v44_v45/`](outcome_ppo_v44_v45/): episode-balanced outcome PPO、Adam 泛化失败、SGD trust-region 最佳点与独立 base 对照。
 - [`multi_rollout_gae_v46_v47/`](multi_rollout_gae_v46_v47/): 配对 on/off CBF-dual GAE、两级梯度共识及与 base 持平的独立 gate。
+- [`observable_cbf_adapter_v49/`](observable_cbf_adapter_v49/): 410-D 可部署 CBF 几何 actor、被拒绝的 all-success ablation、达到 75% 的 rescued-only paired gate、逐 episode 证据与候选 checkpoint。
 
-大型 `.pt` checkpoint 没有提交进 Git；其 SHA-256 已写入
-`pilot_summary.json`，原始 checkpoint 和逐 episode 文件保留在 4080 artifact
-目录中。这个结果包只包含足以审计当前判断的聚合记录，不是多种子正式评估。
+历史大型 `.pt` checkpoint 没有提交进 Git；其 SHA-256 已写入相应 summary。
+v49b 的 15 MB 候选 checkpoint 已随结果目录提交，便于直接复现新的 410-D actor。
+该结果仍不是多种子正式评估。
 
 ## Reproduction boundary
 
