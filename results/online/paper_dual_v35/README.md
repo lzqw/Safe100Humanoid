@@ -52,7 +52,7 @@ action，teacher schedule 保持 A2×4 → A1×4。最终在固定 18.4 cm F2、
 18.4 cm 目标高度做 A1 consolidation。精确 provenance 与逐轮诊断见
 [`height_curriculum_f2_summary.json`](height_curriculum_f2_summary.json)。
 
-### Fixed-target continuation follow-up（新的 F2 Pareto 最优）
+### Fixed-target continuation follow-up（前一阶段的 F2 Pareto 最优）
 
 课程训练第 4 轮 A2 checkpoint 被精确 SHA-256 锁定后，用作三个固定 18.4 cm
 F2 continuation 的共同起点。每个 candidate 只运行一次训练和一次预设 gate；
@@ -60,12 +60,12 @@ F2 continuation 的共同起点。每个 candidate 只运行一次训练和一�
 
 | Continuation from curriculum round 4 | Filter on | Filter off | Final KL | Decision |
 |---|---:|---:|---:|---|
-| A1 Gaussian-NLL ×4 | **81.25% (52/64)** | **68.75% (44/64)** | 0.6518 | F2 Pareto best，仍未达 off≥75% |
+| A1 Gaussian-NLL ×4 | **81.25% (52/64)** | **68.75% (44/64)** | 0.6518 | 当时的 F2 Pareto best，仍未达 off≥75% |
 | sampled-action A2 η=1 ×4 | 79.69% (51/64) | 51.56% (33/64) | 0.00056 | rejected |
 | deterministic-mean CBF A2 η=1 ×4 | 65.62% (42/64) | not run | 0.00067 | on gate 早停 |
 
 A1 continuation 保持课程模型的 81.25% filter-on，同时将 filter-off 从 67.19%
-提高到 68.75%，因此成为当前 F2 的 Pareto 最优；它相对原 fixed-height staged
+提高到 68.75%，因此成为当时 F2 的 Pareto 最优；它相对原 fixed-height staged
 F2 则是 on +10.94 pp、off 持平。结果仍不足以宣称达到论文级效果，因为
 filter-off 未达到 75%，paired gap 仍为 12.50 pp，而且 A1 更新的 KL/clip 仍过高。
 
@@ -74,6 +74,30 @@ filter-off 未达到 75%，paired gap 仍为 12.50 pp，而且 A1 更新的 KL/c
 CBF projection 后，训练数据流误差虽为 0，filter-on 仍明显退化，因此按门槛不再
 运行 off。代码保留该机制用于审计，但不选择其 actor。完整结果、模型哈希及逐轮
 诊断见 [`continuation_f2_summary.json`](continuation_f2_summary.json)。
+
+### Unshielded counterfactual + on-policy mean DAgger（当前 F2 off 最佳）
+
+为缩小训练时过滤与部署时无过滤的分布差异，后续 rollout 直接执行 nominal
+unshielded action；CBF 不再替换训练动作，而是在同一状态上投影 deterministic
+policy mean，作为反事实监督。所有候选仍只做一次预设训练 gate，只有通过 gate
+的 actor 才运行同一个 seed 的 64-episode paired on/off 评估。
+
+| Candidate | Filter on | Filter off | Off - on | Decision |
+|---|---:|---:|---:|---|
+| 50/50 curriculum–A1 model soup | 65.62% (42/64) | not run | — | on gate rejected |
+| unshielded A0，selected round 3 | 76.56% (49/64) | 70.31% (45/64) | -6.25 pp | next-stage base |
+| all-intervention mean-CBF DAgger，η=0.25 ×3 | **79.69% (51/64)** | **71.88% (46/64)** | -7.81 pp | **current F2 off best** |
+| failure-only mean-CBF teacher ×3 | 78.12% (50/64) | 70.31% (45/64) | -7.81 pp | rejected |
+
+当前最佳相对 fixed-target A1 将 filter-off 从 44/64 提高到 46/64（+3.12 pp），
+并把 gap 从 12.50 pp 缩到 7.81 pp；相对 unshielded A0，它的 on/off 分别提高
+3.12/1.56 pp。它仍不满足目标：filter-off 距 75% gate 还差 2 个成功 episode，
+且目前只有一个评估 seed，因此不宣称达到论文级复现。
+
+额外两轮、强 reward、2048-step double batch、较小 rollout noise，以及仅按失败
+episode 过滤 teacher label 均未改善训练 gate 或 paired 结果，已停止，避免消耗
+4080 做低价值重复验证。精确训练配置、逐轮指标、checkpoint/actor SHA-256 与这些
+负结果见 [`unshielded_f2_summary.json`](unshielded_f2_summary.json)。
 
 ## 方法与第一阶段 F1 ablation
 
@@ -112,6 +136,7 @@ winner。后续 staged experiment 解决了 F1 矛盾，并已冻结扩展到 F2
 - [`soft_a1_f2_summary.json`](soft_a1_f2_summary.json): 低 KL 但成功率退化的 F2 负结果。
 - [`height_curriculum_f2_summary.json`](height_curriculum_f2_summary.json): F2 五级高度课程的配对评估、模型哈希与逐轮诊断。
 - [`continuation_f2_summary.json`](continuation_f2_summary.json): 三个固定目标 continuation 的 gate、早停决定与 provenance。
+- [`unshielded_f2_summary.json`](unshielded_f2_summary.json): 无过滤 rollout、反事实 mean-CBF DAgger、模型哈希、paired 评估及训练 gate 负结果。
 
 大型 `.pt` checkpoint 没有提交进 Git；其 SHA-256 已写入
 `pilot_summary.json`，原始 checkpoint 和逐 episode 文件保留在 4080 artifact
@@ -127,4 +152,6 @@ winner。后续 staged experiment 解决了 F1 矛盾，并已冻结扩展到 F2
 - Reward implementation: `src/tasks/stairs_cbf/paper_dual_v35.py`
 - Trainer: `experiments/scripts/refine_paper_dual_v35.py`
 - Target contexts: F1, F2, F3 as listed in the staged table
-- Runtime filter is enabled during training and toggled only for the paired evaluation.
+- Original/staged runs enable the runtime filter during training. The newest
+  unshielded runs execute nominal actions during training and use CBF only for
+  same-state counterfactual labels; paired evaluation still toggles the filter.

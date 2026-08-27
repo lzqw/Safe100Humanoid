@@ -1,0 +1,173 @@
+{
+  "schema_version": 1,
+  "experiment": "paper_dual_v35",
+  "status": "current_f2_filter_off_best_but_goal_not_met",
+  "published_date": "2026-08-27",
+  "hardware": "NVIDIA GeForce RTX 4080 SUPER",
+  "context": "F2_uniform_0.184_m_9_risers",
+  "purpose": "Test whether training the nominal policy without runtime filtering, while retaining counterfactual same-state CBF supervision, improves filter-free deployment.",
+  "evaluation_protocol": {
+    "seed": 201350902,
+    "episodes_per_condition": 64,
+    "policy": "deterministic_mean",
+    "initial_state_signature": "3f8c032be07f7741ddf1da02b72cc65ba59e4bc8f61227d09dc99de9582fa40b",
+    "conditions": ["filter_on", "filter_off"]
+  },
+  "provenance_chain": [
+    {
+      "stage": "fixed_target_A1_base",
+      "run": "raw_moderate_curriculum4_then_fixed_A1x4",
+      "checkpoint_sha256": "b6cbbf22ecebb652bb982b69aa17975b77de919bb41456b4a644f863003b520f",
+      "actor_sha256": "7c33dc65f0183e43e18cc09cd844bb81daedf3eb399f47a12eeaf6674b2ab0db"
+    },
+    {
+      "stage": "unshielded_A0_selected_round_3",
+      "run": "raw_moderate_A1best_then_unshielded_A0x4",
+      "checkpoint_sha256": "4dcb049e43af1fb2521c298e946a4622d630bc66c55f6aa05c6874dafb93c48a",
+      "actor_sha256": "100fa544ba459e406a6c8c5ba69673eecf2a234fc706ef03364d169e5b3ab9b8"
+    },
+    {
+      "stage": "unshielded_mean_CBF_DAgger_selected_round_3",
+      "run": "raw_moderate_unshielded_best_then_mean_cbf_A2eta025x3",
+      "checkpoint_sha256": "3ec45cd196447901cf815d0fa1ff400af1b519ed2bb85c2fc179458ce3e81d3f",
+      "actor_sha256": "3964c0ef24707addbaa0dacfd4fd627882bd8b45a2c9799142710fa45bc29499"
+    }
+  ],
+  "evaluated_candidates": [
+    {
+      "run": "model_soup_curriculum_A1_alpha050",
+      "status": "rejected_after_filter_on_gate",
+      "source_git_commit": "182ff9e400db3ab45ac1f385410cc543252f2f3e",
+      "method": "Provenance-locked interpolation of trainable MLP tensors between the curriculum and fixed-target A1 actors.",
+      "interpolation_fraction": 0.5,
+      "output_actor_sha256": "4a9383c6f2f1b45ac5d04b42c1b8585cebead39c363a91f0efaa911e0130d6bd",
+      "output_checkpoint_sha256": "3f3f0c2eec0c6d9a123ed2098ecf28c069e71ae97a1e7d5ddf3aef8d78b77a3a",
+      "evaluation": {
+        "filter_on": {"success_count": 42, "num_episodes": 64, "success_rate": 0.65625, "fall_rate": 0.34375, "mean_reached_riser": 8.109375, "mean_return": -5.8280016},
+        "filter_off": null
+      },
+      "decision": "The filter-on gate failed, so filter-off was not run. The high source-policy success union did not survive simple parameter interpolation."
+    },
+    {
+      "run": "raw_moderate_A1best_then_unshielded_A0x4",
+      "status": "selected_as_unshielded_A0_base",
+      "source_git_commit": "4f9b3a3d1e2bce95649ccb5bf7bccf74bd20a8cd",
+      "training_seed": 201350142,
+      "training_elapsed_seconds": 119.6978678,
+      "training": {
+        "runtime_filter": false,
+        "reward": "paper_dual_raw_moderate",
+        "teacher": "none",
+        "rounds": 4,
+        "selected_round": 3,
+        "selection_rule": "maximum completed-episode rollout success rate"
+      },
+      "round_metrics": [
+        {"round": 1, "rollout_success_rate": 0.6240601504, "rollout_fall_rate": 0.3759398496, "counterfactual_policy_mean_intervention_fraction": 0.1060333252, "moving_forward_kl": 0.0017086993, "clip_fraction": 0.340927124, "mean_return": -9.1813047},
+        {"round": 2, "rollout_success_rate": 0.704, "rollout_fall_rate": 0.296, "counterfactual_policy_mean_intervention_fraction": 0.1011047363, "moving_forward_kl": 0.00079176185, "clip_fraction": 0.1860961914, "mean_return": -8.7193466},
+        {"round": 3, "rollout_success_rate": 0.7131782946, "rollout_fall_rate": 0.2868217054, "counterfactual_policy_mean_intervention_fraction": 0.1023101807, "moving_forward_kl": 0.00074604613, "clip_fraction": 0.1806640625, "mean_return": -7.7770936},
+        {"round": 4, "rollout_success_rate": 0.6451612903, "rollout_fall_rate": 0.3548387097, "counterfactual_policy_mean_intervention_fraction": 0.1058349609, "moving_forward_kl": 0.00066790788, "clip_fraction": 0.1538696289, "mean_return": -9.5189272}
+      ],
+      "evaluation": {
+        "filter_on": {"success_count": 49, "num_episodes": 64, "success_rate": 0.765625, "fall_rate": 0.234375, "mean_reached_riser": 8.203125, "mean_return": -4.9192503467},
+        "filter_off": {"success_count": 45, "num_episodes": 64, "success_rate": 0.703125, "fall_rate": 0.296875, "mean_reached_riser": 8.09375, "mean_return": -3.3764997758},
+        "off_minus_on_pp": -6.25
+      },
+      "decision": "Selected as the next-stage base: it improved filter-off by one episode and reduced the on/off gap by half relative to fixed-target A1."
+    },
+    {
+      "run": "raw_moderate_unshielded_best_then_mean_cbf_A2eta025x3",
+      "status": "current_f2_filter_off_best",
+      "source_git_commit": "4f9b3a3d1e2bce95649ccb5bf7bccf74bd20a8cd",
+      "training_seed": 201350162,
+      "training_elapsed_seconds": 90.174806,
+      "training": {
+        "runtime_filter": false,
+        "rollout_action_execution": "nominal_unshielded",
+        "counterfactual_teacher": "same_state_deterministic_mean_CBF_projection",
+        "teacher_scope": "all_intervened_transitions",
+        "teacher_eta": 0.25,
+        "training_action_std": 0.05,
+        "actor_learning_rate": 0.000005,
+        "rounds": 3
+      },
+      "round_metrics": [
+        {"round": 1, "rollout_success_rate": 0.6742424242, "rollout_fall_rate": 0.3257575758, "policy_mean_intervention_fraction": 0.10798645, "policy_mean_storage_max_abs_error": 0.0, "moving_forward_kl": 0.0028806182, "clip_fraction": 0.46446228, "teacher_loss": 0.0113074478, "mean_return": -9.3156579},
+        {"round": 2, "rollout_success_rate": 0.6888888889, "rollout_fall_rate": 0.3111111111, "policy_mean_intervention_fraction": 0.1010437, "policy_mean_storage_max_abs_error": 0.0, "moving_forward_kl": 0.00085683115, "clip_fraction": 0.21696472, "teacher_loss": 0.0106103683, "mean_return": -7.7755289},
+        {"round": 3, "rollout_success_rate": 0.7368421053, "rollout_fall_rate": 0.2631578947, "policy_mean_intervention_fraction": 0.10049438, "policy_mean_storage_max_abs_error": 0.0, "moving_forward_kl": 0.00058703584, "clip_fraction": 0.12974548, "teacher_loss": 0.0107278187, "mean_return": -7.2223803}
+      ],
+      "evaluation": {
+        "filter_on": {"success_count": 51, "num_episodes": 64, "success_rate": 0.796875, "fall_rate": 0.203125, "mean_reached_riser": 8.109375, "mean_return": -3.7295618951},
+        "filter_off": {"success_count": 46, "num_episodes": 64, "success_rate": 0.71875, "fall_rate": 0.28125, "mean_reached_riser": 8.125, "mean_return": -4.2394445948},
+        "off_minus_on_pp": -7.8125
+      },
+      "decision": "Selected as the current F2 filter-off best. It improves both paired conditions over the unshielded A0 base, but remains two successes short of the 48/64 (75%) filter-off gate."
+    },
+    {
+      "run": "raw_moderate_failure_only_mean_cbf_x3",
+      "status": "rejected_after_paired_gate",
+      "source_git_commit": "bfa5056a78a6145c8b2ea6e426d8db63267c0810",
+      "training_seed": 201350212,
+      "training_elapsed_seconds": 99.408281,
+      "training": {
+        "runtime_filter": false,
+        "rollout_action_execution": "nominal_unshielded",
+        "counterfactual_teacher": "same_state_deterministic_mean_CBF_projection",
+        "teacher_scope": "intervened_transitions_from_failed_episodes_only",
+        "teacher_eta": 0.25,
+        "rounds": 3
+      },
+      "round_metrics": [
+        {"round": 1, "rollout_success_rate": 0.6363636364, "rollout_fall_rate": 0.3636363636, "failed_episodes": 48, "policy_mean_interventions": 6713, "teacher_transitions": 2216, "moving_forward_kl": 0.00216636, "clip_fraction": 0.381332, "teacher_loss": 0.0123441, "mean_return": -8.4675},
+        {"round": 2, "rollout_success_rate": 0.6569343066, "rollout_fall_rate": 0.3430656934, "failed_episodes": 47, "policy_mean_interventions": 6953, "teacher_transitions": 2211, "moving_forward_kl": 0.000769914, "clip_fraction": 0.170563, "teacher_loss": 0.0161907, "mean_return": -8.9218},
+        {"round": 3, "rollout_success_rate": 0.7022900763, "rollout_fall_rate": 0.2977099237, "failed_episodes": 39, "policy_mean_interventions": 6748, "teacher_transitions": 1805, "moving_forward_kl": 0.000637505, "clip_fraction": 0.14949, "teacher_loss": 0.0125147, "mean_return": -8.39645}
+      ],
+      "final_actor_sha256": "d5948d5ae08596c0369d3802f3dcd5d1dd205d8a3052b6de92bf3a3d0ffa6eac",
+      "final_checkpoint_sha256": "ea293d4fe2d702176c93cbd8dc4810779af3be588f912dc7327b6845aa1164bf",
+      "evaluation": {
+        "filter_on": {"success_count": 50, "num_episodes": 64, "success_rate": 0.78125, "fall_rate": 0.21875, "mean_reached_riser": 8.40625, "mean_return": -4.2362495847},
+        "filter_off": {"success_count": 45, "num_episodes": 64, "success_rate": 0.703125, "fall_rate": 0.296875, "mean_reached_riser": 8.171875, "mean_return": -3.7037675828},
+        "off_minus_on_pp": -7.8125
+      },
+      "decision": "Rejected: limiting only the teacher labels to failed episodes did not preserve or improve the all-intervention DAgger result."
+    }
+  ],
+  "training_gated_rejections": [
+    {
+      "run": "raw_strong_A1best_then_unshielded_A0x3",
+      "source_git_commit": "4f9b3a3d1e2bce95649ccb5bf7bccf74bd20a8cd",
+      "reason": "All three rollout success rates (0.6148, 0.6077, 0.6232) were below the raw-moderate base; paired evaluation was skipped."
+    },
+    {
+      "run": "raw_moderate_mean_cbf_A2eta025_continue2",
+      "source_git_commit": "fb310c306d21c1250f93577842452e3f853ba4c8",
+      "reason": "Two extra rounds declined to 0.6692 and 0.6642 rollout success; paired evaluation was skipped."
+    },
+    {
+      "run": "raw_moderate_mean_cbf_low_variance_64x2048x2",
+      "source_git_commit": "fb310c306d21c1250f93577842452e3f853ba4c8",
+      "reason": "Doubling rollout length produced 0.6426 and 0.6401 rollout success; paired evaluation was skipped."
+    },
+    {
+      "run": "raw_moderate_mean_cbf_std002x3",
+      "source_git_commit": "837a039ae23bcec31592dafe2887cd31dcb37e3b",
+      "reason": "Lower action noise at the original learning rate peaked at 0.7054 rollout success; paired evaluation was skipped."
+    },
+    {
+      "run": "raw_moderate_mean_cbf_std002_lr2e6x3",
+      "source_git_commit": "1230f98243bfc8f8242896dcab3bb8a5abbaf31b",
+      "reason": "Noise-scaled learning rate peaked at 0.6947 rollout success; paired evaluation was skipped."
+    }
+  ],
+  "current_best": {
+    "run": "raw_moderate_unshielded_best_then_mean_cbf_A2eta025x3",
+    "filter_on_success_rate": 0.796875,
+    "filter_off_success_rate": 0.71875,
+    "off_minus_on_pp": -7.8125,
+    "improvement_over_fixed_target_A1_pp": {"filter_on": -1.5625, "filter_off": 3.125, "gap_reduction": 4.6875},
+    "improvement_over_unshielded_A0_pp": {"filter_on": 3.125, "filter_off": 1.5625},
+    "paper_level_effect_claimed": false,
+    "remaining_failure": "Filter-free success is 46/64, two episodes below the 48/64 gate, and only one evaluation seed has been run."
+  },
+  "artifact_policy": "Large .pt files and per-episode traces remain on the 4080 artifact volume; this Git result package records exact SHA-256 identities and the evidence used for selection."
+}
