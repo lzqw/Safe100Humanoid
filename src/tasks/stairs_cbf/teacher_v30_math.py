@@ -6,19 +6,17 @@ import torch
 import torch.nn.functional as F
 
 
-def masked_transition_mean(
+def masked_population_mean(
     values: torch.Tensor, mask: torch.Tensor
 ) -> torch.Tensor:
-    """Average selected transition losses with an exact differentiable zero."""
+    """Zero excluded losses and average over the original transition population."""
     if values.ndim != 1 or mask.shape != values.shape:
         raise ValueError("v35 masked actor terms must share one-dimensional shape")
     if mask.dtype != torch.bool:
         raise TypeError("v35 actor transition mask must be boolean")
     if not bool(torch.isfinite(values).all()):
         raise RuntimeError("v35 masked actor objective contains non-finite values")
-    if not bool(mask.any()):
-        return values.sum() * 0.0
-    return values[mask].mean()
+    return (values * mask.to(values.dtype)).mean()
 
 
 def residual_teacher_target(

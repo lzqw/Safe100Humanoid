@@ -21,7 +21,7 @@ from .teacher_v29 import (
 )
 from .teacher_v30_math import (
     intervention_teacher_weights,
-    masked_transition_mean,
+    masked_population_mean,
     residual_teacher_target,
     weighted_action_errors,
     weighted_smooth_l1_teacher_loss,
@@ -440,7 +440,7 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
                     ratio, 1.0 - self.clip_param, 1.0 + self.clip_param
                 )
                 batch_actor_ppo_mask = actor_ppo_mask[indices]
-                ppo_loss = masked_transition_mean(
+                ppo_loss = masked_population_mean(
                     torch.maximum(surrogate, surrogate_clipped),
                     batch_actor_ppo_mask,
                 )
@@ -465,7 +465,7 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
                 has_signal = bool((batch_weights * batch_eligible).sum() > 0.0)
                 teacher_minibatches_with_signal += int(has_signal)
                 teacher_minibatches_without_signal += int(not has_signal)
-                entropy = masked_transition_mean(
+                entropy = masked_population_mean(
                     self.actor.output_entropy.flatten(), batch_actor_ppo_mask
                 )
                 actor_loss = (
