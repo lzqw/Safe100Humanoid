@@ -193,7 +193,10 @@ def _collect_first_episodes(
   stored_interventions: list[torch.Tensor] = []
   stored_environment_ids: list[torch.Tensor] = []
   maximum_steps = int(base_env.max_episode_length) + 2
-  with torch.inference_mode():
+  # ``env.step`` may auto-reset completed worlds and therefore mutates sensor
+  # buffers.  ``no_grad`` preserves those ordinary tensors across the paired
+  # off/on reset; ``inference_mode`` would permanently tag them as immutable.
+  with torch.no_grad():
     for _ in range(maximum_steps):
       flat = _flat_observations(observations)
       actions = actor(observations, stochastic_output=False)
