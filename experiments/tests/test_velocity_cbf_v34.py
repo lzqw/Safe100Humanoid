@@ -56,6 +56,10 @@ FILTER_OFF_PPO = _load(
     "filter_off_residual_ppo_v117_test",
     "experiments/scripts/train_filter_off_residual_ppo_v117.py",
 )
+PARAMETER_ES = _load(
+    "parameter_antithetic_residual_v124_test",
+    "experiments/scripts/train_parameter_antithetic_residual_v124.py",
+)
 
 
 def test_v34_sherman_morrison_matches_dense_solve() -> None:
@@ -581,6 +585,35 @@ def test_v123_selects_largest_scale_improving_both_clipped_surrogates() -> None:
     assert selected == 0.5
     assert FILTER_OFF_PPO.JOINT_SCALE_GRID == tuple(0.5**index for index in range(8))
     assert FILTER_OFF_PPO.CALIBRATED_ANTITHETIC_METHOD_ID.endswith("v123")
+
+
+def test_v124_parameter_es_gradient_and_deterministic_norm_are_direct() -> None:
+    directions = torch.zeros(2, 12, 11)
+    directions[0, 0, -1] = 1.0
+    directions[1, 0, -1] = -1.0
+    gradient, standardized = PARAMETER_ES.standardized_parameter_gradient(
+        directions, torch.tensor((1.0, -1.0))
+    )
+    assert torch.equal(standardized, torch.tensor((1.0, -1.0)))
+    assert gradient[0, -1] == 1.0
+    delta, metadata = PARAMETER_ES.calibrated_parameter_delta(
+        gradient,
+        torch.zeros(8, 10),
+        target_mean_norm=0.001,
+        max_residual=0.1,
+    )
+    residual = PARAMETER_ES.LinearGeometryResidual(max_residual=0.1)
+    with torch.no_grad():
+        residual.linear.weight.copy_(delta[:, :10])
+        residual.linear.bias.copy_(delta[:, 10])
+    correction = residual(torch.zeros(8, 150))
+    assert torch.isclose(
+        torch.linalg.vector_norm(correction, dim=-1).mean(),
+        torch.tensor(0.001),
+        atol=1e-7,
+    )
+    assert abs(metadata["calibration_mean_residual_norm"] - 0.001) < 1e-7
+    assert PARAMETER_ES.METHOD_ID.endswith("v124")
 
 
 def test_v95_critic_expansion_accepts_ten_persistent_features() -> None:
