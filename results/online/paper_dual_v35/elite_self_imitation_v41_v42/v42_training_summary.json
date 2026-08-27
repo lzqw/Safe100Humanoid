@@ -1,0 +1,72 @@
+{
+  "actor_learning_rate": 5e-06,
+  "base_checkpoint_sha256": "3ec45cd196447901cf815d0fa1ff400af1b519ed2bb85c2fc179458ce3e81d3f",
+  "candidate_actor_sha256": "fd312b6197883dd2aea3f53b10163e04ec25f9d015414695bfc809082ae7b98a",
+  "candidate_checkpoint_sha256": "63731517c63ccdb14afdf7ca513be28ab22ce5a160a8edd1f1bd29945c8b3b83",
+  "candidate_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/pilot/F2/filter_free_elite_full_batch_v42/candidate.pt",
+  "context": "F2",
+  "elapsed_seconds": 9.581462538917549,
+  "epochs": 1,
+  "git_commit": "070f5599d447b5a91888df2733857afbfc768ec7",
+  "initial_actor_sha256": "3964c0ef24707addbaa0dacfd4fd627882bd8b45a2c9799142710fa45bc29499",
+  "max_reference_kl": 0.0001,
+  "method_id": "full-batch-filter-free-elite-self-imitation-v42",
+  "minibatches": 1,
+  "moving_kl_beta": 0.5,
+  "offline_elite_loss_delta": -1.2987819460880123e-06,
+  "offline_gate_passed": true,
+  "optimization_seed": 201350382,
+  "schema_version": 1,
+  "source_dataset": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/pilot/F2/filter_free_elite_self_imitation_v41_3x32/elite_dataset.pt",
+  "source_dataset_sha256": "7540dcd99cd67d90dc5c9b511fe7050469eb6e02696fbbc67841d74a89fd6ac7",
+  "source_training_seeds": [
+    201350342,
+    201350352,
+    201350362
+  ],
+  "training": {
+    "actor_gradient_clipped_fraction": 0.0,
+    "actor_gradient_norm_pre_clip_max": 0.017931967973709106,
+    "actor_update_scope": "last-layer",
+    "after": {
+      "elite_smooth_l1": 0.02121465748492137,
+      "elite_target_distance": 0.16960211640391676,
+      "reference_elite_target_distance": 0.16960814700546759
+    },
+    "before": {
+      "elite_smooth_l1": 0.021215956266867456,
+      "elite_target_distance": 0.16960814700546759,
+      "reference_elite_target_distance": 0.16960814700546759
+    },
+    "dataset_transition_count": 40787,
+    "elite_loss_during_update": 0.021215956658124924,
+    "elite_transition_count": 32144,
+    "elite_transition_fraction": 0.7880942225456238,
+    "minibatches_with_elite": 1,
+    "moving_kl_during_update": 0.0,
+    "optimizer_updates": 1,
+    "trainable_parameter_count": 1548,
+    "trust_region": {
+      "after": {
+        "reference_forward_kl": 9.996380655039587e-05,
+        "reference_mean_shift": 0.0006731720142793325
+      },
+      "before": {
+        "reference_forward_kl": 0.0,
+        "reference_mean_shift": 0.0
+      },
+      "max_reference_kl": 0.0001,
+      "parameter_interpolation_scale": 0.588623046875,
+      "projection_iterations": 12,
+      "unprojected_after": {
+        "reference_forward_kl": 0.00028847583029361186,
+        "reference_mean_shift": 0.0011435536856357514
+      }
+    },
+    "unprojected_after": {
+      "elite_smooth_l1": 0.021214091641324977,
+      "elite_target_distance": 0.16959959479218517,
+      "reference_elite_target_distance": 0.16960814700546759
+    }
+  }
+}

@@ -246,6 +246,25 @@ v40 复用 v38 的冻结多 seed 数据，不再进行 rollout，只更新 actor
 方向本身无法稳定提高 filter-free task return。该路线至此停止，证据见
 [`last_layer_rescue_v40/`](last_layer_rescue_v40/)。
 
+#### Filter-free elite self-imitation（单 gate seed 成功，独立 seed 未通过）
+
+v41 不再拟合反事实 CBF correction，而是在 3 个新训练 seed 上用 std=0.05 的
+当前策略执行无过滤探索，收集 96 个 episode，其中 72 个成功；只把成功 episode
+的实际执行动作作为 deterministic actor 的监督。4-minibatch 更新使全数据 elite
+loss 略升，因此未评估。v42 复用完全相同的数据，只做一次 full-batch 输出层更新，
+elite Smooth-L1 从 `0.02121596` 降至 `0.02121466`，KL 为 `9.996e-5`。
+
+| v42 stable-reset F2 seed | Filter on | Filter off | Off - on | Result |
+|---|---:|---:|---:|---|
+| gate `201350912` | 76.56% (49/64) | **75.00% (48/64)** | -1.56 pp | gate passed；off 比基线 +5 |
+| untouched `201350922` | not run | 68.75% (44/64) | — | stopped below gate |
+
+v42 首次在较难 seed 上同时达到 on/off 75% 且 gap 仅 1.56 pp，证明成功动作的
+filter-free self-imitation 比直接 CBF 蒸馏更接近论文部署目标；但 untouched seed
+仍未达到绝对 gate，所以尚不选择为最终稳健 actor。完整训练、paired gate 与
+untouched 逐 episode 证据见
+[`elite_self_imitation_v41_v42/`](elite_self_imitation_v41_v42/)。
+
 ## 方法与第一阶段 F1 ablation
 
 本目录发布 v35 第一阶段 F1 pilot 的关键结果。该阶段依据
@@ -289,6 +308,7 @@ winner。后续 staged experiment 解决了 F1 矛盾，并已冻结扩展到 F2
 - [`multi_seed_rescue_v38/`](multi_seed_rescue_v38/): 三训练 seed 聚合、off-success trust anchor 及失败的 filter-off gate。
 - [`filtered_ppo_v39/`](filtered_ppo_v39/): 论文式 filtered PPO continuation、checkpoint 对齐及失败的 hard-seed filter-off gate。
 - [`last_layer_rescue_v40/`](last_layer_rescue_v40/): 输出层局部更新、离线 KL 审计及失败的 hard-seed gate。
+- [`elite_self_imitation_v41_v42/`](elite_self_imitation_v41_v42/): 无过滤成功轨迹收集、full-batch 更新、成功的 paired gate 与失败的 untouched-seed 确认。
 
 大型 `.pt` checkpoint 没有提交进 Git；其 SHA-256 已写入
 `pilot_summary.json`，原始 checkpoint 和逐 episode 文件保留在 4080 artifact
