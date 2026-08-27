@@ -20,6 +20,7 @@ from cbf_teacher_v31_protocol import (
   FILTER_ALPHA,
   RECOVERY_DISTANCE_M,
   TASK_ID,
+  arm_parameters,
   environment_parameters,
 )
 from proximal_v23_io import actor_state, actor_state_sha256, file_sha256
@@ -42,7 +43,19 @@ def _parse_args() -> argparse.Namespace:
     choices=("current", "raw_moderate", "raw_strong", "raw_demo"),
     required=True,
   )
-  parser.add_argument("--teacher-arm", choices=("A0", "A1"), default="A0")
+  parser.add_argument("--teacher-arm", choices=("A0", "A1", "A2"), default="A0")
+  parser.add_argument(
+    "--teacher-schedule",
+    choices=("fixed", "A2_then_A1"),
+    default="fixed",
+    help="Use one fixed arm or switch from A2 residual to A1 full-action.",
+  )
+  parser.add_argument(
+    "--teacher-switch-after",
+    type=int,
+    default=4,
+    help="Last A2 round for the A2_then_A1 schedule.",
+  )
   parser.add_argument("--rounds", type=int, default=8)
   parser.add_argument("--num-envs", type=int, default=64)
   parser.add_argument("--rollout-steps", type=int, default=1024)
@@ -64,10 +77,46 @@ def _git(repo: Path, *args: str) -> str:
   ).stdout.strip()
 
 
+def _teacher_arms_by_round(
+  *,
+  rounds: int,
+  teacher_arm: str,
+  teacher_schedule: str,
+  switch_after: int,
+) -> list[str]:
+  """Resolve the teacher arm before any environment or GPU allocation."""
+  if rounds < 1:
+    raise ValueError("v35 requires at least one round")
+  if teacher_schedule == "fixed":
+    arm_parameters(teacher_arm)
+    return [teacher_arm] * rounds
+  if teacher_schedule != "A2_then_A1":
+    raise ValueError(f"unknown v35 teacher schedule {teacher_schedule!r}")
+  if not 1 <= switch_after < rounds:
+    raise ValueError("A2_then_A1 switch must leave at least one round for each arm")
+  return ["A2"] * switch_after + ["A1"] * (rounds - switch_after)
+
+
+def _set_teacher_arm(algorithm, arm: str) -> dict[str, Any]:
+  """Switch only the four frozen teacher fields at a round boundary."""
+  parameters = arm_parameters(arm)
+  algorithm.teacher_mode = parameters["teacher_mode"]
+  algorithm.teacher_gate = parameters["teacher_gate"]
+  algorithm.teacher_eta = parameters["teacher_eta"]
+  algorithm.teacher_distillation_weight = parameters["teacher_weight"]
+  return parameters
+
+
 def main() -> None:
   args = _parse_args()
   if args.rounds < 1 or args.num_envs < 1 or args.rollout_steps < 1:
     raise ValueError("v35 rounds, environments, and rollout steps must be positive")
+  teacher_arms = _teacher_arms_by_round(
+    rounds=args.rounds,
+    teacher_arm=args.teacher_arm,
+    teacher_schedule=args.teacher_schedule,
+    switch_after=args.teacher_switch_after,
+  )
   repo = args.repo.resolve()
   checkpoint = args.base_checkpoint.resolve()
   output_dir = args.output_dir.resolve()
@@ -117,7 +166,7 @@ def main() -> None:
   agent_cfg = load_rl_cfg(TASK_ID)
   agent_cfg.seed = args.seed
   agent_cfg.num_steps_per_env = args.rollout_steps
-  _configure_algorithm(agent_cfg, args.teacher_arm, preflight=False)
+  _configure_algorithm(agent_cfg, teacher_arms[0], preflight=False)
 
   output_dir.mkdir(parents=True)
   started = time.monotonic()
@@ -140,10 +189,15 @@ def main() -> None:
         "experiment": "paper_dual_v35",
         "candidate": args.candidate,
         "context": args.context,
-        "teacher_arm": args.teacher_arm,
+        "teacher_arm": teacher_arms[0],
+        "teacher_arms_by_round": teacher_arms,
       },
     )
     for round_index in range(1, args.rounds + 1):
+      round_teacher_arm = teacher_arms[round_index - 1]
+      round_teacher_parameters = _set_teacher_arm(
+        runner.alg, round_teacher_arm
+      )
       runner.alg.freeze_round_reference()
       start_hash = actor_state_sha256(actor_state(runner.alg.actor))
       round_started = time.monotonic()
@@ -156,6 +210,8 @@ def main() -> None:
         "actor_sha256": end_hash,
         "round_start_actor_sha256": start_hash,
         "round_end_actor_sha256": end_hash,
+        "teacher_arm": round_teacher_arm,
+        "teacher_parameters": round_teacher_parameters,
         "metrics": metrics,
       }
       records.append(record)
@@ -167,7 +223,8 @@ def main() -> None:
           "experiment": "paper_dual_v35",
           "candidate": args.candidate,
           "context": args.context,
-          "teacher_arm": args.teacher_arm,
+          "teacher_arm": round_teacher_arm,
+          "teacher_arms_by_round": teacher_arms,
         },
       )
       _atomic_json(output_dir / "round_metrics.json", records)
@@ -180,7 +237,14 @@ def main() -> None:
       "git_commit": _git(repo, "rev-parse", "HEAD"),
       "context": args.context,
       "candidate": args.candidate,
-      "teacher_arm": args.teacher_arm,
+      "teacher_arm": (
+        args.teacher_arm if args.teacher_schedule == "fixed" else "staged"
+      ),
+      "teacher_schedule": args.teacher_schedule,
+      "teacher_switch_after": (
+        None if args.teacher_schedule == "fixed" else args.teacher_switch_after
+      ),
+      "teacher_arms_by_round": teacher_arms,
       "seed": args.seed,
       "rounds": args.rounds,
       "num_envs": args.num_envs,
