@@ -146,6 +146,14 @@ def _parse_args() -> argparse.Namespace:
     ),
   )
   parser.add_argument(
+    "--success-residual-only-actor",
+    action="store_true",
+    help=(
+      "v91: disable PPO and entropy actor gradients, retaining only the "
+      "successful bounded residual teacher and moving reference KL."
+    ),
+  )
+  parser.add_argument(
     "--failure-only-mean-teacher",
     action="store_true",
     help=(
@@ -654,6 +662,11 @@ def main() -> None:
     and not args.success_intervention_safe_mean_only
   ):
     raise ValueError("v90 bounded residual requires v89 success interventions")
+  if (
+    args.success_residual_only_actor
+    and not args.success_intervention_bounded_residual
+  ):
+    raise ValueError("v91 residual-only actor requires v90 bounded residuals")
   if args.failure_only_mean_teacher and not args.deterministic_mean_teacher:
     raise ValueError("failure-only mean teacher requires deterministic mean labels")
   if args.failure_only_mean_teacher and args.training_runtime_filter != "off":
@@ -981,6 +994,9 @@ def main() -> None:
     deterministic_mean_teacher["success_intervention_bounded_residual"] = (
       args.success_intervention_bounded_residual
     )
+    deterministic_mean_teacher["success_residual_only_actor"] = (
+      args.success_residual_only_actor
+    )
   height_curriculum = None
   if args.height_curriculum:
     height_curriculum = _configure_height_curriculum(
@@ -1003,16 +1019,21 @@ def main() -> None:
   agent_cfg.algorithm.maximum_std = float(args.training_action_std)
   if args.success_safe_action_imitation:
     agent_cfg.algorithm.class_name = (
-      "src.tasks.stairs_cbf.paper_success_residual_v90:"
-      "PaperSuccessResidualV90PPO"
-      if args.success_intervention_bounded_residual
+      "src.tasks.stairs_cbf.paper_success_residual_only_v91:"
+      "PaperSuccessResidualOnlyV91PPO"
+      if args.success_residual_only_actor
       else (
-        "src.tasks.stairs_cbf.paper_success_intervention_v89:"
-        "PaperSuccessInterventionV89PPO"
-        if args.success_intervention_safe_mean_only
+        "src.tasks.stairs_cbf.paper_success_residual_v90:"
+        "PaperSuccessResidualV90PPO"
+        if args.success_intervention_bounded_residual
         else (
-          "src.tasks.stairs_cbf.paper_success_imitation_v88:"
-          "PaperSuccessImitationV88PPO"
+          "src.tasks.stairs_cbf.paper_success_intervention_v89:"
+          "PaperSuccessInterventionV89PPO"
+          if args.success_intervention_safe_mean_only
+          else (
+            "src.tasks.stairs_cbf.paper_success_imitation_v88:"
+            "PaperSuccessImitationV88PPO"
+          )
         )
       )
     )
@@ -1160,6 +1181,7 @@ def main() -> None:
         "success_intervention_bounded_residual": (
           args.success_intervention_bounded_residual
         ),
+        "success_residual_only_actor": args.success_residual_only_actor,
         "success_imitation_weight": (
           args.success_imitation_weight
           if args.success_safe_action_imitation
@@ -1462,6 +1484,7 @@ def main() -> None:
           "success_intervention_bounded_residual": (
             args.success_intervention_bounded_residual
           ),
+          "success_residual_only_actor": args.success_residual_only_actor,
           "success_imitation_weight": (
             args.success_imitation_weight
             if args.success_safe_action_imitation
@@ -1537,6 +1560,7 @@ def main() -> None:
       "success_intervention_bounded_residual": (
         args.success_intervention_bounded_residual
       ),
+      "success_residual_only_actor": args.success_residual_only_actor,
       "success_imitation_weight": (
         args.success_imitation_weight
         if args.success_safe_action_imitation
