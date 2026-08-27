@@ -58,6 +58,11 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--num-envs", type=int, default=16)
   parser.add_argument("--optimization-seed", type=int, required=True)
   parser.add_argument("--teacher-eta", type=float, default=0.5)
+  parser.add_argument(
+    "--teacher-episode-scope",
+    choices=("shielded-success", "rescued-only"),
+    default="shielded-success",
+  )
   parser.add_argument("--actor-learning-rate", type=float, default=1.0e-3)
   parser.add_argument("--moving-kl-beta", type=float, default=0.1)
   parser.add_argument("--max-reference-kl", type=float, default=0.003)
@@ -575,6 +580,7 @@ def main() -> None:
       "base_checkpoint_sha256": checkpoint_sha,
       "training_seeds": seeds,
       "rollout_conditions": ["filter_off", "filter_on"],
+      "teacher_episode_scope": args.teacher_episode_scope,
       "actor_observation_interface": "405D proprioception + 5D deployable CBF geometry",
     },
   )
@@ -684,11 +690,16 @@ def main() -> None:
       ids = on_data["environment_ids"]
       correction = on_data["safe_actions"] - on_data["nominal_actions"]
       correction_norm = torch.linalg.vector_norm(correction, dim=-1)
-      successful_transition = shielded_success[ids]
       rescued_transition = rescued[ids]
+      successful_transition = shielded_success[ids]
+      teacher_episode_transition = (
+        rescued_transition
+        if args.teacher_episode_scope == "rescued-only"
+        else successful_transition
+      )
       effective = (
         on_data["would_intervene"].float()
-        * successful_transition.float()
+        * teacher_episode_transition.float()
         * torch.clamp(correction_norm / 0.05, 0.0, 1.0)
         * (1.0 + rescued_transition.float())
       )
@@ -801,6 +812,7 @@ def main() -> None:
       "num_envs": args.num_envs,
       "optimization_seed": args.optimization_seed,
       "teacher_eta": args.teacher_eta,
+      "teacher_episode_scope": args.teacher_episode_scope,
       "actor_learning_rate": args.actor_learning_rate,
       "moving_kl_beta": args.moving_kl_beta,
       "max_reference_kl": args.max_reference_kl,
