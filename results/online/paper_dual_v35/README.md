@@ -399,6 +399,22 @@ rollout 的多轮局部 PPO 改善仍不足以解决 F2 部署泛化。完整四
 证据和精确 checkpoint 见
 [`observable_cbf_ppo_v53/`](observable_cbf_ppo_v53/)。
 
+#### Paper-exact horizontal stair CBF PPO v54（已拒绝）
+
+v54 对照 CBF-RL v6 修正了两个实现偏差：台阶 CBF 改为下一 riser 的水平超平面
+（`barrier_slope=0`），dual reward 的 imitation distance 改为一个控制周期的摆动脚
+任务空间位移，而不是 12-D joint-action correction。原 405-D blind actor 输入不变。
+
+同 seed 的 32-episode filter-on 假设对比中，paper-exact barrier 为 26/32，历史
+slope=0.8 为 27/32；前者把 intervention steps/riser 从 4.4569 降至 1.6509，约少
+63%。正式训练使用 64 env × 1,024 step × 8 round，共 524,288 transitions，RTX
+4080 用时 231.88 秒。训练期间的 filtered stochastic rollout 没有形成上升趋势；
+最终 round-8 checkpoint 在全新 seed `201351812` 的 deterministic filter-off gate
+上为 **39/64（60.94%）**，比 48/64 门槛少 9 个成功 episode。因此按协议停止，
+未运行 filter-on 或额外 seed。代码、逐轮指标、两个 smoke、几何对比、64 个逐
+episode 记录和精确 checkpoint 见
+[`paper_exact_cbf_ppo_v54/`](paper_exact_cbf_ppo_v54/)。
+
 ## 方法与第一阶段 F1 ablation
 
 本目录发布 v35 第一阶段 F1 pilot 的关键结果。该阶段依据
@@ -451,11 +467,12 @@ winner。后续 staged experiment 解决了 F1 矛盾，并已冻结扩展到 F2
 - [`observable_cbf_ppo_v51/`](observable_cbf_ppo_v51/): 论文式几何感知 paired on/off GAE-PPO、正式 49,152-transition 训练、47/64 untouched gate 与 checkpoint。
 - [`observable_cbf_ppo_v52/`](observable_cbf_ppo_v52/): KL 目标线搜索、6/6 离线 surrogate 改善、失败的 untouched filter-off gate 与 rejected checkpoint。
 - [`observable_cbf_ppo_v53/`](observable_cbf_ppo_v53/): 四轮刷新 on-policy rollout、逐轮 actor/critic 更新、98,304-transition 诊断、失败的 untouched gate 与 checkpoint。
+- [`paper_exact_cbf_ppo_v54/`](paper_exact_cbf_ppo_v54/): paper-exact 水平台阶 CBF、摆动脚任务空间 dual reward、524,288-transition 正式训练、失败的 untouched gate 与精确 checkpoint。
 
 历史大型 `.pt` checkpoint 没有提交进 Git；其 SHA-256 已写入相应 summary。
-v49b、v50、v51 smoke 与 v53 的候选 checkpoint 已随各自结果目录提交，便于
-精确复现；其中 v50 与 v53 已被 untouched gate 拒绝，v51 仅为 smoke，均不是
-最终稳健 actor。
+v49b、v50、v51 smoke、v53 与 v54 的候选 checkpoint 已随各自结果目录提交，
+便于精确复现；其中 v50、v53 与 v54 已被 untouched gate 拒绝，v51 仅为 smoke，
+均不是最终稳健 actor。
 
 ## Reproduction boundary
 
