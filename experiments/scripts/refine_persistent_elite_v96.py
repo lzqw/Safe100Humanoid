@@ -15,6 +15,7 @@ import copy
 import csv
 import json
 import math
+import shutil
 import sys
 import time
 from dataclasses import asdict
@@ -45,13 +46,12 @@ from refine_rescue_distill_v36 import (
   _atomic_json,
   _atomic_torch,
   _git,
-  _initial_state_signature,
   _seed_everything,
 )
 from velocity_cbf_v34_protocol import CURRENT_CBF_MODE, PROTOCOL_ID
 
 
-METHOD_ID = "persistent-geometry-filter-free-elite-sgd-v96"
+METHOD_ID = "persistent-geometry-filter-free-elite-trust-direction-v96"
 
 
 def _parse_args() -> argparse.Namespace:
@@ -61,6 +61,11 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--base-checkpoint", type=Path, required=True)
   parser.add_argument("--expected-base-sha256", required=True)
   parser.add_argument("--output-dir", type=Path, required=True)
+  parser.add_argument(
+    "--reuse-dataset",
+    type=Path,
+    help="Reuse a completed v96 stochastic rollout dataset without recollecting.",
+  )
   parser.add_argument("--context", choices=tuple(CONTEXTS), required=True)
   parser.add_argument("--training-seeds", required=True)
   parser.add_argument("--num-envs", type=int, default=64)
@@ -226,8 +231,37 @@ def _train_new_geometry_columns(
 
   scale = 1.0
   projection_iterations = 0
-  if unprojected_trust["reference_forward_kl"] > max_reference_kl:
+  proposal_kl = unprojected_trust["reference_forward_kl"]
+  if proposal_kl > max_reference_kl:
     low, high = 0.0, 1.0
+  elif proposal_kl > 0.0:
+    low, high = 1.0, 2.0
+    load_scale(high)
+    high_metrics = _trust_metrics(
+      actor,
+      reference_actor,
+      trust_observations,
+      device=device,
+      batch_size=metric_batch_size,
+    )
+    while high_metrics["reference_forward_kl"] < max_reference_kl and high < 64.0:
+      low = high
+      high *= 2.0
+      load_scale(high)
+      high_metrics = _trust_metrics(
+        actor,
+        reference_actor,
+        trust_observations,
+        device=device,
+        batch_size=metric_batch_size,
+      )
+    if high_metrics["reference_forward_kl"] < max_reference_kl:
+      scale = high
+      load_scale(scale)
+      high = low
+  else:
+    low = high = 0.0
+  if high > low:
     for _ in range(12):
       projection_iterations += 1
       middle = 0.5 * (low + high)
@@ -286,6 +320,8 @@ def _train_new_geometry_columns(
       "unprojected_after": unprojected_trust,
       "after": trust_after,
       "adapter_interpolation_scale": scale,
+      "direction_extrapolation_allowed": True,
+      "maximum_direction_scale": 64.0,
       "projection_iterations": projection_iterations,
     },
     "legacy_first_layer_change_max_abs": legacy_error,
@@ -423,72 +459,90 @@ def main() -> None:
       if hasattr(distribution, "std_param")
       else None
     )
-    observation_chunks: list[torch.Tensor] = []
-    action_chunks: list[torch.Tensor] = []
-    elite_chunks: list[torch.Tensor] = []
-    rollout_summaries: list[dict[str, Any]] = []
-    outcome_rows: list[dict[str, Any]] = []
-    offset = 0
-    for seed in seeds:
-      result = _collect_first_episodes(
-        runner,
-        base_env,
-        action_term,
-        seed=seed,
-        runtime_filter=False,
-        stochastic_policy=True,
-      )
-      data = result["dataset"]
-      elite = result["success"][data["environment_ids"]]
-      observation_chunks.append(data["observations"])
-      action_chunks.append(data["nominal_actions"])
-      elite_chunks.append(elite)
-      rollout_summaries.append(
-        {
-          "seed": seed,
-          "initial_state_signature": result["initial_state_signature"],
-          "success_count": result["success_count"],
-          "fall_count": result["fall_count"],
-          "transition_count": len(data["observations"]),
-          "elite_transition_count": int(elite.sum()),
-        }
-      )
-      for environment_id in range(args.num_envs):
-        outcome_rows.append(
+    reused_dataset: str | None = None
+    if args.reuse_dataset is not None:
+      dataset_path = args.reuse_dataset.resolve()
+      reused = torch.load(dataset_path, map_location="cpu", weights_only=False)
+      if reused.get("training_seeds") != seeds:
+        raise RuntimeError("v96 reused dataset training seeds differ")
+      if reused.get("actor_sha256") != initial_actor_hash:
+        raise RuntimeError("v96 reused dataset actor differs")
+      all_observations = reused["observations"]
+      all_actions = reused["sampled_actions"]
+      elite_mask = reused["elite"].bool()
+      parent_summary_path = dataset_path.with_name("training_summary.json")
+      parent_summary = json.loads(parent_summary_path.read_text())
+      rollout_summaries = parent_summary["rollout_summaries"]
+      reused_dataset = str(dataset_path)
+      parent_outcomes = dataset_path.with_name("rollout_outcomes.csv")
+      if parent_outcomes.is_file():
+        shutil.copy2(parent_outcomes, output / "rollout_outcomes.csv")
+    else:
+      observation_chunks: list[torch.Tensor] = []
+      action_chunks: list[torch.Tensor] = []
+      elite_chunks: list[torch.Tensor] = []
+      rollout_summaries = []
+      outcome_rows: list[dict[str, Any]] = []
+      offset = 0
+      for seed in seeds:
+        result = _collect_first_episodes(
+          runner,
+          base_env,
+          action_term,
+          seed=seed,
+          runtime_filter=False,
+          stochastic_policy=True,
+        )
+        data = result["dataset"]
+        elite = result["success"][data["environment_ids"]]
+        observation_chunks.append(data["observations"])
+        action_chunks.append(data["nominal_actions"])
+        elite_chunks.append(elite)
+        rollout_summaries.append(
           {
-            "training_seed": seed,
-            "environment_id": environment_id,
-            "global_environment_id": offset + environment_id,
-            "success": bool(result["success"][environment_id]),
-            "fell": bool(result["fell"][environment_id]),
-            "steps": int(result["steps"][environment_id]),
+            "seed": seed,
+            "initial_state_signature": result["initial_state_signature"],
+            "success_count": result["success_count"],
+            "fall_count": result["fall_count"],
+            "transition_count": len(data["observations"]),
+            "elite_transition_count": int(elite.sum()),
           }
         )
-      offset += args.num_envs
-      print(json.dumps({"rollout_completed": rollout_summaries[-1]}), flush=True)
-
-    all_observations = torch.cat(observation_chunks)
-    all_actions = torch.cat(action_chunks)
-    elite_mask = torch.cat(elite_chunks)
+        for environment_id in range(args.num_envs):
+          outcome_rows.append(
+            {
+              "training_seed": seed,
+              "environment_id": environment_id,
+              "global_environment_id": offset + environment_id,
+              "success": bool(result["success"][environment_id]),
+              "fell": bool(result["fell"][environment_id]),
+              "steps": int(result["steps"][environment_id]),
+            }
+          )
+        offset += args.num_envs
+        print(json.dumps({"rollout_completed": rollout_summaries[-1]}), flush=True)
+      all_observations = torch.cat(observation_chunks)
+      all_actions = torch.cat(action_chunks)
+      elite_mask = torch.cat(elite_chunks)
+      dataset_path = output / "elite_dataset.pt"
+      _atomic_torch(
+        dataset_path,
+        {
+          "schema_version": 1,
+          "method_id": METHOD_ID,
+          "training_seeds": seeds,
+          "actor_sha256": initial_actor_hash,
+          "exploration_std": exploration_std,
+          "observations": all_observations,
+          "sampled_actions": all_actions,
+          "elite": elite_mask,
+        },
+      )
+      _write_outcomes(output / "rollout_outcomes.csv", outcome_rows)
     elite_observations = all_observations[elite_mask]
     elite_actions = all_actions[elite_mask]
     if not len(elite_observations):
       raise RuntimeError("v96 collected no successful filter-free transitions")
-    dataset_path = output / "elite_dataset.pt"
-    _atomic_torch(
-      dataset_path,
-      {
-        "schema_version": 1,
-        "method_id": METHOD_ID,
-        "training_seeds": seeds,
-        "actor_sha256": initial_actor_hash,
-        "exploration_std": exploration_std,
-        "observations": all_observations,
-        "sampled_actions": all_actions,
-        "elite": elite_mask,
-      },
-    )
-    _write_outcomes(output / "rollout_outcomes.csv", outcome_rows)
     _seed_everything(args.optimization_seed)
     training, optimizer = _train_new_geometry_columns(
       runner.alg.actor,
@@ -538,6 +592,7 @@ def main() -> None:
       "candidate_checkpoint_sha256": file_sha256(candidate_path),
       "elite_dataset": str(dataset_path),
       "elite_dataset_sha256": file_sha256(dataset_path),
+      "reused_dataset": reused_dataset,
       "initial_actor_sha256": initial_actor_hash,
       "candidate_actor_sha256": candidate_actor_hash,
       "actor_observation_dim": 415,
