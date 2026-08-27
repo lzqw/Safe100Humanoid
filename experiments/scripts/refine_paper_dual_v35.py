@@ -72,6 +72,16 @@ def _parse_args() -> argparse.Namespace:
     help="Full-action A1 loss weight; 0.1 preserves the frozen v31 arm.",
   )
   parser.add_argument(
+    "--a2-teacher-eta",
+    type=float,
+    choices=(0.25, 0.5, 1.0),
+    default=0.25,
+    help=(
+      "Fraction of the actor-coordinate CBF correction used by the bounded "
+      "A2 Smooth-L1 target."
+    ),
+  )
+  parser.add_argument(
     "--height-curriculum",
     action="store_true",
     help="Train uniform contexts on ordered stair heights up to the target.",
@@ -120,7 +130,11 @@ def _teacher_arms_by_round(
 
 
 def _set_teacher_arm(
-  algorithm, arm: str, *, a1_teacher_weight: float
+  algorithm,
+  arm: str,
+  *,
+  a1_teacher_weight: float,
+  a2_teacher_eta: float,
 ) -> dict[str, Any]:
   """Switch the four teacher fields at a recorded round boundary."""
   parameters = arm_parameters(arm)
@@ -128,6 +142,11 @@ def _set_teacher_arm(
     parameters["teacher_weight"] = float(a1_teacher_weight)
     parameters["name"] = (
       f"full_action_local_success_50_weight_{a1_teacher_weight:g}"
+    )
+  elif arm == "A2":
+    parameters["teacher_eta"] = float(a2_teacher_eta)
+    parameters["name"] = (
+      f"residual_eta_{a2_teacher_eta:g}_all_interventions"
     )
   algorithm.teacher_mode = parameters["teacher_mode"]
   algorithm.teacher_gate = parameters["teacher_gate"]
@@ -298,6 +317,7 @@ def main() -> None:
       runner.alg,
       teacher_arms[0],
       a1_teacher_weight=args.a1_teacher_weight,
+      a2_teacher_eta=args.a2_teacher_eta,
     )
     initial_hash = actor_state_sha256(actor_state(runner.alg.actor))
     _save_checkpoint(
@@ -320,6 +340,7 @@ def main() -> None:
         runner.alg,
         round_teacher_arm,
         a1_teacher_weight=args.a1_teacher_weight,
+        a2_teacher_eta=args.a2_teacher_eta,
       )
       runner.alg.freeze_round_reference()
       start_hash = actor_state_sha256(actor_state(runner.alg.actor))
@@ -374,6 +395,7 @@ def main() -> None:
         None if args.teacher_schedule == "fixed" else args.teacher_switch_after
       ),
       "a1_teacher_weight": args.a1_teacher_weight,
+      "a2_teacher_eta": args.a2_teacher_eta,
       "teacher_arms_by_round": teacher_arms,
       "height_curriculum": height_curriculum,
       "seed": args.seed,
