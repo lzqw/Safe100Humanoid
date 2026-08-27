@@ -1,0 +1,22 @@
+{
+  "schema_version": "paper_dual_v35.v85.decision.v1",
+  "candidate": "paper_stair_sloped_proximity_balanced",
+  "decision": "reject_mixed_execution_below_gate",
+  "reason": "Doubling the Eq. (23) proximity coefficient produced a 69.49% isolated peak, but the accepted actor pooled to only 526/777 (67.70%).",
+  "source_commit": "10f09be",
+  "input_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "training": {"seed": 201352628, "num_envs": 256, "rounds": 4, "rollout_steps_per_round": 1024, "elapsed_seconds": 148.2078302280279, "actor_gradient_accumulation_microbatches": 2, "transactional_rollback_count": 1},
+  "reward": {"margin_weight": 0.1, "intervention_weight": 2.0, "observed_cbf_to_nominal_magnitude_ratio": 0.22},
+  "aligned_filter_off_rollouts": [
+    {"round": 1, "success_count": 259, "episode_count": 396, "success_rate": 0.6540404040404041},
+    {"round": 2, "success_count": 271, "episode_count": 390, "success_rate": 0.6948717948717948},
+    {"round": 3, "success_count": 261, "episode_count": 401, "success_rate": 0.6508728179551122, "rollback": true},
+    {"round": 4, "success_count": 255, "episode_count": 387, "success_rate": 0.6589147286821705, "same_actor_retry": true}
+  ],
+  "selected_actor_pooled_evidence": {"success_count": 526, "episode_count": 777, "success_rate": 0.676962676962677},
+  "selected_checkpoint_sha256": "9728485b07dddc1779ca03f96f366a9daa9bc0b0ce42c1c45d735b48d86cc678",
+  "selected_actor_sha256": "dd6f88d8e5bad71c1b232a9bbf18d29a6d9b02be0971c8dfecf8c55c4ccdc2a8",
+  "deployment_gate_run": false,
+  "global_best_changed": false,
+  "next_hypothesis": "Use 100% filtered execution as in the paper while retaining nominal actions in PPO storage, then test filter-off only if the filtered training gate passes."
+}

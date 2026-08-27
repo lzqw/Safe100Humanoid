@@ -11,6 +11,7 @@
 | v82 | microbatch 修复后 256 environments 完整运行；filter-off 63.22%→69.37%，仍未过 gate | [`pooled_microbatch_v82/`](pooled_microbatch_v82/) |
 | v83 | 新 seed continuation 的单轮峰值 69.27%；同 actor pooled 520/779=66.75%，未过 gate | [`pooled_cont_v83/`](pooled_cont_v83/) |
 | v84 | Eq. (27) margin 0.1→0.25 后峰值仅 67.59%，第 4 轮回落并 rollback | [`mid_margin_v84/`](mid_margin_v84/) |
+| v85 | Eq. (23) proximity 1→2 后单轮 69.49%；同 actor pooled 526/777=67.70% | [`proximity_v85/`](proximity_v85/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -20,8 +21,8 @@ SHA-256 为 `9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317`�
 v82/v83 已证明 microbatch 路径稳定：每轮多个等权 backward chunks、一次全局梯度裁剪、
 一次 SGD step，256-environment 训练没有再发生 OOM。v83 在新 seed 上先升后退，rollback
 后的 accepted actor 两次 rollout 合并仅 66.75%，说明同配置 continuation 已进入噪声平台。
-v84 将 Eq. (27) margin weight 提到 0.25，使 CBF penalty 达到 nominal reward 的约 23%，
-但最佳仅 67.59%。下一步恢复 0.1 margin，并只增强论文 Eq. (23) action-proximity 项；该项
-直接奖励 nominal policy action 接近经过安全过滤的 action，比继续增加状态 margin 更符合
-部署时移除 filter 的目标。
+v84/v85 将相近的约 22--23% CBF 信号分别放到 state margin 和 action proximity；两者都未
+超过 70%，说明问题不只是项间权重。下一步采用论文的完整训练数据流：100% safety-filtered
+execution，同时 PPO 仍存 nominal policy action 和 task+CBF reward。训练阶段只选择
+filter-on actor；达到 75% 后才做一次最小 filter-off deployment gate。
 
