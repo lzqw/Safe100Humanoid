@@ -40,6 +40,10 @@ OBSERVABLE_PPO = _load(
     "observable_cbf_ppo_v51_test",
     "experiments/scripts/refine_observable_cbf_ppo_v51.py",
 )
+GATED_RESIDUAL = _load(
+    "paired_gated_residual_v113_test",
+    "experiments/scripts/train_paired_gated_residual_v113.py",
+)
 
 
 def test_v34_sherman_morrison_matches_dense_solve() -> None:
@@ -347,6 +351,22 @@ def test_v112_full_first_layer_retains_state_conditioning_gradients() -> None:
     assert torch.equal(state_conditioned, gradient)
     with pytest.raises(ValueError, match="unsupported"):
         ADAPTER._apply_first_layer_update_scope(gradient.clone(), "all-layers")
+
+
+def test_v113_gate_balances_classes_and_suppresses_low_confidence_states() -> None:
+    labels = torch.tensor((True, True, False, False, False, False))
+    environment_ids = torch.tensor((0, 0, 1, 2, 2, 2))
+    weights = GATED_RESIDUAL.balanced_episode_weights(labels, environment_ids)
+    assert torch.isclose(weights[labels].sum(), torch.tensor(0.5))
+    assert torch.isclose(weights[~labels].sum(), torch.tensor(0.5))
+    assert torch.isclose(weights[environment_ids == 1].sum(), torch.tensor(0.25))
+    assert torch.isclose(weights[environment_ids == 2].sum(), torch.tensor(0.25))
+    gate = GATED_RESIDUAL.deployable_gate(
+        torch.tensor((0.4, 0.6, 0.9)),
+        torch.tensor((True, True, False)),
+        threshold=0.5,
+    )
+    assert torch.allclose(gate, torch.tensor((0.0, 0.2, 0.0)))
 
 
 def test_v95_critic_expansion_accepts_ten_persistent_features() -> None:
