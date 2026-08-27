@@ -1,5 +1,14 @@
 # v35 Paper-Aligned Dual CBF-RL Pilot
 
+## 最新实验：v68 混合过滤分流 actor 目标
+
+v68 将 filter-off transition 只用于 PPO actor，将 filter-on 环境的 CBF 介入只
+用于 deterministic-mean teacher，critic 和 moving KL 仍共享全部数据。路由审计
+符合配置，但最佳对齐 checkpoint 的 off/on 仅为 **69.70%/69.57%**，未过 75%
+门槛且低于 v67 的 72.22%；四轮 actor gradient 仍全部触发裁剪。因此未追加独立
+评估或上传 checkpoint，当前最佳不变。完整证据见
+[`split_objective_v68/`](split_objective_v68/README.md)。
+
 ## 最新实验：v67 混合过滤分组优势 PPO
 
 v67 将 128 个环境等分为 filter-on/off 两组，并分别归一化 PPO advantage。最佳
