@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from dataclasses import replace
+import math
 from typing import Any
 
 PAPER_ARXIV_ID = "2510.14959v6"
@@ -88,6 +90,8 @@ def configure_paper_dual_reward(
 def configure_paper_training_domain_randomization(
   env_cfg,
   mode: str,
+  *,
+  strength: float = 1.0,
 ) -> dict[str, Any]:
   """Restore repository-native G1 randomization for CBF-RL training.
 
@@ -102,12 +106,15 @@ def configure_paper_training_domain_randomization(
       "paper domain-randomization mode must be one of "
       f"{PAPER_DOMAIN_RANDOMIZATION_MODES}, got {mode!r}"
     )
+  if not math.isfinite(strength) or not 0.0 < strength <= 1.0:
+    raise ValueError("paper domain-randomization strength must lie in (0, 1]")
   if mode == "off":
     return {
       "mode": mode,
       "enabled": False,
       "actor_observation_corruption": False,
       "event_terms": [],
+      "strength": 0.0,
     }
 
   # Import lazily to keep the reward-only module lightweight and avoid adding
@@ -125,14 +132,47 @@ def configure_paper_training_domain_randomization(
     env_cfg.events[name] = deepcopy(native_training_cfg.events[name])
   env_cfg.observations["actor"].enable_corruption = True
 
-  friction = native_training_cfg.events["foot_friction"].params
-  base_com = native_training_cfg.events["base_com"].params
-  encoder = native_training_cfg.events["encoder_bias"].params
+  # Continuation policies already encode a narrow nominal gait. Scale every
+  # native perturbation continuously around its identity/no-noise value so DR
+  # can be introduced as a curriculum instead of an abrupt distribution jump.
+  for term in env_cfg.observations["actor"].terms.values():
+    noise = term.noise
+    if noise is not None:
+      term.noise = replace(
+        noise,
+        n_min=float(noise.n_min) * strength,
+        n_max=float(noise.n_max) * strength,
+      )
+  encoder_event = env_cfg.events["encoder_bias"]
+  encoder_event.params["bias_range"] = tuple(
+    float(value) * strength for value in encoder_event.params["bias_range"]
+  )
+  friction_event = env_cfg.events["foot_friction"]
+  friction_event.params["ranges"] = tuple(
+    1.0 + (float(value) - 1.0) * strength
+    for value in friction_event.params["ranges"]
+  )
+  base_com_event = env_cfg.events["base_com"]
+  base_com_event.params["ranges"] = {
+    axis: tuple(float(value) * strength for value in bounds)
+    for axis, bounds in base_com_event.params["ranges"].items()
+  }
+  if mode == "paper_full":
+    push_event = env_cfg.events["push_robot"]
+    push_event.params["velocity_range"] = {
+      axis: tuple(float(value) * strength for value in bounds)
+      for axis, bounds in push_event.params["velocity_range"].items()
+    }
+
+  friction = env_cfg.events["foot_friction"].params
+  base_com = env_cfg.events["base_com"].params
+  encoder = env_cfg.events["encoder_bias"].params
   metadata: dict[str, Any] = {
     "mode": mode,
     "enabled": True,
     "source": "unitree_g1_rough_env_cfg(play=False)",
     "actor_observation_corruption": True,
+    "strength": strength,
     "event_terms": event_names,
     "encoder_bias_range": list(encoder["bias_range"]),
     "foot_friction_range": list(friction["ranges"]),
@@ -145,7 +185,7 @@ def configure_paper_training_domain_randomization(
     "external_pushes": mode == "paper_full",
   }
   if mode == "paper_full":
-    push = native_training_cfg.events["push_robot"]
+    push = env_cfg.events["push_robot"]
     metadata["push_interval_range_s"] = list(push.interval_range_s)
     metadata["push_velocity_range"] = {
       axis: list(bounds)

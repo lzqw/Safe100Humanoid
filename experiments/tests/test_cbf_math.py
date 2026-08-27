@@ -190,11 +190,16 @@ def test_v57_restores_native_static_training_domain_randomization():
   assert cfg.observations["actor"].enable_corruption is False
   assert not ({"encoder_bias", "foot_friction", "base_com"} & cfg.events.keys())
 
-  metadata = configure_paper_training_domain_randomization(cfg, "paper_static")
+  metadata = configure_paper_training_domain_randomization(
+    cfg, "paper_static", strength=0.25
+  )
 
   assert metadata["enabled"] is True
   assert metadata["external_pushes"] is False
   assert cfg.observations["actor"].enable_corruption is True
   assert {"encoder_bias", "foot_friction", "base_com"} <= cfg.events.keys()
   assert "push_robot" not in cfg.events
-  assert metadata["foot_friction_range"] == [0.3, 1.6]
+  assert metadata["strength"] == 0.25
+  assert metadata["foot_friction_range"] == [0.825, 1.15]
+  assert metadata["encoder_bias_range"] == [-0.00375, 0.00375]
+  assert cfg.observations["actor"].terms["base_ang_vel"].noise.n_max == 0.05

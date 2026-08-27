@@ -219,6 +219,15 @@ def _parse_args() -> argparse.Namespace:
       "the fixed play environment."
     ),
   )
+  parser.add_argument(
+    "--training-domain-randomization-strength",
+    type=float,
+    default=1.0,
+    help=(
+      "Scale native perturbation ranges around their identity values; use a "
+      "fraction below 1 when continuing a nominal pretrained gait."
+    ),
+  )
   return parser.parse_args()
 
 
@@ -510,7 +519,9 @@ def main() -> None:
   )
   training_domain_randomization = (
     configure_paper_training_domain_randomization(
-      env_cfg, args.training_domain_randomization
+      env_cfg,
+      args.training_domain_randomization,
+      strength=args.training_domain_randomization_strength,
     )
   )
   if training_domain_randomization["enabled"]:
