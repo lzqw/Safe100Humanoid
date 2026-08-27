@@ -192,9 +192,12 @@ def cbf_dual_reward(
     correction_norm = torch.linalg.vector_norm(
       term.safe_raw_action - term.nominal_raw_action, dim=-1
     )
+  elif correction_space == "foot_task":
+    correction_norm = term.counterfactual_task_intervention_norm
   else:
     raise ValueError(
-      "CBF dual correction_space must be 'target' or 'raw_action', got "
+      "CBF dual correction_space must be 'target', 'raw_action', or "
+      "'foot_task', got "
       f"{correction_space!r}"
     )
   value = dual_cbf_reward(

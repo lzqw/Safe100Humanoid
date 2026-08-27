@@ -49,8 +49,20 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--context", choices=("F1", "F2", "F3"), required=True)
   parser.add_argument(
     "--candidate",
-    choices=("current", "raw_moderate", "raw_strong", "raw_demo"),
+    choices=(
+      "current",
+      "raw_moderate",
+      "raw_strong",
+      "raw_demo",
+      "paper_stair_exact",
+    ),
     required=True,
+  )
+  parser.add_argument(
+    "--clearance-barrier-slope",
+    type=float,
+    default=CLEARANCE_BARRIER_SLOPE,
+    help="Use 0 for the paper's horizontal next-riser hyperplane.",
   )
   parser.add_argument("--teacher-arm", choices=("A0", "A1", "A2"), default="A0")
   parser.add_argument(
@@ -306,6 +318,13 @@ def main() -> None:
   args = _parse_args()
   if args.rounds < 1 or args.num_envs < 1 or args.rollout_steps < 1:
     raise ValueError("v35 rounds, environments, and rollout steps must be positive")
+  if not 0.0 <= args.clearance_barrier_slope <= 2.0:
+    raise ValueError("v35 clearance barrier slope must lie in [0, 2]")
+  if (
+    args.candidate == "paper_stair_exact"
+    and args.clearance_barrier_slope != 0.0
+  ):
+    raise ValueError("paper_stair_exact requires the horizontal barrier (slope 0)")
   if not 0.0 < args.a1_teacher_weight <= 0.1:
     raise ValueError("v35 A1 teacher weight must be in (0, 0.1]")
   if args.curriculum_rows < 2:
@@ -418,7 +437,7 @@ def main() -> None:
     context=args.context,
     runtime_filter=training_runtime_filter,
     context_spec=environment_parameters(args.context),
-    clearance_barrier_slope=CLEARANCE_BARRIER_SLOPE,
+    clearance_barrier_slope=args.clearance_barrier_slope,
     recovery_distance_m=RECOVERY_DISTANCE_M,
     filter_alpha=FILTER_ALPHA,
   )

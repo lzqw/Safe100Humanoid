@@ -36,6 +36,15 @@ PAPER_DUAL_CANDIDATES: dict[str, dict[str, float | str]] = {
     "margin_weight": 10.0,
     "intervention_weight": 100.0,
   },
+  "paper_stair_exact": {
+    # Humanoid Eq. (27) uses the displacement of the reduced-order swing-foot
+    # state.  Five centimetres keeps the exponential informative at the scale
+    # of one 50 Hz filtered foot update.
+    "correction_space": "foot_task",
+    "sigma": 0.05,
+    "margin_weight": 1.0,
+    "intervention_weight": 1.0,
+  },
 }
 
 

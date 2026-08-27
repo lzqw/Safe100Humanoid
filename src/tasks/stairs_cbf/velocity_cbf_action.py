@@ -414,6 +414,16 @@ class TaskMetricVelocityCbfAction(_V34Timing, HigherRiserCbfAction):
         self.counterfactual_target_intervention_norm[:] = torch.linalg.vector_norm(
             target_correction, dim=-1
         )
+        task_velocity_correction = torch.stack(
+            (
+                torch.sum(selected_jac_x * correction, dim=-1),
+                torch.sum(selected_jac_z * correction, dim=-1),
+            ),
+            dim=-1,
+        )
+        self.counterfactual_task_intervention_norm[:] = dt * torch.linalg.vector_norm(
+            task_velocity_correction, dim=-1
+        )
         previous_correction = torch.where(
             continuous.unsqueeze(-1),
             self._v34_previous_correction,

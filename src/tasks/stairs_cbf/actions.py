@@ -125,6 +125,11 @@ class StairCbfJointPositionAction(JointPositionAction):
     self.counterfactual_target_intervention_norm = torch.zeros(
       shape, device=self.device
     )
+    # Paper Eq. (27) measures the filtered displacement in the reduced-order
+    # swing-foot coordinates, not in the 12-D joint-action parameterization.
+    self.counterfactual_task_intervention_norm = torch.zeros(
+      shape, device=self.device
+    )
     self.intervention_count = torch.zeros(shape, device=self.device)
     self.selected_edge_top_z = torch.zeros(shape, device=self.device)
     self.selected_foot = torch.full(shape, -1, dtype=torch.long, device=self.device)
@@ -387,6 +392,16 @@ class StairCbfJointPositionAction(JointPositionAction):
     counterfactual_target_norm = torch.linalg.vector_norm(
       projected_target - nominal_target, dim=1
     )
+    task_velocity_correction = torch.stack(
+      (
+        torch.sum(selected_jac_x * (projected_qdot - qdot_nominal), dim=1),
+        torch.sum(selected_jac_z * (projected_qdot - qdot_nominal), dim=1),
+      ),
+      dim=1,
+    )
+    counterfactual_task_norm = float(self._env.step_dt) * torch.linalg.vector_norm(
+      task_velocity_correction, dim=1
+    )
     would_intervene = active & (
       (psi_nominal < -self.cfg.intervention_epsilon)
       | (counterfactual_target_norm > self.cfg.intervention_epsilon)
@@ -474,6 +489,7 @@ class StairCbfJointPositionAction(JointPositionAction):
     )
     self.counterfactual_intervention_norm[:] = counterfactual_qdot_norm
     self.counterfactual_target_intervention_norm[:] = counterfactual_target_norm
+    self.counterfactual_task_intervention_norm[:] = counterfactual_task_norm
     self.would_intervene[:] = would_intervene
     self.intervened[:] = filter_enabled & would_intervene
     self.intervention_count += self.intervened.float()
@@ -512,6 +528,7 @@ class StairCbfJointPositionAction(JointPositionAction):
     self.target_intervention_norm[env_ids] = 0.0
     self.counterfactual_intervention_norm[env_ids] = 0.0
     self.counterfactual_target_intervention_norm[env_ids] = 0.0
+    self.counterfactual_task_intervention_norm[env_ids] = 0.0
     self.intervention_count[env_ids] = 0.0
     self.selected_edge_top_z[env_ids] = 0.0
     self.selected_foot[env_ids] = -1

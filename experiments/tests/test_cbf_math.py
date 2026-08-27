@@ -143,3 +143,12 @@ def test_v35_paper_demo_candidate_matches_public_demo_scaling():
     "margin_weight": 10.0,
     "intervention_weight": 100.0,
   }
+
+
+def test_v35_paper_stair_candidate_uses_reduced_order_foot_distance():
+  assert PAPER_DUAL_CANDIDATES["paper_stair_exact"] == {
+    "correction_space": "foot_task",
+    "sigma": 0.05,
+    "margin_weight": 1.0,
+    "intervention_weight": 1.0,
+  }
