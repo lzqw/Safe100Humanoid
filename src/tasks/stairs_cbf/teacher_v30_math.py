@@ -38,6 +38,36 @@ def terminal_episode_transition_mask(
     return torch.isin(composite_ids, terminal_ids)
 
 
+def outcome_gated_interventions(
+    intervened: torch.Tensor,
+    failed_episode_transition: torch.Tensor,
+    successful_episode_transition: torch.Tensor,
+    *,
+    gate: str,
+) -> torch.Tensor:
+    """Restrict intervention labels to one complete-episode outcome."""
+    if not (
+        intervened.shape
+        == failed_episode_transition.shape
+        == successful_episode_transition.shape
+    ) or intervened.ndim != 2:
+        raise ValueError("v35 outcome-gate tensors must share [T, N] shape")
+    if failed_episode_transition.dtype != torch.bool or (
+        successful_episode_transition.dtype != torch.bool
+    ):
+        raise TypeError("v35 outcome transition masks must be boolean")
+    if bool((failed_episode_transition & successful_episode_transition).any()):
+        raise ValueError("v35 failed and successful episode masks overlap")
+    eligible = intervened.bool()
+    if gate == "none":
+        return eligible
+    if gate == "failed":
+        return eligible & failed_episode_transition
+    if gate == "successful":
+        return eligible & successful_episode_transition
+    raise ValueError(f"unknown v35 outcome gate {gate!r}")
+
+
 def residual_teacher_target(
     reference_mean: torch.Tensor,
     safe_actor_action: torch.Tensor,

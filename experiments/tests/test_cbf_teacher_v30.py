@@ -125,6 +125,25 @@ def test_v35_terminal_episode_mask_keeps_environment_identity() -> None:
     )
 
 
+def test_v35_outcome_gate_selects_only_successful_interventions() -> None:
+    intervened = torch.tensor(
+        ((True, True, False), (True, False, True)), dtype=torch.bool
+    )
+    failed = torch.tensor(
+        ((True, False, False), (True, False, False)), dtype=torch.bool
+    )
+    successful = torch.tensor(
+        ((False, True, True), (False, True, True)), dtype=torch.bool
+    )
+    eligible = MATH.outcome_gated_interventions(
+        intervened, failed, successful, gate="successful"
+    )
+    assert torch.equal(
+        eligible,
+        torch.tensor(((False, True, False), (False, False, True))),
+    )
+
+
 def test_v30_update_has_no_kl_threshold_control_flow() -> None:
     source = (REPO / "src/tasks/stairs_cbf/teacher_v30.py").read_text()
     tree = ast.parse(source)

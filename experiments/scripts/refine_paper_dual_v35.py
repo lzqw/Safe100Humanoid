@@ -98,11 +98,27 @@ def _parse_args() -> argparse.Namespace:
     ),
   )
   parser.add_argument(
+    "--success-only-mean-teacher",
+    action="store_true",
+    help=(
+      "Gate deterministic-mean CBF labels to complete reached-top episodes "
+      "from a shielded rollout."
+    ),
+  )
+  parser.add_argument(
     "--failure-focused-actor",
     action="store_true",
     help=(
       "Use PPO and entropy actor gradients only on complete failed episodes; "
       "successful episodes retain only the moving round-reference KL."
+    ),
+  )
+  parser.add_argument(
+    "--distill-only-actor",
+    action="store_true",
+    help=(
+      "Disable PPO/entropy actor gradients and update the actor only with "
+      "the mean-CBF teacher plus the global moving reference KL."
     ),
   )
   parser.add_argument(
@@ -301,16 +317,28 @@ def main() -> None:
     raise ValueError("failure-only mean teacher requires deterministic mean labels")
   if args.failure_only_mean_teacher and args.training_runtime_filter != "off":
     raise ValueError("failure-only mean teacher requires unshielded training")
+  if args.success_only_mean_teacher and not args.deterministic_mean_teacher:
+    raise ValueError("success-only mean teacher requires deterministic mean labels")
+  if args.failure_only_mean_teacher and args.success_only_mean_teacher:
+    raise ValueError("mean-teacher outcome gates are mutually exclusive")
+  if args.success_only_mean_teacher and args.training_runtime_filter != "on":
+    raise ValueError("success-only mean teacher requires shielded training")
   if args.failure_focused_actor and not args.failure_only_mean_teacher:
     raise ValueError(
       "failure-focused actor requires the failure-only mean teacher"
+    )
+  if args.distill_only_actor and not args.success_only_mean_teacher:
+    raise ValueError(
+      "distillation-only actor requires the success-only mean teacher"
     )
   if not 0.0 <= args.success_local_kl_beta <= 4.0:
     raise ValueError("success-local KL beta must lie in [0, 4]")
   if args.success_local_kl_beta > 0.0 and (
     not args.deterministic_mean_teacher
     or args.failure_only_mean_teacher
+    or args.success_only_mean_teacher
     or args.failure_focused_actor
+    or args.distill_only_actor
     or args.training_runtime_filter != "off"
   ):
     raise ValueError(
@@ -389,7 +417,9 @@ def main() -> None:
       env_cfg,
       runtime_filter_during_training=training_runtime_filter,
       failure_only=args.failure_only_mean_teacher,
+      success_only=args.success_only_mean_teacher,
       failure_focused_actor=args.failure_focused_actor,
+      distill_only_actor=args.distill_only_actor,
       success_local_kl_beta=args.success_local_kl_beta,
     )
   height_curriculum = None
@@ -424,8 +454,14 @@ def main() -> None:
     runner_cfg["algorithm"]["v35_failure_only_mean_teacher"] = (
       args.failure_only_mean_teacher
     )
+    runner_cfg["algorithm"]["v35_success_only_mean_teacher"] = (
+      args.success_only_mean_teacher
+    )
     runner_cfg["algorithm"]["v35_failure_focused_actor"] = (
       args.failure_focused_actor
+    )
+    runner_cfg["algorithm"]["v35_distill_only_actor"] = (
+      args.distill_only_actor
     )
     runner_cfg["algorithm"]["v35_success_local_kl_beta"] = (
       args.success_local_kl_beta
@@ -486,7 +522,9 @@ def main() -> None:
         "teacher_arms_by_round": teacher_arms,
         "height_curriculum": height_curriculum,
         "deterministic_mean_teacher": deterministic_mean_teacher,
+        "success_only_mean_teacher": args.success_only_mean_teacher,
         "failure_focused_actor": args.failure_focused_actor,
+        "distill_only_actor": args.distill_only_actor,
         "success_local_kl_beta": args.success_local_kl_beta,
         "training_runtime_filter": training_runtime_filter,
         "training_action_std": args.training_action_std,
@@ -542,7 +580,9 @@ def main() -> None:
           "teacher_arms_by_round": teacher_arms,
           "height_curriculum": height_curriculum,
           "deterministic_mean_teacher": deterministic_mean_teacher,
+          "success_only_mean_teacher": args.success_only_mean_teacher,
           "failure_focused_actor": args.failure_focused_actor,
+          "distill_only_actor": args.distill_only_actor,
           "success_local_kl_beta": args.success_local_kl_beta,
           "training_runtime_filter": training_runtime_filter,
           "training_action_std": args.training_action_std,
@@ -571,7 +611,9 @@ def main() -> None:
       "teacher_arms_by_round": teacher_arms,
       "height_curriculum": height_curriculum,
       "deterministic_mean_teacher": deterministic_mean_teacher,
+      "success_only_mean_teacher": args.success_only_mean_teacher,
       "failure_focused_actor": args.failure_focused_actor,
+      "distill_only_actor": args.distill_only_actor,
       "success_local_kl_beta": args.success_local_kl_beta,
       "round_metric_actor_alignment": (
         "round_N_rollout_uses_round_N_minus_1_checkpoint"

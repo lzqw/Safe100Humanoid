@@ -20,6 +20,7 @@ from .teacher_v26 import HigherRiserCbfAction, v26_online_safety_telemetry
 from .teacher_v30 import CbfTeacherV30PPO, CbfTeacherV30PpoAlgorithmCfg
 from .teacher_v30_math import (
   intervention_teacher_weights,
+  outcome_gated_interventions,
   terminal_episode_transition_mask,
   weighted_action_errors,
 )
@@ -67,7 +68,9 @@ def configure_v35_mean_teacher_telemetry(
   *,
   runtime_filter_during_training: bool,
   failure_only: bool = False,
+  success_only: bool = False,
   failure_focused_actor: bool = False,
+  distill_only_actor: bool = False,
   success_local_kl_beta: float = 0.0,
 ) -> dict[str, Any]:
   """Replace only the training telemetry function; action execution is fixed."""
@@ -93,12 +96,24 @@ def configure_v35_mean_teacher_telemetry(
     ),
     "loss": "weighted_smooth_l1_per_action_mean",
     "eligibility": "deterministic_mean_cbf_interventions_only",
-    "outcome_gate": "failed_episodes" if failure_only else "none",
+    "outcome_gate": (
+      "failed_episodes"
+      if failure_only
+      else "successful_episodes"
+      if success_only
+      else "none"
+    ),
     "actor_ppo_scope": (
-      "failed_episodes" if failure_focused_actor else "all_transitions"
+      "none_distillation_only"
+      if distill_only_actor
+      else "failed_episodes"
+      if failure_focused_actor
+      else "all_transitions"
     ),
     "successful_episode_actor_objective": (
-      "round_reference_KL_only"
+      "mean_CBF_distillation_plus_global_round_reference_KL"
+      if distill_only_actor
+      else "round_reference_KL_only"
       if failure_focused_actor
       else (
         "PPO_plus_mean_CBF_plus_extra_local_round_reference_KL"
@@ -126,7 +141,9 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     self,
     *args,
     v35_failure_only_mean_teacher: bool = False,
+    v35_success_only_mean_teacher: bool = False,
     v35_failure_focused_actor: bool = False,
+    v35_distill_only_actor: bool = False,
     v35_success_local_kl_beta: float = 0.0,
     **kwargs,
   ) -> None:
@@ -138,7 +155,11 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     self.v35_failure_only_mean_teacher = bool(
       v35_failure_only_mean_teacher
     )
+    self.v35_success_only_mean_teacher = bool(
+      v35_success_only_mean_teacher
+    )
     self.v35_failure_focused_actor = bool(v35_failure_focused_actor)
+    self.v35_distill_only_actor = bool(v35_distill_only_actor)
     self.v35_success_local_kl_beta = float(v35_success_local_kl_beta)
     if (
       not math.isfinite(self.v35_success_local_kl_beta)
@@ -148,6 +169,12 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     if self.v35_failure_focused_actor and not self.v35_failure_only_mean_teacher:
       raise ValueError(
         "v35 failure-focused actor requires failure-only mean teacher"
+      )
+    if self.v35_failure_only_mean_teacher and self.v35_success_only_mean_teacher:
+      raise ValueError("v35 mean teacher outcome gates are mutually exclusive")
+    if self.v35_distill_only_actor and not self.v35_success_only_mean_teacher:
+      raise ValueError(
+        "v35 distillation-only actor requires success-only mean teacher"
       )
     t = self.storage.num_transitions_per_env
     n = self.storage.num_envs
@@ -217,13 +244,21 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     success_transition = terminal_episode_transition_mask(
       self.teacher_episode_ids, self.v35_success_terminals
     )
-    if bool((failed_transition & success_transition).any()):
-      raise RuntimeError("v35 success and failed episode masks overlap")
     self.v35_failed_episode_transition.copy_(failed_transition)
     self.v35_success_episode_transition.copy_(success_transition)
-    gated_intervention = self.v35_mean_intervened
-    if self.v35_failure_only_mean_teacher:
-      gated_intervention = gated_intervention & failed_transition
+    gate = (
+      "failed"
+      if self.v35_failure_only_mean_teacher
+      else "successful"
+      if self.v35_success_only_mean_teacher
+      else "none"
+    )
+    gated_intervention = outcome_gated_interventions(
+      self.v35_mean_intervened,
+      failed_transition,
+      success_transition,
+      gate=gate,
+    )
     eligible, weights = intervention_teacher_weights(
       gated_intervention,
       self.v35_mean_correction_norm,
@@ -244,6 +279,8 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     }
 
   def _actor_ppo_transition_mask(self) -> torch.Tensor:
+    if self.v35_distill_only_actor:
+      return torch.zeros_like(self.teacher_eligible, dtype=torch.bool)
     if self.v35_failure_focused_actor:
       return self.v35_failed_episode_transition
     return super()._actor_ppo_transition_mask()
@@ -317,7 +354,11 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
         "v35_failure_only_mean_teacher": (
           self.v35_failure_only_mean_teacher
         ),
+        "v35_success_only_mean_teacher": (
+          self.v35_success_only_mean_teacher
+        ),
         "v35_failure_focused_actor": self.v35_failure_focused_actor,
+        "v35_distill_only_actor": self.v35_distill_only_actor,
         "v35_success_local_kl_beta": self.v35_success_local_kl_beta,
         "v35_failed_episode_count": float(
           (self.storage.dones.squeeze(-1).bool() & self.fall_events).sum()
@@ -383,6 +424,10 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     output["v35_failure_only_mean_teacher"] = (
       self.v35_failure_only_mean_teacher
     )
+    output["v35_success_only_mean_teacher"] = (
+      self.v35_success_only_mean_teacher
+    )
     output["v35_failure_focused_actor"] = self.v35_failure_focused_actor
+    output["v35_distill_only_actor"] = self.v35_distill_only_actor
     output["v35_success_local_kl_beta"] = self.v35_success_local_kl_beta
     return output
