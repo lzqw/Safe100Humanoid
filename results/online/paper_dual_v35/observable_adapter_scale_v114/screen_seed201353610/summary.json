@@ -1,0 +1,50 @@
+[
+  {
+    "counterfactual_intervention_fraction": 0.10112186521291733,
+    "episode_count": 64,
+    "fall_count": 18,
+    "fall_rate": 0.28125,
+    "initial_state_signature": "a6e82feea337e7fc510a8be50f901bf12244a954931f2b19a94232d122bc2bbb",
+    "mean_reached_riser": 7.859375,
+    "scale": 0.0,
+    "screen_seed": 201353610,
+    "success_count": 46,
+    "success_rate": 0.71875
+  },
+  {
+    "counterfactual_intervention_fraction": 0.1024656668305397,
+    "episode_count": 64,
+    "fall_count": 25,
+    "fall_rate": 0.390625,
+    "initial_state_signature": "a6e82feea337e7fc510a8be50f901bf12244a954931f2b19a94232d122bc2bbb",
+    "mean_reached_riser": 7.609375,
+    "scale": 0.5,
+    "screen_seed": 201353610,
+    "success_count": 39,
+    "success_rate": 0.609375
+  },
+  {
+    "counterfactual_intervention_fraction": 0.09886529296636581,
+    "episode_count": 64,
+    "fall_count": 23,
+    "fall_rate": 0.359375,
+    "initial_state_signature": "a6e82feea337e7fc510a8be50f901bf12244a954931f2b19a94232d122bc2bbb",
+    "mean_reached_riser": 8.0,
+    "scale": 1.0,
+    "screen_seed": 201353610,
+    "success_count": 41,
+    "success_rate": 0.640625
+  },
+  {
+    "counterfactual_intervention_fraction": 0.09693358838558197,
+    "episode_count": 64,
+    "fall_count": 19,
+    "fall_rate": 0.296875,
+    "initial_state_signature": "a6e82feea337e7fc510a8be50f901bf12244a954931f2b19a94232d122bc2bbb",
+    "mean_reached_riser": 8.40625,
+    "scale": 1.5,
+    "screen_seed": 201353610,
+    "success_count": 45,
+    "success_rate": 0.703125
+  }
+]

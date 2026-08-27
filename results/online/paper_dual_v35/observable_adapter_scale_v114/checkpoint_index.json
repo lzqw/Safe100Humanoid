@@ -1,0 +1,18 @@
+{
+  "schema_version": "paper_dual_v35.v114.checkpoints.v1",
+  "input": {
+    "path_4080": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt",
+    "sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317"
+  },
+  "source_v92_adapter": {
+    "path_4080": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/observable_rescue_sgd_v92_5914b46_4x64/candidate.pt",
+    "sha256": "3c855c5b5e81cb221187d10db227595abbf7e765d7273d2a2b92515b697cfcce"
+  },
+  "rejected_selected_scale_zero_candidate": {
+    "path_4080": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/observable_adapter_scale_v114_1b4cb8e_s201353610/candidate.pt",
+    "checkpoint_sha256": "b4984c9cebbb61aad8e6db144a5669beaf8f3dd66dadab25d79aa80f0dfe3183",
+    "actor_sha256": "74984667acaf74f789c51c14d2ae7b8e5055b2db09dd3dd089b8b1fe6bf8d99c",
+    "uploaded": false,
+    "reason": "selected screen was 46/64, below 75%"
+  }
+}

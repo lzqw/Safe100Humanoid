@@ -40,6 +40,7 @@
 | v111 | paired terminal outcome 正负对比；rescued/harmed 方向近乎抵消，screen 38/64=59.38% | [`paired_outcome_contrast_v111/`](paired_outcome_contrast_v111/) |
 | v112 | 正负对比开放完整第一层状态条件化；平均到达更远但 screen 仍为 38/64=59.38% | [`state_conditioned_outcome_v112/`](state_conditioned_outcome_v112/) |
 | v113 | 显式 paired treatment gate + bounded residual；gate 仅 54.46% balanced accuracy，screen 42/64=65.63% | [`paired_gated_residual_v113/`](paired_gated_residual_v113/) |
+| v114 | v92 adapter 预声明幅度 screen；四档均低于 75%，最佳为未修改 v79 的 46/64=71.88% | [`observable_adapter_scale_v114/`](observable_adapter_scale_v114/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -222,3 +223,9 @@ treatment gate，并只让 bounded residual 拟合 54 个 matched rescue。resid
 独立 gate。该结果说明消除全局符号抵消仍不足以从局部状态可靠预测终局 treatment
 effect；下一步应加入因果时序上下文，或对曾达到 47/64 的 v92 方向做预先限定的幅度
 筛选。当前最佳仍为 v79。
+
+v114 完成 v92 幅度筛选：在一次 256-env filter-off rollout 中，0×/0.5×/1×/1.5×
+分别为 46/64、39/64、41/64、45/64。1.5× 的 mean reached riser 达 8.406，但登顶
+仍少于未修改 v79；最佳按成功率回到 0×，且没有一档达到 75%，因此独立 gate 自动
+跳过。由此不再继续标量搜索 v92 correction；下一步必须使用因果时序或完整 episode
+policy objective。当前最佳仍为 v79。
