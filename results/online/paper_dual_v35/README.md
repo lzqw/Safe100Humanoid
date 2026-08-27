@@ -342,6 +342,31 @@ transition；教师方向余弦从 0 提高到 0.8355，所有旧 actor 参数�
 不足以泛化。checkpoint、训练摘要和逐 episode 证据见
 [`observable_cbf_adapter_v49/`](observable_cbf_adapter_v49/)。
 
+#### Six-seed rescued-only expansion v50（未通过 untouched gate）
+
+v50 将 rescued-only 数据扩大到 6 个新训练 seed、每个 16 个环境，共收集
+37,549 个 transition、17 个 matched-rescue episode 和 555 个 teacher
+transition。teacher correction cosine 提高到 `0.89922`，active-state forward
+KL 为 `0.00493496`，旧 actor 参数仍严格不变；RTX 4080 训练耗时 165.2 秒。
+
+但在预先未使用的 seed `201350972` 上，filter-off 只有 **45/64（70.31%）**，
+低于 48/64 门槛，因此按协议不运行 filter-on 并拒绝该 candidate。完整训练摘要、
+逐 episode 结果和可复现 checkpoint 见
+[`observable_cbf_adapter_v50/`](observable_cbf_adapter_v50/)。
+
+#### Geometry-aware paired CBF PPO v51（smoke 通过，尚未部署验收）
+
+v51 不再直接回归 safe action，而是在 410-D 几何可观测 actor 上使用论文式
+filter-on/off 配对 rollout、bounded CBF dual reward、critic GAE 和 PPO
+surrogate。每个 seed 先平均 on/off 梯度，再跨 seed 逐坐标取中位数；仅训练新增
+5 个输入列，旧 405-D 策略严格冻结。
+
+3 seed × 2 env × 64 step 的 RTX 4080 smoke 耗时 20.4 秒，6/6 batch 的
+post-update surrogate 均为正，on/off 梯度平均余弦为 `0.97255`，reference KL
+为 `0.00013189 < 0.001`，offline smoke gate 通过。由于这是极短 smoke，尚未做
+64-episode deployment gate，不能当作最终效果。代码、完整诊断与 smoke checkpoint
+见 [`observable_cbf_ppo_v51/`](observable_cbf_ppo_v51/)。
+
 ## 方法与第一阶段 F1 ablation
 
 本目录发布 v35 第一阶段 F1 pilot 的关键结果。该阶段依据
@@ -390,10 +415,12 @@ winner。后续 staged experiment 解决了 F1 矛盾，并已冻结扩展到 F2
 - [`outcome_ppo_v44_v45/`](outcome_ppo_v44_v45/): episode-balanced outcome PPO、Adam 泛化失败、SGD trust-region 最佳点与独立 base 对照。
 - [`multi_rollout_gae_v46_v47/`](multi_rollout_gae_v46_v47/): 配对 on/off CBF-dual GAE、两级梯度共识及与 base 持平的独立 gate。
 - [`observable_cbf_adapter_v49/`](observable_cbf_adapter_v49/): 410-D 可部署 CBF 几何 actor、被拒绝的 all-success ablation、达到 75% 的 rescued-only paired gate、逐 episode 证据与候选 checkpoint。
+- [`observable_cbf_adapter_v50/`](observable_cbf_adapter_v50/): 六训练 seed rescued-only 扩展、失败的 untouched filter-off gate、逐 episode 证据与 rejected checkpoint。
+- [`observable_cbf_ppo_v51/`](observable_cbf_ppo_v51/): 论文式几何感知 paired on/off GAE-PPO 实现 smoke、完整离线诊断与 smoke-only checkpoint。
 
 历史大型 `.pt` checkpoint 没有提交进 Git；其 SHA-256 已写入相应 summary。
-v49b 的 15 MB 候选 checkpoint 已随结果目录提交，便于直接复现新的 410-D actor。
-该结果仍不是多种子正式评估。
+v49b、v50 与 v51 smoke 的候选 checkpoint 已随各自结果目录提交，便于精确复现；
+其中 v50 已被 untouched gate 拒绝，v51 仅为 smoke，均不是最终稳健 actor。
 
 ## Reproduction boundary
 

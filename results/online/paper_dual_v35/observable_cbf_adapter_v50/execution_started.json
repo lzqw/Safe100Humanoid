@@ -1,0 +1,19 @@
+{
+  "actor_observation_interface": "405D proprioception + 5D deployable CBF geometry",
+  "base_checkpoint_sha256": "3ec45cd196447901cf815d0fa1ff400af1b519ed2bb85c2fc179458ce3e81d3f",
+  "git_commit": "cb9b7c9aeb50ae894523c3afb2ffdea45a24fb7c",
+  "method_id": "deployable-cbf-geometry-residual-adapter-v49",
+  "rollout_conditions": [
+    "filter_off",
+    "filter_on"
+  ],
+  "teacher_episode_scope": "rescued-only",
+  "training_seeds": [
+    201350622,
+    201350632,
+    201350642,
+    201350652,
+    201350662,
+    201350672
+  ]
+}
