@@ -116,6 +116,12 @@ def _parse_args() -> argparse.Namespace:
     default=0.05,
     help="Fixed stochastic rollout std; evaluation remains deterministic.",
   )
+  parser.add_argument(
+    "--actor-learning-rate",
+    type=float,
+    default=5.0e-6,
+    help="Actor learning rate recorded for the v35 continuation.",
+  )
   return parser.parse_args()
 
 
@@ -256,6 +262,8 @@ def main() -> None:
     raise ValueError("v35 curriculum rows must be at least two")
   if not 0.01 <= args.training_action_std <= 0.05:
     raise ValueError("v35 training action std must lie in [0.01, 0.05]")
+  if not 1.0e-6 <= args.actor_learning_rate <= 5.0e-6:
+    raise ValueError("v35 actor learning rate must lie in [1e-6, 5e-6]")
   teacher_arms = _teacher_arms_by_round(
     rounds=args.rounds,
     teacher_arm=args.teacher_arm,
@@ -351,6 +359,8 @@ def main() -> None:
   agent_cfg.seed = args.seed
   agent_cfg.num_steps_per_env = args.rollout_steps
   _configure_algorithm(agent_cfg, teacher_arms[0], preflight=False)
+  agent_cfg.algorithm.learning_rate = float(args.actor_learning_rate)
+  agent_cfg.algorithm.actor_learning_rate = float(args.actor_learning_rate)
   agent_cfg.algorithm.minimum_std = float(args.training_action_std)
   agent_cfg.algorithm.maximum_std = float(args.training_action_std)
   if args.deterministic_mean_teacher:
@@ -409,6 +419,7 @@ def main() -> None:
         "deterministic_mean_teacher": deterministic_mean_teacher,
         "training_runtime_filter": training_runtime_filter,
         "training_action_std": args.training_action_std,
+        "actor_learning_rate": args.actor_learning_rate,
       },
     )
     for round_index in range(1, args.rounds + 1):
@@ -455,6 +466,7 @@ def main() -> None:
           "deterministic_mean_teacher": deterministic_mean_teacher,
           "training_runtime_filter": training_runtime_filter,
           "training_action_std": args.training_action_std,
+          "actor_learning_rate": args.actor_learning_rate,
         },
       )
       _atomic_json(output_dir / "round_metrics.json", records)
@@ -481,6 +493,7 @@ def main() -> None:
       "deterministic_mean_teacher": deterministic_mean_teacher,
       "training_runtime_filter": training_runtime_filter,
       "training_action_std": args.training_action_std,
+      "actor_learning_rate": args.actor_learning_rate,
       "seed": args.seed,
       "rounds": args.rounds,
       "num_envs": args.num_envs,
