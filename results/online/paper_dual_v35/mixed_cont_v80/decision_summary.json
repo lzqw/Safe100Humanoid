@@ -1,0 +1,42 @@
+{
+  "schema_version": "paper_dual_v35.v80.decision.v1",
+  "candidate": "mixed-unit-balanced-half-step-transactional-v80",
+  "decision": "rejected_at_training_gate",
+  "reason": "After pooling two evaluations of the identical base actor, its filter-off rate was 264/388 (68.04%); the proposal was 138/202 (68.32%), only +0.28 pp and below the 75% gate.",
+  "training_source_commit": "d65f0b6a18d02b085338cf54af14079b8cd05851",
+  "pooled_anchor_fix_commit": "720d41ce7ff8d57a0384e955ef4929d21b675431",
+  "input_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "training": {
+    "seed": 201352624,
+    "num_envs": 128,
+    "rounds": 4,
+    "rollout_steps_per_round": 1024,
+    "elapsed_seconds": 134.48193213692866,
+    "initial_actor_learning_rate": 0.00005,
+    "transactional_rollback_count": 1
+  },
+  "aligned_rollouts": [
+    {"round": 1, "actor_role": "base", "filter_off_success_count": 127, "filter_off_episode_count": 199, "filter_off_success_rate": 0.6381909547738693},
+    {"round": 2, "actor_role": "proposal_1", "filter_off_success_count": 118, "filter_off_episode_count": 195, "filter_off_success_rate": 0.6051282051282051, "rollback": true},
+    {"round": 3, "actor_role": "same_base_retry", "filter_off_success_count": 137, "filter_off_episode_count": 189, "filter_off_success_rate": 0.7248677248677249},
+    {"round": 4, "actor_role": "proposal_2", "filter_off_success_count": 138, "filter_off_episode_count": 202, "filter_off_success_rate": 0.6831683168316832}
+  ],
+  "pooled_posthoc_decision": {
+    "base_success_count": 264,
+    "base_episode_count": 388,
+    "base_success_rate": 0.6804123711340206,
+    "proposal_success_count": 138,
+    "proposal_episode_count": 202,
+    "proposal_success_rate": 0.6831683168316832,
+    "proposal_minus_base_percentage_points": 0.2755945697662645,
+    "interpretation": "statistical_tie_below_gate"
+  },
+  "deployment_filter_off_gate": {
+    "planned_episode_count": 128,
+    "success_threshold": 0.75,
+    "run": false,
+    "reason": "training_gate_failed"
+  },
+  "current_best_changed": false,
+  "next_hypothesis": "Use 256 environments and the corrected pooled transaction anchor to reduce per-round selection noise without adding separate validation runs."
+}

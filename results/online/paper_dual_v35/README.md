@@ -1,5 +1,13 @@
 # v35 Paper-Aligned Dual CBF-RL Pilot
 
+## 最新实验：v80 pooled-anchor 诊断
+
+v80 从 v79 best 用 `5e-5` continuation；同一 base actor 两次 off rollout 分别为
+63.82% 和 72.49%，暴露 8.67 pp 单轮噪声。合并后 base 为 264/388（68.04%），
+最终 proposal 138/202（68.32%）只持平 +0.28 pp，且未过 75%。事务门槛现已修复
+为累计相同 actor 的 episode 证据；下一步用 256 environments 降低训练选择噪声。
+完整证据见 [`mixed_cont_v80/`](mixed_cont_v80/README.md)。
+
 ## 最新实验：v79 mixed unit-balanced Eq. (27)
 
 v79 用 v72 相同 base、seed、25/75 execution 和 `1e-4` full-batch SGD，只替换为
