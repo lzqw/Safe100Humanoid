@@ -365,7 +365,7 @@ def _distill_actor(
       batch_correction = correction[indices].to(device)
       batch_eligible = eligible[indices].to(device)
       batch_weights = weights[indices].to(device)
-      with torch.inference_mode():
+      with torch.no_grad():
         actor_obs = {"actor": obs}
         reference_actor(actor_obs, stochastic_output=True)
         reference_params = tuple(
@@ -531,7 +531,6 @@ def main() -> None:
   source_payload["actor_state_dict"] = {
     key: value.cpu() for key, value in final_actor_state.items()
   }
-  source_payload["optimizer_state_dict"] = optimizer.state_dict()
   source_payload["rescue_distill_optimizer_state_dict"] = optimizer.state_dict()
   source_payload["iter"] = int(source_payload.get("iter", 0)) + args.epochs
   infos = dict(source_payload.get("infos") or {})
