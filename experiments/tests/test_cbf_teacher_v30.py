@@ -390,6 +390,18 @@ def test_v88_routes_success_safe_action_imitation_through_one_sgd_step() -> None
     assert 'runner_cfg["algorithm"]["v88_success_imitation_weight"]' in script
 
 
+def test_v89_removes_sampled_action_noise_from_success_imitation() -> None:
+    algorithm = (
+        REPO / "src/tasks/stairs_cbf/paper_success_intervention_v89.py"
+    ).read_text()
+    script = (REPO / "experiments/scripts/refine_paper_dual_v35.py").read_text()
+    assert "self.v35_success_episode_transition & self.v35_mean_intervened" in algorithm
+    assert "target = self.v35_safe_policy_means.detach()" in algorithm
+    assert "v89_exploration_noise_target_removed" in algorithm
+    assert '"--success-intervention-safe-mean-only"' in script
+    assert "paper_success_intervention_v89:" in script
+
+
 def test_v35_filter_dropout_mask_is_balanced_and_rotates() -> None:
     first = MATH.rotating_environment_filter_mask(
         4, 0.5, 1, device="cpu"

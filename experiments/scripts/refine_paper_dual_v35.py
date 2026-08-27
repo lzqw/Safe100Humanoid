@@ -130,6 +130,14 @@ def _parse_args() -> argparse.Namespace:
     help="Population-scaled Smooth-L1 coefficient for v88 success imitation.",
   )
   parser.add_argument(
+    "--success-intervention-safe-mean-only",
+    action="store_true",
+    help=(
+      "v89: restrict v88 imitation to successful deterministic-mean CBF "
+      "interventions and target the same-state deterministic safe mean."
+    ),
+  )
+  parser.add_argument(
     "--failure-only-mean-teacher",
     action="store_true",
     help=(
@@ -628,6 +636,11 @@ def main() -> None:
       )
     ) or args.success_local_kl_beta != 0.0:
       raise ValueError("v88 success imitation is mutually exclusive with v35 gates")
+  if (
+    args.success_intervention_safe_mean_only
+    and not args.success_safe_action_imitation
+  ):
+    raise ValueError("v89 safe-mean restriction requires v88 success imitation")
   if args.failure_only_mean_teacher and not args.deterministic_mean_teacher:
     raise ValueError("failure-only mean teacher requires deterministic mean labels")
   if args.failure_only_mean_teacher and args.training_runtime_filter != "off":
@@ -949,6 +962,9 @@ def main() -> None:
       if args.success_safe_action_imitation
       else 0.0
     )
+    deterministic_mean_teacher["success_intervention_safe_mean_only"] = (
+      args.success_intervention_safe_mean_only
+    )
   height_curriculum = None
   if args.height_curriculum:
     height_curriculum = _configure_height_curriculum(
@@ -971,8 +987,13 @@ def main() -> None:
   agent_cfg.algorithm.maximum_std = float(args.training_action_std)
   if args.success_safe_action_imitation:
     agent_cfg.algorithm.class_name = (
-      "src.tasks.stairs_cbf.paper_success_imitation_v88:"
-      "PaperSuccessImitationV88PPO"
+      "src.tasks.stairs_cbf.paper_success_intervention_v89:"
+      "PaperSuccessInterventionV89PPO"
+      if args.success_intervention_safe_mean_only
+      else (
+        "src.tasks.stairs_cbf.paper_success_imitation_v88:"
+        "PaperSuccessImitationV88PPO"
+      )
     )
     agent_cfg.algorithm.num_learning_epochs = 1
     agent_cfg.algorithm.num_mini_batches = (
@@ -1112,6 +1133,9 @@ def main() -> None:
         "deterministic_mean_teacher": deterministic_mean_teacher,
         "success_only_mean_teacher": args.success_only_mean_teacher,
         "success_safe_action_imitation": args.success_safe_action_imitation,
+        "success_intervention_safe_mean_only": (
+          args.success_intervention_safe_mean_only
+        ),
         "success_imitation_weight": (
           args.success_imitation_weight
           if args.success_safe_action_imitation
@@ -1408,6 +1432,9 @@ def main() -> None:
           "success_safe_action_imitation": (
             args.success_safe_action_imitation
           ),
+          "success_intervention_safe_mean_only": (
+            args.success_intervention_safe_mean_only
+          ),
           "success_imitation_weight": (
             args.success_imitation_weight
             if args.success_safe_action_imitation
@@ -1477,6 +1504,9 @@ def main() -> None:
       "deterministic_mean_teacher": deterministic_mean_teacher,
       "success_only_mean_teacher": args.success_only_mean_teacher,
       "success_safe_action_imitation": args.success_safe_action_imitation,
+      "success_intervention_safe_mean_only": (
+        args.success_intervention_safe_mean_only
+      ),
       "success_imitation_weight": (
         args.success_imitation_weight
         if args.success_safe_action_imitation
