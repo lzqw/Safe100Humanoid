@@ -33,6 +33,69 @@ def conditional_deployable_cbf_geometry(
   return torch.cat(blocks, dim=-1)
 
 
+def persistent_next_riser_geometry(
+  root_x: torch.Tensor,
+  foot_xz: torch.Tensor,
+  contact: torch.Tensor,
+  edge_x: torch.Tensor,
+  edge_top_z: torch.Tensor,
+  *,
+  toe_margin: float,
+  top_clearance: float,
+  barrier_slope: float,
+  lookahead_distance: float,
+  horizontal_scale: float,
+  vertical_scale: float,
+) -> torch.Tensor:
+  """Return per-foot next-riser geometry before and throughout swing.
+
+  Each foot contributes normalized horizontal clearance, vertical clearance,
+  sloped barrier, contact state, and a lookahead-valid flag. Unlike the narrow
+  runtime-CBF activation window, the signal starts while both feet are still
+  planted so the policy can plan lift before toe-off.
+  """
+  if root_x.ndim != 1 or foot_xz.shape != (len(root_x), 2, 2):
+    raise ValueError("persistent geometry requires root [N] and feet [N,2,2]")
+  if contact.shape != (len(root_x), 2) or contact.dtype != torch.bool:
+    raise ValueError("persistent geometry contact must be boolean [N,2]")
+  if edge_x.ndim != 2 or edge_x.shape != edge_top_z.shape:
+    raise ValueError("persistent geometry edges must share shape [N,R]")
+  if edge_x.shape[0] != len(root_x) or edge_x.shape[1] < 1:
+    raise ValueError("persistent geometry requires at least one riser per env")
+  if min(lookahead_distance, horizontal_scale, vertical_scale) <= 0.0:
+    raise ValueError("persistent geometry scales and lookahead must be positive")
+
+  root_distance = edge_x - root_x.unsqueeze(1)
+  ahead = root_distance >= 0.0
+  masked = torch.where(ahead, root_distance, torch.full_like(root_distance, torch.inf))
+  index = masked.argmin(dim=1)
+  selected_distance = masked.gather(1, index.unsqueeze(1)).squeeze(1)
+  valid = torch.isfinite(selected_distance) & (
+    selected_distance <= float(lookahead_distance)
+  )
+  selected_x = edge_x.gather(1, index.unsqueeze(1)).squeeze(1)
+  selected_z = edge_top_z.gather(1, index.unsqueeze(1)).squeeze(1)
+  horizontal = selected_x.unsqueeze(1) - foot_xz[..., 0] - float(toe_margin)
+  vertical = foot_xz[..., 1] - selected_z.unsqueeze(1) - float(top_clearance)
+  barrier = (
+    vertical + float(barrier_slope) * horizontal
+    if barrier_slope > 0.0
+    else horizontal
+  )
+  valid_float = valid.to(foot_xz.dtype).unsqueeze(1).expand(-1, 2)
+  features = torch.stack(
+    (
+      (horizontal / float(horizontal_scale)).clamp(-1.5, 1.5),
+      (vertical / float(vertical_scale)).clamp(-1.5, 1.5),
+      (barrier / float(vertical_scale)).clamp(-2.0, 2.0),
+      contact.to(foot_xz.dtype),
+      valid_float,
+    ),
+    dim=-1,
+  )
+  return (features * valid_float.unsqueeze(-1)).reshape(len(root_x), 10)
+
+
 def dual_cbf_reward(
   nominal_margin: torch.Tensor,
   intervention_norm: torch.Tensor,

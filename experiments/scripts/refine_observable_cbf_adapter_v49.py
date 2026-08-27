@@ -5,7 +5,9 @@ runtime filter.  v49 appends five current-state, real-robot-obtainable geometry
 coordinates, expands the pretrained actor with exactly zero input columns, and
 trains only those columns against successful shielded actions.  v93 can instead
 append 16 explicit side/phase-conditioned coordinates so opposite filter
-corrections do not cancel.  Consequently
+corrections do not cancel.  v94 can expose bilateral next-riser geometry
+persistently, including before toe-off, so the policy can plan lift earlier.
+Consequently
 the candidate remains bit-exact to the base policy whenever the CBF geometry is
 inactive, while training still uses the paper's filtered-action distance.
 """
@@ -50,11 +52,19 @@ FULL_BATCH_SGD_METHOD_ID = (
 CONDITIONAL_FULL_BATCH_SGD_METHOD_ID = (
   "full-batch-sgd-conditional-deployable-cbf-geometry-residual-adapter-v93"
 )
+PERSISTENT_FULL_BATCH_SGD_METHOD_ID = (
+  "full-batch-sgd-persistent-next-riser-geometry-residual-adapter-v94"
+)
 LEGACY_ACTOR_OBSERVATION_DIM = 405
 GEOMETRY_OBSERVATION_DIM = 5
+PERSISTENT_GEOMETRY_OBSERVATION_DIM = 10
 CONDITIONAL_GEOMETRY_OBSERVATION_DIM = 16
 SUPPORTED_GEOMETRY_OBSERVATION_DIMS = frozenset(
-  (GEOMETRY_OBSERVATION_DIM, CONDITIONAL_GEOMETRY_OBSERVATION_DIM)
+  (
+    GEOMETRY_OBSERVATION_DIM,
+    PERSISTENT_GEOMETRY_OBSERVATION_DIM,
+    CONDITIONAL_GEOMETRY_OBSERVATION_DIM,
+  )
 )
 
 
@@ -72,7 +82,7 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--teacher-eta", type=float, default=0.5)
   parser.add_argument(
     "--geometry-interface",
-    choices=("base-5", "conditional-16"),
+    choices=("base-5", "persistent-10", "conditional-16"),
     default="base-5",
   )
   parser.add_argument(
@@ -87,7 +97,7 @@ def _parse_args() -> argparse.Namespace:
     default="adam",
     help=(
       "Optimize only the appended geometry columns with Adam or "
-      "direction-preserving SGD. Conditional v93 requires one full SGD batch."
+      "direction-preserving SGD. v93/v94 interfaces require one full SGD batch."
     ),
   )
   parser.add_argument("--moving-kl-beta", type=float, default=0.1)
@@ -122,14 +132,14 @@ def _flat_observations(observations) -> torch.Tensor:
   if legacy.shape[-1] != LEGACY_ACTOR_OBSERVATION_DIM:
     raise RuntimeError("v49 legacy actor observation is not 405-D")
   if geometry.shape[-1] not in SUPPORTED_GEOMETRY_OBSERVATION_DIMS:
-    raise RuntimeError("CBF geometry observation is neither 5-D nor 16-D")
+    raise RuntimeError("CBF geometry observation is not a supported width")
   return torch.cat((legacy, geometry), dim=-1)
 
 
 def _actor_observations(flat: torch.Tensor) -> dict[str, torch.Tensor]:
   geometry_dim = flat.shape[-1] - LEGACY_ACTOR_OBSERVATION_DIM
   if geometry_dim not in SUPPORTED_GEOMETRY_OBSERVATION_DIMS:
-    raise ValueError("flattened actor observation is neither 410-D nor 421-D")
+    raise ValueError("flattened actor observation is not 410-D, 415-D, or 421-D")
   return {
     "actor": flat[:, :LEGACY_ACTOR_OBSERVATION_DIM],
     "cbf_geometry": flat[:, LEGACY_ACTOR_OBSERVATION_DIM:],
@@ -148,7 +158,7 @@ def _expand_actor_state(
     or geometry_dim not in SUPPORTED_GEOMETRY_OBSERVATION_DIMS
   ):
     raise RuntimeError(
-      "adapter actor expansion requires 405 -> 410/421, got "
+      "adapter actor expansion requires 405 -> 410/415/421, got "
       f"{source_width} -> {target_width}"
     )
   if set(source) != set(target):
@@ -289,6 +299,8 @@ def _geometry_active(flat: torch.Tensor) -> torch.Tensor:
   geometry = flat[:, LEGACY_ACTOR_OBSERVATION_DIM:]
   if geometry.shape[-1] == GEOMETRY_OBSERVATION_DIM:
     return geometry[:, 4] > 0.5
+  if geometry.shape[-1] == PERSISTENT_GEOMETRY_OBSERVATION_DIM:
+    return geometry[:, 4::5].sum(dim=-1) > 0.5
   if geometry.shape[-1] == CONDITIONAL_GEOMETRY_OBSERVATION_DIM:
     return geometry[:, 3::4].sum(dim=-1) > 0.5
   raise ValueError("unknown geometry width for active-state selection")
@@ -625,8 +637,8 @@ def main() -> None:
     raise ValueError("v49 moving KL beta must lie in [0, 4]")
   if not 0.0 < args.max_reference_kl <= 0.02:
     raise ValueError("v49 reference KL cap must lie in (0, 0.02]")
-  if args.geometry_interface == "conditional-16" and args.adapter_optimizer != "sgd":
-    raise ValueError("v93 conditional geometry requires direction-preserving SGD")
+  if args.geometry_interface != "base-5" and args.adapter_optimizer != "sgd":
+    raise ValueError("v93/v94 geometry requires direction-preserving SGD")
   repo = args.repo.resolve()
   checkpoint = args.base_checkpoint.resolve()
   output = args.output_dir.resolve()
@@ -644,17 +656,19 @@ def main() -> None:
     raise FileExistsError(output)
   output.mkdir(parents=True)
   started = time.monotonic()
-  if args.geometry_interface == "conditional-16":
+  if args.geometry_interface == "persistent-10":
+    method_id = PERSISTENT_FULL_BATCH_SGD_METHOD_ID
+  elif args.geometry_interface == "conditional-16":
     method_id = CONDITIONAL_FULL_BATCH_SGD_METHOD_ID
   elif args.adapter_optimizer == "sgd":
     method_id = FULL_BATCH_SGD_METHOD_ID
   else:
     method_id = METHOD_ID
-  geometry_dim = (
-    CONDITIONAL_GEOMETRY_OBSERVATION_DIM
-    if args.geometry_interface == "conditional-16"
-    else GEOMETRY_OBSERVATION_DIM
-  )
+  geometry_dim = {
+    "base-5": GEOMETRY_OBSERVATION_DIM,
+    "persistent-10": PERSISTENT_GEOMETRY_OBSERVATION_DIM,
+    "conditional-16": CONDITIONAL_GEOMETRY_OBSERVATION_DIM,
+  }[args.geometry_interface]
   _atomic_json(
     output / "execution_started.json",
     {
@@ -681,6 +695,7 @@ def main() -> None:
     configure_deployable_cbf_conditional_geometry_observation,
     configure_deployable_cbf_geometry_observation,
     configure_deployable_cbf_geometry_runner,
+    configure_deployable_cbf_persistent_geometry_observation,
   )
   from src.tasks.stairs_cbf.environment_v31 import configure_v31_context
   from src.tasks.stairs_cbf.paper_dual_v35 import configure_paper_dual_reward
@@ -710,11 +725,12 @@ def main() -> None:
   reward = configure_paper_dual_reward(
     env_cfg, "raw_moderate", runtime_filter_during_training=True
   )
-  geometry = (
-    configure_deployable_cbf_conditional_geometry_observation(env_cfg)
-    if args.geometry_interface == "conditional-16"
-    else configure_deployable_cbf_geometry_observation(env_cfg)
-  )
+  if args.geometry_interface == "persistent-10":
+    geometry = configure_deployable_cbf_persistent_geometry_observation(env_cfg)
+  elif args.geometry_interface == "conditional-16":
+    geometry = configure_deployable_cbf_conditional_geometry_observation(env_cfg)
+  else:
+    geometry = configure_deployable_cbf_geometry_observation(env_cfg)
   env_cfg.scene.num_envs = args.num_envs
   env_cfg.seed = seeds[0]
   agent_cfg = load_rl_cfg(TASK_ID)

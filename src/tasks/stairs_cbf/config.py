@@ -684,6 +684,41 @@ def configure_deployable_cbf_conditional_geometry_observation(
   }
 
 
+def configure_deployable_cbf_persistent_geometry_observation(
+  cfg: ManagerBasedRlEnvCfg,
+) -> dict[str, object]:
+  """Append 10-D per-foot geometry throughout next-riser approach and swing."""
+  if "cbf_geometry" in cfg.observations:
+    raise ValueError("deployable CBF geometry observation is already configured")
+  cfg.observations["cbf_geometry"] = ObservationGroupCfg(
+    terms={
+      "cbf_geometry": ObservationTermCfg(
+        func=mdp.cbf_deployable_persistent_geometry_observation,
+        params={"action_name": "joint_pos", "asset_name": "robot"},
+        history_length=0,
+      )
+    },
+    concatenate_terms=True,
+    enable_corruption=False,
+    history_length=None,
+  )
+  return {
+    "group": "cbf_geometry",
+    "feature_count": mdp.CBF_DEPLOYABLE_PERSISTENT_GEOMETRY_OBSERVATION_DIM,
+    "source": "current bilateral foot FK + contact + mapped next-riser edges",
+    "timing": "persistent approach and swing, including pre-toe-off",
+    "features_per_foot": (
+      "horizontal",
+      "vertical",
+      "barrier",
+      "contact",
+      "valid",
+    ),
+    "future_or_filtered_action_fields": 0,
+    "deployable": True,
+  }
+
+
 def configure_deployable_cbf_geometry_runner(cfg) -> None:
   """Append geometry after the legacy actor/critic observation prefixes."""
   actor_groups = tuple(cfg.obs_groups["actor"])

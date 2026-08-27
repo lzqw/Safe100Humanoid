@@ -12,6 +12,7 @@ from .cbf_math import (
   conditional_deployable_cbf_geometry,
   dual_cbf_reward,
   next_riser_clearance_reference,
+  persistent_next_riser_geometry,
   sloped_toe_clearance_constraint,
 )
 from .edge_detection import select_active_riser
@@ -19,6 +20,7 @@ from .edge_detection import select_active_riser
 
 CBF_DEPLOYABLE_GEOMETRY_OBSERVATION_DIM = 5
 CBF_DEPLOYABLE_CONDITIONAL_GEOMETRY_OBSERVATION_DIM = 16
+CBF_DEPLOYABLE_PERSISTENT_GEOMETRY_OBSERVATION_DIM = 10
 
 
 def _terrain_risers(
@@ -177,6 +179,54 @@ def cbf_deployable_conditional_geometry_observation(
     CBF_DEPLOYABLE_CONDITIONAL_GEOMETRY_OBSERVATION_DIM,
   ):
     raise RuntimeError("conditional deployable CBF geometry has an unexpected shape")
+  return observation
+
+
+def cbf_deployable_persistent_geometry_observation(
+  env: ManagerBasedRlEnv,
+  action_name: str = "joint_pos",
+  asset_name: str = "robot",
+) -> torch.Tensor:
+  """Expose both feet's next-riser geometry early enough to plan toe lift."""
+  term = _cbf_term(env, action_name)
+  robot = env.scene[asset_name]
+  found = term._contact_sensor.data.found
+  if found is None:
+    raise RuntimeError("persistent CBF geometry requires foot contact state")
+  contact = found > 0
+  if contact.ndim > 2:
+    contact = contact.any(dim=tuple(range(2, contact.ndim)))
+  if contact.shape != (env.num_envs, 2):
+    raise RuntimeError("persistent CBF contact state must have shape [N, 2]")
+  terrain = env.scene.terrain
+  if terrain is None:
+    raise RuntimeError("persistent CBF geometry requires stair metadata")
+  edge_x = term._edge_x[terrain.terrain_levels, terrain.terrain_types]
+  edge_top_z = term._edge_top_z[terrain.terrain_levels, terrain.terrain_types]
+  foot_position = robot.data.site_pos_w[:, term._site_local_ids]
+  lookahead = max(
+    2.5 * float(term.cfg.activation_distance),
+    float(term.cfg.activation_distance) + float(term.cfg.recovery_distance),
+  )
+  vertical_scale = max(float(term.cfg.activation_distance), 0.30)
+  observation = persistent_next_riser_geometry(
+    robot.data.root_link_pos_w[:, 0],
+    foot_position[..., (0, 2)],
+    contact,
+    edge_x,
+    edge_top_z,
+    toe_margin=float(term.cfg.toe_margin),
+    top_clearance=float(term.cfg.top_clearance),
+    barrier_slope=float(term.cfg.clearance_barrier_slope),
+    lookahead_distance=lookahead,
+    horizontal_scale=lookahead,
+    vertical_scale=vertical_scale,
+  )
+  if observation.shape != (
+    env.num_envs,
+    CBF_DEPLOYABLE_PERSISTENT_GEOMETRY_OBSERVATION_DIM,
+  ):
+    raise RuntimeError("persistent deployable CBF geometry has an unexpected shape")
   return observation
 
 

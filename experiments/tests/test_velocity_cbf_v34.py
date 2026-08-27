@@ -151,3 +151,34 @@ def test_v93_conditional_geometry_separates_side_and_barrier_phase() -> None:
         ADAPTER._geometry_active(torch.cat((torch.zeros(3, 405), conditional), dim=1)),
         torch.tensor((True, True, False)),
     )
+
+
+def test_v94_persistent_geometry_is_visible_before_toe_off() -> None:
+    persistent = CBF_MATH.persistent_next_riser_geometry(
+        torch.tensor((0.4, 2.1)),
+        torch.tensor(
+            (
+                ((0.30, 0.10), (0.35, 0.10)),
+                ((2.05, 0.40), (2.00, 0.40)),
+            )
+        ),
+        torch.tensor(((True, True), (True, False))),
+        torch.tensor(((1.0, 2.0), (1.0, 2.0))),
+        torch.tensor(((0.2, 0.4), (0.2, 0.4))),
+        toe_margin=0.0,
+        top_clearance=0.0,
+        barrier_slope=1.0,
+        lookahead_distance=1.0,
+        horizontal_scale=1.0,
+        vertical_scale=1.0,
+    )
+    assert persistent.shape == (2, 10)
+    assert torch.allclose(
+        persistent[0],
+        torch.tensor((0.70, -0.10, 0.60, 1.0, 1.0, 0.65, -0.10, 0.55, 1.0, 1.0)),
+    )
+    assert torch.count_nonzero(persistent[1]) == 0
+    assert torch.equal(
+        ADAPTER._geometry_active(torch.cat((torch.zeros(2, 405), persistent), dim=1)),
+        torch.tensor((True, False)),
+    )

@@ -60,6 +60,7 @@ def _parse_args() -> argparse.Namespace:
         choices=(
             "original-405",
             "deployable-cbf-geometry-410",
+            "deployable-cbf-persistent-geometry-415",
             "deployable-cbf-conditional-geometry-421",
         ),
         default="original-405",
@@ -143,6 +144,7 @@ def main() -> None:
         configure_deployable_cbf_conditional_geometry_observation,
         configure_deployable_cbf_geometry_observation,
         configure_deployable_cbf_geometry_runner,
+        configure_deployable_cbf_persistent_geometry_observation,
     )
     from src.tasks.stairs_cbf.environment_v31 import configure_v31_context
     from src.tasks.stairs_cbf.velocity_cbf_action import (
@@ -172,6 +174,10 @@ def main() -> None:
     geometry_observation = None
     if args.actor_observation_interface == "deployable-cbf-geometry-410":
         geometry_observation = configure_deployable_cbf_geometry_observation(env_cfg)
+    elif args.actor_observation_interface == "deployable-cbf-persistent-geometry-415":
+        geometry_observation = configure_deployable_cbf_persistent_geometry_observation(
+            env_cfg
+        )
     elif args.actor_observation_interface == "deployable-cbf-conditional-geometry-421":
         geometry_observation = (
             configure_deployable_cbf_conditional_geometry_observation(env_cfg)
@@ -198,6 +204,7 @@ def main() -> None:
         expected_actor_dim = {
             "original-405": 405,
             "deployable-cbf-geometry-410": 410,
+            "deployable-cbf-persistent-geometry-415": 415,
             "deployable-cbf-conditional-geometry-421": 421,
         }[args.actor_observation_interface]
         if int(runner.alg.actor.obs_dim) != expected_actor_dim:
