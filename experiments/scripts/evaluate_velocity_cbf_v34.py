@@ -170,9 +170,12 @@ def main() -> None:
         )
         policy = runner.get_inference_policy(args.device)
         # Runner construction and checkpoint loading may consume global torch
-        # RNG state.  Seed the actual evaluated reset explicitly so identical
-        # --seed values select identical episodes across actors/source commits.
-        obs, _ = env.reset(seed=args.seed)
+        # RNG state.  RslRlVecEnvWrapper.reset() does not accept ``seed``, so
+        # reseed the underlying environment immediately before its delegated
+        # reset.  Identical --seed values then select identical episodes across
+        # actors and source commits.
+        base_env.seed(args.seed)
+        obs, _ = env.reset()
         term = base_env.action_manager.get_term("joint_pos")
         if not isinstance(
             term,
