@@ -1,0 +1,15 @@
+{
+  "base_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "git_commit": "2d49d9910ed37404a2d5add7c7181da9957ca879",
+  "method_id": "heldout-validated-filter-off-full-batch-residual-ppo-v119",
+  "num_envs": 64,
+  "screen_seed": 201354080,
+  "training_runtime_filter": false,
+  "training_seeds": [
+    201354000,
+    201354010,
+    201354020,
+    201354030
+  ],
+  "validation_last_seed": true
+}
