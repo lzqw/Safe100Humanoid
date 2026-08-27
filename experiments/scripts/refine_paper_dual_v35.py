@@ -770,7 +770,6 @@ def main() -> None:
     not args.persistent_geometry_gradient_balance
     or not args.filter_group_balanced_advantages
     or args.training_filter_schedule != "fixed"
-    or not 0.0 < training_filter_fraction < 1.0
   ):
     raise ValueError(
       "v106 outcome advantage requires v105 geometry balancing and fixed "
