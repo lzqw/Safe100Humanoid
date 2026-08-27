@@ -42,6 +42,7 @@ def _parse_args() -> argparse.Namespace:
     choices=("current", "raw_moderate", "raw_strong", "raw_demo"),
     required=True,
   )
+  parser.add_argument("--teacher-arm", choices=("A0", "A1"), default="A0")
   parser.add_argument("--rounds", type=int, default=8)
   parser.add_argument("--num-envs", type=int, default=64)
   parser.add_argument("--rollout-steps", type=int, default=1024)
@@ -116,7 +117,7 @@ def main() -> None:
   agent_cfg = load_rl_cfg(TASK_ID)
   agent_cfg.seed = args.seed
   agent_cfg.num_steps_per_env = args.rollout_steps
-  _configure_algorithm(agent_cfg, "A0", preflight=False)
+  _configure_algorithm(agent_cfg, args.teacher_arm, preflight=False)
 
   output_dir.mkdir(parents=True)
   started = time.monotonic()
@@ -139,6 +140,7 @@ def main() -> None:
         "experiment": "paper_dual_v35",
         "candidate": args.candidate,
         "context": args.context,
+        "teacher_arm": args.teacher_arm,
       },
     )
     for round_index in range(1, args.rounds + 1):
@@ -165,6 +167,7 @@ def main() -> None:
           "experiment": "paper_dual_v35",
           "candidate": args.candidate,
           "context": args.context,
+          "teacher_arm": args.teacher_arm,
         },
       )
       _atomic_json(output_dir / "round_metrics.json", records)
@@ -177,6 +180,7 @@ def main() -> None:
       "git_commit": _git(repo, "rev-parse", "HEAD"),
       "context": args.context,
       "candidate": args.candidate,
+      "teacher_arm": args.teacher_arm,
       "seed": args.seed,
       "rounds": args.rounds,
       "num_envs": args.num_envs,
