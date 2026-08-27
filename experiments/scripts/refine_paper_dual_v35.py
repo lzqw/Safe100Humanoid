@@ -37,6 +37,14 @@ def _parse_args() -> argparse.Namespace:
   parser = argparse.ArgumentParser()
   parser.add_argument("--repo", type=Path, required=True)
   parser.add_argument("--base-checkpoint", type=Path, required=True)
+  parser.add_argument(
+    "--expected-base-sha256",
+    default=BASE_CHECKPOINT_SHA256,
+    help=(
+      "Exact SHA-256 required for the base checkpoint. Override this only for "
+      "an explicitly recorded continuation checkpoint."
+    ),
+  )
   parser.add_argument("--output-dir", type=Path, required=True)
   parser.add_argument("--context", choices=("F1", "F2", "F3"), required=True)
   parser.add_argument(
@@ -215,11 +223,16 @@ def main() -> None:
   output_dir = args.output_dir.resolve()
   if not checkpoint.is_file():
     raise FileNotFoundError(checkpoint)
+  expected_base_sha256 = args.expected_base_sha256.strip().lower()
+  if len(expected_base_sha256) != 64 or any(
+    character not in "0123456789abcdef" for character in expected_base_sha256
+  ):
+    raise ValueError("v35 expected base SHA-256 must contain 64 hex digits")
   checkpoint_sha256 = file_sha256(checkpoint)
-  if checkpoint_sha256 != BASE_CHECKPOINT_SHA256:
+  if checkpoint_sha256 != expected_base_sha256:
     raise RuntimeError(
-      "v35 requires the common 838-D online-refinement base checkpoint: "
-      f"{checkpoint_sha256} != {BASE_CHECKPOINT_SHA256}"
+      "v35 base checkpoint does not match the explicitly expected SHA-256: "
+      f"{checkpoint_sha256} != {expected_base_sha256}"
     )
   if output_dir.exists():
     raise FileExistsError(output_dir)
@@ -370,7 +383,14 @@ def main() -> None:
       "shift": shift,
       "reward": reward,
       "warm_start": warm_start,
+      "base_checkpoint": str(checkpoint),
       "base_checkpoint_sha256": checkpoint_sha256,
+      "expected_base_checkpoint_sha256": expected_base_sha256,
+      "base_checkpoint_role": (
+        "common_online_refinement_base"
+        if checkpoint_sha256 == BASE_CHECKPOINT_SHA256
+        else "explicit_continuation"
+      ),
       "initial_actor_sha256": initial_hash,
       "final_actor_sha256": actor_state_sha256(actor_state(runner.alg.actor)),
       "final_checkpoint": str(final_checkpoint),
