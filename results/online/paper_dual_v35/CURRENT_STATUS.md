@@ -28,6 +28,7 @@
 | v99 | 只学习成功 filtered episode 后，幅度 screen 最终选择 0x；learned direction 完全拒绝 | [`learned_residual_v97_v99/`](learned_residual_v97_v99/) |
 | v100 | 同 seed filter-on 对照中 task-metric CBF 为 46/64，当前 CBF 为 44/64，且脚尖峰值力降低 21.5% | [`task_metric_residual_v100_v101/`](task_metric_residual_v100_v101/) |
 | v101 | task-metric 成功轨迹 residual 的 scale screen 达 49/64，但唯一 unseen filter-off gate 仅 40/64，拒绝 | [`task_metric_residual_v100_v101/`](task_metric_residual_v100_v101/) |
+| v102 | task-metric CBF 接入 paper-dual PPO；修复 mixed mask 路由后最佳对齐 off 133/197=67.51%，拒绝 | [`task_metric_paper_dual_v102/`](task_metric_paper_dual_v102/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -108,3 +109,11 @@ v100 在相同 initial-state seed 上比较当前 Euclidean CBF 与历史最优 
 teacher distance 降到 0.08661。部署 scale screen 中 0.05x 短暂达到 49/64=76.56%，
 但全新 seed 的唯一 filter-off gate 只有 40/64=62.50%。该提升未能泛化，v101 已拒绝；
 当前最佳与 GitHub 对外选择仍为 v79。
+
+v102 将 `c012` task-metric CBF 接入 v79 曾有效的 25/75 mixed-execution、Eq. (27)
+unit-balanced paper-dual PPO。首次启动暴露并修复了 task-metric action 忽略逐环境 filter
+mask 的实现错误；正式四轮的 action routing 误差均为 0。修复后四个对齐 filter-off
+rollout 为 66.01%、66.33%、65.13%、67.51%，最佳 round-3 仅比本次 base 高 1.50 pp，
+仍低于 75% 且低于 v79 历史正式结果，因此没有追加独立 gate。该结果排除了“只需把
+task metric 放进现有 PPO 闭环”这一解释，下一步需要跨完整 swing 的安全目标和更稳定的
+episode-level credit，而不是继续静态 metric 或 residual scale 搜索。

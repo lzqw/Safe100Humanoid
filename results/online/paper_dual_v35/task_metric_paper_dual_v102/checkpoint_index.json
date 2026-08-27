@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "source_commit": "a0611231ae9fd9be4b748785de18611d2bd4109a",
+  "global_selected": {
+    "version": "v79",
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt",
+    "sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317"
+  },
+  "v102_best_aligned": {
+    "selected": false,
+    "checkpoint_round": 3,
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/task_metric_paper_dual_v102_a061123_s201353320_r2/round_03.pt",
+    "sha256": "a33e680086cd48dee55a7a57e3ecfb8192eb8ede60806bf4d0e5421f64ae3a12",
+    "actor_sha256": "927df58849eb151c3c8b1cb227a0bb3bb1b764083045455d7bb0690ad0158b54"
+  },
+  "v102_final_unaligned": {
+    "selected": false,
+    "checkpoint_round": 4,
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/task_metric_paper_dual_v102_a061123_s201353320_r2/round_04.pt",
+    "sha256": "324adf71fa045a8472edf19d6a65e541b63917e8a6bcaa8290ca32fb954540b8",
+    "actor_sha256": "f8884bd40ca16fcdc43be122242eadadd3c2e99fb2c82e568ff5eaa7be905fff"
+  },
+  "github_binary_policy": "Rejected candidate binaries remain on 4080 and are not committed."
+}

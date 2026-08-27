@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "experiment": "task_metric_paper_dual_v102",
+  "source_commit": "a0611231ae9fd9be4b748785de18611d2bd4109a",
+  "context": "F2_hard_uniform_18_4cm",
+  "target_filter_off_success_rate": 0.75,
+  "algorithm": {
+    "paper_reference": "CBF-RL arXiv:2510.14959v6 Algorithm 1 and Eq. 22-23/27",
+    "runtime_filter_fraction": 0.25,
+    "task_metric_cbf": "c012",
+    "reward": "paper_stair_sloped_unit_balanced",
+    "num_envs": 128,
+    "rollout_steps_per_round": 1024,
+    "rounds": 4,
+    "actor_learning_rate": 0.00005,
+    "full_batch_sgd": true
+  },
+  "routing_fix": {
+    "mixed_task_metric_mask_bug_found": true,
+    "failed_attempt_optimizer_steps": 0,
+    "fixed_commit": "a0611231ae9fd9be4b748785de18611d2bd4109a",
+    "targeted_tests_passed": 9,
+    "formal_round_max_routing_error": 0.0
+  },
+  "aligned_rollouts": [
+    {"checkpoint_round": 0, "filter_off_success_count": 134, "filter_off_episode_count": 203, "filter_off_success_rate": 0.6600985221674877, "filter_on_success_count": 41, "filter_on_episode_count": 67, "filter_on_success_rate": 0.6119402985074627},
+    {"checkpoint_round": 1, "filter_off_success_count": 132, "filter_off_episode_count": 199, "filter_off_success_rate": 0.6633165829145728, "filter_on_success_count": 45, "filter_on_episode_count": 68, "filter_on_success_rate": 0.6617647058823529},
+    {"checkpoint_round": 2, "filter_off_success_count": 127, "filter_off_episode_count": 195, "filter_off_success_rate": 0.6512820512820513, "filter_on_success_count": 42, "filter_on_episode_count": 67, "filter_on_success_rate": 0.6268656716417911},
+    {"checkpoint_round": 3, "filter_off_success_count": 133, "filter_off_episode_count": 197, "filter_off_success_rate": 0.6751269035532995, "filter_on_success_count": 46, "filter_on_episode_count": 69, "filter_on_success_rate": 0.6666666666666666}
+  ],
+  "elapsed_seconds": 94.20479006390087,
+  "decision": {
+    "v102": "rejected",
+    "independent_gate_run": false,
+    "reason": "Best aligned filter-off rollout was 67.51%, below the 75% gate and below the historical v79 result.",
+    "global_selected_version": "v79",
+    "global_selected_aligned_success": "139/193",
+    "global_selected_aligned_success_rate": 0.7202
+  }
+}
