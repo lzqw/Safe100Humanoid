@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "experiment": "paper_dual_v35",
+  "status": "new_f2_pareto_best_but_goal_not_met",
+  "hardware": "NVIDIA GeForce RTX 4080 SUPER",
+  "context": "F2",
+  "evaluation_seed": 201350902,
+  "evaluation_episodes_per_condition": 64,
+  "evaluation_policy": "deterministic_mean",
+  "continuation_base": {
+    "source_run": "raw_moderate_curriculum_A2x4_A1x4",
+    "source_round": 4,
+    "checkpoint_sha256": "8f194c13d6a7611be4fba3258efb1596857a782dd91fa3b6c53c18adb7c577b4",
+    "actor_sha256": "5721709392d013c237de76ea273a0f9eefdcaf7a500de67445318610cbd1363c"
+  },
+  "candidates": [
+    {
+      "run": "raw_moderate_curriculum4_then_fixed_A1x4",
+      "status": "current_f2_pareto_best_not_final",
+      "source_git_commit": "602028f5e603353372ba332786b52846fc839446",
+      "training_seed": 201350112,
+      "training_elapsed_seconds": 118.66291899303906,
+      "teacher": {
+        "arm": "A1",
+        "mode": "full_action",
+        "loss": "frozen_std_gaussian_nll",
+        "weight": 0.1,
+        "rounds": 4,
+        "training_terrain": "fixed_uniform_0.184_m"
+      },
+      "initial_actor_sha256": "5721709392d013c237de76ea273a0f9eefdcaf7a500de67445318610cbd1363c",
+      "final_actor_sha256": "7c33dc65f0183e43e18cc09cd844bb81daedf3eb399f47a12eeaf6674b2ab0db",
+      "final_checkpoint_sha256": "b6cbbf22ecebb652bb982b69aa17975b77de919bb41456b4a644f863003b520f",
+      "round_metrics": [
+        {"round": 1, "rollout_success_rate": 0.6846153846153846, "rollout_fall_rate": 0.3153846153846154, "cbf_intervention_fraction": 0.127105712890625, "moving_forward_kl": 0.7587684988975525, "clip_fraction": 0.924713134765625, "teacher_loss": 97.73883247375488},
+        {"round": 2, "rollout_success_rate": 0.6544117647058824, "rollout_fall_rate": 0.34558823529411764, "cbf_intervention_fraction": 0.1233062744140625, "moving_forward_kl": 0.6707165241241455, "clip_fraction": 0.911285400390625, "teacher_loss": 95.78131103515625},
+        {"round": 3, "rollout_success_rate": 0.6929133858267716, "rollout_fall_rate": 0.30708661417322836, "cbf_intervention_fraction": 0.113739013671875, "moving_forward_kl": 0.6826969981193542, "clip_fraction": 0.915374755859375, "teacher_loss": 92.72007656097412},
+        {"round": 4, "rollout_success_rate": 0.7313432835820896, "rollout_fall_rate": 0.26865671641791045, "cbf_intervention_fraction": 0.1048431396484375, "moving_forward_kl": 0.6517746448516846, "clip_fraction": 0.913330078125, "teacher_loss": 88.91059684753418}
+      ],
+      "evaluation": {
+        "initial_state_signature": "3f8c032be07f7741ddf1da02b72cc65ba59e4bc8f61227d09dc99de9582fa40b",
+        "filter_on": {"success_count": 52, "num_episodes": 64, "success_rate": 0.8125, "fall_rate": 0.1875, "mean_reached_riser": 8.390625, "mean_return": -3.411125246435404},
+        "filter_off": {"success_count": 44, "num_episodes": 64, "success_rate": 0.6875, "fall_rate": 0.3125, "mean_reached_riser": 7.984375, "mean_return": -4.601979106664658},
+        "off_minus_on_pp": -12.5
+      },
+      "decision": {
+        "selected_as_f2_pareto_best": true,
+        "selected_as_final_actor": false,
+        "both_conditions_at_least_75_percent": false,
+        "reason": "It preserves the curriculum filter-on gain and recovers one filter-off episode, but filter-off remains below 75%."
+      }
+    },
+    {
+      "run": "raw_moderate_curriculum4_then_fixed_A2eta1x4",
+      "status": "rejected_after_paired_gate",
+      "source_git_commit": "3b2515b1ff479c772ab0bd76e51e5182940680ce",
+      "training_seed": 201350122,
+      "training_elapsed_seconds": 122.44385193206836,
+      "teacher": {
+        "arm": "A2",
+        "mode": "sampled_action_residual",
+        "eta": 1.0,
+        "loss": "weighted_smooth_l1_per_action_mean",
+        "weight": 1.0,
+        "rounds": 4,
+        "training_terrain": "fixed_uniform_0.184_m"
+      },
+      "initial_actor_sha256": "5721709392d013c237de76ea273a0f9eefdcaf7a500de67445318610cbd1363c",
+      "final_actor_sha256": "02e786928b5d801adf6193b798d8e20021f5bd79a0da54c67d81998907f3b966",
+      "final_checkpoint_sha256": "d06166ac1db4fd00579f568b1dd23afffa1183bf0b7d90f52f6fa4bc21229286",
+      "round_metrics": [
+        {"round": 1, "rollout_success_rate": 0.6417910447761194, "rollout_fall_rate": 0.3582089552238806, "cbf_intervention_fraction": 0.1260223388671875, "moving_forward_kl": 0.0022646700963377953, "clip_fraction": 0.4255523681640625, "teacher_loss": 0.08219518698751926},
+        {"round": 2, "rollout_success_rate": 0.5882352941176471, "rollout_fall_rate": 0.4117647058823529, "cbf_intervention_fraction": 0.13104248046875, "moving_forward_kl": 0.0008136844262480736, "clip_fraction": 0.1898956298828125, "teacher_loss": 0.0827846759930253},
+        {"round": 3, "rollout_success_rate": 0.6343283582089553, "rollout_fall_rate": 0.3656716417910448, "cbf_intervention_fraction": 0.1253662109375, "moving_forward_kl": 0.0007827671361155808, "clip_fraction": 0.1859283447265625, "teacher_loss": 0.08050118573009968},
+        {"round": 4, "rollout_success_rate": 0.7480916030534351, "rollout_fall_rate": 0.25190839694656486, "cbf_intervention_fraction": 0.1233062744140625, "moving_forward_kl": 0.0005633995169773698, "clip_fraction": 0.1188812255859375, "teacher_loss": 0.08061159588396549}
+      ],
+      "evaluation": {
+        "initial_state_signature": "3f8c032be07f7741ddf1da02b72cc65ba59e4bc8f61227d09dc99de9582fa40b",
+        "filter_on": {"success_count": 51, "num_episodes": 64, "success_rate": 0.796875, "fall_rate": 0.203125, "mean_reached_riser": 8.4375, "mean_return": -6.072073549032211},
+        "filter_off": {"success_count": 33, "num_episodes": 64, "success_rate": 0.515625, "fall_rate": 0.484375, "mean_reached_riser": 7.5625, "mean_return": -7.516030535101891},
+        "off_minus_on_pp": -28.125
+      },
+      "decision": {
+        "selected": false,
+        "reason": "A healthy low-KL optimization trace did not translate into filter-free task success."
+      }
+    },
+    {
+      "run": "raw_moderate_curriculum4_then_fixed_mean_cbf_A2x4",
+      "status": "rejected_after_filter_on_gate",
+      "source_git_commit": "60802947d2e2ffa7f73f37b1a06c039e3cb6060a",
+      "training_seed": 201350132,
+      "training_elapsed_seconds": 149.70194459403865,
+      "teacher": {
+        "arm": "A2",
+        "mode": "same_state_deterministic_mean_counterfactual_cbf",
+        "eta": 1.0,
+        "loss": "weighted_smooth_l1_per_action_mean",
+        "weight": 1.0,
+        "rounds": 4,
+        "training_terrain": "fixed_uniform_0.184_m",
+        "rollout_action_execution": "runtime_cbf_filtered"
+      },
+      "initial_actor_sha256": "5721709392d013c237de76ea273a0f9eefdcaf7a500de67445318610cbd1363c",
+      "final_actor_sha256": "eb4e8f7aaf02158f65640cf7d63efa02f40177c21649fa81faaed9c1c0478bd2",
+      "final_checkpoint_sha256": "1c7f32f28b84832910cfa1850d062e992c3474c6487a94a42440363d365d9942",
+      "round_metrics": [
+        {"round": 1, "rollout_success_rate": 0.6641221374045801, "rollout_fall_rate": 0.33587786259541985, "sampled_intervention_fraction": 0.1285247802734375, "policy_mean_intervention_fraction": 0.1283416748046875, "policy_mean_storage_max_abs_error": 0.0, "moving_forward_kl": 0.0019338043639436364},
+        {"round": 2, "rollout_success_rate": 0.7142857142857143, "rollout_fall_rate": 0.2857142857142857, "sampled_intervention_fraction": 0.12451171875, "policy_mean_intervention_fraction": 0.1246490478515625, "policy_mean_storage_max_abs_error": 0.0, "moving_forward_kl": 0.0006786606973037124},
+        {"round": 3, "rollout_success_rate": 0.6287878787878788, "rollout_fall_rate": 0.3712121212121212, "sampled_intervention_fraction": 0.1273345947265625, "policy_mean_intervention_fraction": 0.126983642578125, "policy_mean_storage_max_abs_error": 0.0, "moving_forward_kl": 0.000723761972039938},
+        {"round": 4, "rollout_success_rate": 0.6929133858267716, "rollout_fall_rate": 0.30708661417322836, "sampled_intervention_fraction": 0.1290283203125, "policy_mean_intervention_fraction": 0.1287384033203125, "policy_mean_storage_max_abs_error": 0.0, "moving_forward_kl": 0.0006747381412424147}
+      ],
+      "evaluation": {
+        "initial_state_signature": "3f8c032be07f7741ddf1da02b72cc65ba59e4bc8f61227d09dc99de9582fa40b",
+        "filter_on": {"success_count": 42, "num_episodes": 64, "success_rate": 0.65625, "fall_rate": 0.34375, "mean_reached_riser": 8.40625, "mean_return": -8.407543674111366},
+        "filter_off": null
+      },
+      "decision": {
+        "selected": false,
+        "filter_off_run": false,
+        "reason": "Filter-on was already 15.625 percentage points below the current F2 Pareto result, so the candidate could not pass the paired >=75% gate."
+      }
+    }
+  ],
+  "current_f2_pareto_best": {
+    "run": "raw_moderate_curriculum4_then_fixed_A1x4",
+    "filter_on_success_rate": 0.8125,
+    "filter_off_success_rate": 0.6875,
+    "off_minus_on_pp": -12.5,
+    "paper_level_effect_claimed": false,
+    "remaining_failure": "Filter-free success is below 75% and the paired gap remains material."
+  }
+}

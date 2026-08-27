@@ -52,6 +52,29 @@ action，teacher schedule 保持 A2×4 → A1×4。最终在固定 18.4 cm F2、
 18.4 cm 目标高度做 A1 consolidation。精确 provenance 与逐轮诊断见
 [`height_curriculum_f2_summary.json`](height_curriculum_f2_summary.json)。
 
+### Fixed-target continuation follow-up（新的 F2 Pareto 最优）
+
+课程训练第 4 轮 A2 checkpoint 被精确 SHA-256 锁定后，用作三个固定 18.4 cm
+F2 continuation 的共同起点。每个 candidate 只运行一次训练和一次预设 gate；
+明显失败时早停。
+
+| Continuation from curriculum round 4 | Filter on | Filter off | Final KL | Decision |
+|---|---:|---:|---:|---|
+| A1 Gaussian-NLL ×4 | **81.25% (52/64)** | **68.75% (44/64)** | 0.6518 | F2 Pareto best，仍未达 off≥75% |
+| sampled-action A2 η=1 ×4 | 79.69% (51/64) | 51.56% (33/64) | 0.00056 | rejected |
+| deterministic-mean CBF A2 η=1 ×4 | 65.62% (42/64) | not run | 0.00067 | on gate 早停 |
+
+A1 continuation 保持课程模型的 81.25% filter-on，同时将 filter-off 从 67.19%
+提高到 68.75%，因此成为当前 F2 的 Pareto 最优；它相对原 fixed-height staged
+F2 则是 on +10.94 pp、off 持平。结果仍不足以宣称达到论文级效果，因为
+filter-off 未达到 75%，paired gap 仍为 12.50 pp，而且 A1 更新的 KL/clip 仍过高。
+
+两个 A2 follow-up 证明“优化稳定”不等于“安全行为内化”：把 sampled correction
+扩大到 η=1 会显著降低 off；进一步对 frozen deterministic mean 做同状态 shadow
+CBF projection 后，训练数据流误差虽为 0，filter-on 仍明显退化，因此按门槛不再
+运行 off。代码保留该机制用于审计，但不选择其 actor。完整结果、模型哈希及逐轮
+诊断见 [`continuation_f2_summary.json`](continuation_f2_summary.json)。
+
 ## 方法与第一阶段 F1 ablation
 
 本目录发布 v35 第一阶段 F1 pilot 的关键结果。该阶段依据
@@ -88,6 +111,7 @@ winner。后续 staged experiment 解决了 F1 矛盾，并已冻结扩展到 F2
 - [`staged_round_metrics.csv`](staged_round_metrics.csv): staged 方法全部 24 轮及 KL 诊断。
 - [`soft_a1_f2_summary.json`](soft_a1_f2_summary.json): 低 KL 但成功率退化的 F2 负结果。
 - [`height_curriculum_f2_summary.json`](height_curriculum_f2_summary.json): F2 五级高度课程的配对评估、模型哈希与逐轮诊断。
+- [`continuation_f2_summary.json`](continuation_f2_summary.json): 三个固定目标 continuation 的 gate、早停决定与 provenance。
 
 大型 `.pt` checkpoint 没有提交进 Git；其 SHA-256 已写入
 `pilot_summary.json`，原始 checkpoint 和逐 episode 文件保留在 4080 artifact
