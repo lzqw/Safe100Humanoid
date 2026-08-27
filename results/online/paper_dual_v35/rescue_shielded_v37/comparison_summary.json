@@ -2,7 +2,7 @@
   "schema_version": 1,
   "method_id": "matched-filter-rescue-shielded-state-distillation-v37",
   "source_git_commit": "f4a8e65e23b316fcb3a53d88fd5518568c4c7208",
-  "decision": "selected_as_current_stable_reset_f2_best",
+  "decision": "not_selected_independent_seed_tied_baseline_below_gate",
   "training": {
     "seed": 201350282,
     "num_envs": 32,
@@ -40,7 +40,19 @@
       "both_failure_count": 3
     }
   },
+  "independent_confirmation": {
+    "seed": 201350912,
+    "num_episodes_per_condition": 64,
+    "initial_state_signature": "f56bacd97c200ede74cf055e7817d16374b14f3f6f66d8f4eaf81106d8e9f1fd",
+    "baseline_filter_off_success_count": 43,
+    "baseline_filter_off_success_rate": 0.671875,
+    "candidate_filter_off_success_count": 43,
+    "candidate_filter_off_success_rate": 0.671875,
+    "candidate_minus_baseline_success_count": 0,
+    "filter_on_run": false,
+    "early_stop_reason": "candidate_filter_off_below_75_percent_gate"
+  },
   "candidate_actor_sha256": "fdc872355f38a31f7c35d16e1ee5f151d156ae2907cf2f5cf8492f7d18891733",
   "candidate_checkpoint_sha256": "483ea5f137cc6cdca8e098500f45e6e347f8f74085fa32b0656322813697a357",
-  "claim_boundary": "This is one adaptive 64-episode paired pilot. It reaches the preset F2 deployment gate, but it is not a multi-seed paper-level statistical reproduction."
+  "claim_boundary": "The adaptive seed passed, but one untouched-seed confirmation tied the baseline at 43/64 and missed the deployment gate. The method is not a robust paper-level reproduction."
 }
