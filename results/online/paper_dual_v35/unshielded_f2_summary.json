@@ -11,7 +11,9 @@
     "episodes_per_condition": 64,
     "policy": "deterministic_mean",
     "initial_state_signature": "3f8c032be07f7741ddf1da02b72cc65ba59e4bc8f61227d09dc99de9582fa40b",
-    "conditions": ["filter_on", "filter_off"]
+    "conditions": ["filter_on", "filter_off"],
+    "later_audit_initial_state_signature": "8ea76a17dff5c8248231bbf34d984be2bb9506415c0830f3b6d8560d14fda1ee",
+    "pairing_note": "Every filter-on/off pair is internally initial-state matched. The later audit signature differs from the historical current-best signature, so no episode-level pairing is claimed across those two groups."
   },
   "provenance_chain": [
     {
@@ -130,8 +132,71 @@
         "off_minus_on_pp": -7.8125
       },
       "decision": "Rejected: limiting only the teacher labels to failed episodes did not preserve or improve the all-intervention DAgger result."
+    },
+    {
+      "run": "raw_moderate_success_local_kl2_mean_cbf_x3",
+      "status": "rejected_after_aligned_paired_evaluation",
+      "source_git_commit": "24aa546c26101a8b0417a1387390fe6fd31cd528",
+      "training_seed": 201350242,
+      "training_elapsed_seconds": 94.30527355,
+      "base_checkpoint_sha256": "3ec45cd196447901cf815d0fa1ff400af1b519ed2bb85c2fc179458ce3e81d3f",
+      "training": {
+        "runtime_filter": false,
+        "rollout_action_execution": "nominal_unshielded",
+        "counterfactual_teacher": "same_state_deterministic_mean_CBF_projection",
+        "teacher_scope": "all_intervened_transitions",
+        "teacher_eta": 0.25,
+        "successful_episode_objective": "local_round_reference_KL",
+        "success_local_kl_beta": 2.0,
+        "actor_learning_rate": 0.000005,
+        "rounds": 3,
+        "rollout_checkpoint_alignment": "round_N_rollout_uses_round_N_minus_1_checkpoint"
+      },
+      "round_metrics": [
+        {"round": 1, "rollout_checkpoint_round": 0, "rollout_success_rate": 0.6742424242, "moving_forward_kl": 0.0022729724, "clip_fraction": 0.398422, "successful_transition_fraction": 0.5994873, "success_local_kl_loss": 0.00528205},
+        {"round": 2, "rollout_checkpoint_round": 1, "rollout_success_rate": 0.776, "moving_forward_kl": 0.0009424195, "clip_fraction": 0.226654, "successful_transition_fraction": 0.6685791, "success_local_kl_loss": 0.00145124},
+        {"round": 3, "rollout_checkpoint_round": 2, "rollout_success_rate": 0.6899225, "moving_forward_kl": 0.0004921175, "clip_fraction": 0.109848, "successful_transition_fraction": 0.6077881, "success_local_kl_loss": 0.00048452}
+      ],
+      "selected_checkpoint": {
+        "round": 1,
+        "selection_evidence": "The round-2 pre-update rollout evaluates the round-1 checkpoint and reached 0.776 success.",
+        "checkpoint_sha256": "d386331354801f4cfb4956e3cb846db70532b9828914dd1ee49bc4c35ae0f27f",
+        "actor_sha256": "30624435698ebd3809ebfc694bdf1cb78d6ac0b3510f61ae1ddeea0af7533de5"
+      },
+      "final_checkpoint_sha256": "9a513573c88e9abd3e4eed3b63bcd82c65c5f6dafcfab2d3b439074325b09bb5",
+      "final_actor_sha256": "0686ae4fa32bd7fa1b30a1a22d153723866765d14c277dffa8f35538715c5447",
+      "evaluation": {
+        "initial_state_signature": "8ea76a17dff5c8248231bbf34d984be2bb9506415c0830f3b6d8560d14fda1ee",
+        "filter_on": {"success_count": 44, "num_episodes": 64, "success_rate": 0.6875, "fall_rate": 0.3125, "mean_reached_riser": 8.0, "mean_return": -5.228644684},
+        "filter_off": {"success_count": 45, "num_episodes": 64, "success_rate": 0.703125, "fall_rate": 0.296875, "mean_reached_riser": 8.25, "mean_return": -3.307240661},
+        "off_minus_on_pp": 1.5625,
+        "cross_history_episode_paired": false
+      },
+      "decision": "Rejected: the aligned stochastic rollout gain did not transfer to deterministic paired evaluation, and filter-off remained below the current best."
     }
   ],
+  "checkpoint_alignment_audit": {
+    "source_git_commit": "24aa546c26101a8b0417a1387390fe6fd31cd528",
+    "semantics": "round_N_rollout_uses_round_N_minus_1_checkpoint",
+    "audited_run": "raw_moderate_unshielded_best_then_mean_cbf_A2eta025x3",
+    "historical_rollout_record": {
+      "reported_round": 3,
+      "rollout_success_rate": 0.7368421053,
+      "actual_checkpoint_round": 2,
+      "checkpoint_sha256": "e8f4a1687d47290e8d4707bd804f346b779b3ba30077807b6c2c648cbc54b197",
+      "actor_sha256": "28f302f9409ca8de8e1d3e48c2ca75c9e6acaf63565b03c0adf73e8352e61026"
+    },
+    "aligned_evaluation": {
+      "seed": 201350902,
+      "initial_state_signature": "8ea76a17dff5c8248231bbf34d984be2bb9506415c0830f3b6d8560d14fda1ee",
+      "filter_on": {"success_count": 51, "num_episodes": 64, "success_rate": 0.796875, "fall_rate": 0.203125, "mean_reached_riser": 8.28125, "mean_return": -3.7772334665},
+      "filter_off": {"success_count": 38, "num_episodes": 64, "success_rate": 0.59375, "fall_rate": 0.40625, "mean_reached_riser": 7.6875, "mean_return": -4.4073638618},
+      "off_minus_on_pp": -20.3125,
+      "cross_history_episode_paired": false
+    },
+    "decision": "Rejected. A high stochastic training rollout did not identify a strong deterministic filter-free checkpoint.",
+    "implementation_change": "The trainer now records rollout_actor_sha256, rollout_checkpoint_round, and rollout_precedes_update explicitly."
+  },
   "training_gated_rejections": [
     {
       "run": "raw_strong_A1best_then_unshielded_A0x3",
@@ -201,6 +266,28 @@
       ],
       "evaluation": null,
       "reason": "Population normalization reduced gradient norms but success declined from 0.6667 to 0.6471 and every actor minibatch still clipped. Failure-only PPO was rejected without paired evaluation."
+    },
+    {
+      "run": "raw_moderate_success_local_kl2_lr1e6_x2",
+      "source_git_commit": "24aa546c26101a8b0417a1387390fe6fd31cd528",
+      "training_seed": 201350252,
+      "training_elapsed_seconds": 65.64253388,
+      "base_checkpoint_sha256": "3ec45cd196447901cf815d0fa1ff400af1b519ed2bb85c2fc179458ce3e81d3f",
+      "final_actor_sha256": "2352f9ad2f1294a109851a52a1b8a51e7b930ae8fb16484fe878cd48a6630de6",
+      "final_checkpoint_sha256": "060692259dff5b03a623df1e9f26ad762f160c1dc3152a56fdc00aaa61041729",
+      "actor_objective": {
+        "teacher_scope": "all_intervened_transitions",
+        "successful_episode_objective": "local_round_reference_KL",
+        "success_local_kl_beta": 2.0,
+        "actor_learning_rate": 0.000001,
+        "rollout_checkpoint_alignment": "round_N_rollout_uses_round_N_minus_1_checkpoint"
+      },
+      "round_metrics": [
+        {"round": 1, "rollout_checkpoint_round": 0, "rollout_success_rate": 0.61654135, "moving_forward_kl": 0.0002272589, "clip_fraction": 0.02900696, "successful_transition_fraction": 0.55493164, "success_local_kl_loss": 0.000253573},
+        {"round": 2, "rollout_checkpoint_round": 1, "rollout_success_rate": 0.63432836, "post_update_actor_sha256": "2352f9ad2f1294a109851a52a1b8a51e7b930ae8fb16484fe878cd48a6630de6", "moving_forward_kl": 0.0002286717, "clip_fraction": 0.0255127, "successful_transition_fraction": 0.58908081, "success_local_kl_loss": 0.000133495}
+      ],
+      "evaluation": null,
+      "reason": "The only aligned improvement was from 0.6165 for the base actor to 0.6343 for round 1, far below the evaluation gate, so paired evaluation was skipped."
     }
   ],
   "current_best": {

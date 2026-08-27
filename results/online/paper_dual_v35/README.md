@@ -114,6 +114,32 @@ episode 过滤 teacher label 均未改善训练 gate 或 paired 结果，已停�
 修正尺度后虽降低了梯度范数，仍未恢复任务成功率。这说明问题不是简单的成功样本
 覆盖失败信号；该方向已按训练 gate 停止，未追加 paired 评估，当前最佳不变。
 
+#### Checkpoint alignment + success-local KL（已拒绝）
+
+最新审计确认训练过程的时序为：第 N 轮 rollout 在该轮更新之前完成，因此它评估
+的是第 N−1 轮 checkpoint。训练器现已显式记录 rollout actor SHA-256、checkpoint
+轮次及 `rollout_precedes_update`，后续不再用同编号的 pre-update rollout 为
+post-update checkpoint 排名。
+
+| Audit / candidate | Filter on | Filter off | Off - on | Decision |
+|---|---:|---:|---:|---|
+| 原 mean-CBF run 的 aligned round-2 checkpoint | 79.69% (51/64) | 59.38% (38/64) | -20.31 pp | rejected |
+| success-local KL β=2、LR=5e-6，selected round 1 | 68.75% (44/64) | 70.31% (45/64) | +1.56 pp | rejected |
+| success-local KL β=2、LR=1e-6 | not run | not run | — | rollout gate rejected |
+
+原 run 的第 3 轮 stochastic rollout 成功率为 73.68%，它实际对应 round-2
+checkpoint；该 checkpoint 的 deterministic filter-off 只有 38/64，说明训练
+rollout 不能单独用于筛选部署 actor。随后在当前最佳 checkpoint 上加入完整成功
+episode 的 local reference KL：LR=5e-6 时 aligned rollout 一度由 67.42% 升至
+77.60%，但选中的 round-1 actor 在 deterministic paired 评估中只有 44/64 on、
+45/64 off；LR=1e-6 时 aligned rollout 仅由 61.65% 升至 63.43%，因此未评估。
+
+本节两组新 paired 评估内部使用相同初始状态签名
+`8ea76a17dff5c8248231bbf34d984be2bb9506415c0830f3b6d8560d14fda1ee`；它与历史
+current-best 评估的 `3f8c032be07f7741ddf1da02b72cc65ba59e4bc8f61227d09dc99de9582fa40b`
+不同，所以只比较各自内部的 on/off，不宣称跨历史结果的逐 episode 配对。当前
+F2 off 最佳仍为 46/64，距离 75% gate 还差 2 个成功 episode。
+
 ## 方法与第一阶段 F1 ablation
 
 本目录发布 v35 第一阶段 F1 pilot 的关键结果。该阶段依据
