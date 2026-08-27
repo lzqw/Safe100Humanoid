@@ -20,6 +20,7 @@
 | v91 | 64-env 放大后两个 residual-only proposal 均低于 pooled base 194/269=72.12%，路线拒绝 | [`success_residual_only_v91/`](success_residual_only_v91/) |
 | v92 | 5-D geometry adapter 的 full-batch SGD 方向正确；untouched filter-off 47/64=73.44%，差 1 episode | [`observable_rescue_sgd_v92/`](observable_rescue_sgd_v92/) |
 | v93 | 16-D 左右脚/phase 条件化 adapter 离线方向改善，但唯一 untouched filter-off 仅 45/64=70.31%，拒绝 | [`conditional_geometry_sgd_v93/`](conditional_geometry_sgd_v93/) |
+| v94 | 10-D persistent 双脚 next-riser 几何使 paired filter-on 达 191/256，但单步 imitation 的 untouched off 仍为 45/64=70.31% | [`persistent_geometry_sgd_v94/`](persistent_geometry_sgd_v94/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -61,3 +62,11 @@ v93 完成了上述条件化：将 5-D geometry 展开为 left/right × unsafe/s
 提高到 0.641，distance 从 0.135701 降到 0.135405，且 KL 仅 3.02e-5；但唯一全新 seed
 的 deterministic filter-off gate 只有 45/64=70.31%。因此该结构虽改善 teacher 对齐，
 仍未改善最终成功率，候选已拒绝，未追加更多 rollout，正式最佳继续保留 v79。
+
+v94 修复了更早的时序缺口：原 5-D/16-D geometry 仅在脚已离地且 CBF 激活后出现，
+新 10-D bilateral next-riser geometry 在接近台阶、双脚仍着地时就持续可见。训练的
+256 个 paired initial states 中，filter-on 从 off 的 169 成功提高到 191 成功，并产生
+61 个 matched rescue；但一次 rescued-only imitation 后，唯一 untouched filter-off gate
+仍只有 45/64=70.31%。这说明提前几何提高了 safety filter 的轨迹价值，但局部 action
+拟合仍不能把早期抬脚 credit 内化；下一步应把 persistent geometry 放入论文式
+filtered-execution PPO 闭环，用 episode return/GAE 训练预摆动动作。
