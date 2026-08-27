@@ -272,12 +272,13 @@ def _dataset_policy_metrics(
         dataset["safe_actions"][start:stop]
         - dataset["nominal_actions"][start:stop]
       ).to(device)
-      reference_actor(obs, stochastic_output=True)
+      actor_obs = {"actor": obs}
+      reference_actor(actor_obs, stochastic_output=True)
       reference_params = tuple(
         value.detach() for value in reference_actor.output_distribution_params
       )
       target = reference_params[0] + eta * correction
-      actor(obs, stochastic_output=True)
+      actor(actor_obs, stochastic_output=True)
       current_params = tuple(actor.output_distribution_params)
       batch_weights = weights[start:stop].to(device)
       batch_eligible = eligible[start:stop].to(device)
@@ -365,12 +366,13 @@ def _distill_actor(
       batch_eligible = eligible[indices].to(device)
       batch_weights = weights[indices].to(device)
       with torch.inference_mode():
-        reference_actor(obs, stochastic_output=True)
+        actor_obs = {"actor": obs}
+        reference_actor(actor_obs, stochastic_output=True)
         reference_params = tuple(
           value.detach() for value in reference_actor.output_distribution_params
         )
         target = reference_params[0] + eta * batch_correction
-      actor(obs, stochastic_output=True)
+      actor(actor_obs, stochastic_output=True)
       current_params = tuple(actor.output_distribution_params)
       teacher_loss = weighted_smooth_l1_teacher_loss(
         current_params[0],
