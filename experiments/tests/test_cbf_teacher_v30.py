@@ -23,6 +23,10 @@ def _load(name: str, relative: str):
 
 MATH = _load("v30_teacher_math", "src/tasks/stairs_cbf/teacher_v30_math.py")
 PROTOCOL = _load("v30_protocol", "experiments/scripts/cbf_teacher_v30_protocol.py")
+V73 = _load(
+    "paper_transactional_v73_math",
+    "experiments/scripts/paper_transactional_v73_math.py",
+)
 
 
 def test_v30_exact_six_arm_matrix_and_contexts_are_json_safe() -> None:
@@ -43,6 +47,64 @@ def test_v30_exact_six_arm_matrix_and_contexts_are_json_safe() -> None:
             },
         }
     )
+
+
+def test_v73_transaction_accepts_baseline_retry_and_only_noninferior_proposal() -> None:
+    baseline = V73.rollout_candidate_decision(
+        actor_sha256="base",
+        success_count=71,
+        episode_count=100,
+        accepted_actor_sha256=None,
+        accepted_success_rate=None,
+    )
+    assert baseline["accepted"] and baseline["replace_anchor"]
+    retry = V73.rollout_candidate_decision(
+        actor_sha256="base",
+        success_count=68,
+        episode_count=100,
+        accepted_actor_sha256="base",
+        accepted_success_rate=0.71,
+    )
+    assert retry["accepted"] and not retry["replace_anchor"]
+    improved = V73.rollout_candidate_decision(
+        actor_sha256="candidate",
+        success_count=73,
+        episode_count=100,
+        accepted_actor_sha256="base",
+        accepted_success_rate=0.71,
+    )
+    assert improved["accepted"] and improved["replace_anchor"]
+    regressed = V73.rollout_candidate_decision(
+        actor_sha256="candidate",
+        success_count=70,
+        episode_count=100,
+        accepted_actor_sha256="base",
+        accepted_success_rate=0.71,
+    )
+    assert not regressed["accepted"] and not regressed["replace_anchor"]
+
+
+def test_v73_learning_rate_only_shrinks_and_penalizes_rejection() -> None:
+    assert V73.adaptive_actor_learning_rate(
+        5.0e-5, 1.0e-5, rejected=False
+    ) == pytest.approx(5.0e-5)
+    assert V73.adaptive_actor_learning_rate(
+        5.0e-5, 4.0e-5, rejected=False
+    ) == pytest.approx(2.5e-5)
+    assert V73.adaptive_actor_learning_rate(
+        5.0e-5, 4.0e-5, rejected=True
+    ) == pytest.approx(1.25e-5)
+    assert V73.adaptive_actor_learning_rate(
+        1.0e-6, 1.0, rejected=True
+    ) == pytest.approx(1.0e-6)
+
+
+def test_v73_script_snapshots_and_restores_transactional_state() -> None:
+    source = (REPO / "experiments/scripts/refine_paper_dual_v35.py").read_text()
+    assert "--transactional-rollout-acceptance" in source
+    assert "runner.snapshot_proximal_state()" in source
+    assert "runner.restore_proximal_state(accepted_transaction)" in source
+    assert "selected_checkpoint_sha256" in source
 
 
 def test_v30_residual_target_uses_round_reference_and_sample_correction() -> None:

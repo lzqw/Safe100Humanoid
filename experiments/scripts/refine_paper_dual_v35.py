@@ -26,6 +26,13 @@ from cbf_teacher_v31_protocol import (
   environment_parameters,
 )
 from proximal_v23_io import actor_state, actor_state_sha256, file_sha256
+from paper_transactional_v73_math import (
+  MINIMUM_ACTOR_LEARNING_RATE,
+  REJECTED_CANDIDATE_LEARNING_RATE_SCALE,
+  TARGET_MOVING_FORWARD_KL,
+  adaptive_actor_learning_rate,
+  rollout_candidate_decision,
+)
 from refine_cbf_teacher_v31 import (
   _collect_round,
   _configure_algorithm,
@@ -232,6 +239,15 @@ def _parse_args() -> argparse.Namespace:
     help=(
       "Use one globally clipped full-batch SGD actor step per round instead "
       "of the historical eight Adam minibatch steps."
+    ),
+  )
+  parser.add_argument(
+    "--transactional-rollout-acceptance",
+    action="store_true",
+    help=(
+      "Evaluate each full-batch proposal on the next aligned rollout; restore "
+      "the accepted actor/critic/optimizers after filter-off regression and "
+      "shrink the next SGD step."
     ),
   )
   parser.add_argument(
@@ -608,6 +624,17 @@ def main() -> None:
         "v72 full-batch SGD requires fixed mixed execution and "
         "group-balanced advantages"
       )
+  if args.transactional_rollout_acceptance:
+    if not args.full_batch_sgd_actor:
+      raise ValueError(
+        "v73 transactional acceptance requires full-batch SGD"
+      )
+    if args.rounds < 2:
+      raise ValueError("v73 transactional acceptance requires at least 2 rounds")
+    if args.training_domain_randomization != "off":
+      raise ValueError(
+        "v73 rollout acceptance requires a fixed physical training domain"
+      )
   if not 0.0 <= args.success_local_kl_beta <= 4.0:
     raise ValueError("success-local KL beta must lie in [0, 4]")
   if args.success_local_kl_beta > 0.0:
@@ -901,6 +928,19 @@ def main() -> None:
   )
   records: list[dict[str, Any]] = []
   observed_dr_state_hashes: set[str] = set()
+  accepted_transaction = None
+  accepted_actor_sha256: str | None = None
+  accepted_success_rate: float | None = None
+  accepted_checkpoint: Path | None = None
+  accepted_rollout_round: int | None = None
+  transactional_rollback_count = 0
+
+  def set_actor_learning_rate(learning_rate: float) -> None:
+    runner.alg.actor_learning_rate = float(learning_rate)
+    runner.alg.learning_rate = float(learning_rate)
+    for parameter_group in runner.alg.actor_optimizer.param_groups:
+      parameter_group["lr"] = float(learning_rate)
+
   try:
     warm_start = runner.load_initial_checkpoint(
       str(checkpoint), map_location=args.device
@@ -945,6 +985,9 @@ def main() -> None:
           args.teacher_gradient_target_ratio
         ),
         "full_batch_sgd_actor": args.full_batch_sgd_actor,
+        "transactional_rollout_acceptance": (
+          args.transactional_rollout_acceptance
+        ),
         "training_action_std": args.training_action_std,
         "actor_learning_rate": args.actor_learning_rate,
         "moving_kl_beta": args.moving_kl_beta,
@@ -977,7 +1020,17 @@ def main() -> None:
         a2_teacher_eta=args.a2_teacher_eta,
       )
       runner.alg.freeze_round_reference()
+      transaction = (
+        runner.snapshot_proximal_state()
+        if args.transactional_rollout_acceptance
+        else None
+      )
       start_hash = actor_state_sha256(actor_state(runner.alg.actor))
+      candidate_checkpoint = output_dir / f"round_{round_index - 1:02d}.pt"
+      candidate_checkpoint_sha256 = file_sha256(candidate_checkpoint)
+      actor_learning_rate_used = float(
+        runner.alg.actor_optimizer.param_groups[0]["lr"]
+      )
       round_filter_fraction = training_filter_fractions[round_index - 1]
       round_filter_mask = rotating_environment_filter_mask(
         args.num_envs,
@@ -1049,6 +1102,68 @@ def main() -> None:
         raise RuntimeError("v35 runtime filter mask was not executed exactly")
       metrics["configured_runtime_filter_fraction"] = expected_filter_fraction
       metrics["configured_runtime_filter_count"] = int(round_filter_mask.sum())
+      post_update_hash = actor_state_sha256(actor_state(runner.alg.actor))
+      candidate_decision = None
+      transactional_rollback_applied = False
+      next_actor_learning_rate = actor_learning_rate_used
+      if args.transactional_rollout_acceptance:
+        candidate_decision = rollout_candidate_decision(
+          actor_sha256=start_hash,
+          success_count=int(metrics["rollout_filter_off_success_count"]),
+          episode_count=int(metrics["rollout_filter_off_episode_count"]),
+          accepted_actor_sha256=accepted_actor_sha256,
+          accepted_success_rate=accepted_success_rate,
+        )
+        if candidate_decision["replace_anchor"]:
+          assert transaction is not None
+          accepted_transaction = transaction
+          accepted_actor_sha256 = start_hash
+          accepted_success_rate = float(candidate_decision["success_rate"])
+          accepted_checkpoint = candidate_checkpoint
+          accepted_rollout_round = round_index
+        if not candidate_decision["accepted"]:
+          if accepted_transaction is None:
+            raise RuntimeError("v73 rejected a candidate without an anchor")
+          runner.restore_proximal_state(accepted_transaction)
+          transactional_rollback_applied = True
+          transactional_rollback_count += 1
+        next_actor_learning_rate = adaptive_actor_learning_rate(
+          actor_learning_rate_used,
+          float(metrics["moving_forward_kl"]),
+          rejected=transactional_rollback_applied,
+        )
+        set_actor_learning_rate(next_actor_learning_rate)
+        metrics.update(
+          {
+            "transactional_rollout_acceptance_enabled": True,
+            "transactional_candidate_accepted": bool(
+              candidate_decision["accepted"]
+            ),
+            "transactional_candidate_replace_anchor": bool(
+              candidate_decision["replace_anchor"]
+            ),
+            "transactional_candidate_reason": candidate_decision["reason"],
+            "transactional_candidate_improvement_percentage_points": (
+              candidate_decision["improvement_percentage_points"]
+            ),
+            "transactional_rollback_applied": (
+              transactional_rollback_applied
+            ),
+            "transactional_actor_learning_rate_used": (
+              actor_learning_rate_used
+            ),
+            "transactional_next_actor_learning_rate": (
+              next_actor_learning_rate
+            ),
+            "transactional_target_moving_forward_kl": (
+              TARGET_MOVING_FORWARD_KL
+            ),
+            "transactional_accepted_actor_sha256": accepted_actor_sha256,
+            "transactional_accepted_filter_off_success_rate": (
+              accepted_success_rate
+            ),
+          }
+        )
       end_hash = actor_state_sha256(actor_state(runner.alg.actor))
       record = {
         "round": round_index,
@@ -1056,14 +1171,21 @@ def main() -> None:
         "elapsed_seconds": time.monotonic() - round_started,
         "actor_sha256": end_hash,
         "round_start_actor_sha256": start_hash,
+        "post_update_actor_sha256": post_update_hash,
         "round_end_actor_sha256": end_hash,
         "rollout_actor_sha256": start_hash,
         "rollout_checkpoint_round": round_index - 1,
+        "rollout_checkpoint": str(candidate_checkpoint),
+        "rollout_checkpoint_sha256": candidate_checkpoint_sha256,
         "rollout_precedes_update": True,
         "runtime_filter_mask_rotation_round": round_index,
         "scheduled_runtime_filter_fraction": round_filter_fraction,
         "teacher_arm": round_teacher_arm,
         "teacher_parameters": round_teacher_parameters,
+        "transactional_candidate_decision": candidate_decision,
+        "transactional_rollback_applied": transactional_rollback_applied,
+        "actor_learning_rate_used": actor_learning_rate_used,
+        "next_actor_learning_rate": next_actor_learning_rate,
         "metrics": metrics,
       }
       records.append(record)
@@ -1100,6 +1222,9 @@ def main() -> None:
             args.teacher_gradient_target_ratio
           ),
           "full_batch_sgd_actor": args.full_batch_sgd_actor,
+          "transactional_rollout_acceptance": (
+            args.transactional_rollout_acceptance
+          ),
           "training_action_std": args.training_action_std,
           "actor_learning_rate": args.actor_learning_rate,
           "moving_kl_beta": args.moving_kl_beta,
@@ -1151,6 +1276,38 @@ def main() -> None:
         args.teacher_gradient_target_ratio
       ),
       "full_batch_sgd_actor": args.full_batch_sgd_actor,
+      "transactional_rollout_acceptance": (
+        args.transactional_rollout_acceptance
+      ),
+      "transactional_target_moving_forward_kl": (
+        TARGET_MOVING_FORWARD_KL
+        if args.transactional_rollout_acceptance
+        else None
+      ),
+      "transactional_minimum_actor_learning_rate": (
+        MINIMUM_ACTOR_LEARNING_RATE
+        if args.transactional_rollout_acceptance
+        else None
+      ),
+      "transactional_rejected_candidate_learning_rate_scale": (
+        REJECTED_CANDIDATE_LEARNING_RATE_SCALE
+        if args.transactional_rollout_acceptance
+        else None
+      ),
+      "transactional_rollback_count": transactional_rollback_count,
+      "selected_checkpoint": (
+        str(accepted_checkpoint)
+        if accepted_checkpoint is not None
+        else None
+      ),
+      "selected_checkpoint_sha256": (
+        file_sha256(accepted_checkpoint)
+        if accepted_checkpoint is not None
+        else None
+      ),
+      "selected_actor_sha256": accepted_actor_sha256,
+      "selected_filter_off_success_rate": accepted_success_rate,
+      "selected_rollout_round": accepted_rollout_round,
       "training_action_std": args.training_action_std,
       "actor_learning_rate": args.actor_learning_rate,
       "moving_kl_beta": args.moving_kl_beta,
