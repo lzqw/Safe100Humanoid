@@ -32,6 +32,7 @@
 | v103 | 1 秒 bounded max swing credit 尺度稳定，但最佳对齐 off 131/193=67.88%，拒绝 | [`swing_credit_v103/`](swing_credit_v103/) |
 | v104 | 415-D persistent geometry 接入完整 PPO；8 轮最佳 off 132/200=66.00%，新增几何列几乎未被利用，拒绝 | [`persistent_paper_dual_v104/`](persistent_paper_dual_v104/) |
 | v105 | 自适应放大 geometry 梯度到 legacy block 的 1:1；最佳 off 138/194=71.13%，仍低于 v79 与 gate | [`persistent_geometry_balanced_v105/`](persistent_geometry_balanced_v105/) |
+| v106 | episode outcome credit 与 GAE 联合训练；本轮峰值 off 68/95=71.58%，提高 2.19 pp 但仍低于 v79 与 gate | [`outcome_geometry_v106/`](outcome_geometry_v106/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -144,3 +145,11 @@ v105 针对 v104 的 geometry gradient starvation，在保留完整 actor PPO �
 138/194=71.13%，相对本次 baseline 仅 +0.43 pp，仍低于 v79 和 75% gate。由此可
 排除“只因新增观测梯度太弱”这一解释；下一步必须让 geometry auxiliary objective
 直接与完整 episode outcome 对齐，而不是继续扩大同一个 per-transition PPO 梯度。
+
+v106 实现上述 episode-level 对齐：每个 filter group 内让成功与失败完整 episode
+分别平分 +0.5/-0.5 credit，再与组内标准化 GAE 等权合并。8 轮中 outcome 标签平均
+覆盖 80.33% transitions，GAE/credit cosine 为 0.227–0.306，证明信号确实进入 actor；
+最佳 filter-off 从本次起点 68/98=69.39% 提高到 68/95=71.58%，增幅 2.19 pp。
+但该峰值仍比 v79 低 0.44 pp，随后又回落到 64.71%，故未运行独立 gate、没有替换
+v79。固定权重 episode credit 的方向有用但累积不稳定；下一步需要保守的 outcome
+weight/acceptance control，而不是继续用相同权重延长训练。
