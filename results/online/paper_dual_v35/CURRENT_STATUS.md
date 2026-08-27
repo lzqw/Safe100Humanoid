@@ -41,6 +41,7 @@
 | v112 | 正负对比开放完整第一层状态条件化；平均到达更远但 screen 仍为 38/64=59.38% | [`state_conditioned_outcome_v112/`](state_conditioned_outcome_v112/) |
 | v113 | 显式 paired treatment gate + bounded residual；gate 仅 54.46% balanced accuracy，screen 42/64=65.63% | [`paired_gated_residual_v113/`](paired_gated_residual_v113/) |
 | v114 | v92 adapter 预声明幅度 screen；四档均低于 75%，最佳为未修改 v79 的 46/64=71.88% | [`observable_adapter_scale_v114/`](observable_adapter_scale_v114/) |
+| v115 | causal GRU 只区分 rescued/harmed，0.6 高置信 gate；screen 恢复到 47/64=73.44%，差 1 episode | [`causal_gated_residual_v115/`](causal_gated_residual_v115/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -229,3 +230,11 @@ v114 完成 v92 幅度筛选：在一次 256-env filter-off rollout 中，0×/0.
 仍少于未修改 v79；最佳按成功率回到 0×，且没有一档达到 75%，因此独立 gate 自动
 跳过。由此不再继续标量搜索 v92 correction；下一步必须使用因果时序或完整 episode
 policy objective。当前最佳仍为 v79。
+
+v115 将 gate 改为因果 GRU，并只在 rescued/harmed discordant pair 上训练；第 4 个
+seed 完整留作离线验证，部署阈值提高到 0.6。唯一 filter-off screen 恢复到
+47/64=73.44%，gate 只激活 7.37% transition，但仍差一个 episode 才达到门槛，因此
+没有运行独立 gate。候选和 screen 写入后，最终 summary 因 Python `false` 拼写触发
+NameError；commit `8fc8a3b` 已修复，且没有为补诊断重复 rollout。该结果保留了时序
+高置信 fallback 的价值，但仍说明 instantaneous correction 不是足够的 episode-level
+policy objective。当前正式最佳继续为 v79。

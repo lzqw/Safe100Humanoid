@@ -1,0 +1,40 @@
+{
+  "schema_version": "paper_dual_v35.v115.decision.v1",
+  "method_id": "causal-discordant-treatment-gated-cbf-residual-v115",
+  "decision": "rejected_one_episode_below_screen_gate",
+  "reason": "The causal high-confidence gate recovered to 47/64=73.4375% but remained one episode below the fixed 75% screen threshold.",
+  "source_commit": "cef3b929d0970e84776894ef95f9b259ec138295",
+  "summary_fix_commit": "8fc8a3bd95a2ee1ab3883e29809df9a937195e96",
+  "targeted_tests_passed": 1,
+  "hardware": "NVIDIA GeForce RTX 4080 SUPER",
+  "input_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "paired_data": {
+    "training_seeds": [201353630, 201353640, 201353650],
+    "validation_seed": 201353660,
+    "train_filter_off_success_count": 131,
+    "train_filter_on_success_count": 138,
+    "train_rescued_episode_count": 44,
+    "train_harmed_episode_count": 37,
+    "validation_filter_off_success_count": 46,
+    "validation_filter_on_success_count": 45,
+    "validation_rescued_episode_count": 13,
+    "validation_harmed_episode_count": 14
+  },
+  "screen": {
+    "seed": 201353680,
+    "episode_count": 64,
+    "runtime_filter": false,
+    "gate_threshold": 0.6,
+    "success_count": 47,
+    "success_rate": 0.734375,
+    "mean_reached_riser": 7.9375,
+    "gate_active_fraction": 0.073665572319156,
+    "mean_correction_norm": 0.0006161038962801818,
+    "independent_gate_run": false
+  },
+  "final_summary_write_error": true,
+  "simulation_and_screen_completed_before_error": true,
+  "rerun_for_diagnostics": false,
+  "global_best_changed": false,
+  "next_hypothesis": "Keep the causal high-confidence fallback, but replace the action-correction teacher with an episode-level value or direct policy objective; do not lower the gate or repeat the same seed."
+}
