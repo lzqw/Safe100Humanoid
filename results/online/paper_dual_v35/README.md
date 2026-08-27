@@ -1,5 +1,13 @@
 # v35 Paper-Aligned Dual CBF-RL Pilot
 
+## 最新实验：v75 论文式 100% safety-filtered PPO
+
+v75 恢复全环境执行 filtered action、PPO 保存 nominal action 的论文数据流，两项
+路由审计误差均为 0，CBF 介入比例提高到约 10%。但两个 aligned proposal 分别从
+71.06% 降到 70.48% 和 66.79%，均被完整回滚；filter-on 未过 75%，因此不追加
+filter-off gate。下一步核对 Eq. (22)–(23) reward 数值分解，而不再调整过滤比例。
+完整证据见 [`full_filter_v75/`](full_filter_v75/README.md)。
+
 ## 最新实验：v74 同 seed 超小步长 continuation
 
 v74 用同一 seed 检查 v73 最后的 unaligned proposal：其 filter-off 为 64.10%，
