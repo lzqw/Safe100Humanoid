@@ -195,6 +195,18 @@ def test_v70_exposes_capped_teacher_gradient_norm_balancing() -> None:
     assert 'runner_cfg["algorithm"]["v35_teacher_gradient_target_ratio"]' in script
 
 
+def test_v72_uses_one_direction_preserving_full_batch_sgd_actor_step() -> None:
+    source = (REPO / "src/tasks/stairs_cbf/paper_full_batch_v72.py").read_text()
+    assert "self.actor_optimizer = torch.optim.SGD(" in source
+    assert '"actor_optimizer_updates_per_round": 1' in source
+    assert 'self.num_learning_epochs != 1 or self.num_mini_batches != 1' in source
+    script = (REPO / "experiments/scripts/refine_paper_dual_v35.py").read_text()
+    assert '"--full-batch-sgd-actor"' in script
+    assert "agent_cfg.algorithm.num_learning_epochs = 1" in script
+    assert "agent_cfg.algorithm.num_mini_batches = 1" in script
+    assert "paper_full_batch_v72:PaperFullBatchV72PPO" in script
+
+
 def test_v35_filter_dropout_mask_is_balanced_and_rotates() -> None:
     first = MATH.rotating_environment_filter_mask(
         4, 0.5, 1, device="cpu"

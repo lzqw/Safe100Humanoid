@@ -227,6 +227,14 @@ def _parse_args() -> argparse.Namespace:
     ),
   )
   parser.add_argument(
+    "--full-batch-sgd-actor",
+    action="store_true",
+    help=(
+      "Use one globally clipped full-batch SGD actor step per round instead "
+      "of the historical eight Adam minibatch steps."
+    ),
+  )
+  parser.add_argument(
     "--training-filter-end-fraction",
     type=float,
     default=0.0,
@@ -478,7 +486,10 @@ def main() -> None:
       raise ValueError("target-height freeze round must lie within training rounds")
   if not 0.01 <= args.training_action_std <= 0.05:
     raise ValueError("v35 training action std must lie in [0.01, 0.05]")
-  if not 1.0e-7 <= args.actor_learning_rate <= 5.0e-6:
+  if args.full_batch_sgd_actor:
+    if not 1.0e-6 <= args.actor_learning_rate <= 1.0e-3:
+      raise ValueError("v72 SGD learning rate must lie in [1e-6, 1e-3]")
+  elif not 1.0e-7 <= args.actor_learning_rate <= 5.0e-6:
     raise ValueError("v35 actor learning rate must lie in [1e-7, 5e-6]")
   if not 0.0 <= args.moving_kl_beta <= 0.5:
     raise ValueError("v35 moving KL beta must lie in [0, 0.5]")
@@ -579,6 +590,24 @@ def main() -> None:
     raise ValueError(
       "teacher gradient norm balancing requires task-priority surgery"
     )
+  if args.full_batch_sgd_actor:
+    if (
+      any(arm != "A0" for arm in teacher_arms)
+      or args.deterministic_mean_teacher
+      or args.split_filter_actor_objectives
+      or args.task_priority_gradient_surgery
+      or args.teacher_gradient_target_ratio != 0.0
+    ):
+      raise ValueError("v72 full-batch SGD requires teacher-free A0 training")
+    if (
+      args.training_filter_schedule != "fixed"
+      or not 0.0 < training_filter_fraction < 1.0
+      or not args.filter_group_balanced_advantages
+    ):
+      raise ValueError(
+        "v72 full-batch SGD requires fixed mixed execution and "
+        "group-balanced advantages"
+      )
   if not 0.0 <= args.success_local_kl_beta <= 4.0:
     raise ValueError("success-local KL beta must lie in [0, 4]")
   if args.success_local_kl_beta > 0.0:
@@ -797,7 +826,13 @@ def main() -> None:
   agent_cfg.algorithm.moving_kl_beta = float(args.moving_kl_beta)
   agent_cfg.algorithm.minimum_std = float(args.training_action_std)
   agent_cfg.algorithm.maximum_std = float(args.training_action_std)
-  if args.deterministic_mean_teacher:
+  if args.full_batch_sgd_actor:
+    agent_cfg.algorithm.class_name = (
+      "src.tasks.stairs_cbf.paper_full_batch_v72:PaperFullBatchV72PPO"
+    )
+    agent_cfg.algorithm.num_learning_epochs = 1
+    agent_cfg.algorithm.num_mini_batches = 1
+  elif args.deterministic_mean_teacher:
     agent_cfg.algorithm.class_name = (
       "src.tasks.stairs_cbf.paper_teacher_v35:PaperMeanTeacherV35PPO"
     )
@@ -909,6 +944,7 @@ def main() -> None:
         "teacher_gradient_target_ratio": (
           args.teacher_gradient_target_ratio
         ),
+        "full_batch_sgd_actor": args.full_batch_sgd_actor,
         "training_action_std": args.training_action_std,
         "actor_learning_rate": args.actor_learning_rate,
         "moving_kl_beta": args.moving_kl_beta,
@@ -1063,6 +1099,7 @@ def main() -> None:
           "teacher_gradient_target_ratio": (
             args.teacher_gradient_target_ratio
           ),
+          "full_batch_sgd_actor": args.full_batch_sgd_actor,
           "training_action_std": args.training_action_std,
           "actor_learning_rate": args.actor_learning_rate,
           "moving_kl_beta": args.moving_kl_beta,
@@ -1113,6 +1150,7 @@ def main() -> None:
       "teacher_gradient_target_ratio": (
         args.teacher_gradient_target_ratio
       ),
+      "full_batch_sgd_actor": args.full_batch_sgd_actor,
       "training_action_std": args.training_action_std,
       "actor_learning_rate": args.actor_learning_rate,
       "moving_kl_beta": args.moving_kl_beta,
