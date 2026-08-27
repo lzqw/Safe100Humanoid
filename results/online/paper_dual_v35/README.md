@@ -1,5 +1,14 @@
 # v35 Paper-Aligned Dual CBF-RL Pilot
 
+## 最新实验：v66 成功状态保护蒸馏
+
+v66 在 v65 的纯安全蒸馏中加入成功 episode local KL（`beta=4`），使用 256 环境
+完成 4×1024 steps，4080 训练耗时 119.21 秒。base filtered rollout 为 65.27%；
+严格对齐后的 round 1–3 checkpoint 分别为 **62.90%、62.79%、61.28%**，全部
+更差。虽然安全 teacher 距离每轮略降，但任务能力没有被保护，因此在训练门槛拒绝，
+没有追加 filter-off 或多 seed 校验，当前最佳模型不变。完整配置与逐轮证据见
+[`success_preserved_distill_v66/`](success_preserved_distill_v66/README.md)。
+
 ## 最新实验：v65 介入局部安全蒸馏
 
 v65 隔离了 actor 的 PPO 梯度，只在 deterministic mean 的 CBF 介入状态做

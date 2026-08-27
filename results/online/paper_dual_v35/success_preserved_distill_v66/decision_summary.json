@@ -1,0 +1,71 @@
+{
+  "schema_version": "paper_dual_v35.v66.decision.v1",
+  "candidate": "success-preserved-distill-v66",
+  "decision": "rejected_at_training_gate",
+  "reason": "All three rollout-aligned post-update checkpoints were below the base filtered success rate.",
+  "source_commit": "f1e6b33a5118815d1896b18a452c4145393d236f",
+  "base_checkpoint_sha256": "f00e3a56276f629504234a20b40c124ee43a2f4d145cb143b3b2899acc024b27",
+  "training": {
+    "seed": 201352413,
+    "num_envs": 256,
+    "rounds": 4,
+    "rollout_steps_per_round": 1024,
+    "elapsed_seconds": 119.20988790900446,
+    "runtime_filter_fraction": 1.0,
+    "actor_learning_rate": 1e-7,
+    "teacher_eta": 0.25,
+    "moving_kl_beta": 0.5,
+    "success_local_kl_beta": 4.0,
+    "actor_ppo_transition_count_per_round": 0
+  },
+  "rollout_checkpoint_alignment": "round_N_rollout_uses_round_N_minus_1_checkpoint",
+  "aligned_rollouts": [
+    {
+      "rollout_round": 1,
+      "checkpoint_round": 0,
+      "checkpoint_label": "base",
+      "success_count": 357,
+      "episode_count": 547,
+      "success_rate": 0.6526508226691042
+    },
+    {
+      "rollout_round": 2,
+      "checkpoint_round": 1,
+      "checkpoint_label": "round_01.pt",
+      "success_count": 351,
+      "episode_count": 558,
+      "success_rate": 0.6290322580645161
+    },
+    {
+      "rollout_round": 3,
+      "checkpoint_round": 2,
+      "checkpoint_label": "round_02.pt",
+      "success_count": 346,
+      "episode_count": 551,
+      "success_rate": 0.6279491833030852
+    },
+    {
+      "rollout_round": 4,
+      "checkpoint_round": 3,
+      "checkpoint_label": "round_03.pt",
+      "success_count": 353,
+      "episode_count": 576,
+      "success_rate": 0.6128472222222222
+    }
+  ],
+  "selected_checkpoint": null,
+  "final_unaligned_checkpoint": {
+    "checkpoint_label": "round_04.pt",
+    "checkpoint_sha256": "229d96816028b7d9c121c90a23b6f0480c6742dd64f1029241a4eb38872a9f11",
+    "actor_sha256": "2773bae6d0bcdf0c6902f30374e9e526b24f5f65bd379fd6b30a2ba8df63c814",
+    "evaluated": false,
+    "uploaded": false
+  },
+  "deployment_filter_off_gate": {
+    "planned_episode_count": 128,
+    "success_threshold": 0.75,
+    "run": false,
+    "reason": "training_gate_failed"
+  },
+  "current_best_changed": false
+}
