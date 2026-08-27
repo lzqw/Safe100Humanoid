@@ -91,6 +91,20 @@ def rotating_environment_filter_mask(
     return ((environment_ids - offset) % num_envs) < enabled_count
 
 
+def filter_rescued_episode_mask(
+    filter_on_success: torch.Tensor, filter_off_success: torch.Tensor
+) -> torch.Tensor:
+    """Select initial episodes that succeed only when the CBF executes."""
+    if (
+        filter_on_success.shape != filter_off_success.shape
+        or filter_on_success.ndim != 1
+    ):
+        raise ValueError("v36 paired outcomes must share one-dimensional shape")
+    if filter_on_success.dtype != torch.bool or filter_off_success.dtype != torch.bool:
+        raise TypeError("v36 paired outcomes must be boolean")
+    return filter_on_success & ~filter_off_success
+
+
 def residual_teacher_target(
     reference_mean: torch.Tensor,
     safe_actor_action: torch.Tensor,

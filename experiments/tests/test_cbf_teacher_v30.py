@@ -159,6 +159,15 @@ def test_v35_filter_dropout_mask_is_balanced_and_rotates() -> None:
     )
 
 
+def test_v36_rescue_gate_uses_matched_on_success_off_failure() -> None:
+    on = torch.tensor((True, True, False, False))
+    off = torch.tensor((False, True, False, True))
+    assert torch.equal(
+        MATH.filter_rescued_episode_mask(on, off),
+        torch.tensor((True, False, False, False)),
+    )
+
+
 def test_v30_update_has_no_kl_threshold_control_flow() -> None:
     source = (REPO / "src/tasks/stairs_cbf/teacher_v30.py").read_text()
     tree = ast.parse(source)
