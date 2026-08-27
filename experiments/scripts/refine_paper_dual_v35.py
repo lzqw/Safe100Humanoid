@@ -331,8 +331,8 @@ def main() -> None:
     raise ValueError("v35 curriculum rows must be at least two")
   if not 0.01 <= args.training_action_std <= 0.05:
     raise ValueError("v35 training action std must lie in [0.01, 0.05]")
-  if not 1.0e-6 <= args.actor_learning_rate <= 5.0e-6:
-    raise ValueError("v35 actor learning rate must lie in [1e-6, 5e-6]")
+  if not 1.0e-7 <= args.actor_learning_rate <= 5.0e-6:
+    raise ValueError("v35 actor learning rate must lie in [1e-7, 5e-6]")
   training_runtime_filter = args.training_runtime_filter == "on"
   training_filter_fraction = (
     1.0 if training_runtime_filter else 0.0
