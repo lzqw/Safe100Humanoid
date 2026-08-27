@@ -17,6 +17,7 @@
 | v88 | 成功轨迹 sampled-safe-action 模仿的两个 proposal 均回落；base pooled 754/1078=69.94% | [`success_imitation_v88/`](success_imitation_v88/) |
 | v89 | 成功且干预状态的 deterministic safe mean 模仿仍回落；base pooled 775/1092=70.97% | [`success_intervention_v89/`](success_intervention_v89/) |
 | v90 | 25% bounded residual 的本机 32-env 筛选中两个 proposal 均回落；不正式放大 | [`success_residual_v90/`](success_residual_v90/) |
+| v91 | 移除 actor PPO/entropy 梯度后，保守 proposal 为 47/66=71.21%；仅比 pooled base 高 0.32 pp，需放大 | [`success_residual_only_v91/`](success_residual_only_v91/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -42,3 +43,8 @@ v90 将目标距离按预期缩到 0.128–0.133，但小批量 actor gradient n
 且全部被裁剪，两个 proposal 均退化。这轮仅是 4080 被占用时的本机方向筛选，不是正式
 gate；结论是下一步必须从 actor 更新中移除 noisy PPO/entropy 梯度，只保留成功干预
 bounded residual 与 moving reference KL。
+
+v91 完成了该隔离：四轮 actor PPO transition count 均为 0，gradient norm 降至
+0.118–0.128 且不再裁剪。较大的 `1e-3` proposal 仍退化；`1.25e-4` proposal 的 moving
+KL 仅 4.84e-6，并以 47/66=71.21% 相对 pooled base 95/134=70.90% 保持非劣（+0.32 pp）。
+由于样本小且仍低于 75%，全局最佳不变；下一步固定 `1.25e-4` 做更大规模筛选。
