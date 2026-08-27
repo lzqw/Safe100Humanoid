@@ -1,5 +1,14 @@
 # v35 Paper-Aligned Dual CBF-RL Pilot
 
+## 最新实验：v79 mixed unit-balanced Eq. (27)
+
+v79 用 v72 相同 base、seed、25/75 execution 和 `1e-4` full-batch SGD，只替换为
+Eq. (27) foot-task 单位平衡 reward package。aligned filter-off 从本次 61.11%
+振荡后达到 **72.02%（+10.91 pp）**，但仍未过 75%，不追加部署 gate。跨进程
+base 与 v72 相差 6.75 pp，绝对值不可直接作严格 reward 归因；运行内提升仍表明
+balanced reward 更适合 mixed deployment distribution。完整证据见
+[`mixed_unit_balanced_v79/`](mixed_unit_balanced_v79/README.md)。
+
 ## 最新实验：v78 Eq. (27) reward 单位平衡
 
 v78 将 margin weight 调到实测单位桥接值 0.1，使 manager-scaled margin 与
