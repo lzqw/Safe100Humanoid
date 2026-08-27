@@ -1,5 +1,14 @@
 # v35 Paper-Aligned Dual CBF-RL Pilot
 
+## 最新实验：v78 Eq. (27) reward 单位平衡
+
+v78 将 margin weight 调到实测单位桥接值 0.1，使 manager-scaled margin 与
+proximity 各约 `-0.0014` 和 `-0.0016/step`，CBF penalty 从 nominal 的
+73%–82% 降到 14%–16%。事务训练在回滚首个候选后由 68.40% 提高到 70.29%，
+仍未过 75% filter-on gate。下一步用 v72 相同 base/seed/25-75 execution 做只改变
+reward 的 controlled comparison。完整证据见
+[`unit_balanced_v78/`](unit_balanced_v78/README.md)。
+
 ## 最新实验：v76–v77 Eq. (27) reward 分解
 
 v76 改用 Eq. (27) reduced-order swing-foot proximity 与 next-riser clearance，
