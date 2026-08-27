@@ -209,6 +209,19 @@ KL 为 `0.004827`，最终只保留 `22.75%` 参数位移，实际 KL 为 `0.000
 证据见
 [`rescue_shielded_v37/`](rescue_shielded_v37/)。
 
+#### Multi-seed rescue aggregation + off-success trust anchor（已拒绝）
+
+v38 将 3 个训练 seed、每个 32 个环境的 matched-rescue shielded 数据合并，得到
+23 个 rescue episode 和 860 个 teacher transition。KL 投影不再使用 teacher
+状态，而是在 30,797 个“原策略 filter-off 成功”状态上限制平均 forward-KL，
+希望直接保护既有成功行为。训练耗时 97.6 秒，最终 KL 为 `0.00024972`。
+
+在较难 gate seed `201350912` 上，固定基线 filter-off 为 43/64（67.19%），v38
+只有 38/64（59.38%），净少 5 个成功 episode，因此立即停止且不运行 filter-on。
+这说明问题不只是单 seed 标签过拟合；当前 supervised correction 的聚合方向本身
+不能可靠替代论文中由 on-policy return 决定的策略更新。完整证据见
+[`multi_seed_rescue_v38/`](multi_seed_rescue_v38/)。
+
 ## 方法与第一阶段 F1 ablation
 
 本目录发布 v35 第一阶段 F1 pilot 的关键结果。该阶段依据
@@ -249,6 +262,7 @@ winner。后续 staged experiment 解决了 F1 矛盾，并已冻结扩展到 F2
 - [`unshielded_f2_summary.json`](unshielded_f2_summary.json): 无过滤 rollout、反事实 mean-CBF DAgger、模型哈希、paired 评估及训练 gate 负结果。
 - [`rescue_distill_v36/`](rescue_distill_v36/): matched filter-rescue 训练摘要、配对结果及留出 filter-off 逐 episode 证据。
 - [`rescue_shielded_v37/`](rescue_shielded_v37/): trust-region 训练、adaptive paired gate 与失败的 untouched-seed 泛化确认。
+- [`multi_seed_rescue_v38/`](multi_seed_rescue_v38/): 三训练 seed 聚合、off-success trust anchor 及失败的 filter-off gate。
 
 大型 `.pt` checkpoint 没有提交进 Git；其 SHA-256 已写入
 `pilot_summary.json`，原始 checkpoint 和逐 episode 文件保留在 4080 artifact
