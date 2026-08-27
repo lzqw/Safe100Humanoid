@@ -1,5 +1,14 @@
 # v35 Paper-Aligned Dual CBF-RL Pilot
 
+## 最新实验：v67 混合过滤分组优势 PPO
+
+v67 将 128 个环境等分为 filter-on/off 两组，并分别归一化 PPO advantage。最佳
+对齐 round-2 checkpoint 的 off/on 为 **72.22%/71.83%**，比本次 base off
+69.70% 有改善，但未过 75% 门槛；下一轮又分裂为 off 60.94%、on 77.86%。
+因此没有追加独立评估，当前最佳不变。该结果证明尺度平衡有效执行，但 filtered
+与 deployment 梯度方向仍需显式分流。完整证据见
+[`mixed_balanced_ppo_v67/`](mixed_balanced_ppo_v67/README.md)。
+
 ## 最新实验：v66 成功状态保护蒸馏
 
 v66 在 v65 的纯安全蒸馏中加入成功 episode local KL（`beta=4`），使用 256 环境
