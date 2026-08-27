@@ -1,0 +1,296 @@
+{
+  "actor_expansion": {
+    "expanded_actor_width": 415,
+    "inactive_geometry_exact_base_policy": true,
+    "legacy_first_layer_copy_max_abs_error": 0.0,
+    "new_feature_count": 10,
+    "new_first_layer_column_max_abs": 0.0,
+    "pi0_exact_preservation_proof": true,
+    "source_actor_width": 405
+  },
+  "antithetic_summary": {
+    "matched_initial_state_signatures": true,
+    "minus_success_count": 170,
+    "negative_difference_count": 68,
+    "pair_count": 256,
+    "plus_success_count": 171,
+    "positive_difference_count": 64,
+    "score_difference_mean": 0.01171875,
+    "score_difference_std": 3.3301210403442383,
+    "zero_difference_count": 124
+  },
+  "base_actor_sha256": "c08c387c0939a0774904cd8f3ccc3d459acc5134f26c5dd44ae411a9eb005188",
+  "base_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "base_critic_sha256": null,
+  "candidate_checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/antithetic_residual_v122_3750857_8x64_s201354300/candidate.pt",
+  "candidate_checkpoint_sha256": "9fcf532066eefb3af564cdb386c1e9f30af907ccd126fabb0c1f590578e27011",
+  "cbf": {
+    "acceleration_or_drift_model": false,
+    "actor_observation_changed": false,
+    "critic_observation_changed": false,
+    "current_CBF0_source_unchanged": true,
+    "mode": "current_velocity_cbf",
+    "parameters": {
+      "alpha": 10.0,
+      "barrier_slope": 0.8,
+      "lambda_s": 0.0,
+      "lambda_x": 0.0,
+      "metric": "euclidean",
+      "toe_margin": 0.08,
+      "top_clearance": 0.025
+    },
+    "plant_action_transform": "identity",
+    "runtime_filter": false
+  },
+  "context": "F2",
+  "critic_expansion": null,
+  "elapsed_seconds": 182.73861550702713,
+  "episode_credit": "paired-antithetic-progress",
+  "episode_failure_count": 171,
+  "episode_success_count": 341,
+  "exploration_std": 0.02,
+  "final_residual_sha256": "5484f4d42e88b183e33a367104d1b944e8f2ffb97ee9f3021fcfcaa510e7503d",
+  "gae_lambda": 0.95,
+  "gae_summary": null,
+  "gamma": 0.99,
+  "geometry_observation": {
+    "deployable": true,
+    "feature_count": 10,
+    "features_per_foot": [
+      "horizontal",
+      "vertical",
+      "barrier",
+      "contact",
+      "valid"
+    ],
+    "future_or_filtered_action_fields": 0,
+    "group": "cbf_geometry",
+    "source": "current bilateral foot FK + contact + mapped next-riser edges",
+    "timing": "persistent approach and swing, including pre-toe-off"
+  },
+  "git_commit": "37508577f7017628bc0a030fb041f25188d5cf9f",
+  "independent_gate_policy": "run separately only if screen_rate_gte_0.75",
+  "independent_gate_run": false,
+  "initial_residual_sha256": "5484f4d42e88b183e33a367104d1b944e8f2ffb97ee9f3021fcfcaa510e7503d",
+  "max_residual": 0.1,
+  "method_id": "heldout-validated-paired-antithetic-residual-ppo-v122",
+  "num_envs": 64,
+  "offline_gate_passed": false,
+  "optimization_seed": 201354393,
+  "optimizer": "sgd",
+  "optimizer_parameter_state_count": 0,
+  "optimizer_state_in_candidate": false,
+  "paper_dual_reward": {
+    "candidate": "raw_moderate",
+    "historical_default_preserved": false,
+    "paper_arxiv_id": "2510.14959v6",
+    "paper_demo_commit": "68955c8ba9e929d974b6677635370ee93eecc63a",
+    "reward_parameters": {
+      "correction_space": "raw_action",
+      "intervention_weight": 10.0,
+      "margin_weight": 1.0,
+      "sigma": 0.5
+    },
+    "runtime_filter_during_training": false
+  },
+  "rollout_summaries": [
+    {
+      "active_geometry_transition_count": 22376,
+      "exploration_sign": 1.0,
+      "fall_count": 23,
+      "initial_state_signature": "a21d03013b0316cb605cc1494f677a00891b10b8deaece3581dcfc21384ba2e6",
+      "mean_reached_riser": 7.859375,
+      "seed": 201354300,
+      "success_count": 41
+    },
+    {
+      "active_geometry_transition_count": 22876,
+      "exploration_sign": -1.0,
+      "fall_count": 29,
+      "initial_state_signature": "a21d03013b0316cb605cc1494f677a00891b10b8deaece3581dcfc21384ba2e6",
+      "mean_reached_riser": 7.75,
+      "seed": 201354300,
+      "success_count": 35
+    },
+    {
+      "active_geometry_transition_count": 22003,
+      "exploration_sign": 1.0,
+      "fall_count": 23,
+      "initial_state_signature": "f97acdbce513a67ee86ba80b3bea4855fa7662fdd11501386b06479ecb187158",
+      "mean_reached_riser": 7.78125,
+      "seed": 201354310,
+      "success_count": 41
+    },
+    {
+      "active_geometry_transition_count": 22206,
+      "exploration_sign": -1.0,
+      "fall_count": 15,
+      "initial_state_signature": "f97acdbce513a67ee86ba80b3bea4855fa7662fdd11501386b06479ecb187158",
+      "mean_reached_riser": 8.234375,
+      "seed": 201354310,
+      "success_count": 49
+    },
+    {
+      "active_geometry_transition_count": 21718,
+      "exploration_sign": 1.0,
+      "fall_count": 17,
+      "initial_state_signature": "4eb88b67b5dcd355ac3dc945611ceea40a739be1bfb6cdc81db2fd409532b3e2",
+      "mean_reached_riser": 8.171875,
+      "seed": 201354320,
+      "success_count": 47
+    },
+    {
+      "active_geometry_transition_count": 22844,
+      "exploration_sign": -1.0,
+      "fall_count": 19,
+      "initial_state_signature": "4eb88b67b5dcd355ac3dc945611ceea40a739be1bfb6cdc81db2fd409532b3e2",
+      "mean_reached_riser": 8.3125,
+      "seed": 201354320,
+      "success_count": 45
+    },
+    {
+      "active_geometry_transition_count": 23059,
+      "exploration_sign": 1.0,
+      "fall_count": 22,
+      "initial_state_signature": "c332a0c052913d490f35b611b259da31abc0732fd8c4a2e7f4f6827f07fc3e12",
+      "mean_reached_riser": 8.296875,
+      "seed": 201354330,
+      "success_count": 42
+    },
+    {
+      "active_geometry_transition_count": 22574,
+      "exploration_sign": -1.0,
+      "fall_count": 23,
+      "initial_state_signature": "c332a0c052913d490f35b611b259da31abc0732fd8c4a2e7f4f6827f07fc3e12",
+      "mean_reached_riser": 7.78125,
+      "seed": 201354330,
+      "success_count": 41
+    }
+  ],
+  "schema_version": 1,
+  "screen": {
+    "all_finite": true,
+    "candidate_checkpoint_sha256": "9fcf532066eefb3af564cdb386c1e9f30af907ccd126fabb0c1f590578e27011",
+    "fall_count": 22,
+    "fall_rate": 0.34375,
+    "initial_state_signature": "e874ed09fb60ec572e47d359e484559dba9636db47cde0efb4523519754e7871",
+    "mean_reached_riser": 7.625,
+    "mean_residual_norm": 0.0,
+    "num_episodes": 64,
+    "passed_75_percent": false,
+    "residual_state_sha256": "5484f4d42e88b183e33a367104d1b944e8f2ffb97ee9f3021fcfcaa510e7503d",
+    "runtime_filter": false,
+    "seed": 201354380,
+    "success_count": 42,
+    "success_rate": 0.65625
+  },
+  "shift": {
+    "actor_observation_fields_added": 0,
+    "baseline_riser_height_m": 0.13,
+    "cbf_geometry_exact": true,
+    "clearance_barrier": "sloped_xz",
+    "clearance_barrier_slope": 0.8,
+    "command_changed": false,
+    "context": "F2",
+    "context_name": "hard_uniform_18_4cm",
+    "controller_changed": false,
+    "filter_alpha": 10.0,
+    "fixed_deployment_environment": {
+      "actor_observation_corruption_disabled": true,
+      "base_com_randomization_absent": true,
+      "curriculum_disabled": true,
+      "encoder_bias_absent": true,
+      "friction_randomization_absent": true,
+      "push_randomization_absent": true,
+      "registered_environment_variant": "fixed_deployment_play",
+      "reset_events_exact": true,
+      "retained_fresh_initial_state_events": [
+        "reset_base",
+        "reset_robot_joints"
+      ]
+    },
+    "friction_changed": false,
+    "num_risers": 9,
+    "plant_action_transform": "identity",
+    "recovery_distance_m": 0.15,
+    "riser_height_m": 0.184,
+    "riser_profile_m": null,
+    "runtime_filter": false,
+    "shift": "fixed_uniform_higher_riser",
+    "stair_riser_patch_slots": 9,
+    "stair_target_patch_slots": 10,
+    "terrain_geometry_changed": true,
+    "top_platform_patch_included": true
+  },
+  "success_bonus": 1.0,
+  "trainable_parameter_count": 28364,
+  "training": {
+    "after": {
+      "clipped_surrogate": 0.0015101699391379952,
+      "importance_ratio_mean": 0.9996935725212097,
+      "reference_forward_kl": 0.004972831811755896,
+      "transition_count": 134023,
+      "unclipped_surrogate": 0.0027456842362880707,
+      "weight_sum": 1.0
+    },
+    "before": {
+      "clipped_surrogate": -2.9103830456733704e-09,
+      "importance_ratio_mean": 1.0,
+      "reference_forward_kl": 0.0,
+      "transition_count": 134023,
+      "unclipped_surrogate": -2.9103830456733704e-09,
+      "weight_sum": 1.0
+    },
+    "epochs": 1,
+    "maximum_gradient_norm_pre_clip": 4.373578071594238,
+    "optimizer_updates": 1,
+    "trust_region": {
+      "max_reference_kl": 0.005,
+      "parameter_interpolation_scale": 0.014404296875,
+      "projection_iterations": 12
+    },
+    "unprojected_after": {
+      "clipped_surrogate": -0.29907694458961487,
+      "importance_ratio_mean": 0.3648713529109955,
+      "reference_forward_kl": 17.772781372070312,
+      "transition_count": 134023,
+      "unclipped_surrogate": 0.005074928514659405,
+      "weight_sum": 1.0
+    }
+  },
+  "training_advantage_mean": 0.07122664898633957,
+  "training_advantage_std": 0.9488022923469543,
+  "training_runtime_filter": false,
+  "training_seed_count": 3,
+  "training_seeds": [
+    201354300,
+    201354310,
+    201354320,
+    201354330
+  ],
+  "training_transition_count": 134023,
+  "transactional_rollback": true,
+  "validation": {
+    "after": {
+      "clipped_surrogate": -0.0001333113839215865,
+      "importance_ratio_mean": 0.9995855092755264,
+      "reference_forward_kl": 0.00496513286397653,
+      "transition_count": 45633,
+      "unclipped_surrogate": 0.0011132825829555143,
+      "weight_sum": 0.9999999403953552
+    },
+    "before": {
+      "clipped_surrogate": 0.0,
+      "importance_ratio_mean": 1.0,
+      "reference_forward_kl": 0.0,
+      "transition_count": 45633,
+      "unclipped_surrogate": 0.0,
+      "weight_sum": 0.9999999403953552
+    }
+  },
+  "validation_advantage_mean": 0.04377676174044609,
+  "validation_advantage_std": 0.9587175250053406,
+  "validation_last_seed": true,
+  "validation_seed": 201354330,
+  "validation_transition_count": 45633
+}

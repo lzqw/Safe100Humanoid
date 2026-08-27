@@ -1,0 +1,20 @@
+{
+  "base_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "episode_credit": "paired-antithetic-progress",
+  "gae_lambda": 0.95,
+  "gamma": 0.99,
+  "git_commit": "37508577f7017628bc0a030fb041f25188d5cf9f",
+  "method_id": "heldout-validated-paired-antithetic-residual-ppo-v122",
+  "num_envs": 64,
+  "paired_antithetic": true,
+  "screen_seed": 201354380,
+  "success_bonus": 1.0,
+  "training_runtime_filter": false,
+  "training_seeds": [
+    201354300,
+    201354310,
+    201354320,
+    201354330
+  ],
+  "validation_last_seed": true
+}

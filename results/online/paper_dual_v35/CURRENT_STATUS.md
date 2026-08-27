@@ -48,6 +48,7 @@
 | v119 | 完整 seed held-out surrogate 为负，事务回滚 exact zero residual；base screen 46/64=71.88% | [`heldout_residual_v119/`](heldout_residual_v119/) |
 | v120 | 连续 reached-riser credit 的 held-out surrogate 仍为负；exact rollback 后 base screen 46/64=71.88% | [`progress_residual_v120/`](progress_residual_v120/) |
 | v121 | v79 pretrained critic 的逐步 GAE 在 train 改善、held-out 反转；exact rollback 后 screen 41/64=64.06% | [`critic_gae_residual_v121/`](critic_gae_residual_v121/) |
+| v122 | matched `+noise/-noise` 使 held-out unclipped 变正，但 clipped 略负；exact rollback 后 screen 42/64=65.63% | [`antithetic_residual_v122/`](antithetic_residual_v122/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -286,3 +287,11 @@ active-geometry transition 进入 residual objective；train clipped surrogate �
 预训练 value baseline 仍不能消除 residual action gradient 的跨 seed 反转；下一步改用
 同初始状态 paired/antithetic action advantage，而不是继续更换单轨迹 credit。
 当前最佳仍为 v79。
+
+v122 对 256 个 matched initial states 分别运行 `+noise/-noise` 镜像 filter-off 轨迹，
+全部 pair 的初态签名一致。正负分支分别为 171/256 与 170/256 success；train clipped
+surrogate 提高到 +0.001510。held-out unclipped surrogate 也首次为正（+0.001113），
+但在当前 KL 步长发生 clipping 后略降到 -0.000133，故仍 exact rollback。回滚后的
+screen 为 42/64=65.63%，未运行独立 gate。该结果说明 paired 差分已改善一阶方向，
+下一步应缩放同一 proposal，使 train/held-out clipped surrogate 同时为正，而不是再次
+更换 objective。当前最佳仍为 v79。
