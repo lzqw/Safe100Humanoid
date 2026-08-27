@@ -9,6 +9,7 @@ from mjlab.envs import ManagerBasedRlEnv
 
 from .actions import StairCbfJointPositionAction
 from .cbf_math import (
+  conditional_deployable_cbf_geometry,
   dual_cbf_reward,
   next_riser_clearance_reference,
   sloped_toe_clearance_constraint,
@@ -17,6 +18,7 @@ from .edge_detection import select_active_riser
 
 
 CBF_DEPLOYABLE_GEOMETRY_OBSERVATION_DIM = 5
+CBF_DEPLOYABLE_CONDITIONAL_GEOMETRY_OBSERVATION_DIM = 16
 
 
 def _terrain_risers(
@@ -155,6 +157,26 @@ def cbf_deployable_geometry_observation(
     CBF_DEPLOYABLE_GEOMETRY_OBSERVATION_DIM,
   ):
     raise RuntimeError("deployable CBF geometry has an unexpected shape")
+  return observation
+
+
+def cbf_deployable_conditional_geometry_observation(
+  env: ManagerBasedRlEnv,
+  action_name: str = "joint_pos",
+  asset_name: str = "robot",
+) -> torch.Tensor:
+  """Expose side/phase-conditioned deployable CBF geometry for v93."""
+  geometry = cbf_deployable_geometry_observation(
+    env,
+    action_name=action_name,
+    asset_name=asset_name,
+  )
+  observation = conditional_deployable_cbf_geometry(geometry)
+  if observation.shape != (
+    env.num_envs,
+    CBF_DEPLOYABLE_CONDITIONAL_GEOMETRY_OBSERVATION_DIM,
+  ):
+    raise RuntimeError("conditional deployable CBF geometry has an unexpected shape")
   return observation
 
 

@@ -23,6 +23,7 @@ def _load(name: str, relative: str):
 
 
 MATH = _load("velocity_cbf_v34_math", "src/tasks/stairs_cbf/velocity_cbf_math.py")
+CBF_MATH = _load("stair_cbf_math", "src/tasks/stairs_cbf/cbf_math.py")
 PROTOCOL = _load(
     "velocity_cbf_v34_protocol_test",
     "experiments/scripts/velocity_cbf_v34_protocol.py",
@@ -125,7 +126,28 @@ def test_v92_geometry_adapter_supports_direction_preserving_sgd() -> None:
     )
     assert isinstance(optimizer, torch.optim.SGD)
     assert ADAPTER.FULL_BATCH_SGD_METHOD_ID.endswith("adapter-v92")
-    with pytest.raises(ValueError, match="unknown v49/v92 adapter optimizer"):
+    with pytest.raises(ValueError, match="unknown v49-v93 adapter optimizer"):
         ADAPTER._build_adapter_optimizer(
             [parameter], optimizer_name="invalid", learning_rate=0.1
         )
+
+
+def test_v93_conditional_geometry_separates_side_and_barrier_phase() -> None:
+    base = torch.tensor(
+        (
+            (0.2, 0.4, -0.3, -1.0, 1.0),
+            (0.1, 0.5, 0.2, 1.0, 1.0),
+            (0.3, 0.2, -0.1, 1.0, 0.0),
+        )
+    )
+    conditional = CBF_MATH.conditional_deployable_cbf_geometry(base)
+    assert conditional.shape == (3, 16)
+    assert torch.equal(conditional[0, :4], torch.tensor((0.2, 0.4, -0.3, 1.0)))
+    assert torch.count_nonzero(conditional[0, 4:]) == 0
+    assert torch.equal(conditional[1, 12:], torch.tensor((0.1, 0.5, 0.2, 1.0)))
+    assert torch.count_nonzero(conditional[1, :12]) == 0
+    assert torch.count_nonzero(conditional[2]) == 0
+    assert torch.equal(
+        ADAPTER._geometry_active(torch.cat((torch.zeros(3, 405), conditional), dim=1)),
+        torch.tensor((True, True, False)),
+    )

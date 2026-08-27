@@ -3,7 +3,9 @@
 The historical 405-D policy cannot observe the toe/riser geometry used by the
 runtime filter.  v49 appends five current-state, real-robot-obtainable geometry
 coordinates, expands the pretrained actor with exactly zero input columns, and
-trains only those columns against successful shielded actions.  Consequently
+trains only those columns against successful shielded actions.  v93 can instead
+append 16 explicit side/phase-conditioned coordinates so opposite filter
+corrections do not cancel.  Consequently
 the candidate remains bit-exact to the base policy whenever the CBF geometry is
 inactive, while training still uses the paper's filtered-action distance.
 """
@@ -45,8 +47,15 @@ METHOD_ID = "deployable-cbf-geometry-residual-adapter-v49"
 FULL_BATCH_SGD_METHOD_ID = (
   "full-batch-sgd-deployable-cbf-geometry-residual-adapter-v92"
 )
+CONDITIONAL_FULL_BATCH_SGD_METHOD_ID = (
+  "full-batch-sgd-conditional-deployable-cbf-geometry-residual-adapter-v93"
+)
 LEGACY_ACTOR_OBSERVATION_DIM = 405
 GEOMETRY_OBSERVATION_DIM = 5
+CONDITIONAL_GEOMETRY_OBSERVATION_DIM = 16
+SUPPORTED_GEOMETRY_OBSERVATION_DIMS = frozenset(
+  (GEOMETRY_OBSERVATION_DIM, CONDITIONAL_GEOMETRY_OBSERVATION_DIM)
+)
 
 
 def _parse_args() -> argparse.Namespace:
@@ -62,6 +71,11 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--optimization-seed", type=int, required=True)
   parser.add_argument("--teacher-eta", type=float, default=0.5)
   parser.add_argument(
+    "--geometry-interface",
+    choices=("base-5", "conditional-16"),
+    default="base-5",
+  )
+  parser.add_argument(
     "--teacher-episode-scope",
     choices=("shielded-success", "rescued-only"),
     default="shielded-success",
@@ -72,8 +86,8 @@ def _parse_args() -> argparse.Namespace:
     choices=("adam", "sgd"),
     default="adam",
     help=(
-      "Optimize the five geometry columns with historical Adam or with "
-      "direction-preserving SGD. Use SGD with one full batch for v92."
+      "Optimize only the appended geometry columns with Adam or "
+      "direction-preserving SGD. Conditional v93 requires one full SGD batch."
     ),
   )
   parser.add_argument("--moving-kl-beta", type=float, default=0.1)
@@ -107,14 +121,15 @@ def _flat_observations(observations) -> torch.Tensor:
   geometry = observations["cbf_geometry"]
   if legacy.shape[-1] != LEGACY_ACTOR_OBSERVATION_DIM:
     raise RuntimeError("v49 legacy actor observation is not 405-D")
-  if geometry.shape[-1] != GEOMETRY_OBSERVATION_DIM:
-    raise RuntimeError("v49 CBF geometry observation is not 5-D")
+  if geometry.shape[-1] not in SUPPORTED_GEOMETRY_OBSERVATION_DIMS:
+    raise RuntimeError("CBF geometry observation is neither 5-D nor 16-D")
   return torch.cat((legacy, geometry), dim=-1)
 
 
 def _actor_observations(flat: torch.Tensor) -> dict[str, torch.Tensor]:
-  if flat.shape[-1] != LEGACY_ACTOR_OBSERVATION_DIM + GEOMETRY_OBSERVATION_DIM:
-    raise ValueError("v49 flattened actor observation is not 410-D")
+  geometry_dim = flat.shape[-1] - LEGACY_ACTOR_OBSERVATION_DIM
+  if geometry_dim not in SUPPORTED_GEOMETRY_OBSERVATION_DIMS:
+    raise ValueError("flattened actor observation is neither 410-D nor 421-D")
   return {
     "actor": flat[:, :LEGACY_ACTOR_OBSERVATION_DIM],
     "cbf_geometry": flat[:, LEGACY_ACTOR_OBSERVATION_DIM:],
@@ -124,15 +139,17 @@ def _actor_observations(flat: torch.Tensor) -> dict[str, torch.Tensor]:
 def _expand_actor_state(
   source: dict[str, torch.Tensor], target: dict[str, torch.Tensor]
 ) -> tuple[dict[str, torch.Tensor], dict[str, Any]]:
-  """Copy a 405-D actor into a 410-D actor with zero geometry columns."""
+  """Copy a 405-D actor into a supported actor with zero geometry columns."""
   source_width = int(source["mlp.0.weight"].shape[1])
   target_width = int(target["mlp.0.weight"].shape[1])
-  if (source_width, target_width) != (
-    LEGACY_ACTOR_OBSERVATION_DIM,
-    LEGACY_ACTOR_OBSERVATION_DIM + GEOMETRY_OBSERVATION_DIM,
+  geometry_dim = target_width - LEGACY_ACTOR_OBSERVATION_DIM
+  if (
+    source_width != LEGACY_ACTOR_OBSERVATION_DIM
+    or geometry_dim not in SUPPORTED_GEOMETRY_OBSERVATION_DIMS
   ):
     raise RuntimeError(
-      f"v49 actor expansion requires 405 -> 410, got {source_width} -> {target_width}"
+      "adapter actor expansion requires 405 -> 410/421, got "
+      f"{source_width} -> {target_width}"
     )
   if set(source) != set(target):
     raise RuntimeError("v49 actor tensors differ outside their input width")
@@ -165,7 +182,7 @@ def _expand_actor_state(
   return expanded, {
     "source_actor_width": source_width,
     "expanded_actor_width": target_width,
-    "new_feature_count": GEOMETRY_OBSERVATION_DIM,
+    "new_feature_count": geometry_dim,
     "legacy_first_layer_copy_max_abs_error": legacy_error,
     "new_first_layer_column_max_abs": zero_error,
     "inactive_geometry_exact_base_policy": True,
@@ -267,6 +284,16 @@ def _distribution_parameters(actor, flat: torch.Tensor):
   return tuple(value for value in actor.output_distribution_params)
 
 
+def _geometry_active(flat: torch.Tensor) -> torch.Tensor:
+  """Return the deployable geometric-active mask for either interface."""
+  geometry = flat[:, LEGACY_ACTOR_OBSERVATION_DIM:]
+  if geometry.shape[-1] == GEOMETRY_OBSERVATION_DIM:
+    return geometry[:, 4] > 0.5
+  if geometry.shape[-1] == CONDITIONAL_GEOMETRY_OBSERVATION_DIM:
+    return geometry[:, 3::4].sum(dim=-1) > 0.5
+  raise ValueError("unknown geometry width for active-state selection")
+
+
 def _build_adapter_optimizer(
   parameters: list[torch.nn.Parameter],
   *,
@@ -277,7 +304,7 @@ def _build_adapter_optimizer(
     return torch.optim.Adam(parameters, lr=learning_rate)
   if optimizer_name == "sgd":
     return torch.optim.SGD(parameters, lr=learning_rate)
-  raise ValueError(f"unknown v49/v92 adapter optimizer {optimizer_name!r}")
+  raise ValueError(f"unknown v49-v93 adapter optimizer {optimizer_name!r}")
 
 
 def _trust_metrics(
@@ -395,7 +422,7 @@ def _train_adapter(
     epochs != 1 or batch_size < len(eligible_indices)
   ):
     raise ValueError(
-      "v92 SGD requires exactly one epoch and one full eligible batch"
+      "v92/v93 SGD requires exactly one epoch and one full eligible batch"
     )
   if not len(trust_observations):
     raise RuntimeError("v49 has no active geometry trust states")
@@ -540,8 +567,11 @@ def _train_adapter(
     )
   )
   return {
-    "actor_update_scope": "five-new-first-layer-input-columns-only",
-    "trainable_parameter_count": int(first_layer.out_features * 5),
+    "actor_update_scope": "new-geometry-first-layer-input-columns-only",
+    "trainable_parameter_count": int(
+      first_layer.out_features
+      * (first_layer.in_features - LEGACY_ACTOR_OBSERVATION_DIM)
+    ),
     "optimizer": optimizer_name,
     "optimizer_updates": update_count,
     "epochs": epochs,
@@ -572,7 +602,10 @@ def _checkpoint_payload(
 ) -> dict[str, Any]:
   output = copy.deepcopy(source)
   output["actor_state_dict"] = {key: value.detach().cpu() for key, value in state.items()}
-  output["actor_observation_interface"] = "legacy_405_plus_deployable_cbf_geometry_5"
+  geometry_dim = int(state["mlp.0.weight"].shape[1]) - LEGACY_ACTOR_OBSERVATION_DIM
+  output["actor_observation_interface"] = (
+    f"legacy_405_plus_deployable_cbf_geometry_{geometry_dim}"
+  )
   infos = dict(output.get("infos") or {})
   infos[method_id] = metadata
   output["infos"] = infos
@@ -592,6 +625,8 @@ def main() -> None:
     raise ValueError("v49 moving KL beta must lie in [0, 4]")
   if not 0.0 < args.max_reference_kl <= 0.02:
     raise ValueError("v49 reference KL cap must lie in (0, 0.02]")
+  if args.geometry_interface == "conditional-16" and args.adapter_optimizer != "sgd":
+    raise ValueError("v93 conditional geometry requires direction-preserving SGD")
   repo = args.repo.resolve()
   checkpoint = args.base_checkpoint.resolve()
   output = args.output_dir.resolve()
@@ -609,10 +644,16 @@ def main() -> None:
     raise FileExistsError(output)
   output.mkdir(parents=True)
   started = time.monotonic()
-  method_id = (
-    FULL_BATCH_SGD_METHOD_ID
-    if args.adapter_optimizer == "sgd"
-    else METHOD_ID
+  if args.geometry_interface == "conditional-16":
+    method_id = CONDITIONAL_FULL_BATCH_SGD_METHOD_ID
+  elif args.adapter_optimizer == "sgd":
+    method_id = FULL_BATCH_SGD_METHOD_ID
+  else:
+    method_id = METHOD_ID
+  geometry_dim = (
+    CONDITIONAL_GEOMETRY_OBSERVATION_DIM
+    if args.geometry_interface == "conditional-16"
+    else GEOMETRY_OBSERVATION_DIM
   )
   _atomic_json(
     output / "execution_started.json",
@@ -623,7 +664,9 @@ def main() -> None:
       "training_seeds": seeds,
       "rollout_conditions": ["filter_off", "filter_on"],
       "teacher_episode_scope": args.teacher_episode_scope,
-      "actor_observation_interface": "405D proprioception + 5D deployable CBF geometry",
+      "actor_observation_interface": (
+        f"405D proprioception + {geometry_dim}D deployable CBF geometry"
+      ),
     },
   )
 
@@ -635,6 +678,7 @@ def main() -> None:
 
   import src.tasks  # noqa: F401
   from src.tasks.stairs_cbf.config import (
+    configure_deployable_cbf_conditional_geometry_observation,
     configure_deployable_cbf_geometry_observation,
     configure_deployable_cbf_geometry_runner,
   )
@@ -666,7 +710,11 @@ def main() -> None:
   reward = configure_paper_dual_reward(
     env_cfg, "raw_moderate", runtime_filter_during_training=True
   )
-  geometry = configure_deployable_cbf_geometry_observation(env_cfg)
+  geometry = (
+    configure_deployable_cbf_conditional_geometry_observation(env_cfg)
+    if args.geometry_interface == "conditional-16"
+    else configure_deployable_cbf_geometry_observation(env_cfg)
+  )
   env_cfg.scene.num_envs = args.num_envs
   env_cfg.seed = seeds[0]
   agent_cfg = load_rl_cfg(TASK_ID)
@@ -752,10 +800,10 @@ def main() -> None:
           value = value + global_environment_offset
         dataset_chunks[key].append(value)
       weight_chunks.append(effective)
-      on_active = on_data["observations"][:, -1] > 0.5
+      on_active = _geometry_active(on_data["observations"])
       off_data = off["dataset"]
       off_success_transition = off["success"][off_data["environment_ids"]]
-      off_active = off_data["observations"][:, -1] > 0.5
+      off_active = _geometry_active(off_data["observations"])
       trust_chunks.extend(
         (
           on_data["observations"][on_active],
@@ -852,7 +900,8 @@ def main() -> None:
       "candidate_checkpoint_sha256": file_sha256(candidate_path),
       "initial_actor_sha256": initial_actor_hash,
       "candidate_actor_sha256": candidate_actor_hash,
-      "actor_observation_dim": 410,
+      "actor_observation_dim": LEGACY_ACTOR_OBSERVATION_DIM + geometry_dim,
+      "geometry_interface": args.geometry_interface,
       "training_seeds": seeds,
       "num_envs": args.num_envs,
       "optimization_seed": args.optimization_seed,

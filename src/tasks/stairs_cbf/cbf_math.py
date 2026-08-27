@@ -5,6 +5,34 @@ from __future__ import annotations
 import torch
 
 
+def conditional_deployable_cbf_geometry(
+  geometry: torch.Tensor,
+) -> torch.Tensor:
+  """Split 5-D toe geometry by swing side and barrier phase.
+
+  The four mutually exclusive blocks are left/unsafe, left/safe,
+  right/unsafe, and right/safe. Each block contains horizontal clearance,
+  vertical clearance, sloped barrier, and its binary mask.
+  """
+  if geometry.ndim < 2 or geometry.shape[-1] != 5:
+    raise ValueError("conditional CBF geometry requires a final width of five")
+  active = geometry[..., 4] > 0.5
+  left = geometry[..., 3] < 0.0
+  right = geometry[..., 3] > 0.0
+  unsafe = geometry[..., 2] < 0.0
+  coordinates = geometry[..., :3]
+  blocks: list[torch.Tensor] = []
+  for selected in (
+    active & left & unsafe,
+    active & left & ~unsafe,
+    active & right & unsafe,
+    active & right & ~unsafe,
+  ):
+    mask = selected.to(geometry.dtype).unsqueeze(-1)
+    blocks.append(torch.cat((coordinates * mask, mask), dim=-1))
+  return torch.cat(blocks, dim=-1)
+
+
 def dual_cbf_reward(
   nominal_margin: torch.Tensor,
   intervention_norm: torch.Tensor,

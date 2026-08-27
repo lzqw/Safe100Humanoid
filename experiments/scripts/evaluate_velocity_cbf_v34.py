@@ -57,7 +57,11 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--candidate", default="unspecified")
     parser.add_argument(
         "--actor-observation-interface",
-        choices=("original-405", "deployable-cbf-geometry-410"),
+        choices=(
+            "original-405",
+            "deployable-cbf-geometry-410",
+            "deployable-cbf-conditional-geometry-421",
+        ),
         default="original-405",
     )
     parser.add_argument("--device", default="cuda:0")
@@ -136,6 +140,7 @@ def main() -> None:
 
     import src.tasks  # noqa: F401
     from src.tasks.stairs_cbf.config import (
+        configure_deployable_cbf_conditional_geometry_observation,
         configure_deployable_cbf_geometry_observation,
         configure_deployable_cbf_geometry_runner,
     )
@@ -167,11 +172,15 @@ def main() -> None:
     geometry_observation = None
     if args.actor_observation_interface == "deployable-cbf-geometry-410":
         geometry_observation = configure_deployable_cbf_geometry_observation(env_cfg)
+    elif args.actor_observation_interface == "deployable-cbf-conditional-geometry-421":
+        geometry_observation = (
+            configure_deployable_cbf_conditional_geometry_observation(env_cfg)
+        )
     env_cfg.scene.num_envs = args.num_envs
     env_cfg.seed = args.seed
     base_env = ManagerBasedRlEnv(env_cfg, device=args.device)
     agent_cfg = load_rl_cfg(TASK_ID)
-    if args.actor_observation_interface == "deployable-cbf-geometry-410":
+    if args.actor_observation_interface != "original-405":
         configure_deployable_cbf_geometry_runner(agent_cfg)
     env = RslRlVecEnvWrapper(base_env, clip_actions=agent_cfg.clip_actions)
     runner_cls = load_runner_cls(TASK_ID)
@@ -186,11 +195,11 @@ def main() -> None:
             strict=True,
             map_location=args.device,
         )
-        expected_actor_dim = (
-            410
-            if args.actor_observation_interface == "deployable-cbf-geometry-410"
-            else 405
-        )
+        expected_actor_dim = {
+            "original-405": 405,
+            "deployable-cbf-geometry-410": 410,
+            "deployable-cbf-conditional-geometry-421": 421,
+        }[args.actor_observation_interface]
         if int(runner.alg.actor.obs_dim) != expected_actor_dim:
             raise RuntimeError(
                 "v34 actor observation width differs from its declared interface"
