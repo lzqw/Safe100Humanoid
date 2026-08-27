@@ -17,6 +17,7 @@ from typing import Any
 import torch
 
 from .paper_dual_v35 import (
+  capped_norm_balance_auxiliary_gradients,
   split_filter_actor_objective_masks,
   task_priority_project_auxiliary_gradients,
 )
@@ -31,6 +32,7 @@ from .teacher_v30_math import (
 )
 
 METHOD_ID = "deterministic-mean-counterfactual-cbf-teacher-v35"
+TEACHER_GRADIENT_MAXIMUM_SCALE = 4.0
 
 
 def v35_mean_teacher_telemetry(
@@ -79,6 +81,7 @@ def configure_v35_mean_teacher_telemetry(
   success_local_kl_beta: float = 0.0,
   split_filter_actor_objectives: bool = False,
   task_priority_gradient_surgery: bool = False,
+  teacher_gradient_target_ratio: float = 0.0,
 ) -> dict[str, Any]:
   """Replace only the training telemetry function; action execution is fixed."""
   action = env_cfg.actions.get("joint_pos")
@@ -139,6 +142,8 @@ def configure_v35_mean_teacher_telemetry(
     "task_priority_gradient_surgery": bool(
       task_priority_gradient_surgery
     ),
+    "teacher_gradient_target_ratio": float(teacher_gradient_target_ratio),
+    "teacher_gradient_maximum_scale": TEACHER_GRADIENT_MAXIMUM_SCALE,
     "filtered_transition_actor_objective": (
       "deterministic_mean_CBF_teacher_plus_global_round_reference_KL"
       if split_filter_actor_objectives
@@ -155,6 +160,7 @@ class PaperMeanTeacherV35PpoAlgorithmCfg(CbfTeacherV30PpoAlgorithmCfg):
     "src.tasks.stairs_cbf.paper_teacher_v35:PaperMeanTeacherV35PPO"
   )
   v35_task_priority_gradient_surgery: bool = False
+  v35_teacher_gradient_target_ratio: float = 0.0
 
 
 class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
@@ -170,6 +176,7 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     v35_success_local_kl_beta: float = 0.0,
     v35_split_filter_actor_objectives: bool = False,
     v35_task_priority_gradient_surgery: bool = False,
+    v35_teacher_gradient_target_ratio: float = 0.0,
     **kwargs,
   ) -> None:
     super().__init__(*args, **kwargs)
@@ -190,6 +197,9 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     )
     self.v35_task_priority_gradient_surgery = bool(
       v35_task_priority_gradient_surgery
+    )
+    self.v35_teacher_gradient_target_ratio = float(
+      v35_teacher_gradient_target_ratio
     )
     self.v35_success_local_kl_beta = float(v35_success_local_kl_beta)
     if (
@@ -218,6 +228,18 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     ):
       raise ValueError(
         "v69 task-priority gradient surgery requires v68 split objectives"
+      )
+    if (
+      not math.isfinite(self.v35_teacher_gradient_target_ratio)
+      or not 0.0 <= self.v35_teacher_gradient_target_ratio <= 1.0
+    ):
+      raise ValueError("v70 teacher gradient target ratio must lie in [0, 1]")
+    if (
+      self.v35_teacher_gradient_target_ratio > 0.0
+      and not self.v35_task_priority_gradient_surgery
+    ):
+      raise ValueError(
+        "v70 teacher gradient norm balancing requires gradient surgery"
       )
     t = self.storage.num_transitions_per_env
     n = self.storage.num_envs
@@ -428,8 +450,35 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
         teacher_gradients,
       )
     )
+    teacher_for_update = projected_teacher
+    deployment_norm = diagnostics["primary_gradient_norm"]
+    projected_teacher_norm = diagnostics[
+      "projected_auxiliary_gradient_norm"
+    ]
+    balance_diagnostics = {
+      "auxiliary_gradient_balance_scale": 1.0,
+      "auxiliary_gradient_requested_scale": 1.0,
+      "auxiliary_gradient_scale_capped": 0.0,
+      "balanced_auxiliary_gradient_norm": projected_teacher_norm,
+      "balanced_auxiliary_to_primary_norm_ratio": (
+        projected_teacher_norm / max(deployment_norm, 1.0e-12)
+      ),
+      "auxiliary_gradient_target_norm_ratio": 0.0,
+      "auxiliary_gradient_maximum_scale": (
+        TEACHER_GRADIENT_MAXIMUM_SCALE
+      ),
+    }
+    if self.v35_teacher_gradient_target_ratio > 0.0:
+      teacher_for_update, balance_diagnostics = (
+        capped_norm_balance_auxiliary_gradients(
+          deployment_gradients,
+          projected_teacher,
+          target_ratio=self.v35_teacher_gradient_target_ratio,
+          maximum_scale=TEACHER_GRADIENT_MAXIMUM_SCALE,
+        )
+      )
     for parameter, deployment, teacher in zip(
-      actor_parameters, deployment_gradients, projected_teacher
+      actor_parameters, deployment_gradients, teacher_for_update
     ):
       parameter.grad = deployment + teacher
     return {
@@ -459,6 +508,24 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
       ],
       "actor_teacher_gradient_conflict": diagnostics[
         "auxiliary_gradient_conflict"
+      ],
+      "actor_teacher_gradient_balance_scale": balance_diagnostics[
+        "auxiliary_gradient_balance_scale"
+      ],
+      "actor_teacher_gradient_requested_scale": balance_diagnostics[
+        "auxiliary_gradient_requested_scale"
+      ],
+      "actor_teacher_gradient_scale_capped": balance_diagnostics[
+        "auxiliary_gradient_scale_capped"
+      ],
+      "actor_balanced_teacher_gradient_norm": balance_diagnostics[
+        "balanced_auxiliary_gradient_norm"
+      ],
+      "actor_balanced_teacher_to_deployment_norm_ratio": (
+        balance_diagnostics["balanced_auxiliary_to_primary_norm_ratio"]
+      ),
+      "actor_teacher_gradient_target_norm_ratio": balance_diagnostics[
+        "auxiliary_gradient_target_norm_ratio"
       ],
     }
 
@@ -550,6 +617,12 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
         "v35_task_priority_gradient_surgery": (
           self.v35_task_priority_gradient_surgery
         ),
+        "v35_teacher_gradient_target_ratio": (
+          self.v35_teacher_gradient_target_ratio
+        ),
+        "v35_teacher_gradient_maximum_scale": (
+          TEACHER_GRADIENT_MAXIMUM_SCALE
+        ),
         "v35_ppo_environment_transition_fraction": float(
           ppo_environment.float().mean()
         ),
@@ -636,5 +709,11 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     )
     output["v35_task_priority_gradient_surgery"] = (
       self.v35_task_priority_gradient_surgery
+    )
+    output["v35_teacher_gradient_target_ratio"] = (
+      self.v35_teacher_gradient_target_ratio
+    )
+    output["v35_teacher_gradient_maximum_scale"] = (
+      TEACHER_GRADIENT_MAXIMUM_SCALE
     )
     return output

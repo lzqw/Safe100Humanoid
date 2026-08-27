@@ -158,6 +158,60 @@ def task_priority_project_auxiliary_gradients(
     "auxiliary_gradient_conflict": float(conflict),
   }
 
+
+def capped_norm_balance_auxiliary_gradients(
+  primary_gradients: tuple[torch.Tensor, ...],
+  auxiliary_gradients: tuple[torch.Tensor, ...],
+  *,
+  target_ratio: float,
+  maximum_scale: float = 4.0,
+  epsilon: float = 1.0e-12,
+) -> tuple[tuple[torch.Tensor, ...], dict[str, float]]:
+  """Scale an already-safe auxiliary direction to a bounded norm ratio."""
+  if not primary_gradients or len(primary_gradients) != len(auxiliary_gradients):
+    raise ValueError("gradient balancing requires two non-empty matched tuples")
+  if not math.isfinite(target_ratio) or not 0.0 < target_ratio <= 1.0:
+    raise ValueError("gradient target ratio must lie in (0, 1]")
+  if not math.isfinite(maximum_scale) or maximum_scale < 1.0:
+    raise ValueError("gradient maximum scale must be finite and at least one")
+  if not math.isfinite(epsilon) or epsilon <= 0.0:
+    raise ValueError("gradient balancing epsilon must be finite and positive")
+  for primary, auxiliary in zip(primary_gradients, auxiliary_gradients):
+    if primary.shape != auxiliary.shape:
+      raise ValueError("gradient balancing tensor shapes must match")
+    if primary.device != auxiliary.device or primary.dtype != auxiliary.dtype:
+      raise ValueError("gradient balancing tensors must share device and dtype")
+    if not bool(torch.isfinite(primary).all()) or not bool(
+      torch.isfinite(auxiliary).all()
+    ):
+      raise RuntimeError("gradient balancing received non-finite gradients")
+
+  zero = primary_gradients[0].new_zeros(())
+  primary_norm = torch.sqrt(
+    sum((gradient.square().sum() for gradient in primary_gradients), zero)
+  )
+  auxiliary_norm = torch.sqrt(
+    sum((gradient.square().sum() for gradient in auxiliary_gradients), zero)
+  )
+  if bool(primary_norm > epsilon) and bool(auxiliary_norm > epsilon):
+    requested_scale = target_ratio * primary_norm / (auxiliary_norm + epsilon)
+    scale = torch.clamp(requested_scale, max=maximum_scale)
+  else:
+    requested_scale = auxiliary_norm.new_ones(())
+    scale = requested_scale
+  balanced = tuple(gradient * scale for gradient in auxiliary_gradients)
+  balanced_norm = auxiliary_norm * scale
+  achieved_ratio = balanced_norm / (primary_norm + epsilon)
+  return balanced, {
+    "auxiliary_gradient_balance_scale": float(scale),
+    "auxiliary_gradient_requested_scale": float(requested_scale),
+    "auxiliary_gradient_scale_capped": float(requested_scale > maximum_scale),
+    "balanced_auxiliary_gradient_norm": float(balanced_norm),
+    "balanced_auxiliary_to_primary_norm_ratio": float(achieved_ratio),
+    "auxiliary_gradient_target_norm_ratio": float(target_ratio),
+    "auxiliary_gradient_maximum_scale": float(maximum_scale),
+  }
+
 # ``raw_demo`` reproduces the two weights and action-coordinate distance used
 # by the authors' public navigation demo. The intermediate variants are needed
 # because humanoid reward rates and action geometry differ from a 2-D point

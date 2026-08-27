@@ -186,6 +186,15 @@ def test_v69_routes_actor_backward_through_task_priority_gradient_surgery() -> N
     assert 'runner_cfg["algorithm"]["v35_task_priority_gradient_surgery"]' in script
 
 
+def test_v70_exposes_capped_teacher_gradient_norm_balancing() -> None:
+    source = (REPO / "src/tasks/stairs_cbf/paper_teacher_v35.py").read_text()
+    assert "capped_norm_balance_auxiliary_gradients(" in source
+    assert "TEACHER_GRADIENT_MAXIMUM_SCALE = 4.0" in source
+    script = (REPO / "experiments/scripts/refine_paper_dual_v35.py").read_text()
+    assert '"--teacher-gradient-target-ratio"' in script
+    assert 'runner_cfg["algorithm"]["v35_teacher_gradient_target_ratio"]' in script
+
+
 def test_v35_filter_dropout_mask_is_balanced_and_rotates() -> None:
     first = MATH.rotating_environment_filter_mask(
         4, 0.5, 1, device="cpu"

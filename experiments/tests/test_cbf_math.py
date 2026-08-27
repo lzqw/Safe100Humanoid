@@ -17,6 +17,7 @@ from src.tasks.stairs_cbf.edge_detection import (
 )
 from src.tasks.stairs_cbf.paper_dual_v35 import (
   PAPER_DUAL_CANDIDATES,
+  capped_norm_balance_auxiliary_gradients,
   configure_paper_training_domain_randomization,
   normalize_filter_group_advantages,
   split_filter_actor_objective_masks,
@@ -268,6 +269,30 @@ def test_v69_leaves_aligned_teacher_gradient_unchanged():
   torch.testing.assert_close(projected[0], teacher[0])
   assert metrics["auxiliary_gradient_conflict"] == 0.0
   assert metrics["auxiliary_gradient_retained_fraction"] == pytest.approx(1.0)
+
+
+def test_v70_norm_balances_projected_teacher_with_a_hard_scale_cap():
+  deployment = (torch.tensor([3.0, 4.0]),)
+  teacher = (torch.tensor([1.0, 0.0]),)
+
+  balanced, metrics = capped_norm_balance_auxiliary_gradients(
+    deployment, teacher, target_ratio=0.5
+  )
+
+  torch.testing.assert_close(balanced[0], torch.tensor([2.5, 0.0]))
+  assert metrics["auxiliary_gradient_balance_scale"] == pytest.approx(2.5)
+  assert metrics["balanced_auxiliary_to_primary_norm_ratio"] == pytest.approx(0.5)
+  assert metrics["auxiliary_gradient_scale_capped"] == 0.0
+
+  capped, capped_metrics = capped_norm_balance_auxiliary_gradients(
+    (torch.tensor([10.0]),),
+    (torch.tensor([0.1]),),
+    target_ratio=1.0,
+    maximum_scale=4.0,
+  )
+  torch.testing.assert_close(capped[0], torch.tensor([0.4]))
+  assert capped_metrics["auxiliary_gradient_balance_scale"] == pytest.approx(4.0)
+  assert capped_metrics["auxiliary_gradient_scale_capped"] == 1.0
 
 
 def test_v57_restores_native_static_training_domain_randomization():

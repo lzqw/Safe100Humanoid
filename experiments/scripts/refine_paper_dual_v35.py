@@ -218,6 +218,15 @@ def _parse_args() -> argparse.Namespace:
     ),
   )
   parser.add_argument(
+    "--teacher-gradient-target-ratio",
+    type=float,
+    default=0.0,
+    help=(
+      "After task-priority projection, norm-balance the CBF-teacher gradient "
+      "to this fraction of the deployment gradient; zero disables balancing."
+    ),
+  )
+  parser.add_argument(
     "--training-filter-end-fraction",
     type=float,
     default=0.0,
@@ -558,6 +567,18 @@ def main() -> None:
     raise ValueError(
       "task-priority gradient surgery requires split filter actor objectives"
     )
+  if (
+    not math.isfinite(args.teacher_gradient_target_ratio)
+    or not 0.0 <= args.teacher_gradient_target_ratio <= 1.0
+  ):
+    raise ValueError("teacher gradient target ratio must lie in [0, 1]")
+  if (
+    args.teacher_gradient_target_ratio > 0.0
+    and not args.task_priority_gradient_surgery
+  ):
+    raise ValueError(
+      "teacher gradient norm balancing requires task-priority surgery"
+    )
   if not 0.0 <= args.success_local_kl_beta <= 4.0:
     raise ValueError("success-local KL beta must lie in [0, 4]")
   if args.success_local_kl_beta > 0.0:
@@ -749,6 +770,9 @@ def main() -> None:
       task_priority_gradient_surgery=(
         args.task_priority_gradient_surgery
       ),
+      teacher_gradient_target_ratio=(
+        args.teacher_gradient_target_ratio
+      ),
     )
     deterministic_mean_teacher["runtime_filter_fraction"] = (
       training_filter_fraction
@@ -805,6 +829,9 @@ def main() -> None:
     )
     runner_cfg["algorithm"]["v35_task_priority_gradient_surgery"] = (
       args.task_priority_gradient_surgery
+    )
+    runner_cfg["algorithm"]["v35_teacher_gradient_target_ratio"] = (
+      args.teacher_gradient_target_ratio
     )
   runner = CbfTeacherV30Runner(
     env, runner_cfg, log_dir=None, device=args.device
@@ -878,6 +905,9 @@ def main() -> None:
         ),
         "task_priority_gradient_surgery": (
           args.task_priority_gradient_surgery
+        ),
+        "teacher_gradient_target_ratio": (
+          args.teacher_gradient_target_ratio
         ),
         "training_action_std": args.training_action_std,
         "actor_learning_rate": args.actor_learning_rate,
@@ -1030,6 +1060,9 @@ def main() -> None:
           "task_priority_gradient_surgery": (
             args.task_priority_gradient_surgery
           ),
+          "teacher_gradient_target_ratio": (
+            args.teacher_gradient_target_ratio
+          ),
           "training_action_std": args.training_action_std,
           "actor_learning_rate": args.actor_learning_rate,
           "moving_kl_beta": args.moving_kl_beta,
@@ -1076,6 +1109,9 @@ def main() -> None:
       ),
       "task_priority_gradient_surgery": (
         args.task_priority_gradient_surgery
+      ),
+      "teacher_gradient_target_ratio": (
+        args.teacher_gradient_target_ratio
       ),
       "training_action_std": args.training_action_std,
       "actor_learning_rate": args.actor_learning_rate,
