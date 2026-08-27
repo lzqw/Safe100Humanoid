@@ -109,6 +109,22 @@ def test_v35_masked_actor_mean_preserves_population_scale() -> None:
     assert torch.equal(empty_values.grad, torch.zeros_like(empty_values))
 
 
+def test_v35_terminal_episode_mask_keeps_environment_identity() -> None:
+    episode_ids = torch.tensor(
+        ((0, 0), (0, 0), (1, 0), (1, 1)), dtype=torch.long
+    )
+    terminal = torch.tensor(
+        ((False, False), (True, False), (False, True), (False, False))
+    )
+    mask = MATH.terminal_episode_transition_mask(episode_ids, terminal)
+    assert torch.equal(
+        mask,
+        torch.tensor(
+            ((True, True), (True, True), (False, True), (False, False))
+        ),
+    )
+
+
 def test_v30_update_has_no_kl_threshold_control_flow() -> None:
     source = (REPO / "src/tasks/stairs_cbf/teacher_v30.py").read_text()
     tree = ast.parse(source)

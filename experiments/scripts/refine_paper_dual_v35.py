@@ -106,6 +106,15 @@ def _parse_args() -> argparse.Namespace:
     ),
   )
   parser.add_argument(
+    "--success-local-kl-beta",
+    type=float,
+    default=0.0,
+    help=(
+      "Additional round-reference forward-KL coefficient on transitions from "
+      "complete reached-top episodes."
+    ),
+  )
+  parser.add_argument(
     "--height-curriculum",
     action="store_true",
     help="Train uniform contexts on ordered stair heights up to the target.",
@@ -296,6 +305,17 @@ def main() -> None:
     raise ValueError(
       "failure-focused actor requires the failure-only mean teacher"
     )
+  if not 0.0 <= args.success_local_kl_beta <= 4.0:
+    raise ValueError("success-local KL beta must lie in [0, 4]")
+  if args.success_local_kl_beta > 0.0 and (
+    not args.deterministic_mean_teacher
+    or args.failure_only_mean_teacher
+    or args.failure_focused_actor
+    or args.training_runtime_filter != "off"
+  ):
+    raise ValueError(
+      "success-local KL requires unshielded all-intervention mean-CBF training"
+    )
   if (
     args.training_runtime_filter == "off"
     and not args.deterministic_mean_teacher
@@ -370,6 +390,7 @@ def main() -> None:
       runtime_filter_during_training=training_runtime_filter,
       failure_only=args.failure_only_mean_teacher,
       failure_focused_actor=args.failure_focused_actor,
+      success_local_kl_beta=args.success_local_kl_beta,
     )
   height_curriculum = None
   if args.height_curriculum:
@@ -406,6 +427,9 @@ def main() -> None:
     runner_cfg["algorithm"]["v35_failure_focused_actor"] = (
       args.failure_focused_actor
     )
+    runner_cfg["algorithm"]["v35_success_local_kl_beta"] = (
+      args.success_local_kl_beta
+    )
   runner = CbfTeacherV30Runner(
     env, runner_cfg, log_dir=None, device=args.device
   )
@@ -425,6 +449,17 @@ def main() -> None:
     stage_deterministic_policy_mean
     if args.deterministic_mean_teacher
     else None
+  )
+
+  def stage_reached_top(active_runner, _dones, extras) -> None:
+    extras["v35_reached_top"] = (
+      active_runner.env.unwrapped.termination_manager.get_term("reached_top")
+      .detach()
+      .clone()
+    )
+
+  before_process_env_step = (
+    stage_reached_top if args.deterministic_mean_teacher else None
   )
   records: list[dict[str, Any]] = []
   try:
@@ -452,6 +487,7 @@ def main() -> None:
         "height_curriculum": height_curriculum,
         "deterministic_mean_teacher": deterministic_mean_teacher,
         "failure_focused_actor": args.failure_focused_actor,
+        "success_local_kl_beta": args.success_local_kl_beta,
         "training_runtime_filter": training_runtime_filter,
         "training_action_std": args.training_action_std,
         "actor_learning_rate": args.actor_learning_rate,
@@ -468,7 +504,11 @@ def main() -> None:
       runner.alg.freeze_round_reference()
       start_hash = actor_state_sha256(actor_state(runner.alg.actor))
       round_started = time.monotonic()
-      metrics = _collect_round(runner, before_env_step=before_env_step)
+      metrics = _collect_round(
+        runner,
+        before_env_step=before_env_step,
+        before_process_env_step=before_process_env_step,
+      )
       if height_curriculum is not None:
         metrics.update(
           _terrain_level_metrics(base_env, num_rows=args.curriculum_rows)
@@ -481,6 +521,9 @@ def main() -> None:
         "actor_sha256": end_hash,
         "round_start_actor_sha256": start_hash,
         "round_end_actor_sha256": end_hash,
+        "rollout_actor_sha256": start_hash,
+        "rollout_checkpoint_round": round_index - 1,
+        "rollout_precedes_update": True,
         "teacher_arm": round_teacher_arm,
         "teacher_parameters": round_teacher_parameters,
         "metrics": metrics,
@@ -500,6 +543,7 @@ def main() -> None:
           "height_curriculum": height_curriculum,
           "deterministic_mean_teacher": deterministic_mean_teacher,
           "failure_focused_actor": args.failure_focused_actor,
+          "success_local_kl_beta": args.success_local_kl_beta,
           "training_runtime_filter": training_runtime_filter,
           "training_action_std": args.training_action_std,
           "actor_learning_rate": args.actor_learning_rate,
@@ -528,6 +572,10 @@ def main() -> None:
       "height_curriculum": height_curriculum,
       "deterministic_mean_teacher": deterministic_mean_teacher,
       "failure_focused_actor": args.failure_focused_actor,
+      "success_local_kl_beta": args.success_local_kl_beta,
+      "round_metric_actor_alignment": (
+        "round_N_rollout_uses_round_N_minus_1_checkpoint"
+      ),
       "training_runtime_filter": training_runtime_filter,
       "training_action_std": args.training_action_std,
       "actor_learning_rate": args.actor_learning_rate,

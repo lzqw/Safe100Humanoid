@@ -186,6 +186,13 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
         """Select transitions that contribute PPO and entropy actor gradients."""
         return torch.ones_like(self.teacher_eligible, dtype=torch.bool)
 
+    def _actor_local_kl_transition_mask(self) -> torch.Tensor:
+        """Select transitions receiving an additional round-reference KL."""
+        return torch.zeros_like(self.teacher_eligible, dtype=torch.bool)
+
+    def _actor_local_kl_beta(self) -> float:
+        return 0.0
+
     @staticmethod
     def _weighted_mean(values: torch.Tensor, weights: torch.Tensor) -> torch.Tensor:
         denominator = weights.sum()
@@ -364,11 +371,24 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
         teacher_eligible = self.teacher_eligible.flatten().detach()
         teacher_weights = self.teacher_weights.flatten().detach()
         actor_ppo_mask = self._actor_ppo_transition_mask().flatten().detach()
+        actor_local_kl_mask = (
+            self._actor_local_kl_transition_mask().flatten().detach()
+        )
+        actor_local_kl_beta = float(self._actor_local_kl_beta())
         if (
             actor_ppo_mask.shape != advantages.shape
             or actor_ppo_mask.dtype != torch.bool
         ):
             raise RuntimeError("v30 actor PPO mask must be boolean with shape [T*N]")
+        if (
+            actor_local_kl_mask.shape != advantages.shape
+            or actor_local_kl_mask.dtype != torch.bool
+        ):
+            raise RuntimeError(
+                "v30 actor local-KL mask must be boolean with shape [T*N]"
+            )
+        if not math.isfinite(actor_local_kl_beta) or actor_local_kl_beta < 0.0:
+            raise RuntimeError("v30 actor local-KL beta must be finite and non-negative")
         if not bool(torch.isfinite(advantages).all()):
             raise ProximalHardRollback("non-finite v30 advantages")
 
@@ -405,6 +425,7 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
             "actor": 0.0,
             "ppo": 0.0,
             "moving_kl": 0.0,
+            "local_kl": 0.0,
             "teacher": 0.0,
             "entropy": 0.0,
         }
@@ -449,10 +470,15 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
                 actor_ppo_minibatches_without_signal += int(
                     not has_actor_ppo_signal
                 )
-                moving_kl_loss = diagonal_gaussian_forward_kl(
+                forward_kl = diagonal_gaussian_forward_kl(
                     current_params,
                     tuple(value[indices] for value in reference_params),
-                ).mean()
+                )
+                moving_kl_loss = forward_kl.mean()
+                local_kl_loss = self._weighted_mean(
+                    forward_kl,
+                    actor_local_kl_mask[indices].to(forward_kl.dtype),
+                )
                 batch_eligible = teacher_eligible[indices]
                 batch_weights = teacher_weights[indices]
                 teacher_loss = self._teacher_loss(
@@ -471,6 +497,7 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
                 actor_loss = (
                     ppo_loss
                     + self.moving_kl_beta * moving_kl_loss
+                    + actor_local_kl_beta * local_kl_loss
                     + self.teacher_distillation_weight * teacher_loss
                     - self.entropy_coef * entropy
                 )
@@ -533,6 +560,7 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
                 totals["actor"] += float(actor_loss.detach())
                 totals["ppo"] += float(ppo_loss.detach())
                 totals["moving_kl"] += float(moving_kl_loss.detach())
+                totals["local_kl"] += float(local_kl_loss.detach())
                 totals["teacher"] += float(teacher_loss.detach())
                 totals["entropy"] += float(entropy.detach())
                 actor_gradient_norm_max = max(
@@ -606,6 +634,16 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
             "actor_loss": totals["actor"] / actor_updates,
             "surrogate": totals["ppo"] / actor_updates,
             "moving_forward_kl_loss": totals["moving_kl"] / actor_updates,
+            "actor_local_preservation_kl_loss": (
+                totals["local_kl"] / actor_updates
+            ),
+            "actor_local_preservation_kl_beta": actor_local_kl_beta,
+            "actor_local_preservation_transition_count": int(
+                actor_local_kl_mask.sum()
+            ),
+            "actor_local_preservation_transition_fraction": float(
+                actor_local_kl_mask.float().mean()
+            ),
             "teacher_loss": totals["teacher"] / actor_updates,
             "teacher_huber_loss_mean": (
                 totals["teacher"] / actor_updates

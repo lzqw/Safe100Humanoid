@@ -447,7 +447,9 @@ def _write_round_csv(path: Path, records: list[dict[str, Any]]) -> None:
     temporary.replace(path)
 
 
-def _collect_round(runner, *, before_env_step=None) -> dict[str, Any]:
+def _collect_round(
+    runner, *, before_env_step=None, before_process_env_step=None
+) -> dict[str, Any]:
     from rsl_rl.utils import check_nan
 
     runner.alg.clear_cbf_rollout()
@@ -471,6 +473,8 @@ def _collect_round(runner, *, before_env_step=None) -> dict[str, Any]:
             )
             check_nan(next_obs, rewards, dones)
             extras = dict(extras)
+            if before_process_env_step is not None:
+                before_process_env_step(runner, dones, extras)
             episode_returns += rewards
             reward_sum += float(rewards.sum())
             riser = extras["online_stair_index"].long()

@@ -10,6 +10,7 @@ runtime filter.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import Any
 
@@ -19,6 +20,7 @@ from .teacher_v26 import HigherRiserCbfAction, v26_online_safety_telemetry
 from .teacher_v30 import CbfTeacherV30PPO, CbfTeacherV30PpoAlgorithmCfg
 from .teacher_v30_math import (
   intervention_teacher_weights,
+  terminal_episode_transition_mask,
   weighted_action_errors,
 )
 
@@ -66,6 +68,7 @@ def configure_v35_mean_teacher_telemetry(
   runtime_filter_during_training: bool,
   failure_only: bool = False,
   failure_focused_actor: bool = False,
+  success_local_kl_beta: float = 0.0,
 ) -> dict[str, Any]:
   """Replace only the training telemetry function; action execution is fixed."""
   action = env_cfg.actions.get("joint_pos")
@@ -97,8 +100,13 @@ def configure_v35_mean_teacher_telemetry(
     "successful_episode_actor_objective": (
       "round_reference_KL_only"
       if failure_focused_actor
-      else "PPO_plus_round_reference_KL"
+      else (
+        "PPO_plus_mean_CBF_plus_extra_local_round_reference_KL"
+        if success_local_kl_beta > 0.0
+        else "PPO_plus_round_reference_KL"
+      )
     ),
+    "success_local_kl_beta": float(success_local_kl_beta),
   }
 
 
@@ -119,6 +127,7 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     *args,
     v35_failure_only_mean_teacher: bool = False,
     v35_failure_focused_actor: bool = False,
+    v35_success_local_kl_beta: float = 0.0,
     **kwargs,
   ) -> None:
     super().__init__(*args, **kwargs)
@@ -130,6 +139,12 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
       v35_failure_only_mean_teacher
     )
     self.v35_failure_focused_actor = bool(v35_failure_focused_actor)
+    self.v35_success_local_kl_beta = float(v35_success_local_kl_beta)
+    if (
+      not math.isfinite(self.v35_success_local_kl_beta)
+      or not 0.0 <= self.v35_success_local_kl_beta <= 4.0
+    ):
+      raise ValueError("v35 success-local KL beta must lie in [0, 4]")
     if self.v35_failure_focused_actor and not self.v35_failure_only_mean_teacher:
       raise ValueError(
         "v35 failure-focused actor requires failure-only mean teacher"
@@ -149,6 +164,12 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     )
     self.v35_failed_episode_transition = torch.zeros(
       t, n, dtype=torch.bool, device=self.device
+    )
+    self.v35_success_terminals = torch.zeros_like(
+      self.v35_failed_episode_transition
+    )
+    self.v35_success_episode_transition = torch.zeros_like(
+      self.v35_failed_episode_transition
     )
 
   def process_env_step(
@@ -177,23 +198,29 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
       self.v35_mean_correction_norm[step].copy_(correction_norm)
       self.v35_mean_nominal_margin[step].copy_(margin)
       self.v35_mean_telemetry_present[step] = True
+      reached_top = extras.get("v35_reached_top")
+      if reached_top is None:
+        raise RuntimeError("v35 exact reached-top telemetry is missing")
+      self.v35_success_terminals[step].copy_(
+        dones.bool() & reached_top.bool()
+      )
     super().process_env_step(obs, rewards, dones, extras)
 
   def _compute_teacher_labels(
     self, correction_norm: torch.Tensor
   ) -> tuple[torch.Tensor, torch.Tensor, dict[str, torch.Tensor]]:
     del correction_norm
-    t, n = self.teacher_episode_ids.shape
-    environment = torch.arange(n, device=self.device).expand(t, n)
-    composite_episode = self.teacher_episode_ids * n + environment
     failed_terminal = self.storage.dones.squeeze(-1).bool() & self.fall_events
-    failed_episode_ids = composite_episode[failed_terminal]
-    failed_transition = (
-      torch.isin(composite_episode, failed_episode_ids)
-      if failed_episode_ids.numel()
-      else torch.zeros_like(self.v35_mean_intervened)
+    failed_transition = terminal_episode_transition_mask(
+      self.teacher_episode_ids, failed_terminal
     )
+    success_transition = terminal_episode_transition_mask(
+      self.teacher_episode_ids, self.v35_success_terminals
+    )
+    if bool((failed_transition & success_transition).any()):
+      raise RuntimeError("v35 success and failed episode masks overlap")
     self.v35_failed_episode_transition.copy_(failed_transition)
+    self.v35_success_episode_transition.copy_(success_transition)
     gated_intervention = self.v35_mean_intervened
     if self.v35_failure_only_mean_teacher:
       gated_intervention = gated_intervention & failed_transition
@@ -220,6 +247,14 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     if self.v35_failure_focused_actor:
       return self.v35_failed_episode_transition
     return super()._actor_ppo_transition_mask()
+
+  def _actor_local_kl_transition_mask(self) -> torch.Tensor:
+    if self.v35_success_local_kl_beta > 0.0:
+      return self.v35_success_episode_transition
+    return super()._actor_local_kl_transition_mask()
+
+  def _actor_local_kl_beta(self) -> float:
+    return self.v35_success_local_kl_beta
 
   def relabel_teacher_transitions(self) -> dict[str, Any]:
     if not bool(self.v35_mean_telemetry_present.all()):
@@ -283,11 +318,16 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
           self.v35_failure_only_mean_teacher
         ),
         "v35_failure_focused_actor": self.v35_failure_focused_actor,
+        "v35_success_local_kl_beta": self.v35_success_local_kl_beta,
         "v35_failed_episode_count": float(
           (self.storage.dones.squeeze(-1).bool() & self.fall_events).sum()
         ),
         "v35_failed_episode_transition_fraction": float(
           self.v35_failed_episode_transition.float().mean()
+        ),
+        "v35_success_episode_count": float(self.v35_success_terminals.sum()),
+        "v35_success_episode_transition_fraction": float(
+          self.v35_success_episode_transition.float().mean()
         ),
         "teacher_eligible_fraction_among_interventions": (
           int(self.teacher_eligible.sum()) / max(1, intervened_count)
@@ -331,6 +371,8 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     self.v35_mean_nominal_margin.zero_()
     self.v35_mean_telemetry_present.zero_()
     self.v35_failed_episode_transition.zero_()
+    self.v35_success_terminals.zero_()
+    self.v35_success_episode_transition.zero_()
 
   def save(self) -> dict[str, Any]:
     output = super().save()
@@ -342,4 +384,5 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
       self.v35_failure_only_mean_teacher
     )
     output["v35_failure_focused_actor"] = self.v35_failure_focused_actor
+    output["v35_success_local_kl_beta"] = self.v35_success_local_kl_beta
     return output

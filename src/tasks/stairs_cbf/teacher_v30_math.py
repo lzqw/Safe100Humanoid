@@ -19,6 +19,25 @@ def masked_population_mean(
     return (values * mask.to(values.dtype)).mean()
 
 
+def terminal_episode_transition_mask(
+    episode_ids: torch.Tensor, terminal_events: torch.Tensor
+) -> torch.Tensor:
+    """Mark every stored transition from episodes ending in ``terminal_events``."""
+    if episode_ids.ndim != 2 or terminal_events.shape != episode_ids.shape:
+        raise ValueError("v35 episode ids and terminal events must share [T, N]")
+    if terminal_events.dtype != torch.bool:
+        raise TypeError("v35 terminal episode events must be boolean")
+    _, num_envs = episode_ids.shape
+    environment_ids = torch.arange(
+        num_envs, device=episode_ids.device, dtype=episode_ids.dtype
+    ).expand_as(episode_ids)
+    composite_ids = episode_ids * num_envs + environment_ids
+    terminal_ids = composite_ids[terminal_events]
+    if terminal_ids.numel() == 0:
+        return torch.zeros_like(terminal_events)
+    return torch.isin(composite_ids, terminal_ids)
+
+
 def residual_teacher_target(
     reference_mean: torch.Tensor,
     safe_actor_action: torch.Tensor,
