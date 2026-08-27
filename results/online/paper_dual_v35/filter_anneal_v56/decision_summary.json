@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "experiment": "filter_anneal_v56",
+  "git_commit": "77dbd3a818db83fc4383470092217db6d0070804",
+  "base_checkpoint_sha256": "9c207de0b0b9868ee76c3f2ba8e6d22c281d022116de5e4d949d899744a13e85",
+  "context": "F2",
+  "candidate": "paper_stair_demo_scale",
+  "change": {
+    "training_filter_schedule": "linear_to_off",
+    "counterfactual_cbf_reward_retained_when_unshielded": true,
+    "per_round_filter_subgroup_metrics": true
+  },
+  "smokes": [
+    {
+      "seed": 201352201,
+      "actor_learning_rate": 5e-07,
+      "transitions": 131072,
+      "elapsed_seconds": 62.32008238695562,
+      "final_filter_fraction": 0.0,
+      "final_unshielded_success_count": 39,
+      "final_unshielded_episode_count": 60,
+      "final_unshielded_success_rate": 0.65
+    },
+    {
+      "seed": 201352202,
+      "actor_learning_rate": 1e-06,
+      "transitions": 131072,
+      "elapsed_seconds": 63.30588329292368,
+      "final_filter_fraction": 0.0,
+      "final_unshielded_success_count": 41,
+      "final_unshielded_episode_count": 59,
+      "final_unshielded_success_rate": 0.6949152542372882
+    }
+  ],
+  "formal": {
+    "seed": 201352301,
+    "actor_learning_rate": 1e-06,
+    "rounds": 8,
+    "num_envs": 64,
+    "rollout_steps": 1024,
+    "transitions": 524288,
+    "elapsed_seconds": 242.73328999406658,
+    "filter_fractions": [
+      1.0,
+      0.8571428571428572,
+      0.7142857142857143,
+      0.5714285714285714,
+      0.4285714285714286,
+      0.2857142857142857,
+      0.1428571428571429,
+      0.0
+    ],
+    "final_rollout_checkpoint_round": 7,
+    "final_unshielded_success_count": 75,
+    "final_unshielded_episode_count": 133,
+    "final_unshielded_success_rate": 0.5639097744360902,
+    "final_unshielded_fall_rate": 0.43609022556390975
+  },
+  "selected_checkpoint": {
+    "role": "rejected candidate evaluated by the final fully unshielded rollout",
+    "round": 7,
+    "sha256": "c5f311aeaa62815d458f5af67212bffc364d60fd692be9abbe7076bda616a512",
+    "actor_sha256": "31becd824a0e697192ecda78eb52253cc68db68ae6c66fdb77a7c655dbe38349"
+  },
+  "untouched_gate": {
+    "threshold_success_rate": 0.75,
+    "run": false,
+    "reason": "The independent formal final rollout was already fully unshielded and achieved only 56.39%, below the predeclared credibility threshold."
+  },
+  "decision": "rejected"
+}
