@@ -107,6 +107,19 @@ def test_v73_script_snapshots_and_restores_transactional_state() -> None:
     assert "selected_checkpoint_sha256" in source
 
 
+def test_v75_full_batch_allows_paper_fully_filtered_execution() -> None:
+    script = (REPO / "experiments/scripts/refine_paper_dual_v35.py").read_text()
+    assert "paper_fully_filtered_execution" in script
+    assert 'transactional_acceptance_group = (' in script
+    assert '"filter_on" if fully_filtered_full_batch_actor' in script
+    assert "PaperFullFilterV75PPO" in script
+    algorithm = (
+        REPO / "src/tasks/stairs_cbf/paper_full_filter_v75.py"
+    ).read_text()
+    assert "paper_training_execution_fully_safety_filtered" in algorithm
+    assert "paper_ppo_storage_uses_nominal_policy_action" in algorithm
+
+
 def test_v30_residual_target_uses_round_reference_and_sample_correction() -> None:
     reference = torch.tensor(((1.0, -2.0),), requires_grad=True)
     raw = torch.tensor(((0.2, 0.4),), requires_grad=True)

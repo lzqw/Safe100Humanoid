@@ -615,14 +615,22 @@ def main() -> None:
       or args.teacher_gradient_target_ratio != 0.0
     ):
       raise ValueError("v72 full-batch SGD requires teacher-free A0 training")
-    if (
-      args.training_filter_schedule != "fixed"
-      or not 0.0 < training_filter_fraction < 1.0
-      or not args.filter_group_balanced_advantages
+    mixed_group_balanced_execution = (
+      args.training_filter_schedule == "fixed"
+      and 0.0 < training_filter_fraction < 1.0
+      and args.filter_group_balanced_advantages
+    )
+    paper_fully_filtered_execution = (
+      args.training_filter_schedule == "fixed"
+      and training_filter_fraction == 1.0
+      and not args.filter_group_balanced_advantages
+    )
+    if not (
+      mixed_group_balanced_execution or paper_fully_filtered_execution
     ):
       raise ValueError(
-        "v72 full-batch SGD requires fixed mixed execution and "
-        "group-balanced advantages"
+        "full-batch SGD requires either fixed mixed execution with "
+        "group-balanced advantages or paper-style fully filtered execution"
       )
   if args.transactional_rollout_acceptance:
     if not args.full_batch_sgd_actor:
@@ -635,6 +643,14 @@ def main() -> None:
       raise ValueError(
         "v73 rollout acceptance requires a fixed physical training domain"
       )
+  fully_filtered_full_batch_actor = bool(
+    args.full_batch_sgd_actor
+    and args.training_filter_schedule == "fixed"
+    and training_filter_fraction == 1.0
+  )
+  transactional_acceptance_group = (
+    "filter_on" if fully_filtered_full_batch_actor else "filter_off"
+  )
   if not 0.0 <= args.success_local_kl_beta <= 4.0:
     raise ValueError("success-local KL beta must lie in [0, 4]")
   if args.success_local_kl_beta > 0.0:
@@ -855,7 +871,9 @@ def main() -> None:
   agent_cfg.algorithm.maximum_std = float(args.training_action_std)
   if args.full_batch_sgd_actor:
     agent_cfg.algorithm.class_name = (
-      "src.tasks.stairs_cbf.paper_full_batch_v72:PaperFullBatchV72PPO"
+      "src.tasks.stairs_cbf.paper_full_filter_v75:PaperFullFilterV75PPO"
+      if fully_filtered_full_batch_actor
+      else "src.tasks.stairs_cbf.paper_full_batch_v72:PaperFullBatchV72PPO"
     )
     agent_cfg.algorithm.num_learning_epochs = 1
     agent_cfg.algorithm.num_mini_batches = 1
@@ -985,8 +1003,14 @@ def main() -> None:
           args.teacher_gradient_target_ratio
         ),
         "full_batch_sgd_actor": args.full_batch_sgd_actor,
+        "fully_filtered_full_batch_actor": fully_filtered_full_batch_actor,
         "transactional_rollout_acceptance": (
           args.transactional_rollout_acceptance
+        ),
+        "transactional_acceptance_group": (
+          transactional_acceptance_group
+          if args.transactional_rollout_acceptance
+          else None
         ),
         "training_action_std": args.training_action_std,
         "actor_learning_rate": args.actor_learning_rate,
@@ -1109,8 +1133,16 @@ def main() -> None:
       if args.transactional_rollout_acceptance:
         candidate_decision = rollout_candidate_decision(
           actor_sha256=start_hash,
-          success_count=int(metrics["rollout_filter_off_success_count"]),
-          episode_count=int(metrics["rollout_filter_off_episode_count"]),
+          success_count=int(
+            metrics[
+              f"rollout_{transactional_acceptance_group}_success_count"
+            ]
+          ),
+          episode_count=int(
+            metrics[
+              f"rollout_{transactional_acceptance_group}_episode_count"
+            ]
+          ),
           accepted_actor_sha256=accepted_actor_sha256,
           accepted_success_rate=accepted_success_rate,
         )
@@ -1136,6 +1168,9 @@ def main() -> None:
         metrics.update(
           {
             "transactional_rollout_acceptance_enabled": True,
+            "transactional_acceptance_group": (
+              transactional_acceptance_group
+            ),
             "transactional_candidate_accepted": bool(
               candidate_decision["accepted"]
             ),
@@ -1159,8 +1194,16 @@ def main() -> None:
               TARGET_MOVING_FORWARD_KL
             ),
             "transactional_accepted_actor_sha256": accepted_actor_sha256,
+            "transactional_accepted_success_rate": accepted_success_rate,
             "transactional_accepted_filter_off_success_rate": (
               accepted_success_rate
+              if transactional_acceptance_group == "filter_off"
+              else None
+            ),
+            "transactional_accepted_filter_on_success_rate": (
+              accepted_success_rate
+              if transactional_acceptance_group == "filter_on"
+              else None
             ),
           }
         )
@@ -1222,8 +1265,14 @@ def main() -> None:
             args.teacher_gradient_target_ratio
           ),
           "full_batch_sgd_actor": args.full_batch_sgd_actor,
+          "fully_filtered_full_batch_actor": fully_filtered_full_batch_actor,
           "transactional_rollout_acceptance": (
             args.transactional_rollout_acceptance
+          ),
+          "transactional_acceptance_group": (
+            transactional_acceptance_group
+            if args.transactional_rollout_acceptance
+            else None
           ),
           "training_action_std": args.training_action_std,
           "actor_learning_rate": args.actor_learning_rate,
@@ -1276,8 +1325,14 @@ def main() -> None:
         args.teacher_gradient_target_ratio
       ),
       "full_batch_sgd_actor": args.full_batch_sgd_actor,
+      "fully_filtered_full_batch_actor": fully_filtered_full_batch_actor,
       "transactional_rollout_acceptance": (
         args.transactional_rollout_acceptance
+      ),
+      "transactional_acceptance_group": (
+        transactional_acceptance_group
+        if args.transactional_rollout_acceptance
+        else None
       ),
       "transactional_target_moving_forward_kl": (
         TARGET_MOVING_FORWARD_KL
@@ -1306,7 +1361,19 @@ def main() -> None:
         else None
       ),
       "selected_actor_sha256": accepted_actor_sha256,
-      "selected_filter_off_success_rate": accepted_success_rate,
+      "selected_success_rate": accepted_success_rate,
+      "selected_filter_off_success_rate": (
+        accepted_success_rate
+        if transactional_acceptance_group == "filter_off"
+        and args.transactional_rollout_acceptance
+        else None
+      ),
+      "selected_filter_on_success_rate": (
+        accepted_success_rate
+        if transactional_acceptance_group == "filter_on"
+        and args.transactional_rollout_acceptance
+        else None
+      ),
       "selected_rollout_round": accepted_rollout_round,
       "training_action_std": args.training_action_std,
       "actor_learning_rate": args.actor_learning_rate,

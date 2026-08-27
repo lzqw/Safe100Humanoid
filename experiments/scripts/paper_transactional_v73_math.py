@@ -18,7 +18,7 @@ def rollout_candidate_decision(
   accepted_actor_sha256: str | None,
   accepted_success_rate: float | None,
 ) -> dict[str, Any]:
-  """Accept the baseline/retry or a candidate that is not worse than anchor."""
+  """Accept the baseline/retry or a success-rate-noninferior candidate."""
   if not actor_sha256:
     raise ValueError("candidate actor SHA-256 must be non-empty")
   if episode_count <= 0 or not 0 <= success_count <= episode_count:
@@ -52,7 +52,7 @@ def rollout_candidate_decision(
     "reason": (
       "candidate_noninferior_to_anchor"
       if accepted
-      else "candidate_filter_off_regression"
+      else "candidate_success_rate_regression"
     ),
     "success_rate": success_rate,
     "improvement_percentage_points": improvement,
