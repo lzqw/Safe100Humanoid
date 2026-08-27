@@ -47,6 +47,7 @@
 | v118 | 一次 full-batch SGD 修复离线 surrogate，但新 seed screen 仅 40/64=62.50% | [`filter_off_full_batch_v118/`](filter_off_full_batch_v118/) |
 | v119 | 完整 seed held-out surrogate 为负，事务回滚 exact zero residual；base screen 46/64=71.88% | [`heldout_residual_v119/`](heldout_residual_v119/) |
 | v120 | 连续 reached-riser credit 的 held-out surrogate 仍为负；exact rollback 后 base screen 46/64=71.88% | [`progress_residual_v120/`](progress_residual_v120/) |
+| v121 | v79 pretrained critic 的逐步 GAE 在 train 改善、held-out 反转；exact rollback 后 screen 41/64=64.06% | [`critic_gae_residual_v121/`](critic_gae_residual_v121/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -276,3 +277,12 @@ surrogate 为 +0.000742，但 held-out seed 仍为 -0.001842，故再次 exact r
 screen 是未修改 v79 的 46/64=71.88%。连续 credit 也不能稳定 residual score-function
 gradient，后续不再继续替换同类标量，而应引入 state-action critic/GAE 或显著扩大真正
 独立的 on-policy batch。当前最佳仍为 v79。
+
+v121 将 v79 的 pretrained critic 以 10 个零列精确扩展，并在真实 filter-off
+deployment trajectory 上计算逐步 GAE。105,214 个完整 transition 中 88,846 个
+active-geometry transition 进入 residual objective；train clipped surrogate 从
+-0.004977 改善到 -0.003434，但完整 held-out seed 从 -0.030414 降到 -0.032271，
+因此 exact rollback。回滚后的新 seed screen 为 41/64=64.06%，未运行独立 gate。
+预训练 value baseline 仍不能消除 residual action gradient 的跨 seed 反转；下一步改用
+同初始状态 paired/antithetic action advantage，而不是继续更换单轨迹 credit。
+当前最佳仍为 v79。

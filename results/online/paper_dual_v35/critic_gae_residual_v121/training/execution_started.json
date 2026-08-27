@@ -1,0 +1,19 @@
+{
+  "base_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "episode_credit": "pretrained-critic-gae",
+  "gae_lambda": 0.95,
+  "gamma": 0.99,
+  "git_commit": "aac480de6e61a2cb732bb8885de0a45921548a47",
+  "method_id": "heldout-validated-pretrained-critic-gae-residual-ppo-v121",
+  "num_envs": 64,
+  "screen_seed": 201354280,
+  "success_bonus": 1.0,
+  "training_runtime_filter": false,
+  "training_seeds": [
+    201354200,
+    201354210,
+    201354220,
+    201354230
+  ],
+  "validation_last_seed": true
+}
