@@ -53,6 +53,7 @@
 | v124 | 132-D deterministic parameter ES 的 train cosine 为正、held-out 为 -0.0848；rollback 后 screen 45/64=70.31% | [`parameter_antithetic_v124/`](parameter_antithetic_v124/) |
 | v125 | local sigma 使 held-out cosine 变为 +0.0854，但 train pairwise -0.0202 未过门槛；rollback 后 42/64 | [`local_parameter_es_v125/`](local_parameter_es_v125/) |
 | v126 | train tolerance 通过但 held-out cosine 再次为 -0.0950；rollback 后 base screen 47/64=73.44% | [`tolerant_local_es_v126/`](tolerant_local_es_v126/) |
+| v127 | cross-fit state/value occupancy BA 仅 51.2%–52.1%；两个 filtered-GAE proposal 均回退，screen 41/64 | [`state_value_occupancy_v127/`](state_value_occupancy_v127/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -329,3 +330,13 @@ screen 达 47/64=73.44%，但 residual norm 为 0，不能归因于候选，且�
 才触发独立 gate。v124-v126 三种 parameter-ES 设置均出现 held-out 不稳定，后续停止
 继续调 sigma/cosine threshold，回到 paper-dual actor 的 state-conditioned value 或
 occupancy correction。当前最佳仍为 v79。
+
+v127 在 50/50 mixed rollout 上用 actor 128-D hidden state 与 critic value 做 2-fold
+cross-fit，估计 filter-off/filter-on occupancy ratio；actor 只接收加权 filtered GAE，
+critic 保留全部 transition。四轮 classifier balanced accuracy 仅 51.2%–52.1%，说明
+这两个 late-policy occupancy 在当前表示中几乎不可分。两个可评估 proposal 的下一轮
+filter-off 结果分别为 80/128=62.50% 与 79/134=58.96%，均被事务门回滚；最终 actor
+与 v79 完全相同。唯一新 seed screen 为 41/64=64.06%，未触发独立 gate。该结果排除
+“只需对局部 filtered PPO 做状态密度重加权”这一解释；剩余最显著的论文差距是从头或
+更早阶段执行长时程、高并行度的全过滤训练，而非继续在 v79 附近做局部 correction。
+当前正式最佳仍为 v79。
