@@ -39,12 +39,19 @@ from refine_rescue_distill_v36 import (
   _initial_state_signature,
   _seed_everything,
 )
-from velocity_cbf_v34_protocol import CURRENT_CBF_MODE, PROTOCOL_ID
+from velocity_cbf_v34_protocol import (
+  CURRENT_CBF_MODE,
+  OPTIMIZED_CBF_MODE,
+  PROTOCOL_ID,
+)
 
 
 METHOD_ID = "learned-cbf-residual-policy-dagger-v97"
 SUCCESSFUL_EPISODE_METHOD_ID = (
   "successful-filtered-episode-learned-cbf-residual-dagger-v99"
+)
+TASK_METRIC_SUCCESSFUL_EPISODE_METHOD_ID = (
+  "task-metric-successful-filtered-learned-cbf-residual-dagger-v101"
 )
 BASE_HIDDEN_DIM = 128
 PERSISTENT_GEOMETRY_DIM = 10
@@ -110,6 +117,15 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--batch-size", type=int, default=4096)
   parser.add_argument("--trust-weight", type=float, default=0.05)
   parser.add_argument("--max-grad-norm", type=float, default=5.0)
+  parser.add_argument(
+    "--cbf-mode",
+    choices=(CURRENT_CBF_MODE, OPTIMIZED_CBF_MODE),
+    default=CURRENT_CBF_MODE,
+  )
+  parser.add_argument(
+    "--cbf-parameters-json",
+    help="Task-metric CBF parameters when --cbf-mode is optimized.",
+  )
   parser.add_argument(
     "--successful-episodes-only",
     action="store_true",
@@ -498,7 +514,20 @@ def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
 def main() -> None:
   args = _parse_args()
   seeds = _parse_seeds(args.training_seeds)
-  method_id = SUCCESSFUL_EPISODE_METHOD_ID if args.successful_episodes_only else METHOD_ID
+  if args.cbf_mode == OPTIMIZED_CBF_MODE and args.successful_episodes_only:
+    method_id = TASK_METRIC_SUCCESSFUL_EPISODE_METHOD_ID
+  elif args.successful_episodes_only:
+    method_id = SUCCESSFUL_EPISODE_METHOD_ID
+  else:
+    method_id = METHOD_ID
+  if args.cbf_mode == OPTIMIZED_CBF_MODE:
+    if args.cbf_parameters_json is None:
+      raise ValueError("v101 task-metric CBF requires parameter JSON")
+    cbf_parameters = json.loads(args.cbf_parameters_json)
+  else:
+    if args.cbf_parameters_json is not None:
+      raise ValueError("current v97 CBF does not accept parameter JSON")
+    cbf_parameters = None
   if args.num_envs < 2 or not 1 <= args.gate_envs <= args.num_envs:
     raise ValueError("v97 environment counts are invalid")
   if args.epochs_per_round < 1 or args.batch_size < 1:
@@ -555,6 +584,7 @@ def main() -> None:
   from src.tasks.stairs_cbf.paper_dual_v35 import configure_paper_dual_reward
   from src.tasks.stairs_cbf.velocity_cbf_action import (
     InstrumentedCurrentVelocityCbfAction,
+    TaskMetricVelocityCbfAction,
     configure_v34_cbf,
   )
 
@@ -571,9 +601,9 @@ def main() -> None:
   )
   cbf = configure_v34_cbf(
     env_cfg,
-    mode=CURRENT_CBF_MODE,
+    mode=args.cbf_mode,
     runtime_filter=True,
-    parameters=None,
+    parameters=cbf_parameters,
     measure_compute_time=False,
   )
   reward = configure_paper_dual_reward(
@@ -592,8 +622,11 @@ def main() -> None:
     raise RuntimeError("v97 task has no runner")
   runner = runner_cls(env, asdict(agent_cfg), log_dir=None, device=args.device)
   action_term = base_env.action_manager.get_term("joint_pos")
-  if not isinstance(action_term, InstrumentedCurrentVelocityCbfAction):
-    raise TypeError("v97 requires the current velocity-CBF action")
+  if not isinstance(
+    action_term,
+    (InstrumentedCurrentVelocityCbfAction, TaskMetricVelocityCbfAction),
+  ):
+    raise TypeError("v97-v101 requires a velocity-CBF action")
   try:
     source_payload = torch.load(checkpoint, map_location="cpu", weights_only=False)
     expanded_state, expansion = _expand_actor_state(
@@ -691,6 +724,7 @@ def main() -> None:
           "hidden_dims": [128, 64],
           "max_residual": args.max_residual,
         },
+        "training_cbf": cbf,
         "round_summaries": round_summaries,
       },
     )

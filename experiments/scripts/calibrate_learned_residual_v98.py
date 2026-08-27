@@ -31,6 +31,7 @@ from refine_rescue_distill_v36 import (
 from train_learned_residual_v97 import (
   METHOD_ID as SOURCE_METHOD_ID,
   SUCCESSFUL_EPISODE_METHOD_ID,
+  TASK_METRIC_SUCCESSFUL_EPISODE_METHOD_ID,
   LearnedCbfResidual,
   _evaluate_filter_off,
   _policy_step,
@@ -214,6 +215,7 @@ def main() -> None:
   if source.get("method_id") not in {
     SOURCE_METHOD_ID,
     SUCCESSFUL_EPISODE_METHOD_ID,
+    TASK_METRIC_SUCCESSFUL_EPISODE_METHOD_ID,
   }:
     raise RuntimeError("v98 source method is not a supported learned residual")
   output.mkdir(parents=True)
@@ -235,6 +237,7 @@ def main() -> None:
   from src.tasks.stairs_cbf.paper_dual_v35 import configure_paper_dual_reward
   from src.tasks.stairs_cbf.velocity_cbf_action import (
     InstrumentedCurrentVelocityCbfAction,
+    TaskMetricVelocityCbfAction,
     configure_v34_cbf,
   )
 
@@ -249,11 +252,15 @@ def main() -> None:
     recovery_distance_m=RECOVERY_DISTANCE_M,
     filter_alpha=FILTER_ALPHA,
   )
+  source_cbf = source.get("training_cbf") or {
+    "mode": CURRENT_CBF_MODE,
+    "parameters": None,
+  }
   cbf = configure_v34_cbf(
     env_cfg,
-    mode=CURRENT_CBF_MODE,
+    mode=source_cbf["mode"],
     runtime_filter=False,
-    parameters=None,
+    parameters=source_cbf.get("parameters"),
     measure_compute_time=False,
   )
   reward = configure_paper_dual_reward(
@@ -272,8 +279,11 @@ def main() -> None:
     raise RuntimeError("v98 task has no runner")
   runner = runner_cls(env, asdict(agent_cfg), log_dir=None, device=args.device)
   action_term = base_env.action_manager.get_term("joint_pos")
-  if not isinstance(action_term, InstrumentedCurrentVelocityCbfAction):
-    raise TypeError("v98 requires the current velocity-CBF action")
+  if not isinstance(
+    action_term,
+    (InstrumentedCurrentVelocityCbfAction, TaskMetricVelocityCbfAction),
+  ):
+    raise TypeError("v98 requires a velocity-CBF action")
   try:
     runner.alg.actor.load_state_dict(source["base_actor_state_dict"], strict=True)
     runner.alg.actor.eval()
