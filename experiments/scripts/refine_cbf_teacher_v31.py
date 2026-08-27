@@ -531,13 +531,16 @@ def _collect_round(
             episode_max_riser = torch.maximum(episode_max_riser, riser)
             done_mask = dones.bool()
             if bool(done_mask.any()):
-                fell = extras["online_fell"].bool()
                 timeouts = extras.get(
                     "time_outs", torch.zeros_like(done_mask, dtype=torch.bool)
                 ).bool()
                 success = runner.env.unwrapped.termination_manager.get_term(
                     "reached_top"
                 ).bool()
+                # Match deployment semantics when both terminal conditions
+                # fire on the same simulator step: reaching the top is one
+                # success episode, not a simultaneous success and fall.
+                fell = extras["online_fell"].bool() & ~success
                 ids = done_mask.nonzero(as_tuple=False).flatten()
                 completed_returns.extend(
                     float(episode_returns[index]) for index in ids.tolist()

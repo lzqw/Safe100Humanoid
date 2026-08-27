@@ -40,6 +40,28 @@ def terminal_episode_transition_mask(
     return torch.isin(composite_ids, terminal_ids)
 
 
+def disjoint_terminal_outcomes(
+    done: torch.Tensor,
+    fell: torch.Tensor,
+    reached_top: torch.Tensor,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Classify simultaneous top/fall terminals once, with success priority.
+
+    A foot can cross the top tolerance on the same simulator step that the
+    body triggers ``fell_over``.  Deployment success is defined by reaching
+    the top, so such a terminal must not label the same episode as both a
+    successful and failed safety-teacher trajectory.
+    """
+    if not (done.shape == fell.shape == reached_top.shape):
+        raise ValueError("v35 terminal outcome tensors must share one shape")
+    if any(value.dtype != torch.bool for value in (done, fell, reached_top)):
+        raise TypeError("v35 terminal outcome tensors must be boolean")
+    successful = done & reached_top
+    joint = successful & fell
+    failed = done & fell & ~successful
+    return failed, successful, joint
+
+
 def outcome_gated_interventions(
     intervened: torch.Tensor,
     failed_episode_transition: torch.Tensor,

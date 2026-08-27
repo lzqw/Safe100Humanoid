@@ -144,6 +144,19 @@ def test_v35_outcome_gate_selects_only_successful_interventions() -> None:
     )
 
 
+def test_v35_joint_top_and_fall_terminal_gets_success_priority() -> None:
+    done = torch.tensor((True, True, True, False))
+    fell = torch.tensor((True, True, False, True))
+    reached_top = torch.tensor((True, False, True, False))
+    failed, successful, joint = MATH.disjoint_terminal_outcomes(
+        done, fell, reached_top
+    )
+    assert torch.equal(failed, torch.tensor((False, True, False, False)))
+    assert torch.equal(successful, torch.tensor((True, False, True, False)))
+    assert torch.equal(joint, torch.tensor((True, False, False, False)))
+    assert not bool((failed & successful).any())
+
+
 def test_v35_filter_dropout_mask_is_balanced_and_rotates() -> None:
     first = MATH.rotating_environment_filter_mask(
         4, 0.5, 1, device="cpu"

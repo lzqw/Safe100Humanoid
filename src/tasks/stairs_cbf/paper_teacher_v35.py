@@ -19,6 +19,7 @@ import torch
 from .teacher_v26 import HigherRiserCbfAction, v26_online_safety_telemetry
 from .teacher_v30 import CbfTeacherV30PPO, CbfTeacherV30PpoAlgorithmCfg
 from .teacher_v30_math import (
+  disjoint_terminal_outcomes,
   intervention_teacher_weights,
   outcome_gated_interventions,
   terminal_episode_transition_mask,
@@ -233,12 +234,16 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
     self, correction_norm: torch.Tensor
   ) -> tuple[torch.Tensor, torch.Tensor, dict[str, torch.Tensor]]:
     del correction_norm
-    failed_terminal = self.storage.dones.squeeze(-1).bool() & self.fall_events
+    failed_terminal, success_terminal, _ = disjoint_terminal_outcomes(
+      self.storage.dones.squeeze(-1).bool(),
+      self.fall_events.bool(),
+      self.v35_success_terminals,
+    )
     failed_transition = terminal_episode_transition_mask(
       self.teacher_episode_ids, failed_terminal
     )
     success_transition = terminal_episode_transition_mask(
-      self.teacher_episode_ids, self.v35_success_terminals
+      self.teacher_episode_ids, success_terminal
     )
     self.v35_failed_episode_transition.copy_(failed_transition)
     self.v35_success_episode_transition.copy_(success_transition)
@@ -303,6 +308,13 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
       )
 
     metrics = super().relabel_teacher_transitions()
+    failed_terminal, success_terminal, joint_terminal = (
+      disjoint_terminal_outcomes(
+        self.storage.dones.squeeze(-1).bool(),
+        self.fall_events.bool(),
+        self.v35_success_terminals,
+      )
+    )
     correction = (
       self.v35_safe_policy_means - self.v35_policy_means
     ).detach()
@@ -357,12 +369,13 @@ class PaperMeanTeacherV35PPO(CbfTeacherV30PPO):
         "v35_distill_only_actor": self.v35_distill_only_actor,
         "v35_success_local_kl_beta": self.v35_success_local_kl_beta,
         "v35_failed_episode_count": float(
-          (self.storage.dones.squeeze(-1).bool() & self.fall_events).sum()
+          failed_terminal.sum()
         ),
         "v35_failed_episode_transition_fraction": float(
           self.v35_failed_episode_transition.float().mean()
         ),
-        "v35_success_episode_count": float(self.v35_success_terminals.sum()),
+        "v35_success_episode_count": float(success_terminal.sum()),
+        "v35_joint_success_fall_terminal_count": float(joint_terminal.sum()),
         "v35_success_episode_transition_fraction": float(
           self.v35_success_episode_transition.float().mean()
         ),
