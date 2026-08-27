@@ -460,6 +460,16 @@ def test_v118_uses_direction_preserving_sgd_without_adam_state() -> None:
         )
 
 
+def test_v119_reserves_the_complete_last_rollout_seed() -> None:
+    ids = torch.tensor((0, 1, 7, 8, 9, 15), dtype=torch.long)
+    train, validation = FILTER_OFF_PPO.last_seed_transition_masks(
+        ids, num_envs=8, num_seeds=2
+    )
+    assert torch.equal(train, torch.tensor((True, True, True, False, False, False)))
+    assert torch.equal(validation, ~train)
+    assert FILTER_OFF_PPO.VALIDATED_FULL_BATCH_METHOD_ID.endswith("v119")
+
+
 def test_v95_critic_expansion_accepts_ten_persistent_features() -> None:
     source = {"mlp.0.weight": torch.randn(3, 7)}
     target = {"mlp.0.weight": torch.randn(3, 17)}

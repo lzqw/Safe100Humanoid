@@ -49,6 +49,9 @@ from velocity_cbf_v34_protocol import CURRENT_CBF_MODE, PROTOCOL_ID
 
 METHOD_ID = "filter-off-episodic-residual-ppo-v117"
 FULL_BATCH_METHOD_ID = "filter-off-episodic-full-batch-residual-ppo-v118"
+VALIDATED_FULL_BATCH_METHOD_ID = (
+  "heldout-validated-filter-off-full-batch-residual-ppo-v119"
+)
 ACTION_DIM = 12
 
 
@@ -98,6 +101,34 @@ def balanced_outcome_weights(
   return weights, advantages
 
 
+def last_seed_transition_masks(
+  environment_ids: torch.Tensor,
+  *,
+  num_envs: int,
+  num_seeds: int,
+) -> tuple[torch.Tensor, torch.Tensor]:
+  """Split complete rollout seeds without leaking validation transitions."""
+  if (
+    environment_ids.ndim != 1
+    or environment_ids.dtype != torch.long
+    or num_envs < 1
+    or num_seeds < 2
+  ):
+    raise ValueError("v119 transition ids or seed dimensions are invalid")
+  cutoff = int((num_seeds - 1) * num_envs)
+  train = environment_ids < cutoff
+  validation = environment_ids >= cutoff
+  if not bool(train.any()) or not bool(validation.any()) or bool((train & validation).any()):
+    raise ValueError("v119 train/validation seed split is empty or overlapping")
+  return train, validation
+
+
+def _subset_dataset(
+  dataset: dict[str, torch.Tensor], mask: torch.Tensor
+) -> dict[str, torch.Tensor]:
+  return {key: value[mask] for key, value in dataset.items()}
+
+
 def _parse_args() -> argparse.Namespace:
   parser = argparse.ArgumentParser()
   parser.add_argument("--repo", type=Path, required=True)
@@ -115,6 +146,11 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--max-residual", type=float, default=0.10)
   parser.add_argument("--learning-rate", type=float, default=1.0e-3)
   parser.add_argument("--optimizer", choices=("adam", "sgd"), default="adam")
+  parser.add_argument(
+    "--validation-last-seed",
+    action="store_true",
+    help="Reserve the final complete rollout seed for transactional acceptance.",
+  )
   parser.add_argument("--epochs", type=int, default=4)
   parser.add_argument("--batch-size", type=int, default=8192)
   parser.add_argument("--clip-ratio", type=float, default=0.2)
@@ -566,7 +602,12 @@ def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
 def main() -> None:
   args = _parse_args()
   seeds = _parse_seeds(args.training_seeds)
-  method_id = FULL_BATCH_METHOD_ID if args.optimizer == "sgd" else METHOD_ID
+  if args.validation_last_seed:
+    if args.optimizer != "sgd" or len(seeds) < 4:
+      raise ValueError("v119 held-out validation requires SGD and four seeds")
+    method_id = VALIDATED_FULL_BATCH_METHOD_ID
+  else:
+    method_id = FULL_BATCH_METHOD_ID if args.optimizer == "sgd" else METHOD_ID
   if args.num_envs < 2 or not 1 <= args.screen_envs <= args.num_envs:
     raise ValueError("v117 environment counts are invalid")
   if args.epochs < 1 or args.batch_size < 1:
@@ -612,6 +653,7 @@ def main() -> None:
       "num_envs": args.num_envs,
       "screen_seed": args.screen_seed,
       "training_runtime_filter": False,
+      "validation_last_seed": args.validation_last_seed,
     },
   )
 
@@ -716,9 +758,27 @@ def main() -> None:
 
     dataset = {key: torch.cat(chunks) for key, chunks in dataset_chunks.items()}
     episode_success = torch.cat(all_success)
-    weights, advantages = balanced_outcome_weights(
-      dataset["environment_ids"], episode_success
-    )
+    validation_dataset = None
+    validation_weights = validation_advantages = None
+    if args.validation_last_seed:
+      train_mask, validation_mask = last_seed_transition_masks(
+        dataset["environment_ids"],
+        num_envs=args.num_envs,
+        num_seeds=len(seeds),
+      )
+      training_dataset = _subset_dataset(dataset, train_mask)
+      validation_dataset = _subset_dataset(dataset, validation_mask)
+      weights, advantages = balanced_outcome_weights(
+        training_dataset["environment_ids"], episode_success
+      )
+      validation_weights, validation_advantages = balanced_outcome_weights(
+        validation_dataset["environment_ids"], episode_success
+      )
+    else:
+      training_dataset = dataset
+      weights, advantages = balanced_outcome_weights(
+        training_dataset["environment_ids"], episode_success
+      )
     if args.optimizer == "sgd" and (
       args.epochs != 1 or args.batch_size < len(weights)
     ):
@@ -726,9 +786,25 @@ def main() -> None:
         "v118 SGD requires exactly one epoch and one full transition batch"
       )
     _seed_everything(args.optimization_seed)
+    reference_residual_state = {
+      key: value.detach().clone() for key, value in residual.state_dict().items()
+    }
+    validation_before = None
+    if validation_dataset is not None:
+      assert validation_weights is not None and validation_advantages is not None
+      validation_before = _ppo_metrics(
+        residual,
+        validation_dataset,
+        validation_weights,
+        validation_advantages,
+        exploration_std=args.exploration_std,
+        clip_ratio=args.clip_ratio,
+        device=args.device,
+        batch_size=args.batch_size,
+      )
     training, optimizer = _fit_residual_ppo(
       residual,
-      dataset,
+      training_dataset,
       weights,
       advantages,
       exploration_std=args.exploration_std,
@@ -742,13 +818,39 @@ def main() -> None:
       max_grad_norm=args.max_grad_norm,
       device=args.device,
     )
+    validation_after = None
+    if validation_dataset is not None:
+      assert validation_weights is not None and validation_advantages is not None
+      validation_after = _ppo_metrics(
+        residual,
+        validation_dataset,
+        validation_weights,
+        validation_advantages,
+        exploration_std=args.exploration_std,
+        clip_ratio=args.clip_ratio,
+        device=args.device,
+        batch_size=args.batch_size,
+      )
     final_residual_state = actor_state(residual)
     final_residual_sha = actor_state_sha256(final_residual_state)
     offline_gate_passed = bool(
       training["after"]["clipped_surrogate"]
       > training["before"]["clipped_surrogate"]
       and training["after"]["reference_forward_kl"] <= args.max_reference_kl
+      and (
+        validation_after is None
+        or (
+          validation_before is not None
+          and validation_after["clipped_surrogate"]
+          > validation_before["clipped_surrogate"]
+        )
+      )
     )
+    rolled_back = bool(args.validation_last_seed and not offline_gate_passed)
+    if rolled_back:
+      residual.load_state_dict(reference_residual_state, strict=True)
+      final_residual_state = actor_state(residual)
+      final_residual_sha = actor_state_sha256(final_residual_state)
     candidate_path = output / "candidate.pt"
     _atomic_torch(
       candidate_path,
@@ -772,6 +874,14 @@ def main() -> None:
           "hidden_dims": [128, 64],
         },
         "offline_gate_passed": offline_gate_passed,
+        "heldout_validation": {
+          "seed": seeds[-1],
+          "before": validation_before,
+          "after": validation_after,
+        }
+        if args.validation_last_seed
+        else None,
+        "transactional_rollback": rolled_back,
       },
     )
     screen, screen_rows = _evaluate_filter_off(
@@ -808,12 +918,25 @@ def main() -> None:
       "exploration_std": args.exploration_std,
       "max_residual": args.max_residual,
       "optimizer": args.optimizer,
+      "validation_last_seed": args.validation_last_seed,
+      "training_seed_count": len(seeds) - int(args.validation_last_seed),
+      "validation_seed": seeds[-1] if args.validation_last_seed else None,
       "episode_success_count": int(episode_success.sum()),
       "episode_failure_count": int((~episode_success).sum()),
       "training_transition_count": len(weights),
+      "validation_transition_count": (
+        len(validation_weights) if validation_weights is not None else 0
+      ),
       "rollout_summaries": rollout_summaries,
       "training": training,
+      "validation": {
+        "before": validation_before,
+        "after": validation_after,
+      }
+      if args.validation_last_seed
+      else None,
       "offline_gate_passed": offline_gate_passed,
+      "transactional_rollback": rolled_back,
       "screen": screen,
       "independent_gate_run": False,
       "independent_gate_policy": "run separately only if screen_rate_gte_0.75",
