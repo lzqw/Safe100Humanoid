@@ -42,11 +42,16 @@ from velocity_cbf_v34_protocol import CURRENT_CBF_MODE, PROTOCOL_ID
 
 
 METHOD_ID = "heldout-validated-parameter-antithetic-residual-es-v124"
+LOCAL_METHOD_ID = "heldout-validated-local-parameter-antithetic-residual-es-v125"
 BASE_HIDDEN_DIM = 128
 GEOMETRY_DIM = 10
 ACTION_DIM = 12
 FEATURE_DIM = 150
 PARAMETER_WIDTH = GEOMETRY_DIM + 1
+
+
+def parameter_method_id(local_search: bool) -> str:
+  return LOCAL_METHOD_ID if local_search else METHOD_ID
 
 
 class LinearGeometryResidual(torch.nn.Module):
@@ -152,6 +157,7 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--screen-seed", type=int, required=True)
   parser.add_argument("--screen-envs", type=int, default=64)
   parser.add_argument("--direction-seed-offset", type=int, default=124_000_000)
+  parser.add_argument("--local-search", action="store_true")
   parser.add_argument("--parameter-sigma", type=float, default=0.02)
   parser.add_argument("--target-mean-residual-norm", type=float, default=0.001)
   parser.add_argument("--success-bonus", type=float, default=1.0)
@@ -292,10 +298,13 @@ def _collect_parameter_branch(
 def main() -> None:
   args = _parse_args()
   seeds = _parse_seeds(args.training_seeds)
+  method_id = parameter_method_id(args.local_search)
   if args.num_envs < 2 or not 1 <= args.screen_envs <= args.num_envs:
     raise ValueError("v124 environment counts are invalid")
   if not 0.001 <= args.parameter_sigma <= 0.1:
     raise ValueError("v124 parameter sigma is outside [0.001, 0.1]")
+  if args.local_search and args.parameter_sigma > 0.01:
+    raise ValueError("v125 local parameter sigma must not exceed 0.01")
   if not 0.0001 <= args.target_mean_residual_norm <= 0.01:
     raise ValueError("v124 target residual norm is outside [0.0001, 0.01]")
   if not 0.0 <= args.success_bonus <= 4.0:
@@ -328,13 +337,14 @@ def main() -> None:
   _atomic_json(
     output / "execution_started.json",
     {
-      "method_id": METHOD_ID,
+      "method_id": method_id,
       "git_commit": source_commit,
       "base_checkpoint_sha256": checkpoint_sha,
       "training_seeds": seeds,
       "num_envs": args.num_envs,
       "screen_seed": args.screen_seed,
       "parameter_sigma": args.parameter_sigma,
+      "local_parameter_search": args.local_search,
       "target_mean_residual_norm": args.target_mean_residual_norm,
       "training_runtime_filter": False,
     },
@@ -541,7 +551,7 @@ def main() -> None:
       candidate_path,
       {
         "schema_version": 1,
-        "method_id": METHOD_ID,
+        "method_id": method_id,
         "git_commit": source_commit,
         "base_checkpoint_sha256": checkpoint_sha,
         "base_actor_state_dict": {
@@ -579,7 +589,7 @@ def main() -> None:
 
     summary = {
       "schema_version": 1,
-      "method_id": METHOD_ID,
+      "method_id": method_id,
       "git_commit": source_commit,
       "context": args.context,
       "base_checkpoint_sha256": checkpoint_sha,
@@ -597,6 +607,7 @@ def main() -> None:
       "num_envs": args.num_envs,
       "training_runtime_filter": False,
       "parameter_sigma": args.parameter_sigma,
+      "local_parameter_search": args.local_search,
       "target_mean_residual_norm": args.target_mean_residual_norm,
       "success_bonus": args.success_bonus,
       "plus_success_count": total_plus_success,

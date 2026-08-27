@@ -616,6 +616,12 @@ def test_v124_parameter_es_gradient_and_deterministic_norm_are_direct() -> None:
     assert PARAMETER_ES.METHOD_ID.endswith("v124")
 
 
+def test_v125_local_parameter_es_has_a_distinct_prespecified_method() -> None:
+    assert PARAMETER_ES.parameter_method_id(False).endswith("v124")
+    assert PARAMETER_ES.parameter_method_id(True).endswith("v125")
+    assert PARAMETER_ES.LOCAL_METHOD_ID != PARAMETER_ES.METHOD_ID
+
+
 def test_v95_critic_expansion_accepts_ten_persistent_features() -> None:
     source = {"mlp.0.weight": torch.randn(3, 7)}
     target = {"mlp.0.weight": torch.randn(3, 17)}
