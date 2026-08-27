@@ -163,6 +163,27 @@ CBF correction，并关闭 PPO/entropy actor 梯度；它把 filter-on 提高 6 
 filter-off 距 75% gate 为 4 个 episode；历史未固定 reset 的最高记录仍是 46/64，
 两者不做逐 episode 混合比较。
 
+#### Matched filter-rescue off-state distillation（已拒绝）
+
+为避免 shielded 成功轨迹中混入本来就能无过滤成功的样本，v36 用独立训练 seed
+对相同初始状态分别执行 filter-on/off，只保留“on 成功、off 失败”的 episode；
+监督状态和 CBF correction 均取自对应的 unshielded 失败轨迹。受共享 GPU 显存
+限制，本次短 pilot 使用 32 个环境，识别到 5 个 filter-rescued episode、238 个
+CBF teacher transition，并用全数据 reference KL 约束一次 actor 更新。
+
+| Stable-reset F2 candidate | Training pair on/off | Teacher distance | Held-out filter off | Decision |
+|---|---:|---:|---:|---|
+| matched rescue v36 | 24/32 vs 25/32；5 rescued | 0.14530 → 0.14089 | 43/64（67.19%） | rejected |
+| 固定基线 | — | — | **44/64（68.75%）** | retained |
+
+候选在独立 seed `201350902`、固定初始状态签名
+`bc4c4cd08aef0d22b69dbf985eaef78a226c402428c72b1ea431593dda42b22c`
+上比基线少 1 个成功 episode，因此按部署 gate 停止，没有追加 filter-on 或多 seed
+验证。候选 actor SHA-256 为
+`ef07a91527c376d4d2baaa563a770725329d1ca4f3763487147eb346811d1f7e`；
+训练、配对样本与逐 episode 结果见
+[`rescue_distill_v36/`](rescue_distill_v36/)。
+
 ## 方法与第一阶段 F1 ablation
 
 本目录发布 v35 第一阶段 F1 pilot 的关键结果。该阶段依据
@@ -201,6 +222,7 @@ winner。后续 staged experiment 解决了 F1 矛盾，并已冻结扩展到 F2
 - [`height_curriculum_f2_summary.json`](height_curriculum_f2_summary.json): F2 五级高度课程的配对评估、模型哈希与逐轮诊断。
 - [`continuation_f2_summary.json`](continuation_f2_summary.json): 三个固定目标 continuation 的 gate、早停决定与 provenance。
 - [`unshielded_f2_summary.json`](unshielded_f2_summary.json): 无过滤 rollout、反事实 mean-CBF DAgger、模型哈希、paired 评估及训练 gate 负结果。
+- [`rescue_distill_v36/`](rescue_distill_v36/): matched filter-rescue 训练摘要、配对结果及留出 filter-off 逐 episode 证据。
 
 大型 `.pt` checkpoint 没有提交进 Git；其 SHA-256 已写入
 `pilot_summary.json`，原始 checkpoint 和逐 episode 文件保留在 4080 artifact
