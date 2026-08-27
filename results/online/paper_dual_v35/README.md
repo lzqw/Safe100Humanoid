@@ -140,6 +140,29 @@ current-best 评估的 `3f8c032be07f7741ddf1da02b72cc65ba59e4bc8f61227d09dc99de9
 不同，所以只比较各自内部的 on/off，不宣称跨历史结果的逐 episode 配对。当前
 F2 off 最佳仍为 46/64，距离 75% gate 还差 2 个成功 episode。
 
+#### Stable reset + shielded/unshielded bridge（未改善 filter-off）
+
+评估器现在在 runner 构造及 checkpoint 加载后，紧邻最终 episode reset 重新设置
+底层环境 seed，避免模型初始化消耗全局 RNG 后改变测试 episode。新协议在相同
+seed `201350902` 下固定得到初始状态签名
+`bc4c4cd08aef0d22b69dbf985eaef78a226c402428c72b1ea431593dda42b22c`；所有后续
+candidate 都与该固定基线比较。
+
+| Stable-reset F2 run | Filter on | Filter off | Off - on | Decision |
+|---|---:|---:|---:|---|
+| 当前最佳 actor 的固定基线 | 75.00% (48/64) | **68.75% (44/64)** | -6.25 pp | future comparison baseline |
+| 成功 shielded episode 的 CBF 蒸馏，round 1 | **84.38% (54/64)** | 67.19% (43/64) | -17.19 pp | rejected |
+| 50/50 shielded/unshielded filter-dropout 蒸馏 | not run | not run | — | rollout gate rejected |
+
+第一项新方法只在完整 reached-top 的 shielded episode 上学习 deterministic-mean
+CBF correction，并关闭 PPO/entropy actor 梯度；它把 filter-on 提高 6 个 episode，
+但 filter-off 降低 1 个，说明更新仍依赖过滤后的状态分布。第二项因此让 32 个环境
+中的 16 个执行 CBF、16 个执行 nominal action，并在下一轮交换两组。运行时审计
+确认 filter fraction 精确为 0.5、executed-action routing 误差为 0；但 rollout 从
+43/66（65.15%）降至 39/67（58.21%），故不再做 paired 评估。固定-reset 协议下
+filter-off 距 75% gate 为 4 个 episode；历史未固定 reset 的最高记录仍是 46/64，
+两者不做逐 episode 混合比较。
+
 ## 方法与第一阶段 F1 ablation
 
 本目录发布 v35 第一阶段 F1 pilot 的关键结果。该阶段依据

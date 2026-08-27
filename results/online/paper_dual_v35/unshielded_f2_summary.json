@@ -13,6 +13,9 @@
     "initial_state_signature": "3f8c032be07f7741ddf1da02b72cc65ba59e4bc8f61227d09dc99de9582fa40b",
     "conditions": ["filter_on", "filter_off"],
     "later_audit_initial_state_signature": "8ea76a17dff5c8248231bbf34d984be2bb9506415c0830f3b6d8560d14fda1ee",
+    "stable_reset_source_git_commit": "88b6862baaa8b6d2c410274822e63f20d50f743f",
+    "stable_reset_initial_state_signature": "bc4c4cd08aef0d22b69dbf985eaef78a226c402428c72b1ea431593dda42b22c",
+    "stable_reset_semantics": "The base environment is reseeded immediately before the wrapper delegates the final evaluated reset, after runner construction and checkpoint loading.",
     "pairing_note": "Every filter-on/off pair is internally initial-state matched. The later audit signature differs from the historical current-best signature, so no episode-level pairing is claimed across those two groups."
   },
   "provenance_chain": [
@@ -173,6 +176,45 @@
         "cross_history_episode_paired": false
       },
       "decision": "Rejected: the aligned stochastic rollout gain did not transfer to deterministic paired evaluation, and filter-off remained below the current best."
+    },
+    {
+      "run": "raw_moderate_success_shielded_distill_eta025_lr5e6_x2",
+      "status": "rejected_after_stable_reset_paired_evaluation",
+      "source_git_commit": "7239b660af35c81e659ee927e6a555ac05563103",
+      "training_seed": 201350262,
+      "training_elapsed_seconds": 53.970890742959455,
+      "base_checkpoint_sha256": "3ec45cd196447901cf815d0fa1ff400af1b519ed2bb85c2fc179458ce3e81d3f",
+      "training": {
+        "runtime_filter_fraction": 1.0,
+        "teacher_scope": "deterministic_mean_CBF_interventions_from_complete_reached_top_episodes",
+        "teacher_eta": 0.25,
+        "actor_objective": "mean_CBF_distillation_plus_global_round_reference_KL",
+        "ppo_actor_transition_fraction": 0.0,
+        "actor_learning_rate": 0.000005,
+        "rounds": 2,
+        "rollout_checkpoint_alignment": "round_N_rollout_uses_round_N_minus_1_checkpoint"
+      },
+      "round_metrics": [
+        {"round": 1, "rollout_checkpoint_round": 0, "rollout_episode_count": 130, "rollout_success_count": 101, "rollout_success_rate": 0.7769230769230769, "runtime_filter_enabled_fraction": 1.0, "teacher_transition_fraction": 0.0581512451171875, "moving_forward_kl": 0.001610187697224319, "teacher_distance_before": 0.12966571748256683, "teacher_distance_after": 0.12848632037639618, "actor_gradient_clipped_fraction": 1.0},
+        {"round": 2, "rollout_checkpoint_round": 1, "rollout_episode_count": 128, "rollout_success_count": 100, "rollout_success_rate": 0.78125, "runtime_filter_enabled_fraction": 1.0, "teacher_transition_fraction": 0.057769775390625, "moving_forward_kl": 0.0007631093030795455, "teacher_distance_before": 0.13228774070739746, "teacher_distance_after": 0.12961262464523315, "actor_gradient_clipped_fraction": 1.0}
+      ],
+      "selected_checkpoint": {
+        "round": 1,
+        "checkpoint_sha256": "97dc4effa1cd5aea84fdbd3596c0bba064015eb07aa27a8fe94c5338326578b8",
+        "actor_sha256": "657712240b5c0c30a2232b0d1002d6bbaaf92b995e54794f2e822216e273835b",
+        "selection_evidence": "The aligned round-2 rollout evaluates round 1 and preserved shielded stochastic success at 100/128."
+      },
+      "final_checkpoint_sha256": "ff30d19de1942ef14be660593ae34fe3dee8d8aac837531514a544f23854befc",
+      "final_actor_sha256": "36278c1c933e4d511b6adb1121cfda1f9b5c5f98f03cd29e1a640e821060da01",
+      "evaluation": {
+        "seed": 201350902,
+        "initial_state_signature": "bc4c4cd08aef0d22b69dbf985eaef78a226c402428c72b1ea431593dda42b22c",
+        "filter_on": {"success_count": 54, "num_episodes": 64, "success_rate": 0.84375, "fall_rate": 0.15625, "mean_reached_riser": 8.4375, "mean_return": -3.2471850477159023},
+        "filter_off": {"success_count": 43, "num_episodes": 64, "success_rate": 0.671875, "fall_rate": 0.328125, "mean_reached_riser": 8.03125, "mean_return": -3.803592760115862},
+        "off_minus_on_pp": -17.1875,
+        "matched_stable_reset_baseline_delta_pp": {"filter_on": 9.375, "filter_off": -1.5625}
+      },
+      "decision": "Rejected: successful shielded distillation substantially improved filter-on but did not transfer to filter-free deployment."
     }
   ],
   "checkpoint_alignment_audit": {
@@ -196,6 +238,17 @@
     },
     "decision": "Rejected. A high stochastic training rollout did not identify a strong deterministic filter-free checkpoint.",
     "implementation_change": "The trainer now records rollout_actor_sha256, rollout_checkpoint_round, and rollout_precedes_update explicitly."
+  },
+  "stable_reset_audit": {
+    "source_git_commit": "88b6862baaa8b6d2c410274822e63f20d50f743f",
+    "seed": 201350902,
+    "initial_state_signature": "bc4c4cd08aef0d22b69dbf985eaef78a226c402428c72b1ea431593dda42b22c",
+    "actor_sha256": "3964c0ef24707addbaa0dacfd4fd627882bd8b45a2c9799142710fa45bc29499",
+    "checkpoint_sha256": "3ec45cd196447901cf815d0fa1ff400af1b519ed2bb85c2fc179458ce3e81d3f",
+    "filter_on": {"success_count": 48, "num_episodes": 64, "success_rate": 0.75, "fall_rate": 0.25, "mean_reached_riser": 8.109375, "mean_return": -4.188635930418968},
+    "filter_off": {"success_count": 44, "num_episodes": 64, "success_rate": 0.6875, "fall_rate": 0.3125, "mean_reached_riser": 7.921875, "mean_return": -3.734208408743143},
+    "off_minus_on_pp": -6.25,
+    "role": "authoritative matched baseline for subsequent source-independent evaluations"
   },
   "training_gated_rejections": [
     {
@@ -288,6 +341,28 @@
       ],
       "evaluation": null,
       "reason": "The only aligned improvement was from 0.6165 for the base actor to 0.6343 for round 1, far below the evaluation gate, so paired evaluation was skipped."
+    },
+    {
+      "run": "raw_moderate_mixed50_distill_eta025_32x1024x2",
+      "source_git_commit": "775a123c8e21308af646086b23f90f0538cba2f7",
+      "training_seed": 201350272,
+      "training_elapsed_seconds": 49.54971498600207,
+      "base_checkpoint_sha256": "3ec45cd196447901cf815d0fa1ff400af1b519ed2bb85c2fc179458ce3e81d3f",
+      "final_actor_sha256": "ba40d850311f6e90f81ee15f7bdc5e4c8968f6e99fc0d0dd11e27d598dc9c25b",
+      "final_checkpoint_sha256": "46278b59640b582a1cc1c2aa5373d17985edd0456c7ac9b29c20795dd25dc890",
+      "actor_objective": {
+        "ppo_scope": "none_distillation_only",
+        "teacher_scope": "all_deterministic_mean_CBF_interventions",
+        "runtime_filter_fraction": 0.5,
+        "mask_rotation": "16_of_32_envs_then_swap_next_round",
+        "actor_learning_rate": 0.000005
+      },
+      "round_metrics": [
+        {"round": 1, "rollout_checkpoint_round": 0, "rollout_episode_count": 66, "rollout_success_count": 43, "rollout_success_rate": 0.6515151515151515, "runtime_filter_enabled_fraction": 0.5, "executed_action_routing_max_abs_error": 0.0, "teacher_transition_fraction": 0.104095458984375, "moving_forward_kl": 0.00179648632183671, "actor_gradient_clipped_fraction": 1.0},
+        {"round": 2, "rollout_checkpoint_round": 1, "rollout_episode_count": 67, "rollout_success_count": 39, "rollout_success_rate": 0.582089552238806, "runtime_filter_enabled_fraction": 0.5, "executed_action_routing_max_abs_error": 0.0, "teacher_transition_fraction": 0.104156494140625, "moving_forward_kl": 0.0006564767099916935, "actor_gradient_clipped_fraction": 1.0}
+      ],
+      "evaluation": null,
+      "reason": "The 50/50 execution and routing audit passed exactly, but the aligned mixed rollout declined from 43/66 to 39/67; paired evaluation was skipped."
     }
   ],
   "current_best": {
@@ -297,8 +372,15 @@
     "off_minus_on_pp": -7.8125,
     "improvement_over_fixed_target_A1_pp": {"filter_on": -1.5625, "filter_off": 3.125, "gap_reduction": 4.6875},
     "improvement_over_unshielded_A0_pp": {"filter_on": 3.125, "filter_off": 1.5625},
+    "stable_reset_rebaseline": {
+      "source_git_commit": "88b6862baaa8b6d2c410274822e63f20d50f743f",
+      "initial_state_signature": "bc4c4cd08aef0d22b69dbf985eaef78a226c402428c72b1ea431593dda42b22c",
+      "filter_on_success_rate": 0.75,
+      "filter_off_success_rate": 0.6875,
+      "off_minus_on_pp": -6.25
+    },
     "paper_level_effect_claimed": false,
-    "remaining_failure": "Filter-free success is 46/64, two episodes below the 48/64 gate, and only one evaluation seed has been run."
+    "remaining_failure": "The historical result is 46/64 filter-free on its original signature; under the source-independent stable-reset protocol the same actor is 44/64, four episodes below the 48/64 gate. Only one seed has been run under either protocol."
   },
   "artifact_policy": "Large .pt files and per-episode traces remain on the 4080 artifact volume; this Git result package records exact SHA-256 identities and the evidence used for selection."
 }
