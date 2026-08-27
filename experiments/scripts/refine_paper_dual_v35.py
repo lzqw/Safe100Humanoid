@@ -329,6 +329,14 @@ def _parse_args() -> argparse.Namespace:
     ),
   )
   parser.add_argument(
+    "--outcome-centered-episode-advantage",
+    action="store_true",
+    help=(
+      "v106: add group- and episode-balanced complete success/failure credit "
+      "at unit scale to paper-dual GAE, then renormalize each filter group."
+    ),
+  )
+  parser.add_argument(
     "--transactional-rollout-acceptance",
     action="store_true",
     help=(
@@ -757,6 +765,16 @@ def main() -> None:
     raise ValueError(
       "v105 geometry gradient balance requires the 415-D actor, one "
       "materialized full-batch SGD step, and no temporal-credit variant"
+    )
+  if args.outcome_centered_episode_advantage and (
+    not args.persistent_geometry_gradient_balance
+    or not args.filter_group_balanced_advantages
+    or args.training_filter_schedule != "fixed"
+    or not 0.0 < training_filter_fraction < 1.0
+  ):
+    raise ValueError(
+      "v106 outcome advantage requires v105 geometry balancing and fixed "
+      "mixed execution with filter-group-balanced advantages"
     )
   if args.actor_gradient_accumulation_microbatches < 1:
     raise ValueError("actor gradient accumulation chunks must be positive")
@@ -1269,7 +1287,12 @@ def main() -> None:
       args.actor_gradient_accumulation_microbatches
     )
   elif args.full_batch_sgd_actor:
-    if args.persistent_geometry_gradient_balance:
+    if args.outcome_centered_episode_advantage:
+      agent_cfg.algorithm.class_name = (
+        "src.tasks.stairs_cbf.paper_outcome_geometry_v106:"
+        "PaperOutcomeGeometryV106PPO"
+      )
+    elif args.persistent_geometry_gradient_balance:
       agent_cfg.algorithm.class_name = (
         "src.tasks.stairs_cbf.paper_geometry_balanced_v105:"
         "PaperGeometryBalancedV105PPO"
@@ -1355,14 +1378,23 @@ def main() -> None:
   )
 
   def stage_reached_top(active_runner, _dones, extras) -> None:
-    extras["v35_reached_top"] = (
+    reached_top = (
       active_runner.env.unwrapped.termination_manager.get_term("reached_top")
       .detach()
       .clone()
     )
+    if args.deterministic_mean_teacher:
+      extras["v35_reached_top"] = reached_top
+    if args.outcome_centered_episode_advantage:
+      extras["v106_reached_top"] = reached_top
 
   before_process_env_step = (
-    stage_reached_top if args.deterministic_mean_teacher else None
+    stage_reached_top
+    if (
+      args.deterministic_mean_teacher
+      or args.outcome_centered_episode_advantage
+    )
+    else None
   )
   records: list[dict[str, Any]] = []
   observed_dr_state_hashes: set[str] = set()
@@ -1453,6 +1485,9 @@ def main() -> None:
         "persistent_geometry_gradient_balance": (
           args.persistent_geometry_gradient_balance
         ),
+        "outcome_centered_episode_advantage": (
+          args.outcome_centered_episode_advantage
+        ),
         "fully_filtered_full_batch_actor": fully_filtered_full_batch_actor,
         "fully_filtered_transactional_actor": (
           fully_filtered_transactional_actor
@@ -1529,7 +1564,12 @@ def main() -> None:
           round_filter_mask
         )
       after_compute_returns = None
-      if args.filter_group_balanced_advantages:
+      if args.outcome_centered_episode_advantage:
+        def after_compute_returns(active_runner):
+          return active_runner.alg.apply_outcome_centered_episode_advantage(
+            round_filter_mask
+          )
+      elif args.filter_group_balanced_advantages:
         def after_compute_returns(active_runner):
           advantages = active_runner.alg.storage.advantages.squeeze(-1)
           balanced, advantage_metrics = normalize_filter_group_advantages(
@@ -1763,6 +1803,9 @@ def main() -> None:
           "persistent_geometry_gradient_balance": (
             args.persistent_geometry_gradient_balance
           ),
+          "outcome_centered_episode_advantage": (
+            args.outcome_centered_episode_advantage
+          ),
           "fully_filtered_full_batch_actor": fully_filtered_full_batch_actor,
           "fully_filtered_transactional_actor": (
             fully_filtered_transactional_actor
@@ -1848,6 +1891,9 @@ def main() -> None:
       ),
       "persistent_geometry_gradient_balance": (
         args.persistent_geometry_gradient_balance
+      ),
+      "outcome_centered_episode_advantage": (
+        args.outcome_centered_episode_advantage
       ),
       "fully_filtered_full_batch_actor": fully_filtered_full_batch_actor,
       "fully_filtered_transactional_actor": fully_filtered_transactional_actor,

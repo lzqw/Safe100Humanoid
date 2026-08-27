@@ -68,6 +68,112 @@ def terminal_episode_transition_mask(
     return torch.isin(composite_ids, terminal_ids)
 
 
+def episode_balanced_outcome_advantage(
+    episode_ids: torch.Tensor,
+    successful_terminal: torch.Tensor,
+    failed_terminal: torch.Tensor,
+    filter_mask: torch.Tensor,
+) -> tuple[torch.Tensor, dict[str, float]]:
+    """Spread centered, episode-equal terminal outcomes over full episodes.
+
+    Each filter-execution group receives +0.5 total mass across successful
+    episodes and -0.5 across failed episodes.  Dividing each episode's mass by
+    its stored length prevents long episodes from dominating.  The resulting
+    transition credit is standardized separately inside each group so it can
+    be combined at unit scale with group-normalized GAE.
+    """
+    if episode_ids.ndim != 2 or not (
+        successful_terminal.shape == failed_terminal.shape == episode_ids.shape
+    ):
+        raise ValueError("v106 outcome tensors must share [T, N] shape")
+    if episode_ids.dtype.is_floating_point:
+        raise TypeError("v106 episode IDs must be integer tensors")
+    if successful_terminal.dtype != torch.bool or failed_terminal.dtype != torch.bool:
+        raise TypeError("v106 terminal outcomes must be boolean")
+    if filter_mask.shape != episode_ids.shape[1:] or filter_mask.dtype != torch.bool:
+        raise ValueError("v106 filter mask must be boolean with shape [N]")
+    if not bool(filter_mask.any()) or bool(filter_mask.all()):
+        raise ValueError("v106 requires non-empty filter-on and filter-off groups")
+    if bool((successful_terminal & failed_terminal).any()):
+        raise ValueError("v106 successful and failed terminals overlap")
+
+    _, num_envs = episode_ids.shape
+    environment_ids = torch.arange(
+        num_envs, device=episode_ids.device, dtype=episode_ids.dtype
+    ).expand_as(episode_ids)
+    composite_ids = episode_ids * num_envs + environment_ids
+    successful_transition = terminal_episode_transition_mask(
+        episode_ids, successful_terminal
+    )
+    failed_transition = terminal_episode_transition_mask(
+        episode_ids, failed_terminal
+    )
+    if bool((successful_transition & failed_transition).any()):
+        raise RuntimeError("v106 episode outcome transition masks overlap")
+
+    output = torch.zeros_like(episode_ids, dtype=torch.float32)
+    metrics: dict[str, float] = {}
+    for name, environment_mask in (
+        ("filter_on", filter_mask),
+        ("filter_off", ~filter_mask),
+    ):
+        group = environment_mask.unsqueeze(0).expand_as(episode_ids)
+        success_ids = torch.unique(
+            composite_ids[successful_terminal & group], sorted=True
+        )
+        failure_ids = torch.unique(
+            composite_ids[failed_terminal & group], sorted=True
+        )
+        success_count = int(success_ids.numel())
+        failure_count = int(failure_ids.numel())
+        eligible = group & (successful_transition | failed_transition)
+        eligible_count = int(eligible.sum())
+        raw_sum = raw_mean = raw_std = normalized_mean = normalized_std = 0.0
+        if success_count and failure_count:
+            ids, inverse, lengths = torch.unique(
+                composite_ids[eligible],
+                sorted=True,
+                return_inverse=True,
+                return_counts=True,
+            )
+            successful_episode = torch.isin(ids, success_ids)
+            failed_episode = torch.isin(ids, failure_ids)
+            if not bool((successful_episode | failed_episode).all()) or bool(
+                (successful_episode & failed_episode).any()
+            ):
+                raise RuntimeError("v106 completed episode classification is invalid")
+            episode_mass = torch.where(
+                successful_episode,
+                torch.full_like(ids, 0.5 / success_count, dtype=torch.float32),
+                torch.full_like(ids, -0.5 / failure_count, dtype=torch.float32),
+            )
+            raw = episode_mass[inverse] / lengths[inverse].to(torch.float32)
+            raw_sum = float(raw.sum())
+            raw_mean = float(raw.mean())
+            raw_std = float(raw.std(unbiased=False))
+            normalized = raw / (raw.std(unbiased=False) + 1.0e-8)
+            output[eligible] = normalized
+            normalized_mean = float(normalized.mean())
+            normalized_std = float(normalized.std(unbiased=False))
+        metrics.update(
+            {
+                f"outcome_{name}_success_episode_count": float(success_count),
+                f"outcome_{name}_failure_episode_count": float(failure_count),
+                f"outcome_{name}_transition_count": float(eligible_count),
+                f"outcome_{name}_raw_credit_sum": raw_sum,
+                f"outcome_{name}_raw_credit_mean": raw_mean,
+                f"outcome_{name}_raw_credit_std": raw_std,
+                f"outcome_{name}_normalized_credit_mean": normalized_mean,
+                f"outcome_{name}_normalized_credit_std": normalized_std,
+            }
+        )
+    labeled = successful_transition | failed_transition
+    metrics["outcome_labeled_transition_count"] = float(labeled.sum())
+    metrics["outcome_labeled_transition_fraction"] = float(labeled.float().mean())
+    metrics["outcome_unfinished_transition_count"] = float((~labeled).sum())
+    return output, metrics
+
+
 def disjoint_terminal_outcomes(
     done: torch.Tensor,
     fell: torch.Tensor,

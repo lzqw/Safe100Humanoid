@@ -29,6 +29,52 @@ V73 = _load(
 )
 
 
+def test_v106_episode_outcome_credit_is_group_and_episode_balanced() -> None:
+    episode_ids = torch.tensor(
+        (
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 1, 0, 0),
+            (1, 1, 0, 0),
+            (1, 1, 1, 0),
+            (1, 1, 1, 1),
+        ),
+        dtype=torch.long,
+    )
+    successful = torch.zeros_like(episode_ids, dtype=torch.bool)
+    failed = torch.zeros_like(successful)
+    successful[2, 0] = True
+    failed[1, 1] = True
+    successful[5, 1] = True
+    successful[3, 2] = True
+    failed[4, 3] = True
+    credit, metrics = MATH.episode_balanced_outcome_advantage(
+        episode_ids,
+        successful,
+        failed,
+        torch.tensor((True, True, False, False)),
+    )
+    assert torch.count_nonzero(credit[3:, 0]) == 0
+    assert torch.count_nonzero(credit[4:, 2]) == 0
+    for name, mask in (
+        ("filter_on", torch.tensor((True, True, False, False))),
+        ("filter_off", torch.tensor((False, False, True, True))),
+    ):
+        values = credit[:, mask]
+        eligible = values != 0
+        assert float(values[eligible].mean()) == pytest.approx(0.0, abs=1e-6)
+        assert float(values[eligible].std(unbiased=False)) == pytest.approx(
+            1.0, abs=1e-5
+        )
+        assert metrics[f"outcome_{name}_raw_credit_sum"] == pytest.approx(
+            0.0, abs=1e-6
+        )
+    assert metrics["outcome_filter_on_success_episode_count"] == 2
+    assert metrics["outcome_filter_on_failure_episode_count"] == 1
+    assert metrics["outcome_filter_off_success_episode_count"] == 1
+    assert metrics["outcome_filter_off_failure_episode_count"] == 1
+
+
 def test_v30_exact_six_arm_matrix_and_contexts_are_json_safe() -> None:
     assert tuple(PROTOCOL.ARMS) == ("A0", "A1", "A2", "A3", "A4", "A5")
     assert tuple(PROTOCOL.TEACHER_ARMS) == ("A1", "A2", "A3", "A4", "A5")
