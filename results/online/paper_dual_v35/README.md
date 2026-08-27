@@ -222,6 +222,19 @@ v38 将 3 个训练 seed、每个 32 个环境的 matched-rescue shielded 数据
 不能可靠替代论文中由 on-policy return 决定的策略更新。完整证据见
 [`multi_seed_rescue_v38/`](multi_seed_rescue_v38/)。
 
+#### Paper-style filtered PPO + bounded dual reward continuation（已拒绝）
+
+v39 完全移除显式 teacher，只保留论文的训练时 CBF filtering、PPO 与 bounded
+negative-margin/action-distance reward；从固定基线以 `2e-6` actor LR 训练 4 轮。
+第 4 轮 pre-update rollout 达到 76.81%，按 checkpoint alignment 对应 round-3
+actor，训练耗时 115.2 秒。
+
+但该 round-3 actor 在 hard seed `201350912` 的 filter-off 只有 33/64
+（51.56%），比同 seed 基线 43/64 少 10 个成功 episode，因此不运行 filter-on。
+这直接表明训练 rollout 的提升依赖运行时 filter，未被 nominal actor 内化；仅延长
+相同 filtered PPO 方向不符合部署目标。完整证据见
+[`filtered_ppo_v39/`](filtered_ppo_v39/)。
+
 ## 方法与第一阶段 F1 ablation
 
 本目录发布 v35 第一阶段 F1 pilot 的关键结果。该阶段依据
@@ -263,6 +276,7 @@ winner。后续 staged experiment 解决了 F1 矛盾，并已冻结扩展到 F2
 - [`rescue_distill_v36/`](rescue_distill_v36/): matched filter-rescue 训练摘要、配对结果及留出 filter-off 逐 episode 证据。
 - [`rescue_shielded_v37/`](rescue_shielded_v37/): trust-region 训练、adaptive paired gate 与失败的 untouched-seed 泛化确认。
 - [`multi_seed_rescue_v38/`](multi_seed_rescue_v38/): 三训练 seed 聚合、off-success trust anchor 及失败的 filter-off gate。
+- [`filtered_ppo_v39/`](filtered_ppo_v39/): 论文式 filtered PPO continuation、checkpoint 对齐及失败的 hard-seed filter-off gate。
 
 大型 `.pt` checkpoint 没有提交进 Git；其 SHA-256 已写入
 `pilot_summary.json`，原始 checkpoint 和逐 episode 文件保留在 4080 artifact
