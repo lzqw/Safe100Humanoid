@@ -291,6 +291,17 @@ PAPER_DUAL_CANDIDATES: dict[str, dict[str, float | str]] = {
     "margin_weight": 0.25,
     "intervention_weight": 1.0,
   },
+  "paper_stair_sloped_proximity_balanced": {
+    # Keep the v78/v82 unit bridge for the state margin, but double only the
+    # Eq. (23) action-proximity term.  This targets the quantity that must be
+    # internalized before the runtime filter is removed.  v82 telemetry puts
+    # the resulting total CBF magnitude near 21% of nominal reward, comparable
+    # to v84 but directed at nominal-to-safe action transfer rather than state.
+    "correction_space": "foot_task",
+    "sigma": 0.05,
+    "margin_weight": 0.1,
+    "intervention_weight": 2.0,
+  },
   "paper_stair_sloped_demo_scale": {
     # Keep the paper's reduced-order swing-foot correction and public-demo
     # reward scale, but pair it with the task-compatible sloped clearance CBF.
