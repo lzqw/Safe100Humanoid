@@ -344,7 +344,7 @@ def _parse_args() -> argparse.Namespace:
   )
   parser.add_argument("--pre-intervention-horizon", type=int, default=10)
   parser.add_argument("--pre-intervention-decay", type=float, default=0.8)
-  parser.add_argument("--pre-intervention-weight", type=float, default=0.2)
+  parser.add_argument("--pre-intervention-weight", type=float, default=0.0)
   parser.add_argument(
     "--pre-intervention-aggregation",
     choices=("sum", "max"),
@@ -645,6 +645,20 @@ def main() -> None:
     raise ValueError("v35 pre-intervention decay must lie in (0, 1]")
   if not 0.0 <= args.pre_intervention_weight <= 0.2:
     raise ValueError("v35 pre-intervention weight must lie in [0, 0.2]")
+  bounded_swing_credit = args.pre_intervention_weight > 0.0
+  if bounded_swing_credit and not (
+    args.full_batch_sgd_actor
+    and args.actor_gradient_accumulation_microbatches == 1
+    and args.pre_intervention_aggregation == "max"
+    and args.pre_intervention_horizon == 50
+    and math.isclose(
+      args.pre_intervention_decay, 0.95, rel_tol=0.0, abs_tol=1.0e-12
+    )
+    and math.isclose(
+      args.pre_intervention_weight, 0.01, rel_tol=0.0, abs_tol=1.0e-12
+    )
+  ):
+    raise ValueError("v103 bounded swing-credit configuration differs")
   if args.actor_gradient_accumulation_microbatches < 1:
     raise ValueError("actor gradient accumulation chunks must be positive")
   if (
@@ -1140,7 +1154,12 @@ def main() -> None:
       args.actor_gradient_accumulation_microbatches
     )
   elif args.full_batch_sgd_actor:
-    if args.actor_gradient_accumulation_microbatches > 1:
+    if bounded_swing_credit:
+      agent_cfg.algorithm.class_name = (
+        "src.tasks.stairs_cbf.paper_swing_credit_v103:"
+        "PaperSwingCreditV103PPO"
+      )
+    elif args.actor_gradient_accumulation_microbatches > 1:
       agent_cfg.algorithm.class_name = (
         "src.tasks.stairs_cbf.paper_accumulated_v82:PaperAccumulatedV82PPO"
       )

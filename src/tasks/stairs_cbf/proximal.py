@@ -140,6 +140,7 @@ class CbfProximalPPO(OnlineSafePPO):
     hard_kl_ceiling: float = 0.01,
     critic_learning_epochs: int = 2,
     freeze_log_std: bool = True,
+    allow_bounded_temporal_credit: bool = False,
     **kwargs,
   ) -> None:
     super().__init__(*args, **kwargs)
@@ -147,6 +148,7 @@ class CbfProximalPPO(OnlineSafePPO):
     self.hard_kl_ceiling = float(hard_kl_ceiling)
     self.critic_learning_epochs = int(critic_learning_epochs)
     self.freeze_log_std = bool(freeze_log_std)
+    self.allow_bounded_temporal_credit = bool(allow_bounded_temporal_credit)
     self.round_reference_actor: torch.nn.Module | None = None
     self.round_reference_index = 0
 
@@ -171,11 +173,28 @@ class CbfProximalPPO(OnlineSafePPO):
       raise ValueError("v23 requires a fixed learning-rate schedule")
     if tuple(self.actor_layer_multipliers) != (1.0, 1.0, 1.0, 1.0):
       raise ValueError("v23 uses one uniform actor learning rate")
+    if self.allow_bounded_temporal_credit:
+      valid_temporal_credit = (
+        self.pre_intervention_aggregation == "max"
+        and self.pre_intervention_horizon == 50
+        and math.isclose(
+          self.pre_intervention_decay, 0.95, rel_tol=0.0, abs_tol=1.0e-12
+        )
+        and math.isclose(
+          self.pre_intervention_weight, 0.01, rel_tol=0.0, abs_tol=1.0e-12
+        )
+      )
+      if not valid_temporal_credit:
+        raise ValueError("v103 bounded temporal credit configuration differs")
     disabled = {
       "actor_new_feature_count": self.actor_new_feature_count,
       "freeze_legacy_actor_input_columns": self.freeze_legacy_actor_input_columns,
       "log_std_learning_rate": self.log_std_learning_rate,
-      "pre_intervention_weight": self.pre_intervention_weight,
+      "pre_intervention_weight": (
+        0.0
+        if self.allow_bounded_temporal_credit
+        else self.pre_intervention_weight
+      ),
       "intervention_advantage_weight": self.intervention_advantage_weight,
       "base_anchor_weight": self.base_anchor_weight,
       "d0_retention_anchor_weight": self.d0_retention_anchor_weight,
