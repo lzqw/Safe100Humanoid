@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "experiment": "paper_training_domain_randomization_v57",
+  "hardware": "NVIDIA GeForce RTX 4080 SUPER",
+  "source_commits": {
+    "domain_randomization_restore": "f77adb93195f4290affba8aee66bbcbf296360a6",
+    "strength_scaling": "531798aa8540aefe00b577fa47087690c4df007c"
+  },
+  "base_checkpoint_sha256": "3ec45cd196447901cf815d0fa1ff400af1b519ed2bb85c2fc179458ce3e81d3f",
+  "screening_runs": [
+    {
+      "name": "paper_static_strength_1_a0",
+      "seed": 201352401,
+      "round_success_rates": [
+        0.3698630136986301,
+        0.3157894736842105,
+        0.3246753246753247,
+        0.24675324675324675
+      ],
+      "elapsed_seconds": 62.93578437110409,
+      "decision": "stopped"
+    },
+    {
+      "name": "paper_static_strength_0.25_a0",
+      "seed": 201352401,
+      "round_success_rates": [
+        0.6666666666666666,
+        0.78125,
+        0.676923076923077,
+        0.5571428571428572
+      ],
+      "elapsed_seconds": 60.515509863966145,
+      "selected_checkpoint": "dr25_a0/round_01.pt",
+      "selected_checkpoint_sha256": "0d7735ae3d8918278f03a0842718d2e11c6d6fd9e3ef9146357610af0633e973",
+      "selected_actor_sha256": "f50e6e53157fec157082ca387a53a748161d2166d198387a31ddf769209aa2a0"
+    },
+    {
+      "name": "paper_static_strength_0.25_a2_residual_eta_0.25",
+      "seed": 201352402,
+      "round_success_rates": [
+        0.5384615384615384,
+        0.6153846153846154
+      ],
+      "elapsed_seconds": 26.04908881499432,
+      "decision": "stopped_without_gate"
+    }
+  ],
+  "independent_filter_off_gate": {
+    "seed": 201352412,
+    "num_episodes": 64,
+    "success_count": 37,
+    "success_rate": 0.578125,
+    "fall_rate": 0.421875,
+    "acceptance_success_count": 48,
+    "acceptance_success_rate": 0.75
+  },
+  "decision": "rejected",
+  "reason": "The selected checkpoint achieved 37/64 filter-off successes, below the 48/64 acceptance threshold.",
+  "next_experiment": "Introduce domain randomization during stair-height curriculum instead of after final-height specialization."
+}
