@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "experiment": "paper_filter_reward_v63_v64",
+  "decision": "both_rejected_before_deployment_gate",
+  "base_checkpoint_sha256": "f00e3a56276f629504234a20b40c124ee43a2f4d145cb143b3b2899acc024b27",
+  "common_configuration": {
+    "context": "F2",
+    "target_height_m": 0.184,
+    "num_envs": 256,
+    "rounds": 6,
+    "rollout_steps": 1024,
+    "transitions_per_run": 1572864,
+    "training_filter_fraction": 1.0,
+    "domain_randomization_strength": 0.25,
+    "domain_randomization_refresh": "round",
+    "physical_parameter_draw_sets": 6,
+    "physical_parameter_draw_count": 1536
+  },
+  "v63": {
+    "source_commit": "4675ede990e7f7e58287ae3dfaa2cfac6ae2a418",
+    "candidate": "paper_stair_demo_scale",
+    "clearance_barrier_slope": 0.0,
+    "moving_kl_beta": 0.0,
+    "seed": 201352409,
+    "elapsed_seconds": 164.56897111202125,
+    "base_rollout_success_rate": 0.5263157894736842,
+    "best_post_update_rollout_checkpoint_round": 1,
+    "best_post_update_success_rate": 0.5499092558983666,
+    "final_aligned_success_rate": 0.5297202797202797,
+    "final_checkpoint_sha256": "8f2c2c0f9499c586d88ccb6156d0054499ea1110d6f2a5083efab087fc28af16",
+    "deployment_gate_run": false,
+    "decision": "rejected"
+  },
+  "v64": {
+    "source_commit": "61b98afa3ee56fd955a07c46fb0e9e94eeff220c",
+    "candidate": "paper_stair_sloped_demo_scale",
+    "clearance_barrier_slope": 0.8,
+    "moving_kl_beta": 0.5,
+    "seed": 201352410,
+    "elapsed_seconds": 174.55060823005624,
+    "base_rollout_success_rate": 0.6678700361010831,
+    "best_post_update_rollout_checkpoint_round": 4,
+    "best_post_update_success_rate": 0.6517857142857143,
+    "final_aligned_success_rate": 0.6454545454545455,
+    "final_checkpoint_sha256": "2c0bb84e923bdd36c81f60f27c1329a08abc14664eca0ded1f108af27d8f7f90",
+    "deployment_gate_run": false,
+    "decision": "rejected"
+  },
+  "next_algorithm": "separate task-preserving PPO from intervention-local safety internalization"
+}

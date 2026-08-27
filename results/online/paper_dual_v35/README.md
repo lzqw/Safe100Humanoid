@@ -1,5 +1,13 @@
 # v35 Paper-Aligned Dual CBF-RL Pilot
 
+## 最新实验：v63--v64 全过滤 Eq. (27) continuation
+
+从 v60 目标高度 checkpoint 出发，v63 用论文水平 CBF、v64 用高台阶适配的
+斜坡 CBF；两者都使用 256 环境、每轮 DR 刷新和训练期 100% 过滤。v63 最佳
+filtered 为 54.99%；v64 起点为 66.79%，但所有更新后的对齐 rollout 均低于
+起点，最佳只有 65.18%。因此两者均在训练门槛拒绝，没有追加 filter-off 评估。
+完整证据见 [`paper_filter_reward_v63_v64/`](paper_filter_reward_v63_v64/README.md)。
+
 ## 最新实验：v62 每轮物理域随机化刷新
 
 v62 在单调 18.4 cm 目标高度课程中，每轮刷新 friction、base COM 和 encoder
