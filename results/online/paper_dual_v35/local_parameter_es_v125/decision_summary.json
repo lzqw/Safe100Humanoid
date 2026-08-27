@@ -1,0 +1,56 @@
+{
+  "schema_version": "paper_dual_v35.v125.decision.v1",
+  "method_id": "heldout-validated-local-parameter-antithetic-residual-es-v125",
+  "decision": "local_parameter_es_rejected_by_slightly_negative_train_pairwise_cosine",
+  "reason": "The held-out gradient cosine passed, but mean train pairwise cosine was -0.0202 versus the predefined zero threshold, so exact rollback was retained.",
+  "source_commit": "7b9fd4d1a37e3cdb84747764cdfbb56f2bdeba81",
+  "targeted_tests_passed": 1,
+  "hardware": "NVIDIA GeForce RTX 4080 SUPER",
+  "input_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "paired_rollout": {
+    "pair_count": 256,
+    "matched_initial_state_signatures": true,
+    "mirrored_parameter_directions": true,
+    "parameter_sigma": 0.005,
+    "plus_success_count": 172,
+    "minus_success_count": 174,
+    "positive_difference_count": 61,
+    "negative_difference_count": 72,
+    "zero_difference_count": 123,
+    "plus_mean_perturbation_residual_norm": 0.010279340442917851,
+    "minus_mean_perturbation_residual_norm": 0.010311514052015086
+  },
+  "gradient_gate": {
+    "train_seed_gradient_norms": [
+      0.40929731726646423,
+      0.4357934892177582,
+      0.47308188676834106
+    ],
+    "train_pairwise_cosines": [
+      -0.16651836037635803,
+      -0.025463951751589775,
+      0.13131891191005707
+    ],
+    "mean_train_pairwise_cosine": -0.02022113340596358,
+    "heldout_gradient_cosine": 0.08541005849838257,
+    "minimum_train_pairwise_cosine": 0.0,
+    "minimum_heldout_cosine": 0.05,
+    "offline_gate_passed": false,
+    "transactional_rollback": true,
+    "initial_residual_sha256": "fee8b17b896844dd29410ad4163283bddada1ba4428f9503e28f673d52dabc91",
+    "final_residual_sha256": "fee8b17b896844dd29410ad4163283bddada1ba4428f9503e28f673d52dabc91"
+  },
+  "screen": {
+    "seed": 201354680,
+    "episode_count": 64,
+    "runtime_filter": false,
+    "success_count": 42,
+    "success_rate": 0.65625,
+    "mean_reached_riser": 7.75,
+    "mean_residual_norm": 0.0,
+    "independent_gate_run": false
+  },
+  "elapsed_seconds": 202.23662252002396,
+  "global_best_changed": false,
+  "next_hypothesis": "Keep held-out cosine >=0.05 and allow mean train pairwise cosine down to -0.05, then test exactly one new-seed candidate."
+}

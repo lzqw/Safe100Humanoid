@@ -1,0 +1,17 @@
+{
+  "base_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "git_commit": "7b9fd4d1a37e3cdb84747764cdfbb56f2bdeba81",
+  "local_parameter_search": true,
+  "method_id": "heldout-validated-local-parameter-antithetic-residual-es-v125",
+  "num_envs": 64,
+  "parameter_sigma": 0.005,
+  "screen_seed": 201354680,
+  "target_mean_residual_norm": 0.001,
+  "training_runtime_filter": false,
+  "training_seeds": [
+    201354600,
+    201354610,
+    201354620,
+    201354630
+  ]
+}

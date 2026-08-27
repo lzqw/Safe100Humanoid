@@ -1,0 +1,14 @@
+{
+  "schema_version": "paper_dual_v35.v125.checkpoints.v1",
+  "input": {
+    "path_4080": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt",
+    "sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317"
+  },
+  "rolled_back_candidate": {
+    "path_4080": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/local_parameter_es_v125_7b9fd4d_8x64_s201354600/candidate.pt",
+    "checkpoint_sha256": "de509ab81cc3107d6f1b179a6c30cb526adefed4a061e7ca9b6e6135451ea511",
+    "residual_state_sha256": "fee8b17b896844dd29410ad4163283bddada1ba4428f9503e28f673d52dabc91",
+    "uploaded": false,
+    "reason": "mean train pairwise cosine missed the predefined gate; exact zero residual restored"
+  }
+}

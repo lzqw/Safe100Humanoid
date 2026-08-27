@@ -51,6 +51,7 @@
 | v122 | matched `+noise/-noise` 使 held-out unclipped 变正，但 clipped 略负；exact rollback 后 screen 42/64=65.63% | [`antithetic_residual_v122/`](antithetic_residual_v122/) |
 | v123 | joint scale=0.25 使 train/held-out clipped 均改善，但 unseen deterministic screen 仅 38/64=59.38% | [`calibrated_antithetic_v123/`](calibrated_antithetic_v123/) |
 | v124 | 132-D deterministic parameter ES 的 train cosine 为正、held-out 为 -0.0848；rollback 后 screen 45/64=70.31% | [`parameter_antithetic_v124/`](parameter_antithetic_v124/) |
+| v125 | local sigma 使 held-out cosine 变为 +0.0854，但 train pairwise -0.0202 未过门槛；rollback 后 42/64 | [`local_parameter_es_v125/`](local_parameter_es_v125/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -313,3 +314,10 @@ v124 使用 132-D persistent-geometry 线性 residual，并为每个环境固定
 45/64=70.31%，未运行独立 gate。当前 sigma=0.02 使探索 residual norm 约 0.039，
 下一步仅缩小到 sigma=0.005 的局部范围，其余 objective 和 gate 保持不变。
 当前最佳仍为 v79。
+
+v125 将 parameter sigma 降至 0.005，探索 residual norm 降到约 0.0103。首个正分支
+达到 48/64，但它包含 64 个不同参数方向，不能视为候选。完整统计中 held-out gradient
+cosine 从 v124 的负值改善到 +0.0854，已过 +0.05 门槛；三个 train gradient 的平均
+pairwise cosine 为 -0.0202，略低于预声明 0 门槛，因此仍 exact rollback。screen 为
+42/64=65.63%，未运行独立 gate。下一步保留 held-out 门槛，仅将 train cosine 的噪声
+容忍线固定为 -0.05，再用全新 seeds 运行一次。当前最佳仍为 v79。
