@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "experiment": "paper_dual_v35",
+  "version": "v131",
+  "method_id": "paper-cbf-dual-deterministic-aligned-low-noise-v131",
+  "status": "rejected_screen_below_gate",
+  "source_git_commit": "d2df47a82208863716ab5c380198f1e049358b21",
+  "target": {
+    "context": "F2",
+    "riser_height_m": 0.184,
+    "runtime_filter_at_deployment": false,
+    "success_threshold": 0.75,
+    "screen_threshold_count": 48,
+    "screen_episode_count": 64
+  },
+  "training": {
+    "seed": 201355200,
+    "num_envs": 64,
+    "rollout_steps": 1024,
+    "rounds": 6,
+    "transition_count": 393216,
+    "elapsed_seconds": 215.24816832493525,
+    "runtime_filter_fraction": 1.0,
+    "training_action_std": 0.03,
+    "reference_v129_action_std": 0.05,
+    "exploration_variance_ratio_vs_v129": 0.36,
+    "continuous_without_rollback": true,
+    "target_forward_kl": 0.0006,
+    "selected_filter_on": {
+      "rollout_round": 5,
+      "checkpoint_round": 4,
+      "success_count": 101,
+      "episode_count": 135,
+      "success_rate": 0.7481481481481481,
+      "mean_reached_riser": 8.185185185185185
+    },
+    "selection_additional_evaluation_count": 0
+  },
+  "screen": {
+    "seed": 201355280,
+    "policy": "deterministic_mean",
+    "runtime_filter": false,
+    "success_count": 44,
+    "episode_count": 64,
+    "success_rate": 0.6875,
+    "fall_count": 20,
+    "fall_rate": 0.3125,
+    "mean_reached_riser": 7.796875,
+    "mean_return": -4.49470841884613,
+    "mean_success_completion_time_s": 8.755454545454546,
+    "initial_state_signature": "8b6e04703b93b259b1b867dd9d610df9fa26b7495d53249236d916ab7f107642"
+  },
+  "gate": {
+    "screen_passed": false,
+    "independent_gate_run": false,
+    "additional_validation_run": false,
+    "reason": "44/64 is below the predeclared 48/64 threshold"
+  },
+  "decision": {
+    "accepted": false,
+    "replaces_v129": false,
+    "replaces_v79": false,
+    "formal_best_remains": "v79 aligned filter-off 139/193 = 72.02%",
+    "development_screen_best_remains": "47/64 = 73.44%",
+    "interpretation": "Reducing Gaussian exploration variance to 36% of v129 preserved stable KL-controlled learning and reached 74.81% filtered training success, but deterministic filter-off deployment fell to 68.75%; lower sampling noise alone does not close the filter internalization gap."
+  }
+}

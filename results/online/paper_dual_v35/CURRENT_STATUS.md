@@ -57,6 +57,7 @@
 | v128 | 原始 nominal 起点做 100% filtered 连续 PPO；训练内峰值 70.23%，但 filter-off screen 仅 36/64 | [`early_continuous_v128/`](early_continuous_v128/) |
 | v129 | v79 上连续 PPO 加 round-level KL 控制；filter-on 达 84.38%，filter-off screen 47/64，差 1 episode | [`continuous_kl_v129/`](continuous_kl_v129/) |
 | v130 | 从 v129 线性撤除 filter；训练内 off 峰值 72.58%，但 deterministic screen 降至 32/64 | [`shield_withdrawal_v130/`](shield_withdrawal_v130/) |
+| v131 | v129 连续 PPO 的 std 0.05→0.03；训练内 on 峰值 74.81%，deterministic off screen 44/64 | [`deterministic_aligned_v131/`](deterministic_aligned_v131/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -366,3 +367,10 @@ v130 针对上述内化差距，从 v129 selected actor 用 5 轮将执行 filte
 filter-off 峰值为 90/124=72.58%，最终纯 off rollout 为 183/266=68.80%；但所选
 round-2 actor 的唯一 deterministic screen 仅 32/64=50.00%。因此未运行独立 gate，
 且不再继续相同的 filter-fraction 退火。v129 的 47/64 开发峰值与 v79 正式最佳保持。
+
+v131 保留 v129 的 100% filtered 连续 PPO 与 KL LR 控制，只将 frozen Gaussian std
+从 0.05 降到 0.03，使探索方差降到 36%。六轮 KL 在首轮收缩后稳定于
+0.000463–0.000568，训练内 filtered 峰值为 101/135=74.81%；但所选 round-4 actor
+的唯一 deterministic filter-off screen 为 44/64=68.75%，低于 48/64 screen 门槛，
+因此未运行独立 gate。降低 sampling noise 不能单独解决 shield 内化差距；v129 的
+47/64 开发峰值与 v79 正式最佳继续保持。
