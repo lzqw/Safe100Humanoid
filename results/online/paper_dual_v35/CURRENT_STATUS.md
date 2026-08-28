@@ -63,11 +63,20 @@
 | v134 | uniform average v132 round 1–7 actor；non-MLP 状态精确保留，但 deterministic screen 仅 40/64 | [`uniform_swa_v134/`](uniform_swa_v134/) |
 | v135 | 192-env 同步 batch、8 次 sequential updates；训练内 72.05%，deterministic screen 46/64 | [`high_parallel_v135/`](high_parallel_v135/) |
 | v136 | v132 exact peak tie 选择更早 round-3 actor；deterministic screen 42/64，保守早停无效 | [`early_peak_v136/`](early_peak_v136/) |
+| v137 | gait-scheduled toe-off CBF 预激活提高覆盖率，但所有 PPO update 回落；所选 base actor screen 43/64 | [`swing_preactivation_v137/`](swing_preactivation_v137/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
 SHA-256 为 `9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317`。
 因为它没有通过 75% gate，模型二进制未提交到 Git；配置、逐轮结果、哈希和选择依据均已提交。
+
+v137 修复了 safety filter 的 toe-off 时序缺口：双脚仍接触但 gait clock 已进入 swing phase
+时预激活对应脚的 CBF，实际离地脚始终优先。该改动将训练期 CBF active fraction 平均从
+v132 的 27.01% 提高到 34.95%，intervention fraction 从 9.78% 提高到 12.64%，说明机制
+确实工作；但 8 个更新后 actor 的 aligned rollout 全部低于初始 actor，最终只选择未更新
+的 round-0。其唯一 deterministic filter-off screen 为 43/64=67.19%，未过 48/64，故未
+运行独立 gate 或额外验证。结论是扩大 CBF toe-off 覆盖本身不足以让 PPO 内化为更好的
+filter-off policy；v132 继续保持最强 development candidate，v79 继续保持正式最佳。
 
 v82/v83 已证明 microbatch 路径稳定：每轮多个等权 backward chunks、一次全局梯度裁剪、
 一次 SGD step，256-environment 训练没有再发生 OOM。v83 在新 seed 上先升后退，rollback
