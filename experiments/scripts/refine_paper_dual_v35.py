@@ -43,6 +43,11 @@ from src.tasks.stairs_cbf.paper_continuous_kl_v129 import (
   V79_CHECKPOINT_SHA256,
   continuous_ppo_kl_learning_rate,
 )
+from src.tasks.stairs_cbf.paper_shield_withdrawal_v130 import (
+  MINIMUM_FILTER_OFF_SELECTION_EPISODES,
+  V129_SELECTED_CHECKPOINT_SHA256,
+  withdrawal_deployment_rollout_decision,
+)
 from velocity_cbf_v34_protocol import CURRENT_CBF_MODE, OPTIMIZED_CBF_MODE
 from refine_cbf_teacher_v31 import (
   _collect_round,
@@ -312,6 +317,15 @@ def _parse_args() -> argparse.Namespace:
       "v129: continue v79 with fully filtered two-epoch Adam PPO, no moving "
       "KL loss or rollback, and bounded round-level learning-rate control "
       "toward the observed forward-KL target."
+    ),
+  )
+  parser.add_argument(
+    "--paper-shield-withdrawal-training",
+    action="store_true",
+    help=(
+      "v130: continue the v129 selected actor while linearly withdrawing the "
+      "executed safety filter from 1 to 0, retaining counterfactual CBF "
+      "reward and the v129 round-level KL learning-rate controller."
     ),
   )
   parser.add_argument(
@@ -1145,11 +1159,13 @@ def main() -> None:
       "v35 base checkpoint does not match the explicitly expected SHA-256: "
       f"{checkpoint_sha256} != {expected_base_sha256}"
     )
-  if (
-    args.paper_early_continuous_training
-    and args.paper_continuous_kl_training
-  ):
-    raise ValueError("v128 and v129 continuous-training modes are exclusive")
+  continuous_training_modes = {
+    "v128": args.paper_early_continuous_training,
+    "v129": args.paper_continuous_kl_training,
+    "v130": args.paper_shield_withdrawal_training,
+  }
+  if sum(bool(enabled) for enabled in continuous_training_modes.values()) > 1:
+    raise ValueError("v128/v129/v130 continuous-training modes are exclusive")
   paper_early_continuous_training = None
   if args.paper_early_continuous_training:
     incompatible_options = {
@@ -1174,6 +1190,9 @@ def main() -> None:
       "conservative_outcome_advantage": args.conservative_outcome_advantage,
       "transactional_rollout_acceptance": args.transactional_rollout_acceptance,
       "paper_continuous_kl_training": args.paper_continuous_kl_training,
+      "paper_shield_withdrawal_training": (
+        args.paper_shield_withdrawal_training
+      ),
     }
     enabled_incompatible = sorted(
       name for name, enabled in incompatible_options.items() if enabled
@@ -1265,6 +1284,9 @@ def main() -> None:
       ),
       "conservative_outcome_advantage": args.conservative_outcome_advantage,
       "transactional_rollout_acceptance": args.transactional_rollout_acceptance,
+      "paper_shield_withdrawal_training": (
+        args.paper_shield_withdrawal_training
+      ),
     }
     enabled_incompatible = sorted(
       name for name, enabled in incompatible_options.items() if enabled
@@ -1333,6 +1355,106 @@ def main() -> None:
       "maximum_actor_learning_rate": V129_MAXIMUM_ACTOR_LEARNING_RATE,
       "aligned_checkpoint_selection": (
         "training_rollout_success_then_progress_then_later"
+      ),
+      "selection_additional_evaluation_count": 0,
+    }
+  paper_shield_withdrawal_training = None
+  if args.paper_shield_withdrawal_training:
+    incompatible_options = {
+      "paper_early_continuous_training": args.paper_early_continuous_training,
+      "paper_continuous_kl_training": args.paper_continuous_kl_training,
+      "height_curriculum": args.height_curriculum,
+      "filter_group_balanced_advantages": args.filter_group_balanced_advantages,
+      "state_value_occupancy_correction": args.state_value_occupancy_correction,
+      "deterministic_mean_teacher": args.deterministic_mean_teacher,
+      "success_safe_action_imitation": args.success_safe_action_imitation,
+      "failure_only_mean_teacher": args.failure_only_mean_teacher,
+      "success_only_mean_teacher": args.success_only_mean_teacher,
+      "failure_focused_actor": args.failure_focused_actor,
+      "distill_only_actor": args.distill_only_actor,
+      "split_filter_actor_objectives": args.split_filter_actor_objectives,
+      "task_priority_gradient_surgery": args.task_priority_gradient_surgery,
+      "full_batch_sgd_actor": args.full_batch_sgd_actor,
+      "persistent_geometry_gradient_balance": (
+        args.persistent_geometry_gradient_balance
+      ),
+      "outcome_centered_episode_advantage": (
+        args.outcome_centered_episode_advantage
+      ),
+      "conservative_outcome_advantage": args.conservative_outcome_advantage,
+      "transactional_rollout_acceptance": args.transactional_rollout_acceptance,
+    }
+    enabled_incompatible = sorted(
+      name for name, enabled in incompatible_options.items() if enabled
+    )
+    contract_checks = {
+      "v129_selected_checkpoint": (
+        checkpoint_sha256 == V129_SELECTED_CHECKPOINT_SHA256
+      ),
+      "fixed_f2": args.context == "F2",
+      "unit_balanced_eq27_reward": (
+        args.candidate == "paper_stair_sloped_unit_balanced"
+      ),
+      "task_compatible_cbf_geometry": math.isclose(
+        args.clearance_barrier_slope,
+        CLEARANCE_BARRIER_SLOPE,
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
+      ),
+      "current_cbf": args.cbf_mode == CURRENT_CBF_MODE,
+      "linear_full_withdrawal": (
+        training_runtime_filter
+        and args.training_filter_schedule == "linear_to_off"
+        and training_filter_fraction == 1.0
+        and args.training_filter_end_fraction == 0.0
+        and args.rounds == 5
+      ),
+      "teacher_free_a0": all(arm == "A0" for arm in teacher_arms),
+      "original_actor_interface": args.actor_observation_interface == "original-405",
+      "continuous_standard_ppo": not enabled_incompatible,
+      "initial_actor_learning_rate": math.isclose(
+        args.actor_learning_rate, 4.0e-6, rel_tol=0.0, abs_tol=1.0e-15
+      ),
+      "continuation_kl_loss_disabled": args.moving_kl_beta == 0.0,
+      "fixed_rollout_std": args.training_action_std == 0.05,
+      "no_auxiliary_credit": (
+        args.pre_intervention_weight == 0.0
+        and args.success_local_kl_beta == 0.0
+        and args.teacher_gradient_target_ratio == 0.0
+      ),
+      "standard_minibatching": (
+        args.actor_gradient_accumulation_microbatches == 1
+      ),
+      "fixed_nominal_dynamics": args.training_domain_randomization == "off",
+      "full_rollout_length": args.rollout_steps == 1024,
+    }
+    failed_checks = sorted(
+      name for name, passed in contract_checks.items() if not passed
+    )
+    if failed_checks:
+      raise ValueError(
+        "v130 shield-withdrawal training contract differs: "
+        f"failed={failed_checks}, incompatible={enabled_incompatible}"
+      )
+    paper_shield_withdrawal_training = {
+      "method_id": "paper-cbf-dual-shield-withdrawal-consolidation-v130",
+      "contract_checks": contract_checks,
+      "base_role": "v129_selected_filter_on_peak_and_filter_off_47_of_64",
+      "training_trajectory": "continuous_without_acceptance_or_rollback",
+      "runtime_filter_fractions": [1.0, 0.75, 0.5, 0.25, 0.0],
+      "counterfactual_cbf_reward_retained": True,
+      "actor_optimizer": "adam",
+      "actor_epochs": 2,
+      "actor_minibatches_per_epoch": 4,
+      "actor_updates_per_round": 8,
+      "moving_kl_beta": 0.0,
+      "target_forward_kl": V129_TARGET_FORWARD_KL,
+      "initial_actor_learning_rate": 4.0e-6,
+      "minimum_actor_learning_rate": V129_MINIMUM_ACTOR_LEARNING_RATE,
+      "maximum_actor_learning_rate": V129_MAXIMUM_ACTOR_LEARNING_RATE,
+      "checkpoint_selection_group": "filter_off",
+      "minimum_filter_off_selection_episodes": (
+        MINIMUM_FILTER_OFF_SELECTION_EPISODES
       ),
       "selection_additional_evaluation_count": 0,
     }
@@ -1576,7 +1698,12 @@ def main() -> None:
     "weight": args.pre_intervention_weight,
     "bounded_above_by_one": args.pre_intervention_aggregation == "max",
   }
-  if args.paper_continuous_kl_training:
+  if args.paper_shield_withdrawal_training:
+    agent_cfg.algorithm.class_name = (
+      "src.tasks.stairs_cbf.paper_shield_withdrawal_v130:"
+      "PaperShieldWithdrawalV130PPO"
+    )
+  elif args.paper_continuous_kl_training:
     agent_cfg.algorithm.class_name = (
       "src.tasks.stairs_cbf.paper_continuous_kl_v129:"
       "PaperContinuousKlV129PPO"
@@ -1809,6 +1936,7 @@ def main() -> None:
         ),
         "paper_early_continuous_training": paper_early_continuous_training,
         "paper_continuous_kl_training": paper_continuous_kl_training,
+        "paper_shield_withdrawal_training": paper_shield_withdrawal_training,
         "split_filter_actor_objectives": (
           args.split_filter_actor_objectives
         ),
@@ -2034,7 +2162,64 @@ def main() -> None:
             ),
           }
         )
-      if args.paper_continuous_kl_training:
+      elif args.paper_shield_withdrawal_training:
+        aligned_selection_decision = withdrawal_deployment_rollout_decision(
+          candidate_round=round_index,
+          runtime_filter_fraction=expected_filter_fraction,
+          filter_off_success_count=int(
+            metrics["rollout_filter_off_success_count"]
+          ),
+          filter_off_episode_count=int(
+            metrics["rollout_filter_off_episode_count"]
+          ),
+          filter_off_mean_reached_riser=(
+            float(metrics["rollout_filter_off_mean_reached_riser"])
+            if metrics["rollout_filter_off_mean_reached_riser"] is not None
+            else None
+          ),
+          incumbent_round=accepted_rollout_round,
+          incumbent_success_count=accepted_success_count,
+          incumbent_episode_count=accepted_episode_count,
+          incumbent_mean_reached_riser=selected_mean_reached_riser,
+        )
+        if aligned_selection_decision["selected"]:
+          accepted_actor_sha256 = start_hash
+          accepted_checkpoint = candidate_checkpoint
+          accepted_rollout_round = round_index
+          accepted_success_count = int(
+            metrics["rollout_filter_off_success_count"]
+          )
+          accepted_episode_count = int(
+            metrics["rollout_filter_off_episode_count"]
+          )
+          accepted_success_rate = float(
+            metrics["rollout_filter_off_success_rate"]
+          )
+          selected_mean_reached_riser = float(
+            metrics["rollout_filter_off_mean_reached_riser"]
+          )
+        metrics.update(
+          {
+            "v130_filter_off_checkpoint_selection": True,
+            "v130_filter_off_candidate_eligible": bool(
+              aligned_selection_decision["eligible"]
+            ),
+            "v130_filter_off_candidate_selected": bool(
+              aligned_selection_decision["selected"]
+            ),
+            "v130_filter_off_selection_reason": aligned_selection_decision[
+              "reason"
+            ],
+            "v130_selected_rollout_round_after": accepted_rollout_round,
+            "v130_selected_success_rate_after": accepted_success_rate,
+            "v130_selection_additional_evaluation_count": 0,
+            "v130_selection_changes_training_trajectory": False,
+          }
+        )
+      if (
+        args.paper_continuous_kl_training
+        or args.paper_shield_withdrawal_training
+      ):
         (
           next_actor_learning_rate,
           kl_controller_decision,
@@ -2209,6 +2394,9 @@ def main() -> None:
           ),
           "paper_early_continuous_training": paper_early_continuous_training,
           "paper_continuous_kl_training": paper_continuous_kl_training,
+          "paper_shield_withdrawal_training": (
+            paper_shield_withdrawal_training
+          ),
           "split_filter_actor_objectives": (
             args.split_filter_actor_objectives
           ),
@@ -2306,6 +2494,7 @@ def main() -> None:
       ),
       "paper_early_continuous_training": paper_early_continuous_training,
       "paper_continuous_kl_training": paper_continuous_kl_training,
+      "paper_shield_withdrawal_training": paper_shield_withdrawal_training,
       "split_filter_actor_objectives": (
         args.split_filter_actor_objectives
       ),
@@ -2370,8 +2559,13 @@ def main() -> None:
       "selected_success_rate": accepted_success_rate,
       "selected_filter_off_success_rate": (
         accepted_success_rate
-        if transactional_acceptance_group == "filter_off"
-        and args.transactional_rollout_acceptance
+        if (
+          (
+            transactional_acceptance_group == "filter_off"
+            and args.transactional_rollout_acceptance
+          )
+          or args.paper_shield_withdrawal_training
+        )
         else None
       ),
       "selected_filter_on_success_rate": (

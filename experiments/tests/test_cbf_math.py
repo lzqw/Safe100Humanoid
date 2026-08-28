@@ -32,6 +32,9 @@ from src.tasks.stairs_cbf.paper_early_start_v128 import (
 from src.tasks.stairs_cbf.paper_continuous_kl_v129 import (
   continuous_ppo_kl_learning_rate,
 )
+from src.tasks.stairs_cbf.paper_shield_withdrawal_v130 import (
+  withdrawal_deployment_rollout_decision,
+)
 
 
 def test_halfspace_projection_repairs_violation():
@@ -343,6 +346,38 @@ def test_v129_controls_next_round_lr_without_rollback_or_actor_mutation():
   assert low_metrics["v129_kl_controller_bounded_scale"] == pytest.approx(1.25)
   assert low_metrics["v129_kl_controller_changes_actor_state"] is False
   assert low_metrics["v129_kl_controller_uses_rollback"] is False
+
+
+def test_v130_selects_only_sufficient_filter_off_training_rollouts():
+  ineligible = withdrawal_deployment_rollout_decision(
+    candidate_round=2,
+    runtime_filter_fraction=0.75,
+    filter_off_success_count=25,
+    filter_off_episode_count=40,
+    filter_off_mean_reached_riser=7.5,
+    incumbent_round=None,
+    incumbent_success_count=None,
+    incumbent_episode_count=None,
+    incumbent_mean_reached_riser=None,
+  )
+  assert ineligible["eligible"] is False
+  assert ineligible["selected"] is False
+
+  eligible = withdrawal_deployment_rollout_decision(
+    candidate_round=3,
+    runtime_filter_fraction=0.5,
+    filter_off_success_count=48,
+    filter_off_episode_count=64,
+    filter_off_mean_reached_riser=8.2,
+    incumbent_round=None,
+    incumbent_success_count=None,
+    incumbent_episode_count=None,
+    incumbent_mean_reached_riser=None,
+  )
+  assert eligible["eligible"] is True
+  assert eligible["selected"] is True
+  assert eligible["selection_group"] == "filter_off"
+  assert eligible["selection_changes_training_trajectory"] is False
 
 
 def test_v68_routes_nominal_worlds_to_ppo_and_filtered_worlds_to_teacher():
