@@ -50,6 +50,9 @@ from src.tasks.stairs_cbf.paper_uniform_swa_v134 import (
 from src.tasks.stairs_cbf.paper_high_parallel_v135 import (
   high_parallel_scale_diagnostics,
 )
+from src.tasks.stairs_cbf.paper_early_peak_v136 import (
+  earliest_exact_peak_decision,
+)
 
 
 def test_halfspace_projection_repairs_violation():
@@ -456,6 +459,24 @@ def test_v135_triples_synchronous_v129_scale_without_more_updates():
   assert diagnostics["v135_parallel_scale_ratio"] == pytest.approx(3.0)
   assert diagnostics["v135_transition_scale_ratio"] == pytest.approx(3.0)
   assert diagnostics["v135_sequential_update_count_changed_from_v129"] is False
+
+
+def test_v136_selects_the_earliest_exact_peak_without_extra_evaluation():
+  decision = earliest_exact_peak_decision(
+    [
+      {"rollout_round": 2, "success_count": 194, "episode_count": 264},
+      {"rollout_round": 4, "success_count": 198, "episode_count": 269},
+      {"rollout_round": 8, "success_count": 198, "episode_count": 269},
+    ]
+  )
+  assert decision["rollout_round"] == 4
+  assert decision["success_rate"] == pytest.approx(198 / 269)
+  assert decision["exact_peak_tie_count"] == 2
+  assert decision["exact_peak_tied_rollout_rounds"] == [4, 8]
+  assert decision["selection_tie_break"] == (
+    "earliest_rollout_minimum_update_count"
+  )
+  assert decision["additional_evaluation_count"] == 0
 
 
 def test_v68_routes_nominal_worlds_to_ppo_and_filtered_worlds_to_teacher():
