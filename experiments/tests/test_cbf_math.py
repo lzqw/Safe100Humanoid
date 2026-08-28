@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import pytest
 import torch
 
@@ -54,6 +56,10 @@ from src.tasks.stairs_cbf.paper_high_parallel_v135 import (
 from src.tasks.stairs_cbf.paper_early_peak_v136 import (
   earliest_exact_peak_decision,
 )
+from src.tasks.stairs_cbf.paper_clearance_margin_v138 import (
+  CLEARANCE_MARGIN_M,
+  configure_paper_clearance_margin,
+)
 
 
 def test_halfspace_projection_repairs_violation():
@@ -92,6 +98,25 @@ def test_v137_preactivates_only_toe_off_and_keeps_airborne_foot_priority():
 
   assert selected.tolist() == [1, -1, 1, 0]
   assert preactivated.tolist() == [True, False, False, False]
+
+
+def test_v138_changes_only_paper_next_riser_clearance_margin():
+  original = {
+    "action_name": "joint_pos",
+    "asset_name": "robot",
+    "default_height": 0.10,
+    "height_above_tread": 0.05,
+    "reference_mode": "next_riser",
+    "lookahead_distance": 0.60,
+  }
+  term = SimpleNamespace(params=dict(original))
+  env_cfg = SimpleNamespace(rewards={"foot_clearance": term})
+
+  audit = configure_paper_clearance_margin(env_cfg)
+
+  assert term.params == {**original, "height_above_tread": CLEARANCE_MARGIN_M}
+  assert audit["clearance_margin_increase_m"] == pytest.approx(0.03)
+  assert audit["cbf_changed"] is False
 
 
 def test_inactive_constraint_is_identity():
