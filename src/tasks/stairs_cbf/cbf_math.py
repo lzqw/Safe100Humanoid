@@ -5,6 +5,64 @@ from __future__ import annotations
 import torch
 
 
+def contact_or_scheduled_swing_foot(
+  contact: torch.Tensor,
+  air_time: torch.Tensor | None,
+  episode_steps: torch.Tensor,
+  *,
+  step_dt: float,
+  period: float = 0.6,
+  stance_fraction: float = 0.56,
+) -> tuple[torch.Tensor, torch.Tensor]:
+  """Select the physical swing foot, with gait-phase toe-off preactivation.
+
+  An already-airborne foot always wins.  The gait clock is consulted only
+  while both feet still report contact, allowing the next swing foot's CBF to
+  shape the toe-off command instead of becoming active one control step late.
+  The second return value marks selections introduced by this preactivation.
+  """
+  if contact.ndim != 2 or contact.shape[1] != 2 or contact.dtype != torch.bool:
+    raise ValueError("foot contact must be boolean with shape [N, 2]")
+  if episode_steps.ndim != 1 or episode_steps.shape[0] != contact.shape[0]:
+    raise ValueError("episode steps must have shape [N]")
+  if air_time is not None and air_time.shape != contact.shape:
+    raise ValueError("foot air time must have shape [N, 2]")
+  if step_dt <= 0.0 or period <= 0.0:
+    raise ValueError("gait timing values must be positive")
+  if not 0.5 < stance_fraction < 1.0:
+    raise ValueError("stance fraction must lie in (0.5, 1)")
+
+  in_air = ~contact
+  scores = (
+    in_air.float()
+    if air_time is None
+    else torch.where(in_air, air_time, torch.full_like(air_time, -1.0))
+  )
+  physical_index = scores.argmax(dim=1)
+  has_physical_swing = in_air.any(dim=1)
+
+  phase = (
+    episode_steps.to(dtype=torch.float32) * float(step_dt) / float(period)
+  ).unsqueeze(1)
+  offsets = torch.tensor(
+    (0.0, 0.5), device=contact.device, dtype=phase.dtype
+  ).view(1, 2)
+  scheduled_swing = ((phase + offsets) % 1.0) >= float(stance_fraction)
+  scheduled_index = scheduled_swing.float().argmax(dim=1)
+  has_scheduled_swing = scheduled_swing.any(dim=1)
+  preactivated = ~has_physical_swing & has_scheduled_swing
+  selected = torch.where(
+    has_physical_swing,
+    physical_index,
+    torch.where(
+      preactivated,
+      scheduled_index,
+      torch.full_like(scheduled_index, -1),
+    ),
+  )
+  return selected, preactivated
+
+
 def conditional_deployable_cbf_geometry(
   geometry: torch.Tensor,
 ) -> torch.Tensor:

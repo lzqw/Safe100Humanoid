@@ -13,7 +13,11 @@ from mjlab.envs.mdp.actions import JointPositionAction, JointPositionActionCfg
 from mjlab.sensor import ContactSensor
 from mjlab.utils.lab_api.string import resolve_matching_names_values
 
-from .cbf_math import project_halfspace, sloped_toe_clearance_constraint
+from .cbf_math import (
+  contact_or_scheduled_swing_foot,
+  project_halfspace,
+  sloped_toe_clearance_constraint,
+)
 from .edge_detection import (
   riser_edges_from_metadata,
   riser_edges_from_tread_patches,
@@ -51,6 +55,9 @@ class StairCbfJointPositionActionCfg(JointPositionActionCfg):
   deployment_action_delay_steps: int = 0
   deployment_contact_delay_steps: int = 0
   deployment_contact_phase_offset: float = 0.0
+  scheduled_swing_preactivation: bool = False
+  gait_period: float = 0.6
+  gait_stance_fraction: float = 0.56
 
   def build(self, env: "ManagerBasedRlEnv") -> "StairCbfJointPositionAction":
     return StairCbfJointPositionAction(self, env)
@@ -133,6 +140,9 @@ class StairCbfJointPositionAction(JointPositionAction):
     self.intervention_count = torch.zeros(shape, device=self.device)
     self.selected_edge_top_z = torch.zeros(shape, device=self.device)
     self.selected_foot = torch.full(shape, -1, dtype=torch.long, device=self.device)
+    self.scheduled_swing_preactivated = torch.zeros(
+      shape, dtype=torch.bool, device=self.device
+    )
     self.nominal_target = torch.zeros(
       self.num_envs, self.action_dim, device=self.device
     )
@@ -225,6 +235,10 @@ class StairCbfJointPositionAction(JointPositionAction):
       raise ValueError("CBF safety history and prediction horizon must be positive")
     if not 0.0 <= cfg.clearance_barrier_slope <= 2.0:
       raise ValueError("clearance barrier slope must lie in [0, 2]")
+    if cfg.gait_period <= 0.0:
+      raise ValueError("CBF gait period must be positive")
+    if not 0.5 < cfg.gait_stance_fraction < 1.0:
+      raise ValueError("CBF gait stance fraction must lie in (0.5, 1)")
     self.barrier_derivative = torch.zeros(shape, device=self.device)
     self.predicted_h = torch.ones(shape, device=self.device)
     self.h_history = torch.ones(
@@ -285,6 +299,30 @@ class StairCbfJointPositionAction(JointPositionAction):
     """Return the historical x-axis Jacobian used by the default CBF."""
     return self._foot_xz_jacobians(foot_pos)[:, :, 0]
 
+  def _select_swing_foot(self, contact: torch.Tensor) -> torch.Tensor:
+    """Return contact-selected swing foot plus optional toe-off preactivation."""
+    in_air = ~contact
+    air_time = self._contact_sensor.data.current_air_time
+    if self.cfg.scheduled_swing_preactivation:
+      selected, preactivated = contact_or_scheduled_swing_foot(
+        contact,
+        air_time,
+        self._env.episode_length_buf,
+        step_dt=float(self._env.step_dt),
+        period=float(self.cfg.gait_period),
+        stance_fraction=float(self.cfg.gait_stance_fraction),
+      )
+      self.scheduled_swing_preactivated.copy_(preactivated)
+      return selected
+    scores = (
+      in_air.float()
+      if air_time is None
+      else torch.where(in_air, air_time, torch.full_like(air_time, -1.0))
+    )
+    index = scores.argmax(dim=1)
+    self.scheduled_swing_preactivated.zero_()
+    return torch.where(in_air.any(dim=1), index, torch.full_like(index, -1))
+
   def process_actions(self, actions: torch.Tensor) -> None:
     previous_h = self.h.clone()
     if self.cfg.deployment_action_delay_steps > 0:
@@ -335,15 +373,9 @@ class StairCbfJointPositionAction(JointPositionAction):
       contact = self._deployment_contact_queue[
         :, self.cfg.deployment_contact_delay_steps
       ]
-    in_air = ~contact
-    air_time = self._contact_sensor.data.current_air_time
-    if air_time is None:
-      scores = in_air.float()
-    else:
-      scores = torch.where(in_air, air_time, torch.full_like(air_time, -1.0))
-    foot_index = scores.argmax(dim=1)
-    has_swing = in_air.any(dim=1)
-    self.selected_foot[:] = torch.where(has_swing, foot_index, -1)
+    self.selected_foot[:] = self._select_swing_foot(contact)
+    has_swing = self.selected_foot >= 0
+    foot_index = self.selected_foot.clamp_min(0)
     batch = torch.arange(self.num_envs, device=self.device)
     selected_pos = foot_pos[batch, foot_index]
     selected_jac_x = jac_x[batch, foot_index]
@@ -532,6 +564,7 @@ class StairCbfJointPositionAction(JointPositionAction):
     self.intervention_count[env_ids] = 0.0
     self.selected_edge_top_z[env_ids] = 0.0
     self.selected_foot[env_ids] = -1
+    self.scheduled_swing_preactivated[env_ids] = False
     self.nominal_target[env_ids] = 0.0
     self.safe_target[env_ids] = 0.0
     self.nominal_raw_action[env_ids] = 0.0

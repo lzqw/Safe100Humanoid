@@ -162,15 +162,7 @@ class SwingUnderResponseCbfAction(StairCbfJointPositionAction):
             contact = contact.any(dim=tuple(range(2, contact.ndim)))
         if contact.ndim != 2 or contact.shape[1] != 2:
             raise RuntimeError("v25 foot-contact state must have shape [N, 2]")
-        in_air = ~contact
-        air_time = self._contact_sensor.data.current_air_time
-        scores = (
-            in_air.float()
-            if air_time is None
-            else torch.where(in_air, air_time, torch.full_like(air_time, -1.0))
-        )
-        index = scores.argmax(dim=1)
-        return torch.where(in_air.any(dim=1), index, torch.full_like(index, -1))
+        return self._select_swing_foot(contact)
 
     def _current_stair_index(self) -> torch.Tensor:
         terrain = self._env.scene.terrain

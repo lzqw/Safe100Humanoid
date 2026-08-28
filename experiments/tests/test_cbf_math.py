@@ -4,6 +4,7 @@ import pytest
 import torch
 
 from src.tasks.stairs_cbf.cbf_math import (
+  contact_or_scheduled_swing_foot,
   dual_cbf_reward,
   next_riser,
   next_riser_clearance_reference,
@@ -64,6 +65,33 @@ def test_halfspace_projection_repairs_violation():
   assert torch.all(after >= -1.0e-6)
   assert torch.allclose(projected[0], torch.tensor([0.5, -1.0]))
   assert torch.allclose(projected[1], nominal[1])
+
+
+def test_v137_preactivates_only_toe_off_and_keeps_airborne_foot_priority():
+  contact = torch.tensor(
+    [
+      [True, True],   # right foot is scheduled to swing at phase 0.10
+      [True, True],   # double-stance window at phase 0.52
+      [True, False],  # physical right swing wins regardless of gait phase
+      [False, True],  # physical left swing wins regardless of gait phase
+    ]
+  )
+  air_time = torch.tensor(
+    [[0.0, 0.0], [0.0, 0.0], [0.0, 0.12], [0.20, 0.0]]
+  )
+  episode_steps = torch.tensor([3, 16, 20, 3])
+
+  selected, preactivated = contact_or_scheduled_swing_foot(
+    contact,
+    air_time,
+    episode_steps,
+    step_dt=0.02,
+    period=0.6,
+    stance_fraction=0.56,
+  )
+
+  assert selected.tolist() == [1, -1, 1, 0]
+  assert preactivated.tolist() == [True, False, False, False]
 
 
 def test_inactive_constraint_is_identity():

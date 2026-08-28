@@ -332,6 +332,9 @@ def _record_online_cbf_telemetry(
     term.geometric_active.float().mean()
   )
   env.extras["log"]["CBF/intervention_fraction"] = term.intervened.float().mean()
+  env.extras["log"]["CBF/scheduled_swing_preactivation_fraction"] = (
+    term.scheduled_swing_preactivated.float().mean()
+  )
   env.extras["log"]["CBF/would_intervene_fraction"] = (
     term.would_intervene.float().mean()
   )

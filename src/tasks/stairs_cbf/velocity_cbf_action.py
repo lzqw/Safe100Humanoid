@@ -297,16 +297,9 @@ class TaskMetricVelocityCbfAction(_V34Timing, HigherRiserCbfAction):
             contact = contact.any(dim=tuple(range(2, contact.ndim)))
         if contact.ndim != 2 or contact.shape[1] != 2:
             raise RuntimeError("v34 contact state must have shape [N, 2]")
-        in_air = ~contact
-        air_time = self._contact_sensor.data.current_air_time
-        scores = (
-            in_air.float()
-            if air_time is None
-            else torch.where(in_air, air_time, torch.full_like(air_time, -1.0))
-        )
-        foot_index = scores.argmax(dim=1)
-        has_swing = in_air.any(dim=1)
-        self.selected_foot[:] = torch.where(has_swing, foot_index, -1)
+        self.selected_foot[:] = self._select_swing_foot(contact)
+        has_swing = self.selected_foot >= 0
+        foot_index = self.selected_foot.clamp_min(0)
         batch = torch.arange(self.num_envs, device=self.device)
         selected_pos = foot_pos[batch, foot_index]
         selected_jac_x = jac_x[batch, foot_index]
@@ -567,6 +560,9 @@ def v34_online_safety_telemetry(
         ),
         "v34_support_foot_slip": support_slip,
         "v34_selected_foot": term.selected_foot,
+        "v34_scheduled_swing_preactivated": (
+            term.scheduled_swing_preactivated
+        ),
         "v34_selected_riser": term.selected_riser,
         "v34_nominal_safe_target_error": term.nominal_safe_target_error,
     }

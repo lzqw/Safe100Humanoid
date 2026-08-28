@@ -75,6 +75,9 @@ from src.tasks.stairs_cbf.paper_high_parallel_v135 import (
   V129_SELECTED_CHECKPOINT_SHA256 as V135_BASE_CHECKPOINT_SHA256,
   high_parallel_scale_diagnostics,
 )
+from src.tasks.stairs_cbf.paper_swing_preactivation_v137 import (
+  METHOD_ID as V137_METHOD_ID,
+)
 from velocity_cbf_v34_protocol import CURRENT_CBF_MODE, OPTIMIZED_CBF_MODE
 from refine_cbf_teacher_v31 import (
   _collect_round,
@@ -388,6 +391,15 @@ def _parse_args() -> argparse.Namespace:
     help=(
       "v135: restart from the v129 selected actor with unchanged paper PPO "
       "but 192 synchronous environments for eight updates."
+    ),
+  )
+  parser.add_argument(
+    "--paper-swing-preactivation-training",
+    action="store_true",
+    help=(
+      "v137: repeat the v132 scale-matched paper PPO from the same v129 "
+      "checkpoint, but preactivate the swing-foot CBF during scheduled "
+      "toe-off while retaining physical-airborne-foot priority."
     ),
   )
   parser.add_argument(
@@ -1229,10 +1241,11 @@ def main() -> None:
     "v132": args.paper_scaled_continuation_training,
     "v133": args.paper_scaled_stage_two_training,
     "v135": args.paper_high_parallel_training,
+    "v137": args.paper_swing_preactivation_training,
   }
   if sum(bool(enabled) for enabled in continuous_training_modes.values()) > 1:
     raise ValueError(
-      "v128/v129/v130/v131/v132/v133/v135 continuous-training modes are exclusive"
+      "v128/v129/v130/v131/v132/v133/v135/v137 continuous-training modes are exclusive"
     )
   paper_early_continuous_training = None
   if args.paper_early_continuous_training:
@@ -1668,7 +1681,11 @@ def main() -> None:
       "selection_additional_evaluation_count": 0,
     }
   paper_scaled_continuation_training = None
-  if args.paper_scaled_continuation_training:
+  paper_swing_preactivation_training = None
+  if (
+    args.paper_scaled_continuation_training
+    or args.paper_swing_preactivation_training
+  ):
     incompatible_options = {
       "paper_early_continuous_training": args.paper_early_continuous_training,
       "paper_continuous_kl_training": args.paper_continuous_kl_training,
@@ -1767,11 +1784,15 @@ def main() -> None:
     )
     if failed_checks:
       raise ValueError(
-        "v132 scaled continuation contract differs: "
+        f"{'v137 swing-preactivation' if args.paper_swing_preactivation_training else 'v132 scaled continuation'} contract differs: "
         f"failed={failed_checks}, incompatible={enabled_incompatible}"
       )
-    paper_scaled_continuation_training = {
-      "method_id": "paper-cbf-dual-scaled-continuation-v132",
+    scaled_training_metadata = {
+      "method_id": (
+        V137_METHOD_ID
+        if args.paper_swing_preactivation_training
+        else "paper-cbf-dual-scaled-continuation-v132"
+      ),
       "contract_checks": contract_checks,
       "base_role": "v129_selected_filter_on_peak_and_filter_off_47_of_64",
       "training_trajectory": "continuous_without_acceptance_or_rollback",
@@ -1792,6 +1813,17 @@ def main() -> None:
       ),
       "selection_additional_evaluation_count": 0,
     }
+    if args.paper_swing_preactivation_training:
+      scaled_training_metadata.update(
+        {
+          "algorithm_change": "scheduled_swing_cbf_toe_off_preactivation",
+          "physical_airborne_foot_has_priority": True,
+          "v132_optimizer_and_transition_budget_unchanged": True,
+        }
+      )
+      paper_swing_preactivation_training = scaled_training_metadata
+    else:
+      paper_scaled_continuation_training = scaled_training_metadata
   paper_scaled_stage_two_training = None
   if args.paper_scaled_stage_two_training:
     incompatible_options = {
@@ -2056,6 +2088,7 @@ def main() -> None:
     or args.paper_scaled_continuation_training
     or args.paper_scaled_stage_two_training
     or args.paper_high_parallel_training
+    or args.paper_swing_preactivation_training
   )
   if output_dir.exists():
     raise FileExistsError(output_dir)
@@ -2091,6 +2124,9 @@ def main() -> None:
     rotating_environment_filter_mask,
     target_terrain_floor_schedule,
   )
+  from src.tasks.stairs_cbf.paper_swing_preactivation_v137 import (
+    configure_scheduled_swing_preactivation,
+  )
   from src.tasks.stairs_cbf.velocity_cbf_action import configure_v34_cbf
 
   training_filter_fractions = (
@@ -2125,6 +2161,16 @@ def main() -> None:
     parameters=cbf_parameters,
     measure_compute_time=False,
   )
+  scheduled_swing_preactivation = None
+  if args.paper_swing_preactivation_training:
+    scheduled_swing_preactivation = configure_scheduled_swing_preactivation(
+      env_cfg
+    )
+    training_cbf["swing_selection"] = scheduled_swing_preactivation
+    assert paper_swing_preactivation_training is not None
+    paper_swing_preactivation_training["swing_selection"] = (
+      scheduled_swing_preactivation
+    )
   training_cbf["paper_dual_execution_fraction"] = training_filter_fraction
   shift["training_cbf"] = training_cbf
   reward = configure_paper_dual_reward(
@@ -2293,7 +2339,12 @@ def main() -> None:
     "weight": args.pre_intervention_weight,
     "bounded_above_by_one": args.pre_intervention_aggregation == "max",
   }
-  if args.paper_shield_withdrawal_training:
+  if args.paper_swing_preactivation_training:
+    agent_cfg.algorithm.class_name = (
+      "src.tasks.stairs_cbf.paper_swing_preactivation_v137:"
+      "PaperSwingPreactivationV137PPO"
+    )
+  elif args.paper_shield_withdrawal_training:
     agent_cfg.algorithm.class_name = (
       "src.tasks.stairs_cbf.paper_shield_withdrawal_v130:"
       "PaperShieldWithdrawalV130PPO"
@@ -2560,6 +2611,9 @@ def main() -> None:
         ),
         "paper_scaled_stage_two_training": paper_scaled_stage_two_training,
         "paper_high_parallel_training": paper_high_parallel_training,
+        "paper_swing_preactivation_training": (
+          paper_swing_preactivation_training
+        ),
         "split_filter_actor_objectives": (
           args.split_filter_actor_objectives
         ),
@@ -2762,19 +2816,23 @@ def main() -> None:
             metrics["rollout_filter_on_mean_reached_riser"]
           )
         selection_metric_prefix = (
-          "v135"
-          if args.paper_high_parallel_training
+          "v137"
+          if args.paper_swing_preactivation_training
           else (
-            "v133"
-            if args.paper_scaled_stage_two_training
+            "v135"
+            if args.paper_high_parallel_training
             else (
-              "v132"
-              if args.paper_scaled_continuation_training
+              "v133"
+              if args.paper_scaled_stage_two_training
               else (
-                "v131"
-                if args.paper_deterministic_aligned_training
+                "v132"
+                if args.paper_scaled_continuation_training
                 else (
-                  "v129" if args.paper_continuous_kl_training else "v128"
+                  "v131"
+                  if args.paper_deterministic_aligned_training
+                  else (
+                    "v129" if args.paper_continuous_kl_training else "v128"
+                  )
                 )
               )
             )
@@ -2862,6 +2920,7 @@ def main() -> None:
         or args.paper_scaled_continuation_training
         or args.paper_scaled_stage_two_training
         or args.paper_high_parallel_training
+        or args.paper_swing_preactivation_training
       ):
         (
           next_actor_learning_rate,
@@ -3048,6 +3107,9 @@ def main() -> None:
           ),
           "paper_scaled_stage_two_training": paper_scaled_stage_two_training,
           "paper_high_parallel_training": paper_high_parallel_training,
+          "paper_swing_preactivation_training": (
+            paper_swing_preactivation_training
+          ),
           "split_filter_actor_objectives": (
             args.split_filter_actor_objectives
           ),
@@ -3154,6 +3216,9 @@ def main() -> None:
       ),
       "paper_scaled_stage_two_training": paper_scaled_stage_two_training,
       "paper_high_parallel_training": paper_high_parallel_training,
+      "paper_swing_preactivation_training": (
+        paper_swing_preactivation_training
+      ),
       "split_filter_actor_objectives": (
         args.split_filter_actor_objectives
       ),
