@@ -59,6 +59,7 @@
 | v130 | 从 v129 线性撤除 filter；训练内 off 峰值 72.58%，但 deterministic screen 降至 32/64 | [`shield_withdrawal_v130/`](shield_withdrawal_v130/) |
 | v131 | v129 连续 PPO 的 std 0.05→0.03；训练内 on 峰值 74.81%，deterministic off screen 44/64 | [`deterministic_aligned_v131/`](deterministic_aligned_v131/) |
 | v132 | 论文式 full-filter transitions 翻倍；screen 50/64 首次过线，独立 gate 46/64，描述性两 seed 合计 96/128 | [`scaled_continuation_v132/`](scaled_continuation_v132/) |
+| v133 | 从 v132 做第二个相同 million-transition stage；训练内 74.90%，但 deterministic screen 降至 41/64 | [`scaled_stage_two_v133/`](scaled_stage_two_v133/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -383,3 +384,9 @@ v132 回到 std=0.05 的论文式 full-filter 连续 PPO，并以 128 environmen
 v79。两个 evaluation seeds 描述性合计 96/128=75.00%，但 gate 是条件触发，不能作为
 正式通过证据。规模放大是迄今第一个让 deterministic screen 过 75% 的论文式方向，
 后续重点应是扩大同一 objective 的稳定训练证据，而不是再加局部辅助 loss。
+
+v133 从 v132 selected actor 做第二个完全相同的 1,048,576-transition stage，使两个
+scaled stages 累计达到 2,097,152 transitions。训练内峰值为 197/263=74.90%，KL
+保持稳定；但唯一 deterministic filter-off screen 降到 41/64=64.06%，未触发 gate。
+因此不能继续把 v132 的结果解释为“只要再训练更久就会稳定提高”；v132 是当前 objective
+下的局部部署峰值，v132 开发记录与 v79 正式最佳均保持。

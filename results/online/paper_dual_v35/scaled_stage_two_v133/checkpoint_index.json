@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "version": "v133",
+  "remote_artifact_root": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/scaled_stage_two_v133_ae093e7_128x1024x8_s201355400",
+  "checkpoints": {
+    "base_v132": {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/scaled_continuation_v132_194917e_128x1024x8_s201355300/round_07.pt",
+      "checkpoint_sha256": "a7fdd4d07dc79f1f001b09ff3638bcc5de000c3804f369dcf13ed61ebd18bde3",
+      "actor_sha256": "ae031e720b6c8e18fd855da10bbd0e3bc80160357ef93c3055c7cfefef126093"
+    },
+    "selected": {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/scaled_stage_two_v133_ae093e7_128x1024x8_s201355400/round_02.pt",
+      "checkpoint_round": 2,
+      "aligned_rollout_round": 3,
+      "checkpoint_sha256": "1de8a78711b8abf1297279c33ba2438a55eb37a1939fdf45c81e1e340357902f",
+      "actor_sha256": "0af82956c1553ac2382109cd8e8b9cdb97fc13f26b86140cc7a8a907d298fb9c",
+      "deterministic_actor_sha256": "685c7166abfa84e7d3b0cb91f55a614926a14d299800944569e4784c4003da0a"
+    },
+    "final_unaligned": {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/scaled_stage_two_v133_ae093e7_128x1024x8_s201355400/round_08.pt",
+      "checkpoint_round": 8,
+      "checkpoint_sha256": "30ba5129e51506f293637e1f150aeb3b3b4e0cbc09850a866a8ca19b50583c2a",
+      "actor_sha256": "5b8d16c06f102fa392ba9bcc2ba874222cee25f45fe8ab73493c9a707536fd4b"
+    }
+  },
+  "binary_upload": {
+    "uploaded_to_git": false,
+    "reason": "The selected candidate scored 41/64 and did not trigger the independent gate; metrics, paths, and SHA-256 identities are published instead."
+  }
+}
