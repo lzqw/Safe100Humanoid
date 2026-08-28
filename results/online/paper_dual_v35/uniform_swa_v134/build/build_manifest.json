@@ -1,0 +1,48 @@
+{
+  "averaged_actor_sha256": "6acd1fded2e95284eed9b503c96ecc4f8945adf2489dedfe844a75b3d76fe816",
+  "deployment_only_checkpoint": true,
+  "diagnostics": {
+    "v134_maximum_snapshot_mlp_distance": 0.004497656533123513,
+    "v134_mean_snapshot_mlp_distance": 0.0029278541600098844,
+    "v134_method_id": "paper-cbf-dual-uniform-actor-swa-v134",
+    "v134_mlp_parameter_count": 373644,
+    "v134_non_mlp_actor_state_exactly_preserved": true,
+    "v134_selected_snapshot_mlp_distance": 0.004497656533123513,
+    "v134_snapshot_count": 7,
+    "v134_uniform_snapshot_weight": 0.14285714285714285
+  },
+  "git_commit": "49f20b16e42db4521662975043a15442b830033b",
+  "method_id": "paper-cbf-dual-uniform-actor-swa-v134",
+  "output_checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/uniform_swa_v134_49f20b1/actor_swa_round01_07.pt",
+  "output_checkpoint_sha256": "d1f2fd282d301069dce6aeda8926c04130a989fa183e54f23b70ea029dad3700",
+  "resume_training_supported": false,
+  "schema_version": 1,
+  "source_checkpoint_sha256": [
+    "79a11beca8d5a85445d7e7a57f30fc81f45601491c1833306d97924653151cbe",
+    "01ec7ea71492555db3ed50608c6b3b9b6216cd129f1435cad8579c9562157a46",
+    "f0c18b0965668fb8eab5e3fab6e8f2edc6555c35f9cb65df4b419c4c3df34b91",
+    "b69fb8d7c88d072a1e328adf7eea0b317cdd4ff9726c60c4047535ffa1428c04",
+    "5db53e0c7d7c6cf92f1e72c9418f81a1933a451a00432de99d15f260ab9529d0",
+    "3c1c9fae4abaeda786fc4377bfeebd6b45892ac53dbb0cf985f4707c219953fc",
+    "a7fdd4d07dc79f1f001b09ff3638bcc5de000c3804f369dcf13ed61ebd18bde3"
+  ],
+  "source_checkpoints": [
+    "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/scaled_continuation_v132_194917e_128x1024x8_s201355300/round_01.pt",
+    "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/scaled_continuation_v132_194917e_128x1024x8_s201355300/round_02.pt",
+    "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/scaled_continuation_v132_194917e_128x1024x8_s201355300/round_03.pt",
+    "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/scaled_continuation_v132_194917e_128x1024x8_s201355300/round_04.pt",
+    "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/scaled_continuation_v132_194917e_128x1024x8_s201355300/round_05.pt",
+    "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/scaled_continuation_v132_194917e_128x1024x8_s201355300/round_06.pt",
+    "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/scaled_continuation_v132_194917e_128x1024x8_s201355300/round_07.pt"
+  ],
+  "source_rounds": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "uniform_snapshot_weight": 0.14285714285714285
+}

@@ -60,6 +60,7 @@
 | v131 | v129 连续 PPO 的 std 0.05→0.03；训练内 on 峰值 74.81%，deterministic off screen 44/64 | [`deterministic_aligned_v131/`](deterministic_aligned_v131/) |
 | v132 | 论文式 full-filter transitions 翻倍；screen 50/64 首次过线，独立 gate 46/64，描述性两 seed 合计 96/128 | [`scaled_continuation_v132/`](scaled_continuation_v132/) |
 | v133 | 从 v132 做第二个相同 million-transition stage；训练内 74.90%，但 deterministic screen 降至 41/64 | [`scaled_stage_two_v133/`](scaled_stage_two_v133/) |
+| v134 | uniform average v132 round 1–7 actor；non-MLP 状态精确保留，但 deterministic screen 仅 40/64 | [`uniform_swa_v134/`](uniform_swa_v134/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -390,3 +391,9 @@ scaled stages 累计达到 2,097,152 transitions。训练内峰值为 197/263=74
 保持稳定；但唯一 deterministic filter-off screen 降到 41/64=64.06%，未触发 gate。
 因此不能继续把 v132 的结果解释为“只要再训练更久就会稳定提高”；v132 是当前 objective
 下的局部部署峰值，v132 开发记录与 v79 正式最佳均保持。
+
+v134 对 v132 round 1–7 的七个 actor MLP snapshot 做固定 `1/7` uniform SWA；
+normalizer/std 等 non-MLP state 全部逐位相同并精确保留，未增加训练 transition。唯一
+deterministic screen 为 40/64=62.50%，未触发 gate。结果排除“PPO 轨迹参数中心比
+selected snapshot 更稳”的解释，不再搜索其他 averaging window/weight；v132 继续保持
+最强候选，v79 继续保持正式最佳。
