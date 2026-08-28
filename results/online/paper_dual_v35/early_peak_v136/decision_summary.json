@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "experiment": "paper_dual_v35",
+  "version": "v136",
+  "method_id": "paper-cbf-dual-earliest-exact-peak-v136",
+  "status": "rejected_screen_below_gate",
+  "source_git_commit": "4a53f1d8ae807960e909a3f8c741b02ef42e553f",
+  "selection": {
+    "source_version": "v132",
+    "source_round_metrics_sha256": "7c0aa01acfaed0cc32f22a245384b20220234ada511c8a83b9d7300e7414ec9c",
+    "exact_peak_success_count": 198,
+    "exact_peak_episode_count": 269,
+    "exact_peak_tied_rollout_rounds": [4, 8],
+    "tie_break": "earliest_rollout_minimum_update_count",
+    "selected_rollout_round": 4,
+    "selected_checkpoint_round": 3,
+    "additional_evaluation_count": 0
+  },
+  "target": {
+    "context": "F2",
+    "riser_height_m": 0.184,
+    "runtime_filter_at_deployment": false,
+    "success_threshold": 0.75,
+    "screen_threshold_count": 48,
+    "screen_episode_count": 64
+  },
+  "screen": {
+    "seed": 201355780,
+    "policy": "deterministic_mean",
+    "runtime_filter": false,
+    "success_count": 42,
+    "episode_count": 64,
+    "success_rate": 0.65625,
+    "fall_count": 22,
+    "fall_rate": 0.34375,
+    "mean_reached_riser": 8.21875,
+    "mean_return": -4.945461843162775,
+    "mean_success_completion_time_s": 9.180952380952382,
+    "initial_state_signature": "142d77ad8a716c0027744cf77f9c6be9caeacc785e79f189033d284df6cde712"
+  },
+  "gate": {
+    "screen_passed": false,
+    "independent_gate_run": false,
+    "additional_validation_run": false,
+    "reason": "42/64 is below the predeclared 48/64 threshold"
+  },
+  "decision": {
+    "accepted": false,
+    "replaces_v132": false,
+    "replaces_v79": false,
+    "formal_best_remains": "v79 aligned filter-off 139/193 = 72.02%",
+    "development_screen_best_remains": "v132 round-7 50/64 = 78.125%",
+    "interpretation": "Choosing the earliest checkpoint in the exact 198/269 training tie reduced deployment to 65.63%; v132's later selected actor cannot be improved by a minimum-update tie-break."
+  }
+}

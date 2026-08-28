@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "version": "v136",
+  "remote_artifact_root": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/early_peak_v136_4a53f1d",
+  "checkpoints": {
+    "selected_existing_v132_round03": {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/scaled_continuation_v132_194917e_128x1024x8_s201355300/round_03.pt",
+      "checkpoint_round": 3,
+      "aligned_rollout_round": 4,
+      "checkpoint_sha256": "f0c18b0965668fb8eab5e3fab6e8f2edc6555c35f9cb65df4b419c4c3df34b91",
+      "actor_sha256": "bde679ca6a2f63b02fb26d0afb0fd3c38736619b6a33246eff7ad69656166f71",
+      "deterministic_actor_sha256": "0b1ac99d014370342cef9b69fa8212c3e7af7c2e53286d7a7a85afcece2a8837"
+    }
+  },
+  "binary_upload": {
+    "uploaded_to_git": false,
+    "reason": "v136 reuses an existing v132 checkpoint and scored 42/64; the frozen selection manifest, paths, and hashes are published instead."
+  }
+}

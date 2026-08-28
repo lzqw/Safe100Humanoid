@@ -62,6 +62,7 @@
 | v133 | 从 v132 做第二个相同 million-transition stage；训练内 74.90%，但 deterministic screen 降至 41/64 | [`scaled_stage_two_v133/`](scaled_stage_two_v133/) |
 | v134 | uniform average v132 round 1–7 actor；non-MLP 状态精确保留，但 deterministic screen 仅 40/64 | [`uniform_swa_v134/`](uniform_swa_v134/) |
 | v135 | 192-env 同步 batch、8 次 sequential updates；训练内 72.05%，deterministic screen 46/64 | [`high_parallel_v135/`](high_parallel_v135/) |
+| v136 | v132 exact peak tie 选择更早 round-3 actor；deterministic screen 42/64，保守早停无效 | [`early_peak_v136/`](early_peak_v136/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -404,3 +405,8 @@ v135 从相同 v129 checkpoint 重新训练 8 轮，将 synchronous environments
 训练内峰值 281/390=72.05%，唯一 deterministic screen 为 46/64=71.875%，未触发
 gate。更大的同步 batch 降低了训练波动，却没有超过 v132；并行规模从 64→128 的正向
 证据不能单调外推到 192，当前最优同步尺度仍是 128。
+
+v136 在 v132 两个精确 `198/269` training-rate 峰值之间改用 minimum-update tie-break，
+从原 round-7 改选 round-3 checkpoint；规则只读取 SHA 固定的 training records，未用
+deployment 数据。唯一 screen 为 42/64=65.625%，未触发 gate。因此 v132 的跨 seed
+差异不能归因于旧规则选得太晚，不再继续同轨迹 checkpoint selection 搜索。
