@@ -88,6 +88,17 @@ from src.tasks.stairs_cbf.paper_clearance_margin_v138 import (
   TRAINING_ACTION_STD as V138_TRAINING_ACTION_STD,
   V132_SELECTED_CHECKPOINT_SHA256 as V138_BASE_CHECKPOINT_SHA256,
 )
+from src.tasks.stairs_cbf.paper_clearance_mixed_v139 import (
+  FILTER_ON_FRACTION as V139_FILTER_ON_FRACTION,
+  INITIAL_ACTOR_LEARNING_RATE as V139_INITIAL_ACTOR_LEARNING_RATE,
+  METHOD_ID as V139_METHOD_ID,
+  NUM_ENVS as V139_NUM_ENVS,
+  ROLLOUT_STEPS as V139_ROLLOUT_STEPS,
+  ROUNDS as V139_ROUNDS,
+  TRAINING_ACTION_STD as V139_TRAINING_ACTION_STD,
+  V138_SELECTED_CHECKPOINT_SHA256 as V139_BASE_CHECKPOINT_SHA256,
+  mixed_clearance_diagnostics,
+)
 from velocity_cbf_v34_protocol import CURRENT_CBF_MODE, OPTIMIZED_CBF_MODE
 from refine_cbf_teacher_v31 import (
   _collect_round,
@@ -419,6 +430,15 @@ def _parse_args() -> argparse.Namespace:
       "v138: continue the v132 selected actor for four paper-style PPO "
       "rounds while raising only the next-stair foot-clearance reference "
       "from 5 cm to 8 cm."
+    ),
+  )
+  parser.add_argument(
+    "--paper-clearance-mixed-training",
+    action="store_true",
+    help=(
+      "v139: keep v138's 8 cm next-riser clearance while continuing with "
+      "25% filter-on / 75% filter-off fixed mixed execution and selecting "
+      "checkpoints on the deployment-aligned filter-off subgroup."
     ),
   )
   parser.add_argument(
@@ -1262,10 +1282,11 @@ def main() -> None:
     "v135": args.paper_high_parallel_training,
     "v137": args.paper_swing_preactivation_training,
     "v138": args.paper_clearance_margin_training,
+    "v139": args.paper_clearance_mixed_training,
   }
   if sum(bool(enabled) for enabled in continuous_training_modes.values()) > 1:
     raise ValueError(
-      "v128/v129/v130/v131/v132/v133/v135/v137/v138 continuous-training modes are exclusive"
+      "v128/v129/v130/v131/v132/v133/v135/v137/v138/v139 continuous-training modes are exclusive"
     )
   paper_early_continuous_training = None
   if args.paper_early_continuous_training:
@@ -2113,6 +2134,151 @@ def main() -> None:
       ),
       "selection_additional_evaluation_count": 0,
     }
+  paper_clearance_mixed_training = None
+  if args.paper_clearance_mixed_training:
+    incompatible_options = {
+      "paper_early_continuous_training": args.paper_early_continuous_training,
+      "paper_continuous_kl_training": args.paper_continuous_kl_training,
+      "paper_shield_withdrawal_training": (
+        args.paper_shield_withdrawal_training
+      ),
+      "paper_deterministic_aligned_training": (
+        args.paper_deterministic_aligned_training
+      ),
+      "paper_scaled_continuation_training": (
+        args.paper_scaled_continuation_training
+      ),
+      "paper_scaled_stage_two_training": args.paper_scaled_stage_two_training,
+      "paper_high_parallel_training": args.paper_high_parallel_training,
+      "paper_swing_preactivation_training": (
+        args.paper_swing_preactivation_training
+      ),
+      "paper_clearance_margin_training": args.paper_clearance_margin_training,
+      "height_curriculum": args.height_curriculum,
+      "state_value_occupancy_correction": args.state_value_occupancy_correction,
+      "deterministic_mean_teacher": args.deterministic_mean_teacher,
+      "success_safe_action_imitation": args.success_safe_action_imitation,
+      "failure_only_mean_teacher": args.failure_only_mean_teacher,
+      "success_only_mean_teacher": args.success_only_mean_teacher,
+      "failure_focused_actor": args.failure_focused_actor,
+      "distill_only_actor": args.distill_only_actor,
+      "split_filter_actor_objectives": args.split_filter_actor_objectives,
+      "task_priority_gradient_surgery": args.task_priority_gradient_surgery,
+      "full_batch_sgd_actor": args.full_batch_sgd_actor,
+      "persistent_geometry_gradient_balance": (
+        args.persistent_geometry_gradient_balance
+      ),
+      "outcome_centered_episode_advantage": (
+        args.outcome_centered_episode_advantage
+      ),
+      "conservative_outcome_advantage": args.conservative_outcome_advantage,
+      "transactional_rollout_acceptance": args.transactional_rollout_acceptance,
+    }
+    enabled_incompatible = sorted(
+      name for name, enabled in incompatible_options.items() if enabled
+    )
+    mixture = mixed_clearance_diagnostics(training_filter_fraction)
+    contract_checks = {
+      "v138_selected_checkpoint": (
+        checkpoint_sha256 == V139_BASE_CHECKPOINT_SHA256
+      ),
+      "fixed_f2": args.context == "F2",
+      "unit_balanced_eq27_reward": (
+        args.candidate == "paper_stair_sloped_unit_balanced"
+      ),
+      "task_compatible_cbf_geometry": math.isclose(
+        args.clearance_barrier_slope,
+        CLEARANCE_BARRIER_SLOPE,
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
+      ),
+      "current_cbf": args.cbf_mode == CURRENT_CBF_MODE,
+      "fixed_deployment_majority_mixture": (
+        training_runtime_filter
+        and args.training_filter_schedule == "fixed"
+        and math.isclose(
+          training_filter_fraction,
+          V139_FILTER_ON_FRACTION,
+          rel_tol=0.0,
+          abs_tol=1.0e-12,
+        )
+      ),
+      "filter_group_balanced_advantages": (
+        args.filter_group_balanced_advantages
+      ),
+      "teacher_free_a0": all(arm == "A0" for arm in teacher_arms),
+      "original_actor_interface": args.actor_observation_interface == "original-405",
+      "continuous_standard_ppo": not enabled_incompatible,
+      "initial_actor_learning_rate": math.isclose(
+        args.actor_learning_rate,
+        V139_INITIAL_ACTOR_LEARNING_RATE,
+        rel_tol=0.0,
+        abs_tol=1.0e-15,
+      ),
+      "continuation_kl_loss_disabled": args.moving_kl_beta == 0.0,
+      "paper_aligned_rollout_std": math.isclose(
+        args.training_action_std,
+        V139_TRAINING_ACTION_STD,
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
+      ),
+      "no_auxiliary_credit": (
+        args.pre_intervention_weight == 0.0
+        and args.success_local_kl_beta == 0.0
+        and args.teacher_gradient_target_ratio == 0.0
+      ),
+      "standard_minibatching": (
+        args.actor_gradient_accumulation_microbatches == 1
+      ),
+      "fixed_nominal_dynamics": args.training_domain_randomization == "off",
+      "fixed_num_envs": args.num_envs == V139_NUM_ENVS,
+      "short_fixed_training_horizon": args.rounds == V139_ROUNDS,
+      "full_rollout_length": args.rollout_steps == V139_ROLLOUT_STEPS,
+      "v138_clearance_margin_retained": math.isclose(
+        float(mixture["clearance_margin_m"]),
+        V138_CLEARANCE_MARGIN_M,
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
+      ),
+    }
+    failed_checks = sorted(
+      name for name, passed in contract_checks.items() if not passed
+    )
+    if failed_checks:
+      raise ValueError(
+        "v139 mixed-clearance contract differs: "
+        f"failed={failed_checks}, incompatible={enabled_incompatible}"
+      )
+    paper_clearance_mixed_training = {
+      "method_id": V139_METHOD_ID,
+      "contract_checks": contract_checks,
+      "base_role": "v138_selected_lower_overlap_actor",
+      "training_trajectory": "continuous_without_acceptance_or_rollback",
+      "training_distribution": "25_percent_filter_on_75_percent_filter_off",
+      "deployment_distribution": "deterministic_mean_filter_off",
+      "algorithm_change": "deployment_majority_mixed_execution",
+      "clearance_margin_m": V138_CLEARANCE_MARGIN_M,
+      "num_envs": V139_NUM_ENVS,
+      "rollout_steps": V139_ROLLOUT_STEPS,
+      "rounds": V139_ROUNDS,
+      "transition_count": (
+        V139_NUM_ENVS * V139_ROLLOUT_STEPS * V139_ROUNDS
+      ),
+      **mixture,
+      "actor_optimizer": "adam",
+      "actor_epochs": 2,
+      "actor_minibatches_per_epoch": 4,
+      "actor_updates_per_round": 8,
+      "moving_kl_beta": 0.0,
+      "target_forward_kl": V129_TARGET_FORWARD_KL,
+      "initial_actor_learning_rate": V139_INITIAL_ACTOR_LEARNING_RATE,
+      "minimum_actor_learning_rate": V129_MINIMUM_ACTOR_LEARNING_RATE,
+      "maximum_actor_learning_rate": V129_MAXIMUM_ACTOR_LEARNING_RATE,
+      "aligned_checkpoint_selection": (
+        "training_filter_off_success_then_progress_then_later"
+      ),
+      "selection_additional_evaluation_count": 0,
+    }
   paper_high_parallel_training = None
   if args.paper_high_parallel_training:
     incompatible_options = {
@@ -2249,6 +2415,7 @@ def main() -> None:
     or args.paper_high_parallel_training
     or args.paper_swing_preactivation_training
     or args.paper_clearance_margin_training
+    or args.paper_clearance_mixed_training
   )
   if output_dir.exists():
     raise FileExistsError(output_dir)
@@ -2407,11 +2574,19 @@ def main() -> None:
       if args.clearance_barrier_slope == 0.0
       else "task_compatible_sloped"
     )
-  if args.paper_clearance_margin_training:
+  if (
+    args.paper_clearance_margin_training
+    or args.paper_clearance_mixed_training
+  ):
     clearance_margin = configure_paper_clearance_margin(env_cfg)
     reward["clearance_margin"] = clearance_margin
-    assert paper_clearance_margin_training is not None
-    paper_clearance_margin_training["clearance_margin"] = clearance_margin
+    clearance_training_metadata = (
+      paper_clearance_mixed_training
+      if args.paper_clearance_mixed_training
+      else paper_clearance_margin_training
+    )
+    assert clearance_training_metadata is not None
+    clearance_training_metadata["clearance_margin"] = clearance_margin
   filter_schedule = {
     "name": args.training_filter_schedule,
     "fractions_by_round": list(training_filter_fractions),
@@ -2507,7 +2682,12 @@ def main() -> None:
     "weight": args.pre_intervention_weight,
     "bounded_above_by_one": args.pre_intervention_aggregation == "max",
   }
-  if args.paper_clearance_margin_training:
+  if args.paper_clearance_mixed_training:
+    agent_cfg.algorithm.class_name = (
+      "src.tasks.stairs_cbf.paper_clearance_mixed_v139:"
+      "PaperClearanceMixedV139PPO"
+    )
+  elif args.paper_clearance_margin_training:
     agent_cfg.algorithm.class_name = (
       "src.tasks.stairs_cbf.paper_clearance_margin_v138:"
       "PaperClearanceMarginV138PPO"
@@ -2790,6 +2970,7 @@ def main() -> None:
         "paper_clearance_margin_training": (
           paper_clearance_margin_training
         ),
+        "paper_clearance_mixed_training": paper_clearance_mixed_training,
         "split_filter_actor_objectives": (
           args.split_filter_actor_objectives
         ),
@@ -2963,12 +3144,19 @@ def main() -> None:
       transactional_rollback_applied = False
       next_actor_learning_rate = actor_learning_rate_used
       if paper_continuous_training_enabled:
+        selection_group = (
+          "filter_off" if args.paper_clearance_mixed_training else "filter_on"
+        )
         aligned_selection_decision = aligned_filtered_rollout_decision(
           candidate_round=round_index,
-          success_count=int(metrics["rollout_filter_on_success_count"]),
-          episode_count=int(metrics["rollout_filter_on_episode_count"]),
+          success_count=int(
+            metrics[f"rollout_{selection_group}_success_count"]
+          ),
+          episode_count=int(
+            metrics[f"rollout_{selection_group}_episode_count"]
+          ),
           mean_reached_riser=float(
-            metrics["rollout_filter_on_mean_reached_riser"]
+            metrics[f"rollout_{selection_group}_mean_reached_riser"]
           ),
           incumbent_round=accepted_rollout_round,
           incumbent_success_count=accepted_success_count,
@@ -2980,37 +3168,43 @@ def main() -> None:
           accepted_checkpoint = candidate_checkpoint
           accepted_rollout_round = round_index
           accepted_success_count = int(
-            metrics["rollout_filter_on_success_count"]
+            metrics[f"rollout_{selection_group}_success_count"]
           )
           accepted_episode_count = int(
-            metrics["rollout_filter_on_episode_count"]
+            metrics[f"rollout_{selection_group}_episode_count"]
           )
           accepted_success_rate = float(
-            metrics["rollout_filter_on_success_rate"]
+            metrics[f"rollout_{selection_group}_success_rate"]
           )
           selected_mean_reached_riser = float(
-            metrics["rollout_filter_on_mean_reached_riser"]
+            metrics[f"rollout_{selection_group}_mean_reached_riser"]
           )
         selection_metric_prefix = (
-          "v138"
-          if args.paper_clearance_margin_training
+          "v139"
+          if args.paper_clearance_mixed_training
           else (
-            "v137"
-            if args.paper_swing_preactivation_training
+            "v138"
+            if args.paper_clearance_margin_training
             else (
-              "v135"
-              if args.paper_high_parallel_training
+              "v137"
+              if args.paper_swing_preactivation_training
               else (
-                "v133"
-                if args.paper_scaled_stage_two_training
+                "v135"
+                if args.paper_high_parallel_training
                 else (
-                  "v132"
-                  if args.paper_scaled_continuation_training
+                  "v133"
+                  if args.paper_scaled_stage_two_training
                   else (
-                    "v131"
-                    if args.paper_deterministic_aligned_training
+                    "v132"
+                    if args.paper_scaled_continuation_training
                     else (
-                      "v129" if args.paper_continuous_kl_training else "v128"
+                      "v131"
+                      if args.paper_deterministic_aligned_training
+                      else (
+                        "v129"
+                        if args.paper_continuous_kl_training
+                        else "v128"
+                      )
                     )
                   )
                 )
@@ -3021,6 +3215,9 @@ def main() -> None:
         metrics.update(
           {
             f"{selection_metric_prefix}_aligned_checkpoint_selection": True,
+            f"{selection_metric_prefix}_checkpoint_selection_group": (
+              selection_group
+            ),
             f"{selection_metric_prefix}_aligned_candidate_selected": bool(
               aligned_selection_decision["selected"]
             ),
@@ -3102,6 +3299,7 @@ def main() -> None:
         or args.paper_high_parallel_training
         or args.paper_swing_preactivation_training
         or args.paper_clearance_margin_training
+        or args.paper_clearance_mixed_training
       ):
         (
           next_actor_learning_rate,
@@ -3294,6 +3492,7 @@ def main() -> None:
           "paper_clearance_margin_training": (
             paper_clearance_margin_training
           ),
+          "paper_clearance_mixed_training": paper_clearance_mixed_training,
           "split_filter_actor_objectives": (
             args.split_filter_actor_objectives
           ),
@@ -3404,6 +3603,7 @@ def main() -> None:
         paper_swing_preactivation_training
       ),
       "paper_clearance_margin_training": paper_clearance_margin_training,
+      "paper_clearance_mixed_training": paper_clearance_mixed_training,
       "split_filter_actor_objectives": (
         args.split_filter_actor_objectives
       ),
@@ -3474,6 +3674,7 @@ def main() -> None:
             and args.transactional_rollout_acceptance
           )
           or args.paper_shield_withdrawal_training
+          or args.paper_clearance_mixed_training
         )
         else None
       ),
@@ -3484,7 +3685,10 @@ def main() -> None:
             transactional_acceptance_group == "filter_on"
             and args.transactional_rollout_acceptance
           )
-          or paper_continuous_training_enabled
+          or (
+            paper_continuous_training_enabled
+            and not args.paper_clearance_mixed_training
+          )
         )
         else None
       ),

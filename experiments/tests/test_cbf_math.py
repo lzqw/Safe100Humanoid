@@ -60,6 +60,9 @@ from src.tasks.stairs_cbf.paper_clearance_margin_v138 import (
   CLEARANCE_MARGIN_M,
   configure_paper_clearance_margin,
 )
+from src.tasks.stairs_cbf.paper_clearance_mixed_v139 import (
+  mixed_clearance_diagnostics,
+)
 
 
 def test_halfspace_projection_repairs_violation():
@@ -117,6 +120,16 @@ def test_v138_changes_only_paper_next_riser_clearance_margin():
   assert term.params == {**original, "height_above_tread": CLEARANCE_MARGIN_M}
   assert audit["clearance_margin_increase_m"] == pytest.approx(0.03)
   assert audit["cbf_changed"] is False
+
+
+def test_v139_uses_deployment_majority_mixture_and_keeps_v138_clearance():
+  diagnostics = mixed_clearance_diagnostics()
+
+  assert diagnostics["filter_on_fraction"] == 0.25
+  assert diagnostics["filter_off_fraction"] == 0.75
+  assert diagnostics["checkpoint_selection_group"] == "filter_off"
+  assert diagnostics["clearance_margin_m"] == CLEARANCE_MARGIN_M
+  assert diagnostics["clearance_margin_changed_from_v138"] is False
 
 
 def test_inactive_constraint_is_identity():
