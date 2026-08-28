@@ -35,6 +35,9 @@ from src.tasks.stairs_cbf.paper_continuous_kl_v129 import (
 from src.tasks.stairs_cbf.paper_shield_withdrawal_v130 import (
   withdrawal_deployment_rollout_decision,
 )
+from src.tasks.stairs_cbf.paper_deterministic_aligned_v131 import (
+  deterministic_alignment_diagnostics,
+)
 
 
 def test_halfspace_projection_repairs_violation():
@@ -378,6 +381,15 @@ def test_v130_selects_only_sufficient_filter_off_training_rollouts():
   assert eligible["selected"] is True
   assert eligible["selection_group"] == "filter_off"
   assert eligible["selection_changes_training_trajectory"] is False
+
+
+def test_v131_reduces_exploration_variance_while_retaining_nonzero_sampling():
+  diagnostics = deterministic_alignment_diagnostics()
+  assert diagnostics["v131_training_action_std"] == pytest.approx(0.03)
+  assert diagnostics["v131_reference_action_std"] == pytest.approx(0.05)
+  assert diagnostics["v131_standard_deviation_ratio"] == pytest.approx(0.6)
+  assert diagnostics["v131_exploration_variance_ratio"] == pytest.approx(0.36)
+  assert diagnostics["v131_equal_kl_mean_shift_ratio"] == pytest.approx(0.6)
 
 
 def test_v68_routes_nominal_worlds_to_ppo_and_filtered_worlds_to_teacher():
