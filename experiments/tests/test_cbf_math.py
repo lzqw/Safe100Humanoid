@@ -47,6 +47,9 @@ from src.tasks.stairs_cbf.paper_scaled_stage_two_v133 import (
 from src.tasks.stairs_cbf.paper_uniform_swa_v134 import (
   uniform_actor_mlp_average,
 )
+from src.tasks.stairs_cbf.paper_high_parallel_v135 import (
+  high_parallel_scale_diagnostics,
+)
 
 
 def test_halfspace_projection_repairs_violation():
@@ -442,6 +445,17 @@ def test_v134_uniformly_averages_only_actor_mlp_snapshots():
   assert diagnostics["v134_snapshot_count"] == 3
   assert diagnostics["v134_uniform_snapshot_weight"] == pytest.approx(1 / 3)
   assert diagnostics["v134_non_mlp_actor_state_exactly_preserved"] is True
+
+
+def test_v135_triples_synchronous_v129_scale_without_more_updates():
+  diagnostics = high_parallel_scale_diagnostics()
+  assert diagnostics["v135_num_envs"] == 192
+  assert diagnostics["v135_rollout_steps"] == 1024
+  assert diagnostics["v135_rounds"] == 8
+  assert diagnostics["v135_transition_count"] == 1_572_864
+  assert diagnostics["v135_parallel_scale_ratio"] == pytest.approx(3.0)
+  assert diagnostics["v135_transition_scale_ratio"] == pytest.approx(3.0)
+  assert diagnostics["v135_sequential_update_count_changed_from_v129"] is False
 
 
 def test_v68_routes_nominal_worlds_to_ppo_and_filtered_worlds_to_teacher():
