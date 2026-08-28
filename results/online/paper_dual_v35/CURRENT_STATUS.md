@@ -55,6 +55,7 @@
 | v126 | train tolerance 通过但 held-out cosine 再次为 -0.0950；rollback 后 base screen 47/64=73.44% | [`tolerant_local_es_v126/`](tolerant_local_es_v126/) |
 | v127 | cross-fit state/value occupancy BA 仅 51.2%–52.1%；两个 filtered-GAE proposal 均回退，screen 41/64 | [`state_value_occupancy_v127/`](state_value_occupancy_v127/) |
 | v128 | 原始 nominal 起点做 100% filtered 连续 PPO；训练内峰值 70.23%，但 filter-off screen 仅 36/64 | [`early_continuous_v128/`](early_continuous_v128/) |
+| v129 | v79 上连续 PPO 加 round-level KL 控制；filter-on 达 84.38%，filter-off screen 47/64，差 1 episode | [`continuous_kl_v129/`](continuous_kl_v129/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -350,3 +351,11 @@ deterministic filter-off screen 只有 36/64=56.25%，未触发独立 gate。因
 full-filter paper PPO 移到更早起点”在当前 655,360-transition 规模下也不足以产生部署
 内化；下一步若继续该方向，关键变量应是接近论文的训练规模/课程，而不是再加局部
 correction 或 checkpoint 回滚。当前正式最佳仍为 v79。
+
+v129 从 v79 恢复 100% safety-filtered、Eq. (27) unit-balanced 的连续 Adam PPO，并
+只用 observed forward KL 调整下一轮 LR，不加 KL loss、不回滚 actor。首轮 KL 0.002847
+使 LR 5e-6→2.5e-6，之后 KL 稳定在 0.000437–0.000632；第 8 轮 aligned filter-on
+达到 108/128=84.38%，比起点高 13.36 pp。所选 round-7 actor 的唯一 deterministic
+filter-off screen 为 47/64=73.44%，追平最高开发 screen，但只差一个 episode 才触发
+独立 gate，因此仍按门槛拒绝。该结果证明更新尺度稳定性可以显著抬高 shielded ceiling，
+剩余问题更集中于 filter-on→filter-off 内化。当前正式最佳仍为 v79。
