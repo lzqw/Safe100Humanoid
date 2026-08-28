@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "experiment": "paper_dual_v35",
+  "version": "v138",
+  "method_id": "paper-cbf-dual-clearance-margin-v138",
+  "status": "rejected_screen_below_gate",
+  "source_git_commit": "b1d2d9c7ab76cbce3ce85343068e234e568a1ad7",
+  "target": {
+    "context": "F2",
+    "riser_height_m": 0.184,
+    "runtime_filter_at_deployment": false,
+    "success_threshold": 0.75,
+    "screen_threshold_count": 48,
+    "screen_episode_count": 64
+  },
+  "algorithm_change": {
+    "name": "next_riser_clearance_margin_5cm_to_8cm",
+    "only_reward_parameter_changed": "foot_clearance.height_above_tread",
+    "reference_mode": "next_riser",
+    "reference_clearance_margin_m": 0.05,
+    "training_clearance_margin_m": 0.08,
+    "cbf_changed": false,
+    "actor_observation_changed": false
+  },
+  "training": {
+    "seed": 201355900,
+    "num_envs": 128,
+    "rollout_steps": 1024,
+    "rounds": 4,
+    "transition_count": 524288,
+    "elapsed_seconds": 137.99299492896535,
+    "runtime_filter_fraction": 1.0,
+    "training_action_std": 0.05,
+    "continuous_without_rollback": true,
+    "target_forward_kl": 0.0006,
+    "selected_filter_on": {
+      "rollout_round": 3,
+      "checkpoint_round": 2,
+      "success_count": 201,
+      "episode_count": 271,
+      "success_rate": 0.7416974169741697,
+      "mean_reached_riser": 8.011070110701107
+    },
+    "selection_additional_evaluation_count": 0
+  },
+  "screen": {
+    "seed": 201355980,
+    "policy": "deterministic_mean",
+    "runtime_filter": false,
+    "success_count": 46,
+    "episode_count": 64,
+    "success_rate": 0.71875,
+    "fall_count": 18,
+    "fall_rate": 0.28125,
+    "mean_reached_riser": 7.921875,
+    "unsafe_overlap_steps_per_riser": 0.8362919132149902,
+    "mean_return": -3.5194347016513348,
+    "mean_success_completion_time_s": 9.354347826086958,
+    "initial_state_signature": "0b1e9018c868d6a14003f0b5320c58efd162aa802bab97e7b0ee435d4844e76d"
+  },
+  "gate": {
+    "screen_passed": false,
+    "independent_gate_run": false,
+    "additional_validation_run": false,
+    "reason": "46/64 is below the predeclared 48/64 threshold"
+  },
+  "decision": {
+    "accepted": false,
+    "replaces_v132": false,
+    "replaces_v79": false,
+    "formal_best_remains": "v79 aligned filter-off 139/193 = 72.02%",
+    "development_screen_best_remains": "v132 50/64 = 78.125%",
+    "interpretation": "The higher paper-style clearance reference improved the aligned filtered rollout and produced lower descriptive overlap, but deterministic filter-off deployment remained two episodes below the gate trigger."
+  }
+}

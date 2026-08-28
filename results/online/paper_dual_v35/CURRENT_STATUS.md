@@ -64,6 +64,7 @@
 | v135 | 192-env 同步 batch、8 次 sequential updates；训练内 72.05%，deterministic screen 46/64 | [`high_parallel_v135/`](high_parallel_v135/) |
 | v136 | v132 exact peak tie 选择更早 round-3 actor；deterministic screen 42/64，保守早停无效 | [`early_peak_v136/`](early_peak_v136/) |
 | v137 | gait-scheduled toe-off CBF 预激活提高覆盖率，但所有 PPO update 回落；所选 base actor screen 43/64 | [`swing_preactivation_v137/`](swing_preactivation_v137/) |
+| v138 | next-riser clearance margin 5→8 cm；训练内升至 74.17%，但 deterministic screen 46/64 | [`clearance_margin_v138/`](clearance_margin_v138/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -77,6 +78,13 @@ v132 的 27.01% 提高到 34.95%，intervention fraction 从 9.78% 提高到 12.
 的 round-0。其唯一 deterministic filter-off screen 为 43/64=67.19%，未过 48/64，故未
 运行独立 gate 或额外验证。结论是扩大 CBF toe-off 覆盖本身不足以让 PPO 内化为更好的
 filter-off policy；v132 继续保持最强 development candidate，v79 继续保持正式最佳。
+
+v138 根据论文 Eq. (27) 后的 stair-dependent foot-clearance reference，把唯一 nominal reward
+参数 `height_above_tread` 从 5 cm 提到 8 cm，并从 v132 selected actor 做 4 轮短 continuation。
+aligned filter-on 从本次 base 的 68.48% 连续提高到 round-2 actor 的 74.17%；唯一
+deterministic filter-off screen 为 46/64=71.88%，仍差 2 个 episode。该 seed 的 unsafe
+overlap 为 0.836/riser，描述性低于 v132 的两个部署 seed，但非 paired，不能宣称严格改善。
+screen 未过，因此没有独立 gate 或额外验证；v132 与 v79 的既有地位不变。
 
 v82/v83 已证明 microbatch 路径稳定：每轮多个等权 backward chunks、一次全局梯度裁剪、
 一次 SGD step，256-environment 训练没有再发生 OOM。v83 在新 seed 上先升后退，rollback
