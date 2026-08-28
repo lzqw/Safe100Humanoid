@@ -58,6 +58,7 @@
 | v129 | v79 上连续 PPO 加 round-level KL 控制；filter-on 达 84.38%，filter-off screen 47/64，差 1 episode | [`continuous_kl_v129/`](continuous_kl_v129/) |
 | v130 | 从 v129 线性撤除 filter；训练内 off 峰值 72.58%，但 deterministic screen 降至 32/64 | [`shield_withdrawal_v130/`](shield_withdrawal_v130/) |
 | v131 | v129 连续 PPO 的 std 0.05→0.03；训练内 on 峰值 74.81%，deterministic off screen 44/64 | [`deterministic_aligned_v131/`](deterministic_aligned_v131/) |
+| v132 | 论文式 full-filter transitions 翻倍；screen 50/64 首次过线，独立 gate 46/64，描述性两 seed 合计 96/128 | [`scaled_continuation_v132/`](scaled_continuation_v132/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -374,3 +375,11 @@ v131 保留 v129 的 100% filtered 连续 PPO 与 KL LR 控制，只将 frozen G
 的唯一 deterministic filter-off screen 为 44/64=68.75%，低于 48/64 screen 门槛，
 因此未运行独立 gate。降低 sampling noise 不能单独解决 shield 内化差距；v129 的
 47/64 开发峰值与 v79 正式最佳继续保持。
+
+v132 回到 std=0.05 的论文式 full-filter 连续 PPO，并以 128 environments × 8 rounds
+将 v129 的 transition count 翻倍到 1,048,576。训练内 selected rollout 为
+198/269=73.61%；唯一 screen 达 50/64=78.125%，首次触发独立 gate。全新 seed 的
+唯一 gate 为 46/64=71.875%，未达到正式 48/64 门槛，故不追加第三个 seed，也不替换
+v79。两个 evaluation seeds 描述性合计 96/128=75.00%，但 gate 是条件触发，不能作为
+正式通过证据。规模放大是迄今第一个让 deterministic screen 过 75% 的论文式方向，
+后续重点应是扩大同一 objective 的稳定训练证据，而不是再加局部辅助 loss。
