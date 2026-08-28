@@ -29,6 +29,9 @@ from src.tasks.stairs_cbf.paper_occupancy_corrected_v127 import (
 from src.tasks.stairs_cbf.paper_early_start_v128 import (
   aligned_filtered_rollout_decision,
 )
+from src.tasks.stairs_cbf.paper_continuous_kl_v129 import (
+  continuous_ppo_kl_learning_rate,
+)
 
 
 def test_halfspace_projection_repairs_violation():
@@ -328,6 +331,18 @@ def test_v128_selects_only_the_best_aligned_filtered_training_rollout():
   )
   assert better_rate["selected"] is True
   assert better_rate["reason"] == "higher_success_rate"
+
+
+def test_v129_controls_next_round_lr_without_rollback_or_actor_mutation():
+  reduced, high_metrics = continuous_ppo_kl_learning_rate(5.0e-6, 2.4e-3)
+  assert reduced == pytest.approx(2.5e-6)
+  assert high_metrics["v129_kl_controller_bounded_scale"] == pytest.approx(0.5)
+
+  restored, low_metrics = continuous_ppo_kl_learning_rate(reduced, 1.5e-4)
+  assert restored == pytest.approx(3.125e-6)
+  assert low_metrics["v129_kl_controller_bounded_scale"] == pytest.approx(1.25)
+  assert low_metrics["v129_kl_controller_changes_actor_state"] is False
+  assert low_metrics["v129_kl_controller_uses_rollback"] is False
 
 
 def test_v68_routes_nominal_worlds_to_ppo_and_filtered_worlds_to_teacher():
