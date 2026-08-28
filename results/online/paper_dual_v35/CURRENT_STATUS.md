@@ -61,6 +61,7 @@
 | v132 | 论文式 full-filter transitions 翻倍；screen 50/64 首次过线，独立 gate 46/64，描述性两 seed 合计 96/128 | [`scaled_continuation_v132/`](scaled_continuation_v132/) |
 | v133 | 从 v132 做第二个相同 million-transition stage；训练内 74.90%，但 deterministic screen 降至 41/64 | [`scaled_stage_two_v133/`](scaled_stage_two_v133/) |
 | v134 | uniform average v132 round 1–7 actor；non-MLP 状态精确保留，但 deterministic screen 仅 40/64 | [`uniform_swa_v134/`](uniform_swa_v134/) |
+| v135 | 192-env 同步 batch、8 次 sequential updates；训练内 72.05%，deterministic screen 46/64 | [`high_parallel_v135/`](high_parallel_v135/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -397,3 +398,9 @@ normalizer/std 等 non-MLP state 全部逐位相同并精确保留，未增加�
 deterministic screen 为 40/64=62.50%，未触发 gate。结果排除“PPO 轨迹参数中心比
 selected snapshot 更稳”的解释，不再搜索其他 averaging window/weight；v132 继续保持
 最强候选，v79 继续保持正式最佳。
+
+v135 从相同 v129 checkpoint 重新训练 8 轮，将 synchronous environments 从 v132 的
+128 提到 192，总 transition count 为 1,572,864，但不增加 sequential update 次数。
+训练内峰值 281/390=72.05%，唯一 deterministic screen 为 46/64=71.875%，未触发
+gate。更大的同步 batch 降低了训练波动，却没有超过 v132；并行规模从 64→128 的正向
+证据不能单调外推到 192，当前最优同步尺度仍是 128。
