@@ -38,6 +38,9 @@ from src.tasks.stairs_cbf.paper_shield_withdrawal_v130 import (
 from src.tasks.stairs_cbf.paper_deterministic_aligned_v131 import (
   deterministic_alignment_diagnostics,
 )
+from src.tasks.stairs_cbf.paper_scaled_continuation_v132 import (
+  paper_scale_diagnostics,
+)
 
 
 def test_halfspace_projection_repairs_violation():
@@ -390,6 +393,16 @@ def test_v131_reduces_exploration_variance_while_retaining_nonzero_sampling():
   assert diagnostics["v131_standard_deviation_ratio"] == pytest.approx(0.6)
   assert diagnostics["v131_exploration_variance_ratio"] == pytest.approx(0.36)
   assert diagnostics["v131_equal_kl_mean_shift_ratio"] == pytest.approx(0.6)
+
+
+def test_v132_doubles_v129_transition_scale_without_changing_rollout_length():
+  diagnostics = paper_scale_diagnostics()
+  assert diagnostics["v132_num_envs"] == 128
+  assert diagnostics["v132_rollout_steps"] == 1024
+  assert diagnostics["v132_rounds"] == 8
+  assert diagnostics["v132_transition_count"] == 1_048_576
+  assert diagnostics["v132_parallel_scale_ratio"] == pytest.approx(2.0)
+  assert diagnostics["v132_transition_scale_ratio"] == pytest.approx(2.0)
 
 
 def test_v68_routes_nominal_worlds_to_ppo_and_filtered_worlds_to_teacher():

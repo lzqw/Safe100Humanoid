@@ -54,6 +54,14 @@ from src.tasks.stairs_cbf.paper_deterministic_aligned_v131 import (
   TRAINING_ACTION_STD as V131_TRAINING_ACTION_STD,
   deterministic_alignment_diagnostics,
 )
+from src.tasks.stairs_cbf.paper_scaled_continuation_v132 import (
+  INITIAL_ACTOR_LEARNING_RATE as V132_INITIAL_ACTOR_LEARNING_RATE,
+  NUM_ENVS as V132_NUM_ENVS,
+  ROLLOUT_STEPS as V132_ROLLOUT_STEPS,
+  ROUNDS as V132_ROUNDS,
+  TRAINING_ACTION_STD as V132_TRAINING_ACTION_STD,
+  paper_scale_diagnostics,
+)
 from velocity_cbf_v34_protocol import CURRENT_CBF_MODE, OPTIMIZED_CBF_MODE
 from refine_cbf_teacher_v31 import (
   _collect_round,
@@ -342,6 +350,15 @@ def _parse_args() -> argparse.Namespace:
       "KL-controlled continuous PPO path while reducing the frozen Gaussian "
       "training std from 0.05 to 0.03 for closer deterministic deployment "
       "alignment."
+    ),
+  )
+  parser.add_argument(
+    "--paper-scaled-continuation-training",
+    action="store_true",
+    help=(
+      "v132: continue the v129 selected actor with unchanged fully filtered "
+      "KL-controlled paper PPO at 128 environments for eight rounds, "
+      "doubling v129's transition count without auxiliary objectives."
     ),
   )
   parser.add_argument(
@@ -1180,9 +1197,12 @@ def main() -> None:
     "v129": args.paper_continuous_kl_training,
     "v130": args.paper_shield_withdrawal_training,
     "v131": args.paper_deterministic_aligned_training,
+    "v132": args.paper_scaled_continuation_training,
   }
   if sum(bool(enabled) for enabled in continuous_training_modes.values()) > 1:
-    raise ValueError("v128/v129/v130/v131 continuous-training modes are exclusive")
+    raise ValueError(
+      "v128/v129/v130/v131/v132 continuous-training modes are exclusive"
+    )
   paper_early_continuous_training = None
   if args.paper_early_continuous_training:
     incompatible_options = {
@@ -1212,6 +1232,9 @@ def main() -> None:
       ),
       "paper_deterministic_aligned_training": (
         args.paper_deterministic_aligned_training
+      ),
+      "paper_scaled_continuation_training": (
+        args.paper_scaled_continuation_training
       ),
     }
     enabled_incompatible = sorted(
@@ -1310,6 +1333,9 @@ def main() -> None:
       "paper_deterministic_aligned_training": (
         args.paper_deterministic_aligned_training
       ),
+      "paper_scaled_continuation_training": (
+        args.paper_scaled_continuation_training
+      ),
     }
     enabled_incompatible = sorted(
       name for name, enabled in incompatible_options.items() if enabled
@@ -1388,6 +1414,9 @@ def main() -> None:
       "paper_continuous_kl_training": args.paper_continuous_kl_training,
       "paper_deterministic_aligned_training": (
         args.paper_deterministic_aligned_training
+      ),
+      "paper_scaled_continuation_training": (
+        args.paper_scaled_continuation_training
       ),
       "height_curriculum": args.height_curriculum,
       "filter_group_balanced_advantages": args.filter_group_balanced_advantages,
@@ -1491,6 +1520,9 @@ def main() -> None:
       "paper_continuous_kl_training": args.paper_continuous_kl_training,
       "paper_shield_withdrawal_training": (
         args.paper_shield_withdrawal_training
+      ),
+      "paper_scaled_continuation_training": (
+        args.paper_scaled_continuation_training
       ),
       "height_curriculum": args.height_curriculum,
       "filter_group_balanced_advantages": args.filter_group_balanced_advantages,
@@ -1604,10 +1636,136 @@ def main() -> None:
       ),
       "selection_additional_evaluation_count": 0,
     }
+  paper_scaled_continuation_training = None
+  if args.paper_scaled_continuation_training:
+    incompatible_options = {
+      "paper_early_continuous_training": args.paper_early_continuous_training,
+      "paper_continuous_kl_training": args.paper_continuous_kl_training,
+      "paper_shield_withdrawal_training": (
+        args.paper_shield_withdrawal_training
+      ),
+      "paper_deterministic_aligned_training": (
+        args.paper_deterministic_aligned_training
+      ),
+      "height_curriculum": args.height_curriculum,
+      "filter_group_balanced_advantages": args.filter_group_balanced_advantages,
+      "state_value_occupancy_correction": args.state_value_occupancy_correction,
+      "deterministic_mean_teacher": args.deterministic_mean_teacher,
+      "success_safe_action_imitation": args.success_safe_action_imitation,
+      "failure_only_mean_teacher": args.failure_only_mean_teacher,
+      "success_only_mean_teacher": args.success_only_mean_teacher,
+      "failure_focused_actor": args.failure_focused_actor,
+      "distill_only_actor": args.distill_only_actor,
+      "split_filter_actor_objectives": args.split_filter_actor_objectives,
+      "task_priority_gradient_surgery": args.task_priority_gradient_surgery,
+      "full_batch_sgd_actor": args.full_batch_sgd_actor,
+      "persistent_geometry_gradient_balance": (
+        args.persistent_geometry_gradient_balance
+      ),
+      "outcome_centered_episode_advantage": (
+        args.outcome_centered_episode_advantage
+      ),
+      "conservative_outcome_advantage": args.conservative_outcome_advantage,
+      "transactional_rollout_acceptance": args.transactional_rollout_acceptance,
+    }
+    enabled_incompatible = sorted(
+      name for name, enabled in incompatible_options.items() if enabled
+    )
+    scale_diagnostics = paper_scale_diagnostics(
+      num_envs=args.num_envs,
+      rollout_steps=args.rollout_steps,
+      rounds=args.rounds,
+    )
+    contract_checks = {
+      "v129_selected_checkpoint": (
+        checkpoint_sha256 == V129_SELECTED_CHECKPOINT_SHA256
+      ),
+      "fixed_f2": args.context == "F2",
+      "unit_balanced_eq27_reward": (
+        args.candidate == "paper_stair_sloped_unit_balanced"
+      ),
+      "task_compatible_cbf_geometry": math.isclose(
+        args.clearance_barrier_slope,
+        CLEARANCE_BARRIER_SLOPE,
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
+      ),
+      "current_cbf": args.cbf_mode == CURRENT_CBF_MODE,
+      "fully_filtered_fixed_rollout": (
+        training_runtime_filter
+        and args.training_filter_schedule == "fixed"
+        and training_filter_fraction == 1.0
+      ),
+      "teacher_free_a0": all(arm == "A0" for arm in teacher_arms),
+      "original_actor_interface": args.actor_observation_interface == "original-405",
+      "continuous_standard_ppo": not enabled_incompatible,
+      "initial_actor_learning_rate": math.isclose(
+        args.actor_learning_rate,
+        V132_INITIAL_ACTOR_LEARNING_RATE,
+        rel_tol=0.0,
+        abs_tol=1.0e-15,
+      ),
+      "continuation_kl_loss_disabled": args.moving_kl_beta == 0.0,
+      "paper_aligned_rollout_std": math.isclose(
+        args.training_action_std,
+        V132_TRAINING_ACTION_STD,
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
+      ),
+      "no_auxiliary_credit": (
+        args.pre_intervention_weight == 0.0
+        and args.success_local_kl_beta == 0.0
+        and args.teacher_gradient_target_ratio == 0.0
+      ),
+      "standard_minibatching": (
+        args.actor_gradient_accumulation_microbatches == 1
+      ),
+      "fixed_nominal_dynamics": args.training_domain_randomization == "off",
+      "scaled_num_envs": args.num_envs == V132_NUM_ENVS,
+      "fixed_training_horizon": args.rounds == V132_ROUNDS,
+      "full_rollout_length": args.rollout_steps == V132_ROLLOUT_STEPS,
+      "double_v129_transition_count": math.isclose(
+        float(scale_diagnostics["v132_transition_scale_ratio"]),
+        2.0,
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
+      ),
+    }
+    failed_checks = sorted(
+      name for name, passed in contract_checks.items() if not passed
+    )
+    if failed_checks:
+      raise ValueError(
+        "v132 scaled continuation contract differs: "
+        f"failed={failed_checks}, incompatible={enabled_incompatible}"
+      )
+    paper_scaled_continuation_training = {
+      "method_id": "paper-cbf-dual-scaled-continuation-v132",
+      "contract_checks": contract_checks,
+      "base_role": "v129_selected_filter_on_peak_and_filter_off_47_of_64",
+      "training_trajectory": "continuous_without_acceptance_or_rollback",
+      "training_distribution": "paper_aligned_frozen_gaussian_std_0.05",
+      "deployment_distribution": "deterministic_mean_filter_off",
+      **scale_diagnostics,
+      "actor_optimizer": "adam",
+      "actor_epochs": 2,
+      "actor_minibatches_per_epoch": 4,
+      "actor_updates_per_round": 8,
+      "moving_kl_beta": 0.0,
+      "target_forward_kl": V129_TARGET_FORWARD_KL,
+      "initial_actor_learning_rate": V132_INITIAL_ACTOR_LEARNING_RATE,
+      "minimum_actor_learning_rate": V129_MINIMUM_ACTOR_LEARNING_RATE,
+      "maximum_actor_learning_rate": V129_MAXIMUM_ACTOR_LEARNING_RATE,
+      "aligned_checkpoint_selection": (
+        "training_rollout_success_then_progress_then_later"
+      ),
+      "selection_additional_evaluation_count": 0,
+    }
   paper_continuous_training_enabled = bool(
     args.paper_early_continuous_training
     or args.paper_continuous_kl_training
     or args.paper_deterministic_aligned_training
+    or args.paper_scaled_continuation_training
   )
   if output_dir.exists():
     raise FileExistsError(output_dir)
@@ -1849,6 +2007,11 @@ def main() -> None:
     agent_cfg.algorithm.class_name = (
       "src.tasks.stairs_cbf.paper_shield_withdrawal_v130:"
       "PaperShieldWithdrawalV130PPO"
+    )
+  elif args.paper_scaled_continuation_training:
+    agent_cfg.algorithm.class_name = (
+      "src.tasks.stairs_cbf.paper_scaled_continuation_v132:"
+      "PaperScaledContinuationV132PPO"
     )
   elif args.paper_deterministic_aligned_training:
     agent_cfg.algorithm.class_name = (
@@ -2092,6 +2255,9 @@ def main() -> None:
         "paper_deterministic_aligned_training": (
           paper_deterministic_aligned_training
         ),
+        "paper_scaled_continuation_training": (
+          paper_scaled_continuation_training
+        ),
         "split_filter_actor_objectives": (
           args.split_filter_actor_objectives
         ),
@@ -2294,9 +2460,13 @@ def main() -> None:
             metrics["rollout_filter_on_mean_reached_riser"]
           )
         selection_metric_prefix = (
-          "v131"
-          if args.paper_deterministic_aligned_training
-          else ("v129" if args.paper_continuous_kl_training else "v128")
+          "v132"
+          if args.paper_scaled_continuation_training
+          else (
+            "v131"
+            if args.paper_deterministic_aligned_training
+            else ("v129" if args.paper_continuous_kl_training else "v128")
+          )
         )
         metrics.update(
           {
@@ -2377,6 +2547,7 @@ def main() -> None:
         args.paper_continuous_kl_training
         or args.paper_shield_withdrawal_training
         or args.paper_deterministic_aligned_training
+        or args.paper_scaled_continuation_training
       ):
         (
           next_actor_learning_rate,
@@ -2558,6 +2729,9 @@ def main() -> None:
           "paper_deterministic_aligned_training": (
             paper_deterministic_aligned_training
           ),
+          "paper_scaled_continuation_training": (
+            paper_scaled_continuation_training
+          ),
           "split_filter_actor_objectives": (
             args.split_filter_actor_objectives
           ),
@@ -2658,6 +2832,9 @@ def main() -> None:
       "paper_shield_withdrawal_training": paper_shield_withdrawal_training,
       "paper_deterministic_aligned_training": (
         paper_deterministic_aligned_training
+      ),
+      "paper_scaled_continuation_training": (
+        paper_scaled_continuation_training
       ),
       "split_filter_actor_objectives": (
         args.split_filter_actor_objectives
