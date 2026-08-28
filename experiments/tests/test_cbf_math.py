@@ -41,6 +41,9 @@ from src.tasks.stairs_cbf.paper_deterministic_aligned_v131 import (
 from src.tasks.stairs_cbf.paper_scaled_continuation_v132 import (
   paper_scale_diagnostics,
 )
+from src.tasks.stairs_cbf.paper_scaled_stage_two_v133 import (
+  stage_two_scale_diagnostics,
+)
 
 
 def test_halfspace_projection_repairs_violation():
@@ -403,6 +406,15 @@ def test_v132_doubles_v129_transition_scale_without_changing_rollout_length():
   assert diagnostics["v132_transition_count"] == 1_048_576
   assert diagnostics["v132_parallel_scale_ratio"] == pytest.approx(2.0)
   assert diagnostics["v132_transition_scale_ratio"] == pytest.approx(2.0)
+
+
+def test_v133_extends_the_same_scaled_objective_to_a_second_stage():
+  diagnostics = stage_two_scale_diagnostics()
+  assert diagnostics["v133_stage_index"] == 2
+  assert diagnostics["v133_stage_transition_count"] == 1_048_576
+  assert diagnostics["v133_scaled_stage_cumulative_transition_count"] == 2_097_152
+  assert diagnostics["v133_objective_changed_from_v132"] is False
+  assert diagnostics["v133_optimizer_protocol_changed_from_v132"] is False
 
 
 def test_v68_routes_nominal_worlds_to_ppo_and_filtered_worlds_to_teacher():
