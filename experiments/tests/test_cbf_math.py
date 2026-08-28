@@ -44,6 +44,9 @@ from src.tasks.stairs_cbf.paper_scaled_continuation_v132 import (
 from src.tasks.stairs_cbf.paper_scaled_stage_two_v133 import (
   stage_two_scale_diagnostics,
 )
+from src.tasks.stairs_cbf.paper_uniform_swa_v134 import (
+  uniform_actor_mlp_average,
+)
 
 
 def test_halfspace_projection_repairs_violation():
@@ -415,6 +418,30 @@ def test_v133_extends_the_same_scaled_objective_to_a_second_stage():
   assert diagnostics["v133_scaled_stage_cumulative_transition_count"] == 2_097_152
   assert diagnostics["v133_objective_changed_from_v132"] is False
   assert diagnostics["v133_optimizer_protocol_changed_from_v132"] is False
+
+
+def test_v134_uniformly_averages_only_actor_mlp_snapshots():
+  states = [
+    {
+      "obs_normalizer.count": torch.tensor(7),
+      "distribution.std_param": torch.tensor([0.05]),
+      "mlp.0.weight": torch.tensor([[value, 2.0 * value]]),
+      "mlp.0.bias": torch.tensor([value]),
+    }
+    for value in (1.0, 2.0, 3.0)
+  ]
+  averaged, diagnostics = uniform_actor_mlp_average(states)
+  torch.testing.assert_close(
+    averaged["mlp.0.weight"], torch.tensor([[2.0, 4.0]])
+  )
+  torch.testing.assert_close(averaged["mlp.0.bias"], torch.tensor([2.0]))
+  assert torch.equal(averaged["obs_normalizer.count"], torch.tensor(7))
+  assert torch.equal(
+    averaged["distribution.std_param"], torch.tensor([0.05])
+  )
+  assert diagnostics["v134_snapshot_count"] == 3
+  assert diagnostics["v134_uniform_snapshot_weight"] == pytest.approx(1 / 3)
+  assert diagnostics["v134_non_mlp_actor_state_exactly_preserved"] is True
 
 
 def test_v68_routes_nominal_worlds_to_ppo_and_filtered_worlds_to_teacher():
