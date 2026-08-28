@@ -56,6 +56,7 @@
 | v127 | cross-fit state/value occupancy BA 仅 51.2%–52.1%；两个 filtered-GAE proposal 均回退，screen 41/64 | [`state_value_occupancy_v127/`](state_value_occupancy_v127/) |
 | v128 | 原始 nominal 起点做 100% filtered 连续 PPO；训练内峰值 70.23%，但 filter-off screen 仅 36/64 | [`early_continuous_v128/`](early_continuous_v128/) |
 | v129 | v79 上连续 PPO 加 round-level KL 控制；filter-on 达 84.38%，filter-off screen 47/64，差 1 episode | [`continuous_kl_v129/`](continuous_kl_v129/) |
+| v130 | 从 v129 线性撤除 filter；训练内 off 峰值 72.58%，但 deterministic screen 降至 32/64 | [`shield_withdrawal_v130/`](shield_withdrawal_v130/) |
 
 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
@@ -359,3 +360,9 @@ v129 从 v79 恢复 100% safety-filtered、Eq. (27) unit-balanced 的连续 Adam
 filter-off screen 为 47/64=73.44%，追平最高开发 screen，但只差一个 episode 才触发
 独立 gate，因此仍按门槛拒绝。该结果证明更新尺度稳定性可以显著抬高 shielded ceiling，
 剩余问题更集中于 filter-on→filter-off 内化。当前正式最佳仍为 v79。
+
+v130 针对上述内化差距，从 v129 selected actor 用 5 轮将执行 filter fraction 按
+1/.75/.5/.25/0 撤除，同时保留 counterfactual dual reward 和 KL LR 控制。训练内
+filter-off 峰值为 90/124=72.58%，最终纯 off rollout 为 183/266=68.80%；但所选
+round-2 actor 的唯一 deterministic screen 仅 32/64=50.00%。因此未运行独立 gate，
+且不再继续相同的 filter-fraction 退火。v129 的 47/64 开发峰值与 v79 正式最佳保持。
