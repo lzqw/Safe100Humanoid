@@ -1,7 +1,8 @@
 # Paper-dual 当前结果索引（2026-08-28）
 
-当前目标是 F2 18.4 cm、部署时 filter-off 成功率至少 75%。截至本次记录，目标尚未达到，
-当前最好的训练内对齐结果仍是 v79 的 **139/193（72.02%）**。
+当前目标是 F2 18.4 cm、部署时 filter-off 成功率至少 75%。v139 的唯一 deterministic
+screen 为 **50/64（78.125%）**，随后唯一独立 gate 为 **49/64（76.5625%）**，
+已按预声明协议正式达到目标。当前正式最佳为 v139。
 
 | 版本 | 关键结论 | GitHub 目录 |
 |---|---|---|
@@ -65,11 +66,18 @@
 | v136 | v132 exact peak tie 选择更早 round-3 actor；deterministic screen 42/64，保守早停无效 | [`early_peak_v136/`](early_peak_v136/) |
 | v137 | gait-scheduled toe-off CBF 预激活提高覆盖率，但所有 PPO update 回落；所选 base actor screen 43/64 | [`swing_preactivation_v137/`](swing_preactivation_v137/) |
 | v138 | next-riser clearance margin 5→8 cm；训练内升至 74.17%，但 deterministic screen 46/64 | [`clearance_margin_v138/`](clearance_margin_v138/) |
+| v139 | 保留 8 cm clearance，以 25% on / 75% off 混合训练；screen 50/64、独立 gate 49/64，正式通过 | [`clearance_mixed_v139/`](clearance_mixed_v139/) |
 
-v79 最佳 checkpoint 保留在 4080：
+v139 正式 checkpoint 已同时提交到 GitHub：
+[`clearance_mixed_v139/checkpoints/selected_round_01.pt`](clearance_mixed_v139/checkpoints/selected_round_01.pt)，
+SHA-256 为 `323f1e00b58d379b8746c0191a44272f2e1df134139050417c56e733cc484728`。
+4080 原始副本位于
+`/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/clearance_mixed_v139_fdc2a63_128x1024x4_s201356000/round_01.pt`。
+
+此前 v79 最佳 checkpoint 保留在 4080：
 `/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt`，
 SHA-256 为 `9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317`。
-因为它没有通过 75% gate，模型二进制未提交到 Git；配置、逐轮结果、哈希和选择依据均已提交。
+它没有通过 75% gate，现已被 v139 的正式独立 gate 结果替换。
 
 v137 修复了 safety filter 的 toe-off 时序缺口：双脚仍接触但 gait clock 已进入 swing phase
 时预激活对应脚的 CBF，实际离地脚始终优先。该改动将训练期 CBF active fraction 平均从
@@ -85,6 +93,14 @@ aligned filter-on 从本次 base 的 68.48% 连续提高到 round-2 actor 的 74
 deterministic filter-off screen 为 46/64=71.88%，仍差 2 个 episode。该 seed 的 unsafe
 overlap 为 0.836/riser，描述性低于 v132 的两个部署 seed，但非 paired，不能宣称严格改善。
 screen 未过，因此没有独立 gate 或额外验证；v132 与 v79 的既有地位不变。
+
+v139 保留 v138 的 8 cm clearance、标准低学习率论文式 PPO 和 KL controller，只把执行分布
+固定为 25% filter-on / 75% filter-off，并分别归一化两个组的 advantage；checkpoint 选择也
+改为部署一致的 filter-off 子组。524,288 transitions 用时 120.62 秒，所选 round-1 actor
+的唯一 screen 为 50/64=78.125%，触发且只触发一个独立 gate；新 seed gate 为
+49/64=76.5625%，正式超过 48/64 门槛。两个 seed 描述性合计为 99/128=77.34375%，但正式
+接受依据是 gate 本身通过。未运行第三个 seed、其他 checkpoint 或额外验证；v139 成为首个
+达到既定 F2 18.4 cm deterministic filter-off 目标的版本，并替换 v79 为正式最佳。
 
 v82/v83 已证明 microbatch 路径稳定：每轮多个等权 backward chunks、一次全局梯度裁剪、
 一次 SGD step，256-environment 训练没有再发生 OOM。v83 在新 seed 上先升后退，rollback
