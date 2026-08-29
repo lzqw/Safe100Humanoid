@@ -909,6 +909,10 @@ def main() -> None:
     "mean_cbf_off_would_intervene_fraction",
     "mean_cbf_off_counterfactual_correction_norm",
     "mean_shield_gap",
+    "training_falls_mean",
+    "training_shield_recoveries_mean",
+    "training_nominal_violation_fraction_mean",
+    "training_executed_violation_fraction_mean",
   )
   factorial_contrasts: list[dict[str, Any]] = []
   for metric in factorial_metrics:

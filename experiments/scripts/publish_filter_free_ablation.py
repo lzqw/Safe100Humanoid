@@ -512,9 +512,9 @@ def main() -> None:
     "paired_statistics_four_adaptation_methods": (
       set(final_results.get("paired_report_statistics", {})) == set(ARMS)
     ),
-    "factorial_contrasts_five_primary_metrics": (
+    "factorial_contrasts_nine_task_and_safety_metrics": (
       final_results.get("factorial_contrasts_are_report_only") is True
-      and len(final_results.get("factorial_contrasts", [])) == 5
+      and len(final_results.get("factorial_contrasts", [])) == 9
       and {
         row.get("metric")
         for row in final_results.get("factorial_contrasts", [])
@@ -525,6 +525,10 @@ def main() -> None:
         "mean_cbf_off_would_intervene_fraction",
         "mean_cbf_off_counterfactual_correction_norm",
         "mean_shield_gap",
+        "training_falls_mean",
+        "training_shield_recoveries_mean",
+        "training_nominal_violation_fraction_mean",
+        "training_executed_violation_fraction_mean",
       }
     ),
     "hardware_proxy_three_method_aggregate": (
