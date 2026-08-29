@@ -326,13 +326,13 @@ def main() -> None:
             for _ in range(maximum_steps):
                 actions = policy(obs)
                 if hardware_action_transport is not None:
-                    actions = hardware_action_transport.apply(
-                        torch.clamp(
+                    if agent_cfg.clip_actions is not None:
+                        actions = torch.clamp(
                             actions,
                             -float(agent_cfg.clip_actions),
                             float(agent_cfg.clip_actions),
                         )
-                    )
+                    actions = hardware_action_transport.apply(actions)
                 obs, rewards, dones, extras = env.step(actions)
                 extras = dict(extras)
                 active_float = active.float()
