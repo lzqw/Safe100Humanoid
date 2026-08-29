@@ -543,6 +543,10 @@ def main() -> None:
     "outcomes_not_used_as_completion_requirements": {
       "main_claim_supported": final_results["main_claim_supported"],
       "main_claim_checks": final_results["main_claim_checks"],
+      "global_fall_and_violation_free_training_supported": final_results[
+        "global_fall_and_violation_free_training_supported"
+      ],
+      "training_safety_checks": final_results["training_safety_checks"],
       "all_pytorch_bridge_p95_within_20ms": all(
         bool(row["pytorch_bridge_deadline_passed"])
         for row in deployment_index
@@ -632,6 +636,12 @@ def main() -> None:
       "physical robot. Any physical follow-up is restricted to CBF-on "
       "adaptation and shadow-only filter-free measurements."
     ]
+  training_safety_interpretation = [
+    "Global fall- and executed-violation-free simulation training supported: "
+    f"**{final_results['global_fall_and_violation_free_training_supported']}**. "
+    "A false result means the filtered methods improved the local barrier "
+    "constraint but did not prove globally fall-free online adaptation."
+  ]
   readme = [
     "# Filter-free deployment ablation (v140)",
     "",
@@ -645,6 +655,8 @@ def main() -> None:
     f"Main claim supported: **{final_results['main_claim_supported']}**.",
     "",
     *claim_interpretation,
+    "",
+    *training_safety_interpretation,
     "",
     "## Hardware proxy", 
     "",

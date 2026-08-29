@@ -880,6 +880,28 @@ def main() -> None:
       abs_tol=1.0e-12,
     ),
   }
+  filtered_training_arms = ("filter_only_ft", "dual_safe_ft")
+  training_safety_checks = {
+    "filtered_training_fall_free": all(
+      int(seed_row["falls"]) == 0
+      for arm in filtered_training_arms
+      for seed_row in training_by_arm[arm]["per_seed"]
+    ),
+    "filtered_training_executed_violation_free": all(
+      float(seed_row["executed_violation_fraction"]) == 0.0
+      for arm in filtered_training_arms
+      for seed_row in training_by_arm[arm]["per_seed"]
+    ),
+    "filtered_training_reduces_executed_violations_vs_nominal": all(
+      float(training_by_arm[arm]["training_executed_violation_fraction_mean"])
+      < float(
+        training_by_arm["nominal_ft"][
+          "training_executed_violation_fraction_mean"
+        ]
+      )
+      for arm in filtered_training_arms
+    ),
+  }
   result = {
     "schema_version": 1,
     "experiment": "paper_filter_free_deployment_ablation",
@@ -891,6 +913,13 @@ def main() -> None:
     "main_claim_checks": claim_checks,
     "main_claim_comparison_arms": ["frozen", *ARMS],
     "main_claim_supported": all(claim_checks.values()),
+    "training_safety_checks": training_safety_checks,
+    "global_fall_and_violation_free_training_supported": (
+      training_safety_checks["filtered_training_fall_free"]
+      and training_safety_checks[
+        "filtered_training_executed_violation_free"
+      ]
+    ),
     "curve_row_count": len(curve_rows),
     "training_safety_run_count": len(training_rows),
     "training_safety_curve_row_count": len(training_curve_rows),
@@ -942,6 +971,11 @@ def main() -> None:
       "The claim is enabled only when Dual Safe-FT has both the best "
       "round-4 CBF-off success and the lowest nominal violation rate across "
       "all five main-table methods, including Frozen.",
+      "",
+      "Global fall- and executed-violation-free training supported: "
+      f"**{result['global_fall_and_violation_free_training_supported']}**.",
+      "The filtered arms are reported as local barrier-safety improvements, "
+      "not as globally fall-free adaptation, whenever this check is false.",
       "",
       "## CBF-dependence diagnostics",
       "",
