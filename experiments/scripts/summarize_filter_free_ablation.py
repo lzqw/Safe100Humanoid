@@ -630,12 +630,11 @@ def main() -> None:
     main_table.append(table_row)
     detailed_by_arm[arm] = {"per_seed": per_seed, "training": training}
 
-  adaptation_table = [row for row in main_table if row["arm"] != "frozen"]
-  dual = next(row for row in adaptation_table if row["arm"] == "dual_safe_ft")
-  best_off = max(float(row["mean_cbf_off_success_rate"]) for row in adaptation_table)
+  dual = next(row for row in main_table if row["arm"] == "dual_safe_ft")
+  best_off = max(float(row["mean_cbf_off_success_rate"]) for row in main_table)
   lowest_violation = min(
     float(row["mean_cbf_off_nominal_violation_steps_per_riser"])
-    for row in adaptation_table
+    for row in main_table
   )
   claim_checks = {
     "dual_safe_ft_best_cbf_off_success": math.isclose(
@@ -655,6 +654,7 @@ def main() -> None:
     "main_table": main_table,
     "details_by_arm": detailed_by_arm,
     "main_claim_checks": claim_checks,
+    "main_claim_comparison_arms": list(ARMS),
     "main_claim_supported": all(claim_checks.values()),
     "curve_row_count": len(curve_rows),
     "training_safety_run_count": len(training_rows),
@@ -703,7 +703,8 @@ def main() -> None:
       f"Main claim supported: **{result['main_claim_supported']}**.",
       "",
       "The claim is enabled only when Dual Safe-FT has both the best "
-      "round-4 CBF-off success and the lowest nominal violation rate.",
+      "round-4 CBF-off success and the lowest nominal violation rate across "
+      "all five main-table methods, including Frozen.",
       "",
       "![Task learning curves](task_learning_curves.png)",
       "",
