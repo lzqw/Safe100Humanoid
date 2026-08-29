@@ -706,6 +706,22 @@ def main() -> None:
           for context in CONTEXTS
         ]
       ),
+      "mean_cbf_off_would_intervene_fraction": _mean(
+        [
+          float(frozen[context]["cbf_off_would_intervene_fraction"])
+          for context in CONTEXTS
+        ]
+      ),
+      "mean_cbf_off_counterfactual_correction_norm": _mean(
+        [
+          float(
+            frozen[context][
+              "cbf_off_mean_counterfactual_correction_norm"
+            ]
+          )
+          for context in CONTEXTS
+        ]
+      ),
       "training_falls_mean": None,
       "training_falls_std": None,
       "training_shield_recoveries_mean": None,
@@ -757,6 +773,15 @@ def main() -> None:
               for row in rows
             ]
           ),
+          "mean_cbf_off_would_intervene_fraction": _mean(
+            [float(row["cbf_off_would_intervene_fraction"]) for row in rows]
+          ),
+          "mean_cbf_off_counterfactual_correction_norm": _mean(
+            [
+              float(row["cbf_off_mean_counterfactual_correction_norm"])
+              for row in rows
+            ]
+          ),
         }
       )
     training = training_by_arm[arm]
@@ -791,6 +816,18 @@ def main() -> None:
       "mean_cbf_off_nominal_violation_steps_per_riser": _mean(
         [
           float(row["mean_cbf_off_nominal_violation_steps_per_riser"])
+          for row in per_seed
+        ]
+      ),
+      "mean_cbf_off_would_intervene_fraction": _mean(
+        [
+          float(row["mean_cbf_off_would_intervene_fraction"])
+          for row in per_seed
+        ]
+      ),
+      "mean_cbf_off_counterfactual_correction_norm": _mean(
+        [
+          float(row["mean_cbf_off_counterfactual_correction_norm"])
           for row in per_seed
         ]
       ),
@@ -905,6 +942,26 @@ def main() -> None:
       "The claim is enabled only when Dual Safe-FT has both the best "
       "round-4 CBF-off success and the lowest nominal violation rate across "
       "all five main-table methods, including Frozen.",
+      "",
+      "## CBF-dependence diagnostics",
+      "",
+      "| Arm | Would intervene | Correction norm | Nominal violation/riser | Shield gap |",
+      "|---|---:|---:|---:|---:|",
+      *[
+        "| {arm} | {intervene:.4f} | {correction:.4f} | {violation:.4f} | "
+        "{gap:+.4f} |".format(
+          arm=ARM_LABELS[str(row["arm"])],
+          intervene=float(row["mean_cbf_off_would_intervene_fraction"]),
+          correction=float(
+            row["mean_cbf_off_counterfactual_correction_norm"]
+          ),
+          violation=float(
+            row["mean_cbf_off_nominal_violation_steps_per_riser"]
+          ),
+          gap=float(row["mean_shield_gap"]),
+        )
+        for row in main_table
+      ],
       "",
       "## Report-only paired 95% intervals",
       "",

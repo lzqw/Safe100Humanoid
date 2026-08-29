@@ -484,6 +484,15 @@ def main() -> None:
       {row.get("arm") for row in final_results.get("main_table", [])}
       == {"frozen", *ARMS}
     ),
+    "main_table_internalization_metrics_complete": all(
+      {
+        "mean_cbf_off_would_intervene_fraction",
+        "mean_cbf_off_counterfactual_correction_norm",
+        "mean_cbf_off_nominal_violation_steps_per_riser",
+        "mean_shield_gap",
+      }.issubset(row)
+      for row in final_results.get("main_table", [])
+    ),
     "task_curve_rows_144": final_results.get("curve_row_count") == 144,
     "training_safety_runs_36": (
       final_results.get("training_safety_run_count") == 36
