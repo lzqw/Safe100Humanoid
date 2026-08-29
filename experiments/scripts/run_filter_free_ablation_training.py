@@ -135,7 +135,7 @@ def _command(
     "--clearance-barrier-slope",
     "0.8",
     "--cbf-mode",
-    "current",
+    "current_velocity_cbf",
     "--actor-observation-interface",
     "original-405",
     "--teacher-arm",
