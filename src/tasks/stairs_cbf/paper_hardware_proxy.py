@@ -40,8 +40,9 @@ def configure_hardware_proxy(env_cfg, *, action_delay_steps: int) -> dict[str, A
   command.low_pass_time_constant_s = COMMAND_LOW_PASS_S
 
   action = env_cfg.actions["joint_pos"]
-  action.deployment_action_gain = ACTUATOR_GAIN
-  action.deployment_action_delay_steps = action_delay_steps
+  # v25 deliberately freezes the learnable teacher's internal plant transform.
+  # The evaluator applies the proxy-only gain and FIFO delay immediately before
+  # ``env.step`` instead, leaving the frozen teacher configuration untouched.
   # A positive height-estimate bias is equivalent to raising the CBF's
   # estimated riser top while leaving the physical terrain unchanged.
   action.top_clearance += STAIR_HEIGHT_ESTIMATE_BIAS_M
@@ -76,7 +77,9 @@ def configure_hardware_proxy(env_cfg, *, action_delay_steps: int) -> dict[str, A
     "encoder_bias_range": randomization["encoder_bias_range"],
     "foot_friction_range": randomization["foot_friction_range"],
     "action_delay_steps": action_delay_steps,
+    "action_delay_implementation": "evaluator_fifo_after_standard_action_clip_before_env_step",
     "actuator_gain": ACTUATOR_GAIN,
+    "actuator_gain_implementation": "evaluator_scale_after_standard_action_clip_before_env_step",
     "stair_height_estimate_bias_m": STAIR_HEIGHT_ESTIMATE_BIAS_M,
     "stair_height_bias_implementation": "cbf_estimated_top_clearance_offset",
     "physical_tread_profile_m": list(tread_profile),

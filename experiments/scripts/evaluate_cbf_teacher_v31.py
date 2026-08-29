@@ -28,6 +28,44 @@ from cbf_teacher_v31_protocol import (
 from proximal_v23_io import actor_state_sha256, file_sha256
 
 
+class _HardwareProxyActionTransport:
+    """Apply the proxy-only plant gain and fixed FIFO delay outside frozen v25."""
+
+    def __init__(
+        self,
+        *,
+        num_envs: int,
+        action_dim: int,
+        delay_steps: int,
+        gain: float,
+        device: torch.device | str,
+        dtype: torch.dtype,
+    ) -> None:
+        if delay_steps < 1:
+            raise ValueError("hardware proxy action delay must be positive")
+        if not 0.0 < gain <= 2.0:
+            raise ValueError("hardware proxy actuator gain must be in (0, 2]")
+        self.delay_steps = int(delay_steps)
+        self.gain = float(gain)
+        self.queue = torch.zeros(
+            num_envs,
+            self.delay_steps + 1,
+            action_dim,
+            device=device,
+            dtype=dtype,
+        )
+
+    def apply(self, actions: torch.Tensor) -> torch.Tensor:
+        if actions.shape != (self.queue.shape[0], self.queue.shape[2]):
+            raise ValueError(
+                "hardware proxy action shape differs from the transport queue: "
+                f"{tuple(actions.shape)}"
+            )
+        self.queue[:, 1:] = self.queue[:, :-1].clone()
+        self.queue[:, 0] = actions
+        return self.gain * self.queue[:, self.delay_steps]
+
+
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo", type=Path, required=True)
@@ -56,7 +94,13 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _initial_state_signature(obs, base_env, action_term, command_term) -> str:
+def _initial_state_signature(
+    obs,
+    base_env,
+    action_term,
+    command_term,
+    hardware_action_queue: torch.Tensor | None = None,
+) -> str:
     signature = hashlib.sha256()
     terrain = base_env.scene.terrain
     if terrain is None:
@@ -101,6 +145,8 @@ def _initial_state_signature(obs, base_env, action_term, command_term) -> str:
             ),
         ),
     )
+    if hardware_action_queue is not None:
+        tensors = (*tensors, hardware_action_queue)
     for tensor in tensors:
         signature.update(tensor.detach().cpu().contiguous().numpy().tobytes())
     return signature.hexdigest()
@@ -234,8 +280,24 @@ def main() -> None:
         if not isinstance(action_term, HigherRiserCbfAction):
             raise TypeError("v31 evaluator did not build the fixed CBF action")
         command_term = base_env.command_manager.get_term("twist")
+        hardware_action_transport = None
+        if hardware_proxy is not None:
+            hardware_action_transport = _HardwareProxyActionTransport(
+                num_envs=base_env.num_envs,
+                action_dim=action_term.action_dim,
+                delay_steps=int(hardware_proxy["action_delay_steps"]),
+                gain=float(hardware_proxy["actuator_gain"]),
+                device=base_env.device,
+                dtype=obs["actor"].dtype,
+            )
         initial_signature = _initial_state_signature(
-            obs, base_env, action_term, command_term
+            obs,
+            base_env,
+            action_term,
+            command_term,
+            None
+            if hardware_action_transport is None
+            else hardware_action_transport.queue,
         )
         num_risers = int(action_term._edge_x.shape[-1])
         n = args.num_envs
@@ -263,6 +325,14 @@ def main() -> None:
         with torch.inference_mode():
             for _ in range(maximum_steps):
                 actions = policy(obs)
+                if hardware_action_transport is not None:
+                    actions = hardware_action_transport.apply(
+                        torch.clamp(
+                            actions,
+                            -float(agent_cfg.clip_actions),
+                            float(agent_cfg.clip_actions),
+                        )
+                    )
                 obs, rewards, dones, extras = env.step(actions)
                 extras = dict(extras)
                 active_float = active.float()
