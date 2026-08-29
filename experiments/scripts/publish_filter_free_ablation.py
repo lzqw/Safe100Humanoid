@@ -300,6 +300,125 @@ def main() -> None:
   proxy_results = json.loads(
     (proxy_root / "hardware_proxy_results.json").read_text()
   )
+  training_progress = json.loads(
+    (training_root / "training_progress.json").read_text()
+  )
+  evaluation_progress = json.loads(
+    (evaluation_root / "evaluation_progress.json").read_text()
+  )
+  proxy_progress = json.loads((proxy_root / "proxy_progress.json").read_text())
+  paired_results = json.loads(
+    (evaluation_root / "paired_checkpoint_results.json").read_text()
+  )
+  required_paired_metrics = {
+    "cbf_off_success_rate",
+    "cbf_on_success_rate",
+    "shield_gap",
+    "cbf_off_fall_rate",
+    "cbf_on_fall_rate",
+    "cbf_off_mean_reached_riser",
+    "cbf_on_mean_reached_riser",
+    "cbf_off_mean_return",
+    "cbf_on_mean_return",
+    "cbf_off_mean_completion_time_s",
+    "cbf_on_mean_completion_time_s",
+    "cbf_off_nominal_violation_steps_per_riser",
+    "cbf_on_nominal_violation_steps_per_riser",
+    "cbf_off_would_intervene_fraction",
+    "cbf_on_would_intervene_fraction",
+    "cbf_off_mean_counterfactual_correction_norm",
+    "cbf_on_mean_correction_norm",
+    "cbf_off_unsafe_overlap_steps_per_riser",
+    "cbf_on_unsafe_overlap_steps_per_riser",
+    "cbf_off_toe_riser_kick_episode_rate",
+    "cbf_on_toe_riser_kick_episode_rate",
+  }
+  structural_checks = {
+    "training_matrix_complete_36_of_36": (
+      training_progress.get("status") == "complete"
+      and training_progress.get("completed_jobs") == 36
+      and training_progress.get("job_count") == 36
+    ),
+    "paired_evaluation_complete_222_of_222": (
+      evaluation_progress.get("status") == "complete"
+      and evaluation_progress.get("completed_jobs") == 222
+      and evaluation_progress.get("evaluation_job_count") == 222
+    ),
+    "paired_checkpoint_count_111": len(paired_results) == 111,
+    "paired_metrics_complete": all(
+      required_paired_metrics.issubset(row) for row in paired_results
+    ),
+    "hardware_proxy_complete_78_of_78": (
+      proxy_progress.get("status") == "complete"
+      and proxy_progress.get("completed_jobs") == 78
+      and proxy_progress.get("job_count") == 78
+    ),
+    "main_table_contains_five_methods": (
+      {row.get("arm") for row in final_results.get("main_table", [])}
+      == {"frozen", *ARMS}
+    ),
+    "task_curve_rows_144": final_results.get("curve_row_count") == 144,
+    "training_safety_runs_36": (
+      final_results.get("training_safety_run_count") == 36
+    ),
+    "training_safety_curve_rows_144": (
+      final_results.get("training_safety_curve_row_count") == 144
+    ),
+    "paired_statistics_four_adaptation_methods": (
+      set(final_results.get("paired_report_statistics", {})) == set(ARMS)
+    ),
+    "hardware_proxy_five_method_aggregate": (
+      {row.get("arm") for row in proxy_results.get("aggregate", [])}
+      == {"frozen", *ARMS}
+    ),
+    "checkpoint_index_36": len(checkpoint_index) == 36,
+    "representative_fixed_round_4_models_3": sum(
+      bool(row["published_to_repository"]) for row in checkpoint_index
+    )
+    == 3,
+    "deployment_candidates_3": len(deployment_index) == 3,
+    "deployment_bridge_parity_passed": all(
+      bool(row["bridge_parity_passed"]) for row in deployment_index
+    ),
+  }
+  failed_structural_checks = sorted(
+    name for name, passed in structural_checks.items() if not passed
+  )
+  completion_audit = {
+    "schema_version": 1,
+    "scope": (
+      "formal simulation adaptation, paired CBF-on/off evaluation, "
+      "CBF-off hardware proxy, and offline ONNX/bridge validation"
+    ),
+    "physical_robot_experiment_executed": False,
+    "physical_robot_claim_made": False,
+    "structural_protocol_audit_passed": not failed_structural_checks,
+    "structural_checks": structural_checks,
+    "failed_structural_checks": failed_structural_checks,
+    "outcomes_not_used_as_completion_requirements": {
+      "main_claim_supported": final_results["main_claim_supported"],
+      "all_pytorch_bridge_p95_within_20ms": all(
+        bool(row["pytorch_bridge_deadline_passed"])
+        for row in deployment_index
+      ),
+    },
+    "counts": {
+      "training_jobs": training_progress.get("completed_jobs"),
+      "evaluation_jobs": evaluation_progress.get("completed_jobs"),
+      "paired_checkpoints": len(paired_results),
+      "hardware_proxy_jobs": proxy_progress.get("completed_jobs"),
+      "indexed_round_4_checkpoints": len(checkpoint_index),
+      "published_representative_models": 3,
+      "deployment_candidates": len(deployment_index),
+    },
+  }
+  (result_dir / "COMPLETION_AUDIT.json").write_text(
+    json.dumps(completion_audit, indent=2, sort_keys=True) + "\n"
+  )
+  if failed_structural_checks:
+    raise RuntimeError(
+      f"formal completion audit failed: {failed_structural_checks}"
+    )
   table_lines = [
     "| Arm | Filter | CBF reward | F1 off | F2 off | F3 off | Mean off | Off Δ | Shield gap | Training falls |",
     "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
@@ -394,6 +513,7 @@ def main() -> None:
     "- `checkpoint_index.json`: hashes for all 36 fixed round-4 models",
     "- `deployment/`: three ONNX actors plus bridge parity/latency reports",
     "- `deployment_index.json`: deployment artifact hashes and compact checks",
+    "- `COMPLETION_AUDIT.json`: one structural audit of all formal deliverables",
     "",
     "Episode CSVs and redundant checkpoints remain in the archived 4080 run; "
     "the repository contains the compact evidence needed to reproduce tables.",
@@ -415,6 +535,9 @@ def main() -> None:
         "proxy_summary_count": proxy_summary_count,
         "representative_model_count": 3,
         "deployment_candidate_count": len(deployment_index),
+        "completion_audit_passed": completion_audit[
+          "structural_protocol_audit_passed"
+        ],
       },
       indent=2,
       sort_keys=True,
