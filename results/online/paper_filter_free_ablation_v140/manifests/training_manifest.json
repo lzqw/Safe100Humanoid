@@ -1,0 +1,209 @@
+{
+  "arms": [
+    "dual_safe_ft",
+    "filter_only_ft",
+    "reward_only_ft",
+    "nominal_ft"
+  ],
+  "base_checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/clearance_mixed_v139_fdc2a63_128x1024x4_s201356000/round_01.pt",
+  "base_checkpoint_sha256": "323f1e00b58d379b8746c0191a44272f2e1df134139050417c56e733cc484728",
+  "contexts": [
+    "F1",
+    "F2",
+    "F3"
+  ],
+  "experiment": "paper_filter_free_ablation_training_matrix",
+  "git_commit": "8deaeff4293aa747bb4599f180b0a6304942a3e3",
+  "num_envs": 128,
+  "rollout_steps": 1024,
+  "rounds": 4,
+  "run_order": [
+    {
+      "arm": "dual_safe_ft",
+      "context": "F1",
+      "seed": 201357000
+    },
+    {
+      "arm": "dual_safe_ft",
+      "context": "F1",
+      "seed": 201357001
+    },
+    {
+      "arm": "dual_safe_ft",
+      "context": "F1",
+      "seed": 201357002
+    },
+    {
+      "arm": "filter_only_ft",
+      "context": "F1",
+      "seed": 201357000
+    },
+    {
+      "arm": "filter_only_ft",
+      "context": "F1",
+      "seed": 201357001
+    },
+    {
+      "arm": "filter_only_ft",
+      "context": "F1",
+      "seed": 201357002
+    },
+    {
+      "arm": "reward_only_ft",
+      "context": "F1",
+      "seed": 201357000
+    },
+    {
+      "arm": "reward_only_ft",
+      "context": "F1",
+      "seed": 201357001
+    },
+    {
+      "arm": "reward_only_ft",
+      "context": "F1",
+      "seed": 201357002
+    },
+    {
+      "arm": "nominal_ft",
+      "context": "F1",
+      "seed": 201357000
+    },
+    {
+      "arm": "nominal_ft",
+      "context": "F1",
+      "seed": 201357001
+    },
+    {
+      "arm": "nominal_ft",
+      "context": "F1",
+      "seed": 201357002
+    },
+    {
+      "arm": "dual_safe_ft",
+      "context": "F2",
+      "seed": 201357000
+    },
+    {
+      "arm": "dual_safe_ft",
+      "context": "F2",
+      "seed": 201357001
+    },
+    {
+      "arm": "dual_safe_ft",
+      "context": "F2",
+      "seed": 201357002
+    },
+    {
+      "arm": "filter_only_ft",
+      "context": "F2",
+      "seed": 201357000
+    },
+    {
+      "arm": "filter_only_ft",
+      "context": "F2",
+      "seed": 201357001
+    },
+    {
+      "arm": "filter_only_ft",
+      "context": "F2",
+      "seed": 201357002
+    },
+    {
+      "arm": "reward_only_ft",
+      "context": "F2",
+      "seed": 201357000
+    },
+    {
+      "arm": "reward_only_ft",
+      "context": "F2",
+      "seed": 201357001
+    },
+    {
+      "arm": "reward_only_ft",
+      "context": "F2",
+      "seed": 201357002
+    },
+    {
+      "arm": "nominal_ft",
+      "context": "F2",
+      "seed": 201357000
+    },
+    {
+      "arm": "nominal_ft",
+      "context": "F2",
+      "seed": 201357001
+    },
+    {
+      "arm": "nominal_ft",
+      "context": "F2",
+      "seed": 201357002
+    },
+    {
+      "arm": "dual_safe_ft",
+      "context": "F3",
+      "seed": 201357000
+    },
+    {
+      "arm": "dual_safe_ft",
+      "context": "F3",
+      "seed": 201357001
+    },
+    {
+      "arm": "dual_safe_ft",
+      "context": "F3",
+      "seed": 201357002
+    },
+    {
+      "arm": "filter_only_ft",
+      "context": "F3",
+      "seed": 201357000
+    },
+    {
+      "arm": "filter_only_ft",
+      "context": "F3",
+      "seed": 201357001
+    },
+    {
+      "arm": "filter_only_ft",
+      "context": "F3",
+      "seed": 201357002
+    },
+    {
+      "arm": "reward_only_ft",
+      "context": "F3",
+      "seed": 201357000
+    },
+    {
+      "arm": "reward_only_ft",
+      "context": "F3",
+      "seed": 201357001
+    },
+    {
+      "arm": "reward_only_ft",
+      "context": "F3",
+      "seed": 201357002
+    },
+    {
+      "arm": "nominal_ft",
+      "context": "F3",
+      "seed": 201357000
+    },
+    {
+      "arm": "nominal_ft",
+      "context": "F3",
+      "seed": 201357001
+    },
+    {
+      "arm": "nominal_ft",
+      "context": "F3",
+      "seed": 201357002
+    }
+  ],
+  "schema_version": 1,
+  "seeds": [
+    201357000,
+    201357001,
+    201357002
+  ],
+  "started_unix": 1787989899.0362248
+}

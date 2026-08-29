@@ -1,0 +1,57 @@
+{
+  "counts": {
+    "deployment_candidates": 3,
+    "evaluation_jobs": 222,
+    "hardware_proxy_jobs": 42,
+    "indexed_round_4_checkpoints": 36,
+    "paired_checkpoints": 111,
+    "published_representative_models": 3,
+    "training_jobs": 36
+  },
+  "failed_structural_checks": [],
+  "outcomes_not_used_as_completion_requirements": {
+    "all_pytorch_bridge_p95_within_20ms": true,
+    "global_fall_and_violation_free_training_supported": false,
+    "main_claim_checks": {
+      "dual_safe_ft_best_cbf_off_success": false,
+      "dual_safe_ft_lowest_nominal_violation": false
+    },
+    "main_claim_supported": false,
+    "training_safety_checks": {
+      "filtered_training_executed_violation_free": false,
+      "filtered_training_fall_free": false,
+      "filtered_training_reduces_executed_violations_vs_nominal": true
+    }
+  },
+  "physical_robot_claim_made": false,
+  "physical_robot_experiment_executed": false,
+  "physical_stage_decision": "do not run physical CBF-off from this result; retain CBF-on and shadow-only evaluation because the simulation claim gate failed",
+  "schema_version": 1,
+  "scope": "formal simulation adaptation, paired CBF-on/off evaluation, CBF-off hardware proxy, and offline ONNX/bridge validation",
+  "structural_checks": {
+    "checkpoint_index_36": true,
+    "deployment_bridge_parity_passed": true,
+    "deployment_candidates_3": true,
+    "factorial_contrasts_nine_task_and_safety_metrics": true,
+    "fixed_training_protocol_36_of_36": true,
+    "hardware_proxy_complete_42_of_42": true,
+    "hardware_proxy_three_method_aggregate": true,
+    "main_table_contains_five_methods": true,
+    "main_table_internalization_metrics_complete": true,
+    "paired_checkpoint_count_111": true,
+    "paired_evaluation_complete_222_of_222": true,
+    "paired_evaluation_protocol_512_on_off_rounds_0_1_2_4": true,
+    "paired_metrics_complete": true,
+    "paired_statistics_four_adaptation_methods": true,
+    "representative_fixed_round_4_models_3": true,
+    "task_curve_rows_144": true,
+    "task_learning_curve_metrics_complete": true,
+    "training_matrix_complete_36_of_36": true,
+    "training_safety_curve_metrics_complete": true,
+    "training_safety_curve_rows_144": true,
+    "training_safety_metrics_complete": true,
+    "training_safety_runs_36": true
+  },
+  "structural_protocol_audit_passed": true,
+  "training_protocol_failures": []
+}

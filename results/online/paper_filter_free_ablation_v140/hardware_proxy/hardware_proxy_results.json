@@ -1,0 +1,56 @@
+{
+  "action_delay_steps": [
+    1,
+    2
+  ],
+  "aggregate": [
+    {
+      "absolute_success_rate_drop": 0.517578125,
+      "arm": "frozen",
+      "hardware_proxy_cbf_off_success_rate": 0.18684895833333334,
+      "mean_fall_rate": 0.8131510416666666,
+      "mean_nominal_violation_steps_per_riser": 7.3846924009034645,
+      "mean_success_rate": 0.18684895833333334,
+      "nominal_sim_cbf_off_success_rate": 0.7044270833333334,
+      "policy_context_delay_count": 6,
+      "success_rate_retention": 0.26524953789279115
+    },
+    {
+      "absolute_success_rate_drop": 0.5106336805555556,
+      "arm": "dual_safe_ft",
+      "hardware_proxy_cbf_off_success_rate": 0.1890190972222222,
+      "mean_fall_rate": 0.8107638888888888,
+      "mean_nominal_violation_steps_per_riser": 7.404974108268105,
+      "mean_success_rate": 0.1890190972222222,
+      "nominal_sim_cbf_off_success_rate": 0.6996527777777778,
+      "policy_context_delay_count": 18,
+      "success_rate_retention": 0.2701612903225806
+    },
+    {
+      "absolute_success_rate_drop": 0.5145399305555555,
+      "arm": "filter_only_ft",
+      "hardware_proxy_cbf_off_success_rate": 0.18880208333333334,
+      "mean_fall_rate": 0.8109809027777778,
+      "mean_nominal_violation_steps_per_riser": 7.401168364473244,
+      "mean_success_rate": 0.18880208333333334,
+      "nominal_sim_cbf_off_success_rate": 0.7033420138888888,
+      "policy_context_delay_count": 18,
+      "success_rate_retention": 0.2684356680037026
+    }
+  ],
+  "completed_jobs": 42,
+  "episodes_per_policy_context_delay": 256,
+  "evaluation_seed": 201357901,
+  "experiment": "paper_filter_free_hardware_proxy",
+  "finished_unix": 1788001802.2545133,
+  "job_count": 42,
+  "mean_job_seconds": 56.16632490430493,
+  "method_id": "paper-filter-free-hardware-proxy-v1",
+  "nominal_sim_evaluation_root": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_filter_free_ablation/formal_8deaeff/evaluation_seed201357900",
+  "nominal_sim_paired_result_sha256": "54c55220866b02de0823169ad24d64af587bb6324b47d8b43ced765257f82008",
+  "policy_spec_count": 21,
+  "schema_version": 1,
+  "skipped_jobs": 29,
+  "started_unix": 1788001071.7432668,
+  "status": "complete"
+}
