@@ -66,6 +66,26 @@ performance. Save rounds 0/1/2/4 when four rounds are used; the last fixed round
 is the final policy. There is no candidate line search or performance-based
 checkpoint selection.
 
+## Simulation release prerequisite
+
+The physical CBF-off phase is not authorized merely because an ONNX actor and
+bridge-validation report exist. Before any Phase 3 traversal, all of the
+following independent prerequisites must be recorded in the run manifest:
+
+- the fixed-round formal simulation claim gate is true: Dual Safe-FT has the
+  best CBF-off success and the lowest nominal violation among the preregistered
+  methods, including Frozen;
+- the frozen CBF-off hardware-proxy release thresholds pass;
+- checkpoint, actor, ONNX, bridge-parity, action-mapping, and latency hashes
+  match the reviewed deployment bundle;
+- the physical CBF-on adaptation and shadow gates below pass without a fall,
+  emergency stop, watchdog fault, or unapproved operator takeover.
+
+If the formal simulation claim gate is false, Phase 3 is prohibited for that
+result. A supervised Phase 1/2 follow-up may still collect CBF-on and shadow
+research measurements, but it is not a filter-free deployment authorization.
+Thresholds cannot be weakened after observing the result.
+
 ## Phase 1 — CBF-on adaptation
 
 Runtime action projection is always enabled. For every control transition log:
@@ -87,9 +107,9 @@ The robot still executes the CBF-filtered action. The nominal action is evaluate
 in shadow mode only. Record would-intervene fraction, correction norm, nominal
 barrier violation, and the pre-registered shadow success predictor.
 
-The operator may proceed only if every pre-registered release gate passes. A
-failed gate ends the run; it does not authorize threshold changes or checkpoint
-selection.
+The operator may proceed only if every pre-registered release gate and the
+simulation release prerequisite pass. A failed gate ends the run; it does not
+authorize threshold changes or checkpoint selection.
 
 ## Phase 3 — protected CBF-off evaluation
 
