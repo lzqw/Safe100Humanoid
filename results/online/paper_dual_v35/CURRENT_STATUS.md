@@ -1,8 +1,11 @@
-# Paper-dual 当前结果索引（2026-08-28）
+# Paper-dual 当前结果索引（2026-08-29）
 
-当前目标是 F2 18.4 cm、部署时 filter-off 成功率至少 75%。v139 的唯一 deterministic
-screen 为 **50/64（78.125%）**，随后唯一独立 gate 为 **49/64（76.5625%）**，
-已按预声明协议正式达到目标。当前正式最佳为 v139。
+v139 的 64-episode deterministic F2 filter-off screen/gate 曾按预声明协议通过 75%，
+但新的 512-episode paired 结果将其 F2 off 估计修正为 **348/512（67.97%）**；matched
+full-filter control 为 358/512（69.92%）。因此 v139 保留为冻结的部署初始化 artifact，
+但不再把 mixed execution 解释为已证实的稳健因果提升。三场景两轮 CBF-protected
+Safe-FT pooled on 为 **1156/1536（75.26%）**，较 v139 on 的 74.15% 高 1.11 pp，
+但 paired `p=0.478` 且 F1 退化；当前主结果是方向性证据，实机主张尚未完成。
 
 | 版本 | 关键结论 | GitHub 目录 |
 |---|---|---|
@@ -67,6 +70,7 @@ screen 为 **50/64（78.125%）**，随后唯一独立 gate 为 **49/64（76.562
 | v137 | gait-scheduled toe-off CBF 预激活提高覆盖率，但所有 PPO update 回落；所选 base actor screen 43/64 | [`swing_preactivation_v137/`](swing_preactivation_v137/) |
 | v138 | next-riser clearance margin 5→8 cm；训练内升至 74.17%，但 deterministic screen 46/64 | [`clearance_margin_v138/`](clearance_margin_v138/) |
 | v139 | 保留 8 cm clearance，以 25% on / 75% off 混合训练；screen 50/64、独立 gate 49/64，正式通过 | [`clearance_mixed_v139/`](clearance_mixed_v139/) |
+| deployment pipeline | 512-paired 对照否定 mixed 稳健优势；2-round Safe-FT pooled on 75.26%，但增益不显著且场景依赖 | [`deployment_pipeline_v139/`](deployment_pipeline_v139/) |
 
 v139 正式 checkpoint 已同时提交到 GitHub：
 [`clearance_mixed_v139/checkpoints/selected_round_01.pt`](clearance_mixed_v139/checkpoints/selected_round_01.pt)，
@@ -101,6 +105,15 @@ v139 保留 v138 的 8 cm clearance、标准低学习率论文式 PPO 和 KL con
 49/64=76.5625%，正式超过 48/64 门槛。两个 seed 描述性合计为 99/128=77.34375%，但正式
 接受依据是 gate 本身通过。未运行第三个 seed、其他 checkpoint 或额外验证；v139 成为首个
 达到既定 F2 18.4 cm deterministic filter-off 目标的版本，并替换 v79 为正式最佳。
+
+后续 512-episode paired 审计改变了上述小样本解释。相同 v138 起点、seed、预算和 round-1
+索引下，v139 F2 off 为 348/512，而 100% filter-on control 为 358/512；三场景 pooled
+v138/v139 off 更是 1082/1536 与 1081/1536，净差 -1。因而 25/75 mixed execution 的
+因果优势没有得到支持。按新主线，从 v139 在 F1/F2/F3 各做固定两轮、100% CBF-on Safe-FT；
+pooled CBF-on 从 1139/1536=74.15% 升至 1156/1536=75.26%，但 exact paired McNemar
+`p=0.478`，F1 还下降 2.34 pp。CBF 本身的 pooled off→on 改善则在 v139 和 Safe-FT 上
+分别为 +3.78 pp (`p=0.0209`) 与 +3.84 pp (`p=0.0177`)。因此当前最可靠结论是运行时
+CBF 有益；短时 Safe-FT 仅有方向性仿真证据，完整论文主张仍需 CBF 全程开启的实机实验。
 
 v82/v83 已证明 microbatch 路径稳定：每轮多个等权 backward chunks、一次全局梯度裁剪、
 一次 SGD step，256-environment 训练没有再发生 OOM。v83 在新 seed 上先升后退，rollback

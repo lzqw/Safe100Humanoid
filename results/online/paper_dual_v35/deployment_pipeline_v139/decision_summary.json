@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "experiment": "v139_deployment_initializer_and_cbf_protected_safe_ft",
+  "source_git_commit": "7edc4da60a089985681cb6b78243b53cfb730003",
+  "status": "simulation_complete_mixed_advantage_not_supported_safe_ft_directional",
+  "protocol": {
+    "evaluation_seed": 201356200,
+    "episodes_per_cell": 512,
+    "paired_initial_states_within_context": true,
+    "deterministic_policy_mean": true,
+    "contexts": ["F1", "F2", "F3"],
+    "safe_ft_training_seed": 201356300,
+    "safe_ft_rounds": 2,
+    "safe_ft_num_envs": 128,
+    "safe_ft_rollout_steps": 1024,
+    "safe_ft_execution_filter_fraction": 1.0,
+    "safe_ft_candidate_selection": false,
+    "safe_ft_primary_actor": "fixed_round_2_final_actor",
+    "extra_evaluation_or_checkpoint_search": false
+  },
+  "matched_full_filter_control": {
+    "context": "F2",
+    "base_checkpoint_sha256": "7a3899c515d5afd93f79f4db251feab4cd59f003e7150711e506ef5850604c63",
+    "training_seed": 201356000,
+    "training_transition_count": 524288,
+    "comparison_checkpoint_round": 1,
+    "v139_filter_off": {"success_count": 348, "episode_count": 512, "success_rate": 0.6796875},
+    "full_filter_control_filter_off": {"success_count": 358, "episode_count": 512, "success_rate": 0.69921875},
+    "control_minus_v139_percentage_points": 1.953125,
+    "paired_exact_mcnemar_p": 0.54591349,
+    "conclusion": "The paired large-sample control does not support a causal advantage for 25/75 mixed execution over the matched 100% filter-on continuation."
+  },
+  "main_table": {
+    "F1": {
+      "base_v138_off": [382, 512],
+      "v139_off": [395, 512],
+      "v139_on": [409, 512],
+      "safe_ft_off": [375, 512],
+      "safe_ft_on": [397, 512]
+    },
+    "F2": {
+      "base_v138_off": [342, 512],
+      "v139_off": [348, 512],
+      "v139_on": [377, 512],
+      "safe_ft_off": [370, 512],
+      "safe_ft_on": [380, 512]
+    },
+    "F3": {
+      "base_v138_off": [358, 512],
+      "v139_off": [338, 512],
+      "v139_on": [353, 512],
+      "safe_ft_off": [352, 512],
+      "safe_ft_on": [379, 512]
+    },
+    "pooled": {
+      "base_v138_off": [1082, 1536, 0.7044270833333334],
+      "v139_off": [1081, 1536, 0.7037760416666667],
+      "v139_on": [1139, 1536, 0.7415364583333334],
+      "safe_ft_off": [1097, 1536, 0.7141927083333333],
+      "safe_ft_on": [1156, 1536, 0.7526041666666666]
+    }
+  },
+  "paired_primary_comparisons": {
+    "v138_off_to_v139_off_pooled": {
+      "net_success_change": -1,
+      "percentage_point_change": -0.06510416666666667,
+      "exact_mcnemar_p": 1.0
+    },
+    "v139_on_to_safe_ft_on_pooled": {
+      "net_success_change": 17,
+      "percentage_point_change": 1.1067708333333333,
+      "exact_mcnemar_p": 0.47824413
+    },
+    "v139_off_to_safe_ft_off_pooled": {
+      "net_success_change": 16,
+      "percentage_point_change": 1.0416666666666667,
+      "exact_mcnemar_p": 0.5239739
+    },
+    "v139_off_to_v139_on_pooled": {
+      "net_success_change": 58,
+      "percentage_point_change": 3.7760416666666665,
+      "exact_mcnemar_p": 0.0209308
+    },
+    "safe_ft_off_to_safe_ft_on_pooled": {
+      "net_success_change": 59,
+      "percentage_point_change": 3.8411458333333335,
+      "exact_mcnemar_p": 0.01772361
+    }
+  },
+  "shield_reliance_on_pooled": {
+    "v139": {
+      "intervention_events_per_riser": 2.117119121792019,
+      "intervention_steps_per_riser": 4.431390001483459,
+      "mean_velocity_correction_norm_riser_weighted": 1.1334790496907996,
+      "unsafe_overlap_steps_per_riser": 0.7811155614893933
+    },
+    "safe_ft": {
+      "intervention_events_per_riser": 2.0794652803564797,
+      "intervention_steps_per_riser": 4.377051615298923,
+      "mean_velocity_correction_norm_riser_weighted": 1.1147281413479062,
+      "unsafe_overlap_steps_per_riser": 0.7636093575937616
+    },
+    "interpretation": "Every shield-reliance metric decreases slightly after Safe-FT, but the magnitude is small and this single training seed does not establish a robust reduction."
+  },
+  "decision": {
+    "v139_role": "frozen simulation deployment initializer, not the final method",
+    "mixed_execution_causal_claim_supported": false,
+    "cbf_runtime_protection_effect_supported": true,
+    "safe_ft_mean_direction_positive": true,
+    "safe_ft_improvement_statistically_decisive": false,
+    "safe_ft_context_consistent": false,
+    "real_robot_experiment_run": false,
+    "paper_main_claim_complete": false,
+    "reason": "CBF-on significantly improves pooled success for both policies. Two-round Safe-FT raises pooled CBF-on success by 1.11 pp and slightly lowers shield reliance, but the paired success change is not significant and F1 regresses. Real-robot CBF-protected adaptation remains required."
+  }
+}
