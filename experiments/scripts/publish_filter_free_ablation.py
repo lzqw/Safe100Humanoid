@@ -721,7 +721,9 @@ def main() -> None:
   ]
   (result_dir / "README.md").write_text("\n".join(readme) + "\n")
 
-  _git(repo, "add", str(args.result_relative_dir))
+  # Formal workers may use a narrow sparse checkout; the published result
+  # directory is intentionally outside that runtime-only cone.
+  _git(repo, "add", "--sparse", str(args.result_relative_dir))
   _git(repo, "commit", "-m", "Publish formal filter-free ablation results")
   commit = _git(repo, "rev-parse", "HEAD")
   if args.push:
