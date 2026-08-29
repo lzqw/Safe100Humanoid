@@ -7,6 +7,7 @@ import hashlib
 import json
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -61,6 +62,50 @@ def _copy_named_summaries(source_root: Path, destination_root: Path) -> int:
     _copy(source, destination_root / source.relative_to(source_root))
     count += 1
   return count
+
+
+def _validate_deployment_candidate(
+  *,
+  repo: Path,
+  checkpoint: Path,
+  checkpoint_hash: str,
+  actor_hash: str,
+  checkpoint_label: str,
+  output: Path,
+  report: Path,
+  context: str,
+  seed: int,
+) -> dict[str, Any]:
+  command = [
+    sys.executable,
+    str(repo / "experiments/scripts/validate_filter_free_deployment.py"),
+    "--checkpoint",
+    str(checkpoint),
+    "--output",
+    str(output),
+    "--report",
+    str(report),
+    "--expected-checkpoint-sha256",
+    checkpoint_hash,
+    "--expected-actor-sha256",
+    actor_hash,
+    "--checkpoint-label",
+    checkpoint_label,
+    "--artifact-label",
+    str(output.relative_to(repo)),
+    "--context",
+    context,
+    "--training-seed",
+    str(seed),
+  ]
+  subprocess.run(
+    command,
+    cwd=repo,
+    check=True,
+    capture_output=True,
+    text=True,
+  )
+  return json.loads(report.read_text())
 
 
 def main() -> None:
@@ -144,6 +189,7 @@ def main() -> None:
     )
 
   checkpoint_index: list[dict[str, Any]] = []
+  deployment_index: list[dict[str, Any]] = []
   for arm in ARMS:
     for context in CONTEXTS:
       for seed in TRAINING_SEEDS:
@@ -159,6 +205,8 @@ def main() -> None:
             / "training_summary.json"
           ).read_text()
         )
+        checkpoint_hash = _sha256(source)
+        actor_hash = summary["final_actor_sha256"]
         published = arm == "dual_safe_ft" and seed == REPRESENTATIVE_MODEL_SEED
         destination = None
         if published:
@@ -169,14 +217,55 @@ def main() -> None:
           )
           _copy(source, destination_path)
           destination = str(destination_path.relative_to(repo))
+          onnx_path = (
+            result_dir
+            / "deployment"
+            / f"dual_safe_ft_{context}_seed_{seed}_round_04.onnx"
+          )
+          report_path = onnx_path.with_suffix(".validation.json")
+          deployment_report = _validate_deployment_candidate(
+            repo=repo,
+            checkpoint=source,
+            checkpoint_hash=checkpoint_hash,
+            actor_hash=actor_hash,
+            checkpoint_label=destination,
+            output=onnx_path,
+            report=report_path,
+            context=context,
+            seed=seed,
+          )
+          deployment_index.append(
+            {
+              "context": context,
+              "training_seed": seed,
+              "checkpoint": destination,
+              "onnx": str(onnx_path.relative_to(repo)),
+              "validation_report": str(report_path.relative_to(repo)),
+              "checkpoint_sha256": checkpoint_hash,
+              "actor_sha256": actor_hash,
+              "onnx_sha256": deployment_report["onnx_sha256"],
+              "bridge_parity_passed": deployment_report["bridge_parity"][
+                "passed"
+              ],
+              "pytorch_bridge_p95_ms": deployment_report["latency"][
+                "pytorch_backend"
+              ]["p95_ms"],
+              "pytorch_bridge_deadline_passed": deployment_report["latency"][
+                "pytorch_backend"
+              ]["p95_within_policy_deadline"],
+              "onnx_reference_p95_ms": deployment_report["latency"][
+                "onnx_backend"
+              ]["p95_ms"],
+            }
+          )
         checkpoint_index.append(
           {
             "arm": arm,
             "context": context,
             "training_seed": seed,
             "round": 4,
-            "checkpoint_sha256": _sha256(source),
-            "actor_sha256": summary["final_actor_sha256"],
+            "checkpoint_sha256": checkpoint_hash,
+            "actor_sha256": actor_hash,
             "published_to_repository": published,
             "repository_path": destination,
             "selection_used": False,
@@ -184,6 +273,13 @@ def main() -> None:
         )
   (result_dir / "checkpoint_index.json").write_text(
     json.dumps(checkpoint_index, indent=2, sort_keys=True) + "\n"
+  )
+  if len(deployment_index) != len(CONTEXTS):
+    raise RuntimeError(
+      f"deployment candidate count differs: {len(deployment_index)}"
+    )
+  (result_dir / "deployment_index.json").write_text(
+    json.dumps(deployment_index, indent=2, sort_keys=True) + "\n"
   )
 
   final_results = json.loads(final_results_path.read_text())
@@ -218,6 +314,16 @@ def main() -> None:
       f"| {row['arm']} | {float(row['mean_success_rate']):.3f} | "
       f"{float(row['mean_fall_rate']):.3f} |"
     )
+  deployment_lines = [
+    "| Context | Bridge parity | PyTorch bridge p95 (ms) | 20 ms deadline |",
+    "|---|---:|---:|---:|",
+  ]
+  for row in deployment_index:
+    deployment_lines.append(
+      f"| {row['context']} | {row['bridge_parity_passed']} | "
+      f"{float(row['pytorch_bridge_p95_ms']):.3f} | "
+      f"{row['pytorch_bridge_deadline_passed']} |"
+    )
   readme = [
     "# Filter-free deployment ablation (v140)",
     "",
@@ -239,6 +345,16 @@ def main() -> None:
     "tread perturbation, friction variation, and command delay. All proxy "
     "evaluations execute CBF-off.",
     "",
+    "## Offline ONNX/bridge validation",
+    "",
+    *deployment_lines,
+    "",
+    "Each representative fixed round-4 Dual actor is exported to ONNX and "
+    "checked on deterministic five-frame bridge inputs. Latency covers "
+    "observation assembly, actor inference, and 12-to-29 target mapping on "
+    "one CPU thread. ONNX ReferenceEvaluator latency is retained in the JSON "
+    "reports as portability evidence, not as a production-runtime claim.",
+    "",
     "## Contents",
     "",
     "- `final_results.json` and `main_table.csv`: primary result and claim checks",
@@ -249,6 +365,8 @@ def main() -> None:
     "- `training/`: all 36 training summaries and round metrics",
     "- `checkpoints/`: fixed round-4 Dual Safe-FT models for F1/F2/F3, seed 201357000",
     "- `checkpoint_index.json`: hashes for all 36 fixed round-4 models",
+    "- `deployment/`: three ONNX actors plus bridge parity/latency reports",
+    "- `deployment_index.json`: deployment artifact hashes and compact checks",
     "",
     "Episode CSVs and redundant checkpoints remain in the archived 4080 run; "
     "the repository contains the compact evidence needed to reproduce tables.",
@@ -269,6 +387,7 @@ def main() -> None:
         "evaluation_summary_count": evaluation_summary_count,
         "proxy_summary_count": proxy_summary_count,
         "representative_model_count": 3,
+        "deployment_candidate_count": len(deployment_index),
       },
       indent=2,
       sort_keys=True,
