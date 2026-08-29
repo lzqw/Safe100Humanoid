@@ -852,7 +852,7 @@ def main() -> None:
     "details_by_arm": detailed_by_arm,
     "paired_report_statistics": paired_statistics,
     "main_claim_checks": claim_checks,
-    "main_claim_comparison_arms": list(ARMS),
+    "main_claim_comparison_arms": ["frozen", *ARMS],
     "main_claim_supported": all(claim_checks.values()),
     "curve_row_count": len(curve_rows),
     "training_safety_run_count": len(training_rows),

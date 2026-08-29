@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
 import json
 import shutil
@@ -21,6 +22,12 @@ ARM_LABELS = {
   "reward_only_ft": "Reward-only FT",
   "filter_only_ft": "Filter-only FT",
   "dual_safe_ft": "Dual Safe-FT",
+}
+EXPECTED_ARM_FACTORS = {
+  "nominal_ft": (False, False),
+  "reward_only_ft": (False, True),
+  "filter_only_ft": (True, False),
+  "dual_safe_ft": (True, True),
 }
 
 
@@ -69,6 +76,12 @@ def _copy_named_summaries(source_root: Path, destination_root: Path) -> int:
     _copy(source, destination_root / source.relative_to(source_root))
     count += 1
   return count
+
+
+def _csv_fieldnames(path: Path) -> set[str]:
+  with path.open(newline="") as handle:
+    reader = csv.reader(handle)
+    return set(next(reader))
 
 
 def _validate_deployment_candidate(
@@ -204,6 +217,7 @@ def main() -> None:
 
   checkpoint_index: list[dict[str, Any]] = []
   deployment_index: list[dict[str, Any]] = []
+  training_protocol_failures: list[str] = []
   for arm in ARMS:
     for context in CONTEXTS:
       for seed in TRAINING_SEEDS:
@@ -218,6 +232,68 @@ def main() -> None:
             / f"seed_{seed}"
             / "training_summary.json"
           ).read_text()
+        )
+        metadata = summary.get("paper_filter_free_ablation_training") or {}
+        expected_filter, expected_reward = EXPECTED_ARM_FACTORS[arm]
+        protocol_checks = {
+          "arm": metadata.get("arm") == arm,
+          "context": metadata.get("context") == context,
+          "seed": summary.get("seed") == seed,
+          "frozen_v139": (
+            metadata.get("expected_base_checkpoint_sha256")
+            == "323f1e00b58d379b8746c0191a44272f2e1df134139050417c56e733cc484728"
+          ),
+          "four_rounds": metadata.get("rounds") == 4,
+          "fixed_budget": (
+            metadata.get("num_envs") == 128
+            and metadata.get("rollout_steps") == 1024
+          ),
+          "training_std": metadata.get("training_action_std") == 0.05,
+          "raw_action_ppo": (
+            metadata.get("ppo_storage_action")
+            == "raw_nominal_policy_action"
+          ),
+          "fixed_round_4": (
+            metadata.get("primary_checkpoint_round") == 4
+            and metadata.get("primary_checkpoint_rule") == "fixed_round_4"
+            and metadata.get("checkpoint_rounds") == [0, 1, 2, 4]
+          ),
+          "matched_arm_filter": (
+            metadata.get("runtime_filter_during_adaptation")
+            is expected_filter
+          ),
+          "matched_arm_reward": (
+            metadata.get("cbf_reward_during_adaptation") is expected_reward
+          ),
+          "cbf_off_primary": (
+            metadata.get("final_deployment_filter") == "off"
+            and metadata.get("primary_metric")
+            == "post_adaptation_cbf_off_success_rate"
+          ),
+          "paired_512": (
+            metadata.get("paired_evaluation_episodes_per_filter_condition")
+            == 512
+            and metadata.get("paired_evaluation_filter_conditions")
+            == ["off", "on"]
+          ),
+          "no_checkpoint_selection": (
+            metadata.get("checkpoint_candidate_selection") is False
+            and metadata.get("candidate_selection_additional_evaluation_count")
+            == 0
+          ),
+          "continuous_no_rollback": (
+            metadata.get("training_trajectory")
+            == "continuous_without_acceptance_or_rollback"
+          ),
+          "all_contract_checks": (
+            bool(metadata.get("contract_checks"))
+            and all(bool(value) for value in metadata["contract_checks"].values())
+          ),
+        }
+        training_protocol_failures.extend(
+          f"{arm}/{context}/{seed}:{name}"
+          for name, passed in protocol_checks.items()
+          if not passed
         )
         checkpoint_hash = _sha256(source)
         actor_hash = summary["final_actor_sha256"]
@@ -310,6 +386,9 @@ def main() -> None:
   paired_results = json.loads(
     (evaluation_root / "paired_checkpoint_results.json").read_text()
   )
+  evaluation_manifest = json.loads(
+    (evaluation_root / "evaluation_manifest.json").read_text()
+  )
   required_paired_metrics = {
     "cbf_off_success_rate",
     "cbf_on_success_rate",
@@ -333,6 +412,43 @@ def main() -> None:
     "cbf_off_toe_riser_kick_episode_rate",
     "cbf_on_toe_riser_kick_episode_rate",
   }
+  required_task_curve_fields = {
+    "arm",
+    "context",
+    "training_seed",
+    "round",
+    "online_transitions",
+    "cbf_off_success_rate",
+    "cbf_on_success_rate",
+    "shield_gap",
+    "cbf_off_nominal_violation_steps_per_riser",
+    "cbf_off_would_intervene_fraction",
+    "cbf_off_mean_counterfactual_correction_norm",
+  }
+  required_training_safety_fields = {
+    "arm",
+    "context",
+    "training_seed",
+    "training_falls",
+    "training_shield_recoveries",
+    "training_nominal_violation_count",
+    "training_executed_violation_count",
+    "training_minimum_nominal_barrier_margin",
+    "training_minimum_executed_barrier_margin",
+  }
+  required_training_safety_curve_fields = {
+    "arm",
+    "context",
+    "training_seed",
+    "round",
+    "online_transitions",
+    "round_falls",
+    "round_shield_recoveries",
+    "round_nominal_violation_count",
+    "round_executed_violation_count",
+    "round_minimum_nominal_barrier_margin",
+    "round_minimum_executed_barrier_margin",
+  }
   structural_checks = {
     "training_matrix_complete_36_of_36": (
       training_progress.get("status") == "complete"
@@ -345,8 +461,18 @@ def main() -> None:
       and evaluation_progress.get("evaluation_job_count") == 222
     ),
     "paired_checkpoint_count_111": len(paired_results) == 111,
+    "fixed_training_protocol_36_of_36": not training_protocol_failures,
+    "paired_evaluation_protocol_512_on_off_rounds_0_1_2_4": (
+      evaluation_manifest.get("episodes_per_filter_condition") == 512
+      and evaluation_manifest.get("checkpoint_rounds") == [0, 1, 2, 4]
+      and evaluation_manifest.get("checkpoint_spec_count") == 111
+      and evaluation_manifest.get("shared_round_0_evaluation") is True
+    ),
     "paired_metrics_complete": all(
       required_paired_metrics.issubset(row) for row in paired_results
+    ),
+    "task_learning_curve_metrics_complete": required_task_curve_fields.issubset(
+      _csv_fieldnames(final_root / "learning_curves.csv")
     ),
     "hardware_proxy_complete_78_of_78": (
       proxy_progress.get("status") == "complete"
@@ -363,6 +489,14 @@ def main() -> None:
     ),
     "training_safety_curve_rows_144": (
       final_results.get("training_safety_curve_row_count") == 144
+    ),
+    "training_safety_metrics_complete": required_training_safety_fields.issubset(
+      _csv_fieldnames(final_root / "training_safety.csv")
+    ),
+    "training_safety_curve_metrics_complete": (
+      required_training_safety_curve_fields.issubset(
+        _csv_fieldnames(final_root / "training_safety_curves.csv")
+      )
     ),
     "paired_statistics_four_adaptation_methods": (
       set(final_results.get("paired_report_statistics", {})) == set(ARMS)
@@ -395,6 +529,7 @@ def main() -> None:
     "structural_protocol_audit_passed": not failed_structural_checks,
     "structural_checks": structural_checks,
     "failed_structural_checks": failed_structural_checks,
+    "training_protocol_failures": training_protocol_failures,
     "outcomes_not_used_as_completion_requirements": {
       "main_claim_supported": final_results["main_claim_supported"],
       "all_pytorch_bridge_p95_within_20ms": all(
