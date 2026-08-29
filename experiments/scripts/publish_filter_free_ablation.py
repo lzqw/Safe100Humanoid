@@ -532,11 +532,19 @@ def main() -> None:
     "training_protocol_failures": training_protocol_failures,
     "outcomes_not_used_as_completion_requirements": {
       "main_claim_supported": final_results["main_claim_supported"],
+      "main_claim_checks": final_results["main_claim_checks"],
       "all_pytorch_bridge_p95_within_20ms": all(
         bool(row["pytorch_bridge_deadline_passed"])
         for row in deployment_index
       ),
     },
+    "physical_stage_decision": (
+      "operator-gated CBF-on adaptation and shadow checks may proceed; "
+      "physical CBF-off still requires the documented independent safety gate"
+      if final_results["main_claim_supported"]
+      else "do not run physical CBF-off from this result; retain CBF-on and "
+      "shadow-only evaluation because the simulation claim gate failed"
+    ),
     "counts": {
       "training_jobs": training_progress.get("completed_jobs"),
       "evaluation_jobs": evaluation_progress.get("completed_jobs"),
@@ -601,6 +609,19 @@ def main() -> None:
       f"{float(row['pytorch_bridge_p95_ms']):.3f} | "
       f"{row['pytorch_bridge_deadline_passed']} |"
     )
+  if final_results["main_claim_supported"]:
+    claim_interpretation = [
+      "The preregistered simulation claim gate passed. This is simulation "
+      "evidence only: physical CBF-off remains prohibited until the staged "
+      "operator safety protocol and independent shadow gate are satisfied."
+    ]
+  else:
+    claim_interpretation = [
+      "The preregistered simulation claim gate failed. These artifacts must "
+      "not be presented as evidence that runtime CBF can be removed on the "
+      "physical robot. Any physical follow-up is restricted to CBF-on "
+      "adaptation and shadow-only filter-free measurements."
+    ]
   readme = [
     "# Filter-free deployment ablation (v140)",
     "",
@@ -612,6 +633,8 @@ def main() -> None:
     *table_lines,
     "",
     f"Main claim supported: **{final_results['main_claim_supported']}**.",
+    "",
+    *claim_interpretation,
     "",
     "## Hardware proxy", 
     "",
