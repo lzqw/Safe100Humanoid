@@ -44,6 +44,13 @@ def _parse_args() -> argparse.Namespace:
         action="store_true",
         help="Use the behavior-equivalent v34 current-CBF instrumentation.",
     )
+    parser.add_argument(
+        "--hardware-proxy-action-delay-steps",
+        type=int,
+        choices=(1, 2),
+        default=None,
+        help="Apply the frozen CBF-off hardware proxy at one delay level.",
+    )
     parser.add_argument("--output-json", type=Path, required=True)
     parser.add_argument("--output-csv", type=Path, required=True)
     return parser.parse_args()
@@ -160,6 +167,9 @@ def main() -> None:
         CURRENT_CBF_MODE,
         configure_v34_cbf,
     )
+    from src.tasks.stairs_cbf.paper_hardware_proxy import (
+        configure_hardware_proxy,
+    )
 
     env_cfg = load_env_cfg(TASK_ID, play=True)
     shift = configure_v31_context(
@@ -171,6 +181,16 @@ def main() -> None:
         recovery_distance_m=RECOVERY_DISTANCE_M,
         filter_alpha=FILTER_ALPHA,
     )
+    hardware_proxy = None
+    if args.hardware_proxy_action_delay_steps is not None:
+        if runtime_filter or args.instrument_current_velocity_cbf:
+            raise ValueError(
+                "hardware proxy is CBF-off and cannot use v34 instrumentation"
+            )
+        hardware_proxy = configure_hardware_proxy(
+            env_cfg,
+            action_delay_steps=args.hardware_proxy_action_delay_steps,
+        )
     evaluation_cbf = None
     if args.instrument_current_velocity_cbf:
         evaluation_cbf = configure_v34_cbf(
@@ -399,6 +419,7 @@ def main() -> None:
             "context_spec": context_spec,
             "shift": shift,
             "evaluation_cbf": evaluation_cbf,
+            "hardware_proxy": hardware_proxy,
             "checkpoint_sha256": file_sha256(checkpoint),
             "base_checkpoint": file_sha256(checkpoint) == BASE_CHECKPOINT_SHA256,
             "actor_state_sha256": actor_hash,
