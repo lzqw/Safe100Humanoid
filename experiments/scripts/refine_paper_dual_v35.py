@@ -114,6 +114,19 @@ from src.tasks.stairs_cbf.paper_deployment_pipeline import (
   V139_SELECTED_CHECKPOINT_SHA256 as SAFE_ADAPTATION_BASE_SHA256,
   deployment_pipeline_diagnostics,
 )
+from src.tasks.stairs_cbf.paper_filter_free_ablation import (
+  ADAPTATION_ARMS as FILTER_FREE_ADAPTATION_ARMS,
+  CHECKPOINT_ROUNDS as FILTER_FREE_CHECKPOINT_ROUNDS,
+  INITIAL_ACTOR_LEARNING_RATE as FILTER_FREE_INITIAL_ACTOR_LEARNING_RATE,
+  NUM_ENVS as FILTER_FREE_NUM_ENVS,
+  ROLLOUT_STEPS as FILTER_FREE_ROLLOUT_STEPS,
+  ROUNDS as FILTER_FREE_ROUNDS,
+  TRAINING_SEEDS as FILTER_FREE_TRAINING_SEEDS,
+  TRAINING_ACTION_STD as FILTER_FREE_TRAINING_ACTION_STD,
+  V139_SELECTED_CHECKPOINT_SHA256 as FILTER_FREE_BASE_SHA256,
+  arm_variables as filter_free_arm_variables,
+  filter_free_ablation_diagnostics,
+)
 from velocity_cbf_v34_protocol import CURRENT_CBF_MODE, OPTIMIZED_CBF_MODE
 from refine_cbf_teacher_v31 import (
   _collect_round,
@@ -470,6 +483,23 @@ def _parse_args() -> argparse.Namespace:
     help=(
       "Two-round F1/F2/F3 online adaptation from frozen v139 with every "
       "executed action CBF-filtered and the round-2 final actor published."
+    ),
+  )
+  parser.add_argument(
+    "--paper-filter-free-ablation-training",
+    action="store_true",
+    help=(
+      "Four-round formal adaptation from frozen v139 for the prospective "
+      "filter-free deployment ablation; publish the fixed round-4 actor."
+    ),
+  )
+  parser.add_argument(
+    "--filter-free-ablation-arm",
+    choices=FILTER_FREE_ADAPTATION_ARMS,
+    default=None,
+    help=(
+      "Formal adaptation arm: nominal, reward-only, filter-only, or dual "
+      "Safe-FT. Frozen is evaluated directly and has no training run."
     ),
   )
   parser.add_argument(
@@ -899,6 +929,12 @@ def _domain_randomization_state_sha256(base_env) -> str:
 
 def main() -> None:
   args = _parse_args()
+  if args.paper_filter_free_ablation_training != (
+    args.filter_free_ablation_arm is not None
+  ):
+    raise ValueError(
+      "filter-free ablation training and its arm must be specified together"
+    )
   if args.rounds < 1 or args.num_envs < 1 or args.rollout_steps < 1:
     raise ValueError("v35 rounds, environments, and rollout steps must be positive")
   if not 0.0 <= args.clearance_barrier_slope <= 2.0:
@@ -1318,6 +1354,7 @@ def main() -> None:
       args.paper_deployment_alignment_control_training
     ),
     "safe_online_adaptation": args.paper_safe_online_adaptation_training,
+    "filter_free_ablation": args.paper_filter_free_ablation_training,
   }
   if sum(bool(enabled) for enabled in continuous_training_modes.values()) > 1:
     raise ValueError(
@@ -2488,6 +2525,164 @@ def main() -> None:
       paper_deployment_alignment_control_training = (
         pipeline_training_metadata
       )
+  paper_filter_free_ablation_training = None
+  if args.paper_filter_free_ablation_training:
+    assert args.filter_free_ablation_arm is not None
+    filter_free_variables = filter_free_arm_variables(
+      args.filter_free_ablation_arm
+    )
+    expected_filter_enabled = bool(
+      filter_free_variables["runtime_filter_during_adaptation"]
+    )
+    expected_filter_fraction = 1.0 if expected_filter_enabled else 0.0
+    filter_free_diagnostics = filter_free_ablation_diagnostics(
+      arm=args.filter_free_ablation_arm,
+      context=args.context,
+    )
+    filter_free_incompatible_options = {
+      "height_curriculum": args.height_curriculum,
+      "filter_group_balanced_advantages": (
+        args.filter_group_balanced_advantages
+      ),
+      "state_value_occupancy_correction": (
+        args.state_value_occupancy_correction
+      ),
+      "deterministic_mean_teacher": args.deterministic_mean_teacher,
+      "success_safe_action_imitation": args.success_safe_action_imitation,
+      "failure_only_mean_teacher": args.failure_only_mean_teacher,
+      "success_only_mean_teacher": args.success_only_mean_teacher,
+      "failure_focused_actor": args.failure_focused_actor,
+      "distill_only_actor": args.distill_only_actor,
+      "split_filter_actor_objectives": args.split_filter_actor_objectives,
+      "task_priority_gradient_surgery": args.task_priority_gradient_surgery,
+      "full_batch_sgd_actor": args.full_batch_sgd_actor,
+      "persistent_geometry_gradient_balance": (
+        args.persistent_geometry_gradient_balance
+      ),
+      "outcome_centered_episode_advantage": (
+        args.outcome_centered_episode_advantage
+      ),
+      "conservative_outcome_advantage": (
+        args.conservative_outcome_advantage
+      ),
+      "transactional_rollout_acceptance": (
+        args.transactional_rollout_acceptance
+      ),
+    }
+    enabled_filter_free_incompatible = sorted(
+      name
+      for name, enabled in filter_free_incompatible_options.items()
+      if enabled
+    )
+    filter_free_contract_checks = {
+      "frozen_v139_base_checkpoint": (
+        checkpoint_sha256 == FILTER_FREE_BASE_SHA256
+      ),
+      "supported_context": args.context in ("F1", "F2", "F3"),
+      "prospectively_frozen_training_seed": (
+        args.seed in FILTER_FREE_TRAINING_SEEDS
+      ),
+      "unit_balanced_eq27_reward_configuration": (
+        args.candidate == "paper_stair_sloped_unit_balanced"
+      ),
+      "task_compatible_cbf_geometry": math.isclose(
+        args.clearance_barrier_slope,
+        CLEARANCE_BARRIER_SLOPE,
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
+      ),
+      "current_cbf": args.cbf_mode == CURRENT_CBF_MODE,
+      "arm_runtime_filter": (
+        training_runtime_filter == expected_filter_enabled
+      ),
+      "fixed_binary_filter_fraction": (
+        args.training_filter_schedule == "fixed"
+        and math.isclose(
+          training_filter_fraction,
+          expected_filter_fraction,
+          rel_tol=0.0,
+          abs_tol=1.0e-12,
+        )
+      ),
+      "teacher_free_a0": all(arm == "A0" for arm in teacher_arms),
+      "original_actor_interface": (
+        args.actor_observation_interface == "original-405"
+      ),
+      "continuous_standard_ppo": not enabled_filter_free_incompatible,
+      "initial_actor_learning_rate": math.isclose(
+        args.actor_learning_rate,
+        FILTER_FREE_INITIAL_ACTOR_LEARNING_RATE,
+        rel_tol=0.0,
+        abs_tol=1.0e-15,
+      ),
+      "continuation_kl_loss_disabled": args.moving_kl_beta == 0.0,
+      "paper_aligned_rollout_std": math.isclose(
+        args.training_action_std,
+        FILTER_FREE_TRAINING_ACTION_STD,
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
+      ),
+      "no_auxiliary_credit": (
+        args.pre_intervention_weight == 0.0
+        and args.success_local_kl_beta == 0.0
+        and args.teacher_gradient_target_ratio == 0.0
+      ),
+      "standard_minibatching": (
+        args.actor_gradient_accumulation_microbatches == 1
+      ),
+      "fixed_nominal_dynamics": (
+        args.training_domain_randomization == "off"
+      ),
+      "fixed_num_envs": args.num_envs == FILTER_FREE_NUM_ENVS,
+      "fixed_training_horizon": args.rounds == FILTER_FREE_ROUNDS,
+      "full_rollout_length": (
+        args.rollout_steps == FILTER_FREE_ROLLOUT_STEPS
+      ),
+      "fixed_checkpoint_rounds": FILTER_FREE_CHECKPOINT_ROUNDS == (0, 1, 2, 4),
+      "eight_cm_clearance_retained": math.isclose(
+        float(filter_free_diagnostics["clearance_margin_m"]),
+        V138_CLEARANCE_MARGIN_M,
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
+      ),
+      "candidate_selection_disabled": (
+        not bool(filter_free_diagnostics["checkpoint_candidate_selection"])
+      ),
+    }
+    failed_filter_free_checks = sorted(
+      name
+      for name, passed in filter_free_contract_checks.items()
+      if not passed
+    )
+    if failed_filter_free_checks:
+      raise ValueError(
+        "filter-free ablation contract differs: "
+        f"arm={args.filter_free_ablation_arm}, "
+        f"failed={failed_filter_free_checks}, "
+        f"incompatible={enabled_filter_free_incompatible}"
+      )
+    paper_filter_free_ablation_training = {
+      **filter_free_diagnostics,
+      "contract_checks": filter_free_contract_checks,
+      "training_trajectory": "continuous_without_acceptance_or_rollback",
+      "training_distribution": (
+        "100_percent_cbf_filtered_execution"
+        if expected_filter_enabled
+        else "100_percent_nominal_execution"
+      ),
+      "deployment_distribution": "deterministic_mean_cbf_off_primary",
+      "actor_optimizer": "adam",
+      "actor_epochs": 2,
+      "actor_minibatches_per_epoch": 4,
+      "actor_updates_per_round": 8,
+      "moving_kl_beta": 0.0,
+      "target_forward_kl": V129_TARGET_FORWARD_KL,
+      "initial_actor_learning_rate": FILTER_FREE_INITIAL_ACTOR_LEARNING_RATE,
+      "minimum_actor_learning_rate": V129_MINIMUM_ACTOR_LEARNING_RATE,
+      "maximum_actor_learning_rate": V129_MAXIMUM_ACTOR_LEARNING_RATE,
+      "real_world_interaction": False,
+      "candidate_selection_additional_evaluation_count": 0,
+    }
   paper_high_parallel_training = None
   if args.paper_high_parallel_training:
     incompatible_options = {
@@ -2717,6 +2912,24 @@ def main() -> None:
     args.candidate,
     runtime_filter_during_training=training_runtime_filter,
   )
+  cbf_reward_enabled = True
+  if args.paper_filter_free_ablation_training:
+    assert args.filter_free_ablation_arm is not None
+    cbf_reward_enabled = bool(
+      filter_free_arm_variables(args.filter_free_ablation_arm)[
+        "cbf_reward_during_adaptation"
+      ]
+    )
+    env_cfg.rewards["cbf_dual"].weight = 1.0 if cbf_reward_enabled else 0.0
+    reward["enabled_during_adaptation"] = cbf_reward_enabled
+    reward["configured_for_matched_ablation"] = True
+    reward["configured_weight"] = env_cfg.rewards["cbf_dual"].weight
+    assert paper_filter_free_ablation_training is not None
+    paper_filter_free_ablation_training["cbf_reward"] = {
+      "enabled": cbf_reward_enabled,
+      "configured_weight": env_cfg.rewards["cbf_dual"].weight,
+      "counterfactual_cbf_telemetry_retained": True,
+    }
   reward["training_cbf"] = training_cbf
   geometry_observation = None
   if (
@@ -2788,11 +3001,14 @@ def main() -> None:
     or args.paper_clearance_mixed_training
     or args.paper_deployment_alignment_control_training
     or args.paper_safe_online_adaptation_training
+    or args.paper_filter_free_ablation_training
   ):
     clearance_margin = configure_paper_clearance_margin(env_cfg)
     reward["clearance_margin"] = clearance_margin
     if args.paper_safe_online_adaptation_training:
       clearance_training_metadata = paper_safe_online_adaptation_training
+    elif args.paper_filter_free_ablation_training:
+      clearance_training_metadata = paper_filter_free_ablation_training
     elif args.paper_deployment_alignment_control_training:
       clearance_training_metadata = (
         paper_deployment_alignment_control_training
@@ -2808,7 +3024,9 @@ def main() -> None:
     "fractions_by_round": list(training_filter_fractions),
     "start_fraction": training_filter_fractions[0],
     "end_fraction": training_filter_fractions[-1],
-    "counterfactual_cbf_reward_retained_when_unshielded": True,
+    "counterfactual_cbf_reward_retained_when_unshielded": (
+      cbf_reward_enabled
+    ),
   }
   shift["runtime_filter_fraction"] = training_filter_fraction
   shift["runtime_filter_schedule"] = filter_schedule
@@ -2898,7 +3116,19 @@ def main() -> None:
     "weight": args.pre_intervention_weight,
     "bounded_above_by_one": args.pre_intervention_aggregation == "max",
   }
-  if args.paper_safe_online_adaptation_training:
+  if args.paper_filter_free_ablation_training:
+    assert args.filter_free_ablation_arm is not None
+    filter_free_classes = {
+      "nominal_ft": "PaperNominalFilterFreePPO",
+      "reward_only_ft": "PaperRewardOnlyFilterFreePPO",
+      "filter_only_ft": "PaperFilterOnlyFilterFreePPO",
+      "dual_safe_ft": "PaperDualFilterFreePPO",
+    }
+    agent_cfg.algorithm.class_name = (
+      "src.tasks.stairs_cbf.paper_filter_free_ablation:"
+      f"{filter_free_classes[args.filter_free_ablation_arm]}"
+    )
+  elif args.paper_safe_online_adaptation_training:
     agent_cfg.algorithm.class_name = (
       "src.tasks.stairs_cbf.paper_deployment_pipeline:"
       "PaperSafeOnlineAdaptationPPO"
@@ -3202,6 +3432,9 @@ def main() -> None:
         ),
         "paper_safe_online_adaptation_training": (
           paper_safe_online_adaptation_training
+        ),
+        "paper_filter_free_ablation_training": (
+          paper_filter_free_ablation_training
         ),
         "split_filter_actor_objectives": (
           args.split_filter_actor_objectives
@@ -3534,6 +3767,7 @@ def main() -> None:
         or args.paper_clearance_mixed_training
         or args.paper_deployment_alignment_control_training
         or args.paper_safe_online_adaptation_training
+        or args.paper_filter_free_ablation_training
       ):
         (
           next_actor_learning_rate,
@@ -3733,6 +3967,9 @@ def main() -> None:
           "paper_safe_online_adaptation_training": (
             paper_safe_online_adaptation_training
           ),
+          "paper_filter_free_ablation_training": (
+            paper_filter_free_ablation_training
+          ),
           "split_filter_actor_objectives": (
             args.split_filter_actor_objectives
           ),
@@ -3796,6 +4033,11 @@ def main() -> None:
       primary_checkpoint_round = SAFE_ADAPTATION_ROUNDS
       primary_checkpoint = final_checkpoint
       primary_checkpoint_role = "fixed_round_2_final_safe_adaptation_actor"
+      primary_actor_sha256 = final_actor_sha256
+    elif args.paper_filter_free_ablation_training:
+      primary_checkpoint_round = FILTER_FREE_ROUNDS
+      primary_checkpoint = final_checkpoint
+      primary_checkpoint_role = "fixed_round_4_filter_free_ablation_actor"
       primary_actor_sha256 = final_actor_sha256
     summary = {
       "schema_version": 1,
@@ -3866,6 +4108,9 @@ def main() -> None:
       ),
       "paper_safe_online_adaptation_training": (
         paper_safe_online_adaptation_training
+      ),
+      "paper_filter_free_ablation_training": (
+        paper_filter_free_ablation_training
       ),
       "split_filter_actor_objectives": (
         args.split_filter_actor_objectives
