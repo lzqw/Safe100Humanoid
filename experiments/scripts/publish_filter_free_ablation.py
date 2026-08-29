@@ -182,6 +182,7 @@ def main() -> None:
     "training_safety_curves.svg",
     "paired_statistics.json",
     "paired_statistics.csv",
+    "factorial_contrasts.csv",
     "SUMMARY.md",
   ):
     _copy(final_root / name, result_dir / name)
@@ -511,6 +512,21 @@ def main() -> None:
     "paired_statistics_four_adaptation_methods": (
       set(final_results.get("paired_report_statistics", {})) == set(ARMS)
     ),
+    "factorial_contrasts_five_primary_metrics": (
+      final_results.get("factorial_contrasts_are_report_only") is True
+      and len(final_results.get("factorial_contrasts", [])) == 5
+      and {
+        row.get("metric")
+        for row in final_results.get("factorial_contrasts", [])
+      }
+      == {
+        "mean_cbf_off_success_rate",
+        "mean_cbf_off_nominal_violation_steps_per_riser",
+        "mean_cbf_off_would_intervene_fraction",
+        "mean_cbf_off_counterfactual_correction_norm",
+        "mean_shield_gap",
+      }
+    ),
     "hardware_proxy_three_method_aggregate": (
       {row.get("arm") for row in proxy_results.get("aggregate", [])}
       == {"frozen", *HARDWARE_PROXY_ARMS}
@@ -686,6 +702,7 @@ def main() -> None:
     "- `task_learning_curves.*`: CBF-off success and shield-gap figures",
     "- `training_safety_curves.*`: executed violations and falls figures",
     "- `paired_statistics.*`: report-only paired-bootstrap intervals and repair/regression counts",
+    "- `factorial_contrasts.csv`: report-only Filter, Reward, and interaction contrasts",
     "- `evaluation/checkpoint_summaries/`: all 222 paired-condition summaries",
     "- `hardware_proxy/`: 42 Frozen/Filter-only/Dual proxy summaries and aggregate table",
     "- `training/`: all 36 training summaries and round metrics",

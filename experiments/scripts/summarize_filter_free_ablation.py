@@ -902,6 +902,31 @@ def main() -> None:
       for arm in filtered_training_arms
     ),
   }
+  arm_rows = {str(row["arm"]): row for row in main_table}
+  factorial_metrics = (
+    "mean_cbf_off_success_rate",
+    "mean_cbf_off_nominal_violation_steps_per_riser",
+    "mean_cbf_off_would_intervene_fraction",
+    "mean_cbf_off_counterfactual_correction_norm",
+    "mean_shield_gap",
+  )
+  factorial_contrasts: list[dict[str, Any]] = []
+  for metric in factorial_metrics:
+    nominal = float(arm_rows["nominal_ft"][metric])
+    reward = float(arm_rows["reward_only_ft"][metric])
+    filtered = float(arm_rows["filter_only_ft"][metric])
+    dual = float(arm_rows["dual_safe_ft"][metric])
+    factorial_contrasts.append(
+      {
+        "metric": metric,
+        "reward_effect_without_filter": reward - nominal,
+        "reward_effect_with_filter": dual - filtered,
+        "filter_effect_without_reward": filtered - nominal,
+        "filter_effect_with_reward": dual - reward,
+        "filter_reward_interaction": dual - filtered - reward + nominal,
+        "report_only": True,
+      }
+    )
   result = {
     "schema_version": 1,
     "experiment": "paper_filter_free_deployment_ablation",
@@ -920,6 +945,8 @@ def main() -> None:
         "filtered_training_executed_violation_free"
       ]
     ),
+    "factorial_contrasts": factorial_contrasts,
+    "factorial_contrasts_are_report_only": True,
     "curve_row_count": len(curve_rows),
     "training_safety_run_count": len(training_rows),
     "training_safety_curve_row_count": len(training_curve_rows),
@@ -935,6 +962,7 @@ def main() -> None:
   _write_learning_plots(output_dir, curve_rows, training_curve_rows)
   _atomic_json(output_dir / "paired_statistics.json", paired_statistics)
   _write_csv(output_dir / "paired_statistics.csv", paired_statistics_rows)
+  _write_csv(output_dir / "factorial_contrasts.csv", factorial_contrasts)
 
   lines = [
     "# Filter-free deployment ablation",
@@ -1030,6 +1058,27 @@ def main() -> None:
       "Intervals resample adaptation seeds and paired episodes while holding "
       "the three deployment contexts fixed and equally weighted. They are "
       "descriptive and do not alter the pre-registered claim gate.",
+      "",
+      "## Report-only 2×2 factorial contrasts",
+      "",
+      "| Metric | Reward effect, filter off | Reward effect, filter on | Filter effect, no reward | Filter effect, reward | Interaction |",
+      "|---|---:|---:|---:|---:|---:|",
+      *[
+        "| {metric} | {reward_off:+.5f} | {reward_on:+.5f} | "
+        "{filter_no_reward:+.5f} | {filter_reward:+.5f} | "
+        "{interaction:+.5f} |".format(
+          metric=str(row["metric"]),
+          reward_off=float(row["reward_effect_without_filter"]),
+          reward_on=float(row["reward_effect_with_filter"]),
+          filter_no_reward=float(row["filter_effect_without_reward"]),
+          filter_reward=float(row["filter_effect_with_reward"]),
+          interaction=float(row["filter_reward_interaction"]),
+        )
+        for row in factorial_contrasts
+      ],
+      "",
+      "These contrasts are descriptive consequences of the matched 2×2 "
+      "ablation and do not alter the pre-registered claim gate.",
       "",
       "![Task learning curves](task_learning_curves.png)",
       "",
