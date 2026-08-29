@@ -15,6 +15,13 @@ ARMS = ("nominal_ft", "reward_only_ft", "filter_only_ft", "dual_safe_ft")
 CONTEXTS = ("F1", "F2", "F3")
 TRAINING_SEEDS = (201357000, 201357001, 201357002)
 REPRESENTATIVE_MODEL_SEED = TRAINING_SEEDS[0]
+ARM_LABELS = {
+  "frozen": "Frozen",
+  "nominal_ft": "Nominal FT",
+  "reward_only_ft": "Reward-only FT",
+  "filter_only_ft": "Filter-only FT",
+  "dual_safe_ft": "Dual Safe-FT",
+}
 
 
 def _parse_args() -> argparse.Namespace:
@@ -154,6 +161,11 @@ def main() -> None:
     "main_table.csv",
     "learning_curves.csv",
     "training_safety.csv",
+    "training_safety_curves.csv",
+    "task_learning_curves.png",
+    "task_learning_curves.svg",
+    "training_safety_curves.png",
+    "training_safety_curves.svg",
     "SUMMARY.md",
   ):
     _copy(final_root / name, result_dir / name)
@@ -287,8 +299,8 @@ def main() -> None:
     (proxy_root / "hardware_proxy_results.json").read_text()
   )
   table_lines = [
-    "| Arm | Mean CBF-off | Improvement | Shield gap | Training falls |",
-    "|---|---:|---:|---:|---:|",
+    "| Arm | Filter | CBF reward | F1 off | F2 off | F3 off | Mean off | Off Δ | Shield gap | Training falls |",
+    "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
   ]
   for row in final_results["main_table"]:
     falls = (
@@ -297,8 +309,14 @@ def main() -> None:
       else f"{float(row['training_falls_mean']):.1f}"
     )
     table_lines.append(
-      "| {arm} | {off:.3f} | {gain:+.3f} | {gap:+.3f} | {falls} |".format(
-        arm=row["arm"],
+      "| {arm} | {filter} | {reward} | {f1:.3f} | {f2:.3f} | {f3:.3f} | "
+      "{off:.3f} | {gain:+.3f} | {gap:+.3f} | {falls} |".format(
+        arm=ARM_LABELS[str(row["arm"])],
+        filter=row["training_filter"],
+        reward=row["cbf_reward"],
+        f1=float(row["f1_cbf_off_success_rate"]),
+        f2=float(row["f2_cbf_off_success_rate"]),
+        f3=float(row["f3_cbf_off_success_rate"]),
         off=float(row["mean_cbf_off_success_rate"]),
         gain=float(row["mean_off_improvement"]),
         gap=float(row["mean_shield_gap"]),
@@ -359,7 +377,10 @@ def main() -> None:
     "",
     "- `final_results.json` and `main_table.csv`: primary result and claim checks",
     "- `learning_curves.csv`: rounds 0/1/2/4",
-    "- `training_safety.csv`: falls, nominal/executed violations, recoveries, min h",
+    "- `training_safety.csv`: per-run falls, violations, recoveries, and min h",
+    "- `training_safety_curves.csv`: per-round safety metrics versus transitions",
+    "- `task_learning_curves.*`: CBF-off success and shield-gap figures",
+    "- `training_safety_curves.*`: executed violations and falls figures",
     "- `evaluation/checkpoint_summaries/`: all 222 paired-condition summaries",
     "- `hardware_proxy/`: 78 proxy summaries and aggregate table",
     "- `training/`: all 36 training summaries and round metrics",

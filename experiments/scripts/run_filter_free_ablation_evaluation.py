@@ -206,6 +206,16 @@ def _paired_row(
     "cbf_on_fall_rate": on["fall_rate"],
     "cbf_off_mean_reached_riser": off["mean_reached_riser"],
     "cbf_on_mean_reached_riser": on["mean_reached_riser"],
+    "cbf_off_mean_return": off["mean_return"],
+    "cbf_on_mean_return": on["mean_return"],
+    "cbf_off_mean_completion_time_s": off["mean_completion_time_s"],
+    "cbf_on_mean_completion_time_s": on["mean_completion_time_s"],
+    "cbf_off_mean_success_completion_time_s": off[
+      "mean_success_completion_time_s"
+    ],
+    "cbf_on_mean_success_completion_time_s": on[
+      "mean_success_completion_time_s"
+    ],
     "cbf_off_nominal_violation_steps_per_riser": off[
       "nominal_barrier_violation_steps_per_riser"
     ],
@@ -222,8 +232,20 @@ def _paired_row(
       "mean_counterfactual_correction_norm"
     ],
     "cbf_on_mean_correction_norm": on["mean_correction_norm"],
+    "cbf_off_unsafe_overlap_steps_per_riser": off[
+      "unsafe_overlap_steps_per_riser"
+    ],
+    "cbf_on_unsafe_overlap_steps_per_riser": on[
+      "unsafe_overlap_steps_per_riser"
+    ],
     "cbf_off_toe_riser_kick_episode_rate": off["kick_episode_rate"],
     "cbf_on_toe_riser_kick_episode_rate": on["kick_episode_rate"],
+    "cbf_off_toe_riser_kick_events_per_riser": off[
+      "toe_riser_kick_events_per_riser"
+    ],
+    "cbf_on_toe_riser_kick_events_per_riser": on[
+      "toe_riser_kick_events_per_riser"
+    ],
   }
 
 
