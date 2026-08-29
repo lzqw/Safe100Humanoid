@@ -10,6 +10,8 @@ import statistics
 from pathlib import Path
 from typing import Any
 
+import numpy as np
+
 ARMS = (
   "frozen",
   "nominal_ft",
@@ -25,6 +27,9 @@ TRAINING_ROUNDS = (1, 2, 3, 4)
 NUM_ENVS = 128
 ROLLOUT_STEPS = 1024
 TRANSITIONS_PER_ROUND = NUM_ENVS * ROLLOUT_STEPS
+PAIRED_EPISODES = 512
+BOOTSTRAP_SAMPLES = 10_000
+BOOTSTRAP_SEED_BASE = 201_357_950
 ARM_FACTORS = {
   "frozen": ("—", "—"),
   "nominal_ft": ("Off", "No"),
@@ -76,6 +81,177 @@ def _mean(values: list[float]) -> float:
 
 def _sample_std(values: list[float]) -> float:
   return statistics.stdev(values) if len(values) > 1 else 0.0
+
+
+def _parse_bool(value: str) -> bool:
+  normalized = value.strip().lower()
+  if normalized in {"true", "1"}:
+    return True
+  if normalized in {"false", "0"}:
+    return False
+  raise ValueError(f"invalid CSV boolean: {value!r}")
+
+
+def _episode_success(path: Path) -> tuple[list[tuple[int, int]], np.ndarray]:
+  if not path.is_file():
+    raise FileNotFoundError(path)
+  with path.open(newline="") as handle:
+    rows = list(csv.DictReader(handle))
+  keys = [
+    (int(row["evaluation_seed"]), int(row["environment_id"])) for row in rows
+  ]
+  if len(rows) != PAIRED_EPISODES or len(keys) != len(set(keys)):
+    raise RuntimeError(f"paired episode identity differs: {path}")
+  order = np.argsort(np.asarray(keys, dtype=np.int64)[:, 1], kind="stable")
+  ordered_keys = [keys[int(index)] for index in order]
+  values = np.asarray(
+    [float(_parse_bool(rows[int(index)]["success"])) for index in order],
+    dtype=np.float64,
+  )
+  return ordered_keys, values
+
+
+def _episode_path(
+  evaluation_root: Path,
+  *,
+  context: str,
+  arm: str,
+  training_seed: int | None,
+  round_index: int,
+  condition: str,
+) -> Path:
+  base = evaluation_root / context / arm
+  if arm != "frozen":
+    if training_seed is None:
+      raise ValueError("adapted episode path requires a training seed")
+    base = base / f"seed_{training_seed}"
+  return base / f"round_{round_index:02d}" / f"filter_{condition}" / "episodes.csv"
+
+
+def _hierarchical_paired_interval(
+  deltas: np.ndarray,
+  *,
+  bootstrap_seed: int,
+) -> dict[str, Any]:
+  values = np.asarray(deltas, dtype=np.float64)
+  expected_shape = (len(TRAINING_SEEDS), len(CONTEXTS), PAIRED_EPISODES)
+  if values.shape != expected_shape or not bool(np.isfinite(values).all()):
+    raise ValueError(
+      f"hierarchical paired deltas differ: {values.shape} != {expected_shape}"
+    )
+  rng = np.random.default_rng(bootstrap_seed)
+  means = np.empty(BOOTSTRAP_SAMPLES, dtype=np.float64)
+  chunk_size = 100
+  seed_count, context_count, episode_count = values.shape
+  for start in range(0, BOOTSTRAP_SAMPLES, chunk_size):
+    stop = min(start + chunk_size, BOOTSTRAP_SAMPLES)
+    count = stop - start
+    sampled_seeds = rng.integers(0, seed_count, size=(count, seed_count))
+    chunk_means = np.zeros(count, dtype=np.float64)
+    for seed_slot in range(seed_count):
+      for context_index in range(context_count):
+        source = values[sampled_seeds[:, seed_slot], context_index, :]
+        episode_ids = rng.integers(
+          0, episode_count, size=(count, episode_count)
+        )
+        sampled = np.take_along_axis(source, episode_ids, axis=1)
+        chunk_means += sampled.mean(axis=1) / (seed_count * context_count)
+    means[start:stop] = chunk_means
+  lower, upper = np.quantile(means, [0.025, 0.975])
+  return {
+    "mean": float(values.mean()),
+    "paired_bootstrap_ci95": [float(lower), float(upper)],
+    "bootstrap_samples": BOOTSTRAP_SAMPLES,
+    "bootstrap_seed": bootstrap_seed,
+    "hierarchy": "adaptation seeds, then paired episodes; contexts fixed/equal",
+    "confidence_interval_is_gate": False,
+    "paired_episode_comparisons": int(values.size),
+    "repairs": int(np.count_nonzero(values > 0.0)),
+    "regressions": int(np.count_nonzero(values < 0.0)),
+    "ties": int(np.count_nonzero(values == 0.0)),
+  }
+
+
+def _paired_statistics(
+  evaluation_root: Path,
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+  results: dict[str, Any] = {}
+  csv_rows: list[dict[str, Any]] = []
+  for arm_index, arm in enumerate(ADAPTATION_ARMS):
+    improvement = np.empty(
+      (len(TRAINING_SEEDS), len(CONTEXTS), PAIRED_EPISODES),
+      dtype=np.float64,
+    )
+    shield_gap = np.empty_like(improvement)
+    for seed_index, training_seed in enumerate(TRAINING_SEEDS):
+      for context_index, context in enumerate(CONTEXTS):
+        baseline_keys, baseline_off = _episode_success(
+          _episode_path(
+            evaluation_root,
+            context=context,
+            arm="frozen",
+            training_seed=None,
+            round_index=0,
+            condition="off",
+          )
+        )
+        off_keys, final_off = _episode_success(
+          _episode_path(
+            evaluation_root,
+            context=context,
+            arm=arm,
+            training_seed=training_seed,
+            round_index=4,
+            condition="off",
+          )
+        )
+        on_keys, final_on = _episode_success(
+          _episode_path(
+            evaluation_root,
+            context=context,
+            arm=arm,
+            training_seed=training_seed,
+            round_index=4,
+            condition="on",
+          )
+        )
+        if baseline_keys != off_keys or off_keys != on_keys:
+          raise RuntimeError(
+            f"paired episode keys differ for {arm}/{context}/{training_seed}"
+          )
+        improvement[seed_index, context_index] = final_off - baseline_off
+        shield_gap[seed_index, context_index] = final_on - final_off
+    arm_result = {
+      "cbf_off_improvement": _hierarchical_paired_interval(
+        improvement,
+        bootstrap_seed=BOOTSTRAP_SEED_BASE + arm_index * 10,
+      ),
+      "shield_gap": _hierarchical_paired_interval(
+        shield_gap,
+        bootstrap_seed=BOOTSTRAP_SEED_BASE + arm_index * 10 + 1,
+      ),
+    }
+    results[arm] = arm_result
+    for metric, record in arm_result.items():
+      csv_rows.append(
+        {
+          "arm": arm,
+          "metric": metric,
+          "mean": record["mean"],
+          "ci95_lower": record["paired_bootstrap_ci95"][0],
+          "ci95_upper": record["paired_bootstrap_ci95"][1],
+          "repairs": record["repairs"],
+          "regressions": record["regressions"],
+          "ties": record["ties"],
+          "paired_episode_comparisons": record[
+            "paired_episode_comparisons"
+          ],
+          "bootstrap_samples": record["bootstrap_samples"],
+          "bootstrap_seed": record["bootstrap_seed"],
+          "confidence_interval_is_gate": False,
+        }
+      )
+  return results, csv_rows
 
 
 def _training_safety(
@@ -500,6 +676,9 @@ def main() -> None:
   training_rows, training_curve_rows, training_by_arm = _training_safety(
     training_root
   )
+  paired_statistics, paired_statistics_rows = _paired_statistics(
+    evaluation_root
+  )
   final_rows = [row for row in curve_rows if row["round"] == 4]
   baseline_off_mean = _mean(
     [float(frozen[context]["cbf_off_success_rate"]) for context in CONTEXTS]
@@ -630,6 +809,24 @@ def main() -> None:
     main_table.append(table_row)
     detailed_by_arm[arm] = {"per_seed": per_seed, "training": training}
 
+  for row in main_table:
+    arm = str(row["arm"])
+    if arm == "frozen":
+      continue
+    statistics_record = paired_statistics[arm]
+    if not math.isclose(
+      float(statistics_record["cbf_off_improvement"]["mean"]),
+      float(row["mean_off_improvement"]),
+      abs_tol=1.0e-12,
+    ):
+      raise RuntimeError(f"paired improvement mean differs for {arm}")
+    if not math.isclose(
+      float(statistics_record["shield_gap"]["mean"]),
+      float(row["mean_shield_gap"]),
+      abs_tol=1.0e-12,
+    ):
+      raise RuntimeError(f"paired shield-gap mean differs for {arm}")
+
   dual = next(row for row in main_table if row["arm"] == "dual_safe_ft")
   best_off = max(float(row["mean_cbf_off_success_rate"]) for row in main_table)
   lowest_violation = min(
@@ -653,6 +850,7 @@ def main() -> None:
     "baseline_mean_cbf_off_success_rate": baseline_off_mean,
     "main_table": main_table,
     "details_by_arm": detailed_by_arm,
+    "paired_report_statistics": paired_statistics,
     "main_claim_checks": claim_checks,
     "main_claim_comparison_arms": list(ARMS),
     "main_claim_supported": all(claim_checks.values()),
@@ -669,6 +867,8 @@ def main() -> None:
     output_dir / "training_safety_curves.csv", training_curve_rows
   )
   _write_learning_plots(output_dir, curve_rows, training_curve_rows)
+  _atomic_json(output_dir / "paired_statistics.json", paired_statistics)
+  _write_csv(output_dir / "paired_statistics.csv", paired_statistics_rows)
 
   lines = [
     "# Filter-free deployment ablation",
@@ -705,6 +905,40 @@ def main() -> None:
       "The claim is enabled only when Dual Safe-FT has both the best "
       "round-4 CBF-off success and the lowest nominal violation rate across "
       "all five main-table methods, including Frozen.",
+      "",
+      "## Report-only paired 95% intervals",
+      "",
+      "| Arm | CBF-off improvement | 95% CI | Shield gap | 95% CI |",
+      "|---|---:|---:|---:|---:|",
+      *[
+        "| {arm} | {gain:+.3f} | [{gain_lo:+.3f}, {gain_hi:+.3f}] | "
+        "{gap:+.3f} | [{gap_lo:+.3f}, {gap_hi:+.3f}] |".format(
+          arm=ARM_LABELS[arm],
+          gain=float(paired_statistics[arm]["cbf_off_improvement"]["mean"]),
+          gain_lo=float(
+            paired_statistics[arm]["cbf_off_improvement"][
+              "paired_bootstrap_ci95"
+            ][0]
+          ),
+          gain_hi=float(
+            paired_statistics[arm]["cbf_off_improvement"][
+              "paired_bootstrap_ci95"
+            ][1]
+          ),
+          gap=float(paired_statistics[arm]["shield_gap"]["mean"]),
+          gap_lo=float(
+            paired_statistics[arm]["shield_gap"]["paired_bootstrap_ci95"][0]
+          ),
+          gap_hi=float(
+            paired_statistics[arm]["shield_gap"]["paired_bootstrap_ci95"][1]
+          ),
+        )
+        for arm in ADAPTATION_ARMS
+      ],
+      "",
+      "Intervals resample adaptation seeds and paired episodes while holding "
+      "the three deployment contexts fixed and equally weighted. They are "
+      "descriptive and do not alter the pre-registered claim gate.",
       "",
       "![Task learning curves](task_learning_curves.png)",
       "",

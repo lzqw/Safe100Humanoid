@@ -166,6 +166,8 @@ def main() -> None:
     "task_learning_curves.svg",
     "training_safety_curves.png",
     "training_safety_curves.svg",
+    "paired_statistics.json",
+    "paired_statistics.csv",
     "SUMMARY.md",
   ):
     _copy(final_root / name, result_dir / name)
@@ -384,6 +386,7 @@ def main() -> None:
     "- `training_safety_curves.csv`: per-round safety metrics versus transitions",
     "- `task_learning_curves.*`: CBF-off success and shield-gap figures",
     "- `training_safety_curves.*`: executed violations and falls figures",
+    "- `paired_statistics.*`: report-only paired-bootstrap intervals and repair/regression counts",
     "- `evaluation/checkpoint_summaries/`: all 222 paired-condition summaries",
     "- `hardware_proxy/`: 78 proxy summaries and aggregate table",
     "- `training/`: all 36 training summaries and round metrics",
