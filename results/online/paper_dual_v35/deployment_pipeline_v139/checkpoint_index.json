@@ -7,6 +7,16 @@
     "checkpoint_sha256": "323f1e00b58d379b8746c0191a44272f2e1df134139050417c56e733cc484728",
     "actor_sha256": "4a4926d9227c31fb239ceead6c39bed61304d1f2c7e3a47aea510e060cee2acd"
   },
+  "v139_deployment_actor": {
+    "git_path": "results/online/paper_dual_v35/deployment_pipeline_v139/deployment_artifacts/v139_actor_405x12.onnx",
+    "onnx_sha256": "d3f75cbb7699ddcc824d16a34a46b48e03d5345676d544366ba89db414a89d6b",
+    "size_bytes": 1499237,
+    "input_shape": [1, 405],
+    "output_shape": [1, 12],
+    "observation_normalization_embedded": true,
+    "deterministic_equivalence_max_abs_error": 4.76837158203125e-07,
+    "hardware_control_ready": false
+  },
   "full_filter_control": {
     "context": "F2",
     "primary_checkpoint_round": 1,
@@ -40,6 +50,7 @@
   },
   "binary_upload": {
     "safe_ft_checkpoints_uploaded": true,
+    "v139_deployment_onnx_uploaded": true,
     "each_size_bytes": 13173745,
     "full_filter_control_uploaded": false,
     "reason": "The three fixed round-2 actors are the outputs required for the protected adaptation pipeline; the control is identified by immutable remote path and hashes only."

@@ -3,6 +3,20 @@
 This file records the next hardware stage; no real-robot traversal was run as part of the
 simulation result in this directory.
 
+## Current readiness gate
+
+The frozen v139 deterministic actor has been exported as a fixed-shape `405 -> 12` ONNX
+candidate. This repository is nevertheless **not ready to send motor commands**: it is
+simulation-only and does not contain the Unitree transport/controller, exact five-history
+observation bridge, 12-to-29 action bridge, real-state stair CBF, watchdog, or emergency-stop
+integration. The stock deployment skeleton found elsewhere on this machine is not compatible
+without changes because it expects a one-frame 29-action policy and has no stair CBF.
+
+The authoritative current gaps are in `real_robot_readiness.json`. Before any controller is
+launched, the robot operator and safety reviewer must complete and sign
+`real_robot_run_manifest.template.json`. `deployment_artifacts/actor_io_contract.json` freezes
+the simulation-side tensor order and action semantics that the hardware bridge must reproduce.
+
 ## Frozen starting point
 
 - Initial policy: v139 checkpoint SHA-256

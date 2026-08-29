@@ -115,6 +115,14 @@ pooled CBF-on 从 1139/1536=74.15% 升至 1156/1536=75.26%，但 exact paired Mc
 分别为 +3.78 pp (`p=0.0209`) 与 +3.84 pp (`p=0.0177`)。因此当前最可靠结论是运行时
 CBF 有益；短时 Safe-FT 仅有方向性仿真证据，完整论文主张仍需 CBF 全程开启的实机实验。
 
+实机前置准备已导出冻结 v139 deterministic actor：
+[`deployment_pipeline_v139/deployment_artifacts/v139_actor_405x12.onnx`](deployment_pipeline_v139/deployment_artifacts/v139_actor_405x12.onnx)。
+该文件只包含带归一化的 405→12 nominal actor，并不是可直接上机的控制器。当前仓库没有
+真实 Unitree 通信、五帧 observation bridge、12→29 action mapping、实机楼梯 CBF、watchdog
+和急停集成；权威 readiness 缺口见
+[`deployment_pipeline_v139/real_robot_readiness.json`](deployment_pipeline_v139/real_robot_readiness.json)。
+在操作员完成并签署冻结 manifest 前，不发送电机命令。
+
 v82/v83 已证明 microbatch 路径稳定：每轮多个等权 backward chunks、一次全局梯度裁剪、
 一次 SGD step，256-environment 训练没有再发生 OOM。v83 在新 seed 上先升后退，rollback
 后的 accepted actor 两次 rollout 合并仅 66.75%，说明同配置 continuation 已进入噪声平台。

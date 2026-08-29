@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "status": "draft_requires_operator_and_safety_reviewer_freeze",
+  "robot": {
+    "model": "Unitree G1 29-DoF",
+    "serial_or_asset_id": null,
+    "firmware_version": null,
+    "unitree_sdk2_commit": null,
+    "controller_checkout_commit": null,
+    "control_machine": null,
+    "network_interface": null,
+    "policy_rate_hz": 50.0,
+    "state_timestamp_and_staleness_limit_ms": null
+  },
+  "staircase": {
+    "fixture_id": null,
+    "frame_definition": null,
+    "riser_heights_m": null,
+    "tread_depths_m": null,
+    "first_riser_pose_in_robot_start_frame": null,
+    "measurement_method": null,
+    "measurement_approved_by": null
+  },
+  "policy": {
+    "initial_checkpoint_sha256": "323f1e00b58d379b8746c0191a44272f2e1df134139050417c56e733cc484728",
+    "initial_actor_sha256": "4a4926d9227c31fb239ceead6c39bed61304d1f2c7e3a47aea510e060cee2acd",
+    "onnx_sha256": "d3f75cbb7699ddcc824d16a34a46b48e03d5345676d544366ba89db414a89d6b",
+    "actor_input_dim": 405,
+    "actor_output_dim": 12,
+    "deterministic_mean_for_evaluation": true,
+    "observation_contract_verified": false,
+    "action_mapping_verified": false
+  },
+  "runtime_cbf": {
+    "enabled_for_every_baseline_training_and_evaluation_action": true,
+    "filter_off_hardware_traversal_allowed": false,
+    "alpha": 10.0,
+    "activation_distance_m": 0.3,
+    "toe_margin_m": 0.08,
+    "top_clearance_m": 0.025,
+    "recovery_distance_m": 0.15,
+    "real_kinematics_implementation_commit": null,
+    "stale_or_invalid_state_behavior": "fail_closed",
+    "parity_test_record": null
+  },
+  "safety": {
+    "emergency_stop_tested": false,
+    "watchdog_tested": false,
+    "operator_takeover_tested": false,
+    "support_or_fall_protection": null,
+    "joint_position_limits": null,
+    "joint_velocity_limits": null,
+    "joint_torque_limits": null,
+    "base_orientation_abort_limits": null,
+    "state_estimator_abort_conditions": null,
+    "cbf_state_staleness_abort_condition": null,
+    "workspace_exclusion_confirmed": false,
+    "hardware_safety_overrides_research_protocol": true
+  },
+  "protocol": {
+    "baseline_cbf_on_traversals": null,
+    "training_rounds": 2,
+    "traversals_per_round_allowed_range": [8, 12],
+    "round_1_traversals": null,
+    "round_2_traversals": null,
+    "final_cbf_on_evaluation_traversals": null,
+    "final_actor_rule": "fixed_round_2_actor_no_hardware_outcome_selection",
+    "real_filter_off_traversals": 0,
+    "stop_on_operator_or_safety_abort": true
+  },
+  "online_update": {
+    "ppo_stored_action": "raw_nominal_policy_action",
+    "executed_action": "runtime_cbf_filtered_action",
+    "actor_learning_rate": 0.0000025,
+    "fixed_action_std": 0.05,
+    "target_forward_kl": 0.0006,
+    "candidate_selection": false,
+    "reward_and_termination_reconstruction_verified": false,
+    "critic_inputs_available_and_verified": false,
+    "dataset_location": null,
+    "round_1_output_sha256": null,
+    "round_2_output_sha256": null
+  },
+  "metrics": {
+    "protected_success": true,
+    "fall_or_recovery_takeover": true,
+    "mean_reached_riser": true,
+    "completion_time": true,
+    "intervention_events_per_riser": true,
+    "intervention_steps_per_riser": true,
+    "mean_correction_norm": true,
+    "shadow_nominal_would_intervene_fraction": true,
+    "shadow_nominal_barrier_violations_per_riser": true,
+    "shadow_nominal_to_safe_action_distance": true
+  },
+  "signoff": {
+    "robot_operator": null,
+    "safety_reviewer": null,
+    "protocol_owner": null,
+    "freeze_timestamp": null,
+    "approved_to_run": false
+  }
+}

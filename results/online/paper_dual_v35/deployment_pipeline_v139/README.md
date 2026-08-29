@@ -81,6 +81,15 @@ These reductions are small and come from one training seed. The defensible concl
 - `training/`: control and Safe-FT round metrics/training summaries.
 - `checkpoints/`: the three fixed Safe-FT round-2 model binaries.
 - `checkpoint_index.json`: local/remote paths and SHA-256 identities.
+- `deployment_artifacts/v139_actor_405x12.onnx`: deterministic v139 deployment
+  candidate with embedded observation normalization; this is an actor artifact, not a
+  complete or approved robot controller.
+- `deployment_artifacts/actor_io_contract.json`: exact term-major five-history input and
+  12-action simulation interface that a hardware bridge must reproduce.
+- `real_robot_readiness.json`: current hardware readiness audit and hard-stop gaps.
+- `real_robot_run_manifest.template.json`: operator/safety-reviewer freeze template required
+  before any motor command is sent.
 
 Implementation: `src/tasks/stairs_cbf/paper_deployment_pipeline.py` and
-`experiments/scripts/refine_paper_dual_v35.py`.
+`experiments/scripts/refine_paper_dual_v35.py`. The actor-only exporter is
+`experiments/scripts/export_stairs_actor_onnx.py`.
