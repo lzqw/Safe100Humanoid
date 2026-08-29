@@ -63,6 +63,11 @@ from src.tasks.stairs_cbf.paper_clearance_margin_v138 import (
 from src.tasks.stairs_cbf.paper_clearance_mixed_v139 import (
   mixed_clearance_diagnostics,
 )
+from src.tasks.stairs_cbf.paper_deployment_pipeline import (
+  V138_SELECTED_CHECKPOINT_SHA256,
+  V139_SELECTED_CHECKPOINT_SHA256,
+  deployment_pipeline_diagnostics,
+)
 
 
 def test_halfspace_projection_repairs_violation():
@@ -130,6 +135,32 @@ def test_v139_uses_deployment_majority_mixture_and_keeps_v138_clearance():
   assert diagnostics["checkpoint_selection_group"] == "filter_off"
   assert diagnostics["clearance_margin_m"] == CLEARANCE_MARGIN_M
   assert diagnostics["clearance_margin_changed_from_v138"] is False
+
+
+def test_deployment_pipeline_freezes_control_and_safe_adaptation_protocols():
+  control = deployment_pipeline_diagnostics(
+    stage="full_filter_control", context="F2"
+  )
+  adaptation = deployment_pipeline_diagnostics(
+    stage="safe_online_adaptation", context="F3"
+  )
+
+  assert control["expected_base_checkpoint_sha256"] == (
+    V138_SELECTED_CHECKPOINT_SHA256
+  )
+  assert adaptation["expected_base_checkpoint_sha256"] == (
+    V139_SELECTED_CHECKPOINT_SHA256
+  )
+  assert control["filter_on_fraction"] == 1.0
+  assert adaptation["filter_on_fraction"] == 1.0
+  assert control["ppo_storage_action"] == "raw_nominal_policy_action"
+  assert adaptation["all_executed_actions_cbf_filtered"] is True
+  assert control["primary_checkpoint_round"] == 1
+  assert adaptation["primary_checkpoint_round"] == 2
+  assert control["checkpoint_candidate_selection"] is False
+  assert adaptation["checkpoint_candidate_selection"] is False
+  assert control["clearance_margin_m"] == CLEARANCE_MARGIN_M
+  assert adaptation["clearance_margin_m"] == CLEARANCE_MARGIN_M
 
 
 def test_inactive_constraint_is_identity():
