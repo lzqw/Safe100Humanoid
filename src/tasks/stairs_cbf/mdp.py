@@ -350,6 +350,8 @@ def _record_online_cbf_telemetry(
     env.extras["log"]["CBF/dual_reward_mean"] = dual_reward.mean()
   # Per-environment transition data is consumed by OnlineSafePPO.  It lives
   # outside ``log`` so the scalar logger never reduces or serializes it.
+  env.extras["cbf_nominal_barrier_margin"] = term.psi_nominal.detach().clone()
+  env.extras["cbf_filtered_barrier_margin"] = term.psi_filtered.detach().clone()
   env.extras["cbf_intervened"] = term.intervened.detach().clone()
   env.extras["cbf_intervention_magnitude"] = (
     term.target_intervention_norm.detach().clone()

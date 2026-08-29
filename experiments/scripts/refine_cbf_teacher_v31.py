@@ -527,6 +527,12 @@ def _collect_round(
     cbf_reward_telemetry_counts = {
         name: 0 for name in cbf_reward_telemetry_names
     }
+    safety_transition_count = 0
+    nominal_violation_count = 0
+    executed_violation_count = 0
+    shield_recovery_count = 0
+    minimum_nominal_margin = float("inf")
+    minimum_executed_margin = float("inf")
     with torch.no_grad():
         for _ in range(runner.cfg["num_steps_per_env"]):
             raw_actions = runner.alg.act(obs)
@@ -537,6 +543,40 @@ def _collect_round(
             )
             check_nan(next_obs, rewards, dones)
             extras = dict(extras)
+            nominal_margin = extras.get("cbf_nominal_barrier_margin")
+            filtered_margin = extras.get("cbf_filtered_barrier_margin")
+            filter_enabled = extras.get("cbf_filter_enabled")
+            if (
+                nominal_margin is None
+                or filtered_margin is None
+                or filter_enabled is None
+            ):
+                raise RuntimeError("per-transition CBF safety telemetry is missing")
+            nominal_margin = torch.as_tensor(nominal_margin)
+            filtered_margin = torch.as_tensor(filtered_margin)
+            filter_enabled = torch.as_tensor(filter_enabled).bool()
+            if not (
+                nominal_margin.shape == filtered_margin.shape == filter_enabled.shape
+                and nominal_margin.numel() == n
+                and bool(torch.isfinite(nominal_margin).all())
+                and bool(torch.isfinite(filtered_margin).all())
+            ):
+                raise RuntimeError("per-transition CBF safety telemetry is invalid")
+            executed_margin = torch.where(
+                filter_enabled, filtered_margin, nominal_margin
+            )
+            nominal_unsafe = nominal_margin < -1.0e-5
+            executed_unsafe = executed_margin < -1.0e-5
+            safety_transition_count += n
+            nominal_violation_count += int(nominal_unsafe.sum())
+            executed_violation_count += int(executed_unsafe.sum())
+            shield_recovery_count += int((nominal_unsafe & ~executed_unsafe).sum())
+            minimum_nominal_margin = min(
+                minimum_nominal_margin, float(nominal_margin.min())
+            )
+            minimum_executed_margin = min(
+                minimum_executed_margin, float(executed_margin.min())
+            )
             for name in cbf_reward_telemetry_names:
                 value = extras.get(name)
                 if value is None:
@@ -620,6 +660,21 @@ def _collect_round(
             "rollout_mean_reward_per_transition": reward_sum
             / (n * runner.cfg["num_steps_per_env"]),
             "performance_gate_used": False,
+            "training_safety_transition_count": safety_transition_count,
+            "training_nominal_violation_count": nominal_violation_count,
+            "training_nominal_violation_fraction": (
+                nominal_violation_count / max(1, safety_transition_count)
+            ),
+            "training_executed_violation_count": executed_violation_count,
+            "training_executed_violation_fraction": (
+                executed_violation_count / max(1, safety_transition_count)
+            ),
+            "training_shield_recovery_count": shield_recovery_count,
+            "training_shield_recovery_fraction": (
+                shield_recovery_count / max(1, safety_transition_count)
+            ),
+            "training_minimum_nominal_barrier_margin": minimum_nominal_margin,
+            "training_minimum_executed_barrier_margin": minimum_executed_margin,
         }
         dual_count = cbf_reward_telemetry_counts[
             "cbf_reward_dual_component"

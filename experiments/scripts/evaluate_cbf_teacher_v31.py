@@ -39,6 +39,11 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--num-episodes", type=int, required=True)
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--device", default="cuda:0")
+    parser.add_argument(
+        "--instrument-current-velocity-cbf",
+        action="store_true",
+        help="Use the behavior-equivalent v34 current-CBF instrumentation.",
+    )
     parser.add_argument("--output-json", type=Path, required=True)
     parser.add_argument("--output-csv", type=Path, required=True)
     return parser.parse_args()
@@ -151,6 +156,10 @@ def main() -> None:
     import src.tasks  # noqa: F401
     from src.tasks.stairs_cbf.environment_v31 import configure_v31_context
     from src.tasks.stairs_cbf.teacher_v26 import HigherRiserCbfAction
+    from src.tasks.stairs_cbf.velocity_cbf_action import (
+        CURRENT_CBF_MODE,
+        configure_v34_cbf,
+    )
 
     env_cfg = load_env_cfg(TASK_ID, play=True)
     shift = configure_v31_context(
@@ -162,6 +171,15 @@ def main() -> None:
         recovery_distance_m=RECOVERY_DISTANCE_M,
         filter_alpha=FILTER_ALPHA,
     )
+    evaluation_cbf = None
+    if args.instrument_current_velocity_cbf:
+        evaluation_cbf = configure_v34_cbf(
+            env_cfg,
+            mode=CURRENT_CBF_MODE,
+            runtime_filter=runtime_filter,
+            parameters=None,
+            measure_compute_time=False,
+        )
     env_cfg.scene.num_envs = args.num_envs
     env_cfg.seed = args.seed
     base_env = ManagerBasedRlEnv(env_cfg, device=args.device)
@@ -210,9 +228,13 @@ def main() -> None:
         intervention_count = torch.zeros_like(steps)
         would_intervene_count = torch.zeros_like(steps)
         nominal_violation_steps = torch.zeros_like(steps)
+        filtered_violation_steps = torch.zeros_like(steps)
         correction_sum = torch.zeros(n, device=args.device)
         counterfactual_correction_sum = torch.zeros_like(correction_sum)
         minimum_nominal_margin = torch.full((n,), float("inf"), device=args.device)
+        minimum_filtered_margin = torch.full(
+            (n,), float("inf"), device=args.device
+        )
         maximum_reprojection_error = torch.zeros_like(correction_sum)
         swing_selection_mismatch_count = torch.zeros_like(steps)
         maximum_steps = int(base_env.max_episode_length) + 2
@@ -240,6 +262,7 @@ def main() -> None:
                 reprojection = extras["v26_teacher_reprojection_error"]
                 selection_match = extras["v26_swing_selection_matches"].bool()
                 nominal_margin = action_term.psi_nominal
+                filtered_margin = action_term.psi_filtered
                 kick_count += kick.long() * active_long
                 overlap_steps += overlap.long() * active_long
                 intervention_count += intervened.long() * active_long
@@ -247,12 +270,20 @@ def main() -> None:
                 nominal_violation_steps += (
                     nominal_margin < -1.0e-5
                 ).long() * active_long
+                filtered_violation_steps += (
+                    filtered_margin < -1.0e-5
+                ).long() * active_long
                 correction_sum += correction * active_float
                 counterfactual_correction_sum += counterfactual * active_float
                 minimum_nominal_margin = torch.where(
                     active,
                     torch.minimum(minimum_nominal_margin, nominal_margin),
                     minimum_nominal_margin,
+                )
+                minimum_filtered_margin = torch.where(
+                    active,
+                    torch.minimum(minimum_filtered_margin, filtered_margin),
+                    minimum_filtered_margin,
                 )
                 maximum_reprojection_error = torch.where(
                     active,
@@ -311,6 +342,9 @@ def main() -> None:
                                 "nominal_barrier_violation_steps": int(
                                     nominal_violation_steps[env_id]
                                 ),
+                                "filtered_barrier_violation_steps": int(
+                                    filtered_violation_steps[env_id]
+                                ),
                                 "mean_correction_norm": float(correction_sum[env_id])
                                 / episode_steps,
                                 "mean_counterfactual_correction_norm": float(
@@ -319,6 +353,9 @@ def main() -> None:
                                 / episode_steps,
                                 "minimum_nominal_barrier_margin": float(
                                     minimum_nominal_margin[env_id]
+                                ),
+                                "minimum_filtered_barrier_margin": float(
+                                    minimum_filtered_margin[env_id]
                                 ),
                                 "teacher_reprojection_max_abs_error": float(
                                     maximum_reprojection_error[env_id]
@@ -343,6 +380,9 @@ def main() -> None:
         total_violations = sum(
             int(row["nominal_barrier_violation_steps"]) for row in completed
         )
+        total_filtered_violations = sum(
+            int(row["filtered_barrier_violation_steps"]) for row in completed
+        )
         failure_count = sum(not bool(row["success"]) for row in completed)
         aligned_failures = sum(
             (not bool(row["success"])) and bool(row["toe_riser_kick"])
@@ -358,6 +398,7 @@ def main() -> None:
             "context": args.context,
             "context_spec": context_spec,
             "shift": shift,
+            "evaluation_cbf": evaluation_cbf,
             "checkpoint_sha256": file_sha256(checkpoint),
             "base_checkpoint": file_sha256(checkpoint) == BASE_CHECKPOINT_SHA256,
             "actor_state_sha256": actor_hash,
@@ -411,11 +452,23 @@ def main() -> None:
             "unsafe_overlap_steps_per_riser": total_overlap / max(1, total_risers),
             "nominal_barrier_violation_steps_per_riser": total_violations
             / max(1, total_risers),
+            "filtered_barrier_violation_steps_per_riser": (
+                total_filtered_violations / max(1, total_risers)
+            ),
             "mean_episode_minimum_nominal_barrier_margin": float(
                 np.mean([row["minimum_nominal_barrier_margin"] for row in completed])
             ),
             "global_minimum_nominal_barrier_margin": min(
                 float(row["minimum_nominal_barrier_margin"]) for row in completed
+            ),
+            "mean_episode_minimum_filtered_barrier_margin": float(
+                np.mean(
+                    [row["minimum_filtered_barrier_margin"] for row in completed]
+                )
+            ),
+            "global_minimum_filtered_barrier_margin": min(
+                float(row["minimum_filtered_barrier_margin"])
+                for row in completed
             ),
             "teacher_reprojection_max_abs_error": max(
                 float(row["teacher_reprojection_max_abs_error"]) for row in completed
