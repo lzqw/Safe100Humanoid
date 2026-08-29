@@ -57,7 +57,6 @@ def configure_hardware_proxy(env_cfg, *, action_delay_steps: int) -> dict[str, A
   )
   stairs = replace(
     stairs,
-    step_width_range=(min(tread_profile), max(tread_profile)),
     step_width_profile=tread_profile,
   )
   terrain_generator.sub_terrains = {name: stairs}
