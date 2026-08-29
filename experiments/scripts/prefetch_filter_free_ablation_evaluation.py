@@ -51,6 +51,11 @@ def _parse_args() -> argparse.Namespace:
     required=True,
     help="Zero-based inclusive checkpoint-spec suffix boundary.",
   )
+  parser.add_argument(
+    "--reverse",
+    action="store_true",
+    help="Traverse the disjoint suffix from the final checkpoint toward the boundary.",
+  )
   return parser.parse_args()
 
 
@@ -90,6 +95,8 @@ def main() -> None:
       f"start spec index must be in [1, {len(specs) - 1}]"
     )
   selected_specs = specs[args.start_spec_index :]
+  if args.reverse:
+    selected_specs = list(reversed(selected_specs))
   jobs = [
     (spec, condition)
     for spec in selected_specs
@@ -122,6 +129,7 @@ def main() -> None:
         "status": "running",
         "role": "disjoint_suffix_prefetch_worker",
         "start_spec_index": args.start_spec_index,
+        "reverse": args.reverse,
         "selected_spec_count": len(selected_specs),
         "job_count": len(jobs),
         "job_index": job_index,
@@ -208,6 +216,7 @@ def main() -> None:
     "status": "complete",
     "role": "disjoint_suffix_prefetch_worker",
     "start_spec_index": args.start_spec_index,
+    "reverse": args.reverse,
     "selected_spec_count": len(selected_specs),
     "job_count": len(jobs),
     "completed_jobs": completed,
