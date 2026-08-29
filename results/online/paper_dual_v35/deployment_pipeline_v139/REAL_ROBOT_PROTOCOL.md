@@ -6,16 +6,18 @@ simulation result in this directory.
 ## Current readiness gate
 
 The frozen v139 deterministic actor has been exported as a fixed-shape `405 -> 12` ONNX
-candidate. This repository is nevertheless **not ready to send motor commands**: it is
-simulation-only and does not contain the Unitree transport/controller, exact five-history
-observation bridge, 12-to-29 action bridge, real-state stair CBF, watchdog, or emergency-stop
-integration. The stock deployment skeleton found elsewhere on this machine is not compatible
-without changes because it expects a one-frame 29-action policy and has no stair CBF.
+candidate. An offline numeric reference now reproduces the exact five-history observation,
+12-to-29 target mapping, and inherited slope-0.8 x-z stair-CBF projection. This repository is
+nevertheless **not ready to send motor commands**: it does not contain reviewed integration
+with Unitree transport/state/kinematics, a real-time controller, watchdog, or emergency stop.
+The stock deployment skeleton found elsewhere on this machine is not compatible without
+changes because it expects a one-frame 29-action policy and has no stair CBF.
 
 The authoritative current gaps are in `real_robot_readiness.json`. Before any controller is
 launched, the robot operator and safety reviewer must complete and sign
 `real_robot_run_manifest.template.json`. `deployment_artifacts/actor_io_contract.json` freezes
-the simulation-side tensor order and action semantics that the hardware bridge must reproduce.
+the simulation-side tensor order and action semantics that the hardware bridge must reproduce;
+the offline executable reference is `src/tasks/stairs_cbf/real_robot_reference.py`.
 
 ## Frozen starting point
 

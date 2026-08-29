@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Export a frozen 405-D stair actor without starting a simulator or robot."""
 
 from __future__ import annotations
@@ -10,9 +9,7 @@ from typing import Any
 
 import numpy as np
 import torch
-
 from proximal_v23_io import actor_state_sha256, file_sha256
-
 
 V139_CHECKPOINT_SHA256 = (
   "323f1e00b58d379b8746c0191a44272f2e1df134139050417c56e733cc484728"
@@ -68,7 +65,7 @@ def _load_actor(checkpoint: Path):
   payload = torch.load(checkpoint, map_location="cpu", weights_only=False)
   actor_state = payload.get("actor_state_dict")
   if not isinstance(actor_state, dict):
-    raise RuntimeError("checkpoint has no actor_state_dict")
+    raise TypeError("checkpoint actor_state_dict is missing or is not a dict")
 
   sample_obs = TensorDict(
     {"actor": torch.zeros(1, ACTOR_OBSERVATION_DIM)}, batch_size=[1]

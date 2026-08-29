@@ -118,10 +118,14 @@ CBF 有益；短时 Safe-FT 仅有方向性仿真证据，完整论文主张仍�
 实机前置准备已导出冻结 v139 deterministic actor：
 [`deployment_pipeline_v139/deployment_artifacts/v139_actor_405x12.onnx`](deployment_pipeline_v139/deployment_artifacts/v139_actor_405x12.onnx)。
 该文件只包含带归一化的 405→12 nominal actor，并不是可直接上机的控制器。当前仓库没有
-真实 Unitree 通信、五帧 observation bridge、12→29 action mapping、实机楼梯 CBF、watchdog
-和急停集成；权威 readiness 缺口见
+接入真实 Unitree 状态/运动学/通信的五帧 observation bridge、12→29 action mapping、实时
+楼梯 CBF、watchdog 和急停集成；权威 readiness 缺口见
 [`deployment_pipeline_v139/real_robot_readiness.json`](deployment_pipeline_v139/real_robot_readiness.json)。
 在操作员完成并签署冻结 manifest 前，不发送电机命令。
+
+其中五帧 term-major observation、动作目标映射和 v139 实际继承的 slope=0.8 x-z CBF
+已有不含硬件 I/O 的数值参考实现 `src/tasks/stairs_cbf/real_robot_reference.py`，针对性测试
+通过；剩余缺口是把它接入真实 Unitree 状态/运动学/通信与独立安全系统，而不是继续仿真调参。
 
 v82/v83 已证明 microbatch 路径稳定：每轮多个等权 backward chunks、一次全局梯度裁剪、
 一次 SGD step，256-environment 训练没有再发生 OOM。v83 在新 seed 上先升后退，rollback

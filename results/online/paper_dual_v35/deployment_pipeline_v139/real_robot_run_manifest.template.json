@@ -38,6 +38,7 @@
     "activation_distance_m": 0.3,
     "toe_margin_m": 0.08,
     "top_clearance_m": 0.025,
+    "clearance_barrier_slope": 0.8,
     "recovery_distance_m": 0.15,
     "real_kinematics_implementation_commit": null,
     "stale_or_invalid_state_behavior": "fail_closed",

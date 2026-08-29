@@ -105,11 +105,12 @@
   "runtime_cbf_contract": {
     "always_enabled_on_hardware": true,
     "nominal_velocity_rule": "qdot_nominal = (q_nominal - q_measured) / 0.02",
-    "projection": "single Euclidean half-space projection in 12-D lower-body joint velocity",
+    "projection": "single Euclidean half-space projection in 12-D lower-body joint velocity using the inherited sloped x-z toe-clearance barrier",
     "alpha": 10.0,
     "activation_distance_m": 0.3,
     "toe_margin_m": 0.08,
     "top_clearance_m": 0.025,
+    "clearance_barrier_slope": 0.8,
     "recovery_distance_m": 0.15,
     "required_real_inputs": [
       "synchronized 29-joint position and velocity",
@@ -126,6 +127,7 @@
     "src/tasks/velocity/velocity_env_cfg.py",
     "src/tasks/stairs_cbf/config.py",
     "src/tasks/stairs_cbf/actions.py",
+    "src/tasks/stairs_cbf/real_robot_reference.py",
     "src/assets/robots/unitree_g1/g1_constants.py"
   ],
   "hardware_control_ready": false

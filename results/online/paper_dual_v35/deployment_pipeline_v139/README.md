@@ -89,7 +89,11 @@ These reductions are small and come from one training seed. The defensible concl
 - `real_robot_readiness.json`: current hardware readiness audit and hard-stop gaps.
 - `real_robot_run_manifest.template.json`: operator/safety-reviewer freeze template required
   before any motor command is sent.
+- `src/tasks/stairs_cbf/real_robot_reference.py`: offline executable reference for the
+  term-major history, action mapping, and slope-0.8 x-z CBF; it has no robot transport and
+  cannot send motor commands.
 
 Implementation: `src/tasks/stairs_cbf/paper_deployment_pipeline.py` and
 `experiments/scripts/refine_paper_dual_v35.py`. The actor-only exporter is
-`experiments/scripts/export_stairs_actor_onnx.py`.
+`experiments/scripts/export_stairs_actor_onnx.py`; its offline bridge contract is covered by
+`experiments/tests/test_real_robot_reference.py`.
