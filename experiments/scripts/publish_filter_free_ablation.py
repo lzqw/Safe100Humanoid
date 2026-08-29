@@ -324,12 +324,15 @@ def main() -> None:
       )
     )
   proxy_lines = [
-    "| Arm | Hardware-proxy CBF-off success | Fall rate |",
-    "|---|---:|---:|",
+    "| Arm | Nominal-sim off | Hardware-proxy off | Absolute drop | Fall rate |",
+    "|---|---:|---:|---:|---:|",
   ]
   for row in proxy_results["aggregate"]:
     proxy_lines.append(
-      f"| {row['arm']} | {float(row['mean_success_rate']):.3f} | "
+      f"| {ARM_LABELS[str(row['arm'])]} | "
+      f"{float(row['nominal_sim_cbf_off_success_rate']):.3f} | "
+      f"{float(row['hardware_proxy_cbf_off_success_rate']):.3f} | "
+      f"{float(row['absolute_success_rate_drop']):+.3f} | "
       f"{float(row['mean_fall_rate']):.3f} |"
     )
   deployment_lines = [

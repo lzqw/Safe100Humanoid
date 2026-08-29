@@ -39,6 +39,14 @@ def _parse_args() -> argparse.Namespace:
   parser.add_argument("--protocol", type=Path, required=True)
   parser.add_argument("--base-checkpoint", type=Path, required=True)
   parser.add_argument("--training-root", type=Path, required=True)
+  parser.add_argument(
+    "--evaluation-root",
+    type=Path,
+    help=(
+      "Paired nominal-simulation evaluation root. Defaults to "
+      "<training-root>/evaluation_seed201357900."
+    ),
+  )
   parser.add_argument("--output-root", type=Path, required=True)
   parser.add_argument("--device", default="cuda:0")
   return parser.parse_args()
@@ -151,6 +159,40 @@ def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
   temporary.replace(path)
 
 
+def _nominal_sim_off_success(
+  evaluation_root: Path,
+) -> tuple[dict[str, float], str]:
+  progress_path = evaluation_root / "evaluation_progress.json"
+  paired_path = evaluation_root / "paired_checkpoint_results.json"
+  if not progress_path.is_file() or not paired_path.is_file():
+    raise FileNotFoundError("paired nominal-simulation evaluation is missing")
+  if json.loads(progress_path.read_text()).get("status") != "complete":
+    raise RuntimeError("paired nominal-simulation evaluation is incomplete")
+  paired = json.loads(paired_path.read_text())
+  result: dict[str, float] = {}
+  for arm in ("frozen", *ARMS):
+    selected = [
+      row
+      for row in paired
+      if row.get("arm") == arm
+      and (
+        (arm == "frozen" and row.get("round") == 0)
+        or (arm != "frozen" and row.get("round") == 4)
+      )
+    ]
+    expected = len(CONTEXTS) if arm == "frozen" else len(CONTEXTS) * len(
+      TRAINING_SEEDS
+    )
+    if len(selected) != expected:
+      raise RuntimeError(
+        f"nominal round-4 rows differ for {arm}: {len(selected)} != {expected}"
+      )
+    result[arm] = statistics.fmean(
+      float(row["cbf_off_success_rate"]) for row in selected
+    )
+  return result, _sha256(paired_path)
+
+
 def main() -> None:
   args = _parse_args()
   args.repo = args.repo.resolve()
@@ -158,6 +200,11 @@ def main() -> None:
   args.protocol = args.protocol.resolve()
   args.base_checkpoint = args.base_checkpoint.resolve()
   args.training_root = args.training_root.resolve()
+  args.evaluation_root = (
+    args.evaluation_root.resolve()
+    if args.evaluation_root is not None
+    else args.training_root / "evaluation_seed201357900"
+  )
   args.output_root = args.output_root.resolve()
   if _sha256(args.base_checkpoint) != V139_SELECTED_CHECKPOINT_SHA256:
     raise RuntimeError("hardware proxy requires frozen v139")
@@ -173,6 +220,9 @@ def main() -> None:
     "status"
   ) != "complete":
     raise RuntimeError("formal adaptation training is incomplete")
+  nominal_sim_off, paired_result_sha256 = _nominal_sim_off_success(
+    args.evaluation_root
+  )
   specs = _specs(args.training_root, args.base_checkpoint)
   jobs = [(delay, spec) for delay in ACTION_DELAY_STEPS for spec in specs]
   manifest = {
@@ -182,6 +232,8 @@ def main() -> None:
     "evaluation_seed": EVALUATION_SEED,
     "episodes_per_policy_context_delay": EPISODES,
     "action_delay_steps": list(ACTION_DELAY_STEPS),
+    "nominal_sim_evaluation_root": str(args.evaluation_root),
+    "nominal_sim_paired_result_sha256": paired_result_sha256,
     "policy_spec_count": len(specs),
     "job_count": len(jobs),
     "started_unix": time.time(),
@@ -316,12 +368,20 @@ def main() -> None:
   aggregate = []
   for arm in ("frozen", *ARMS):
     selected = [row for row in rows if row["arm"] == arm]
+    proxy_success = statistics.fmean(
+      float(row["success_rate"]) for row in selected
+    )
+    nominal_success = nominal_sim_off[arm]
     aggregate.append(
       {
         "arm": arm,
-        "mean_success_rate": statistics.fmean(
-          float(row["success_rate"]) for row in selected
+        "nominal_sim_cbf_off_success_rate": nominal_success,
+        "hardware_proxy_cbf_off_success_rate": proxy_success,
+        "absolute_success_rate_drop": nominal_success - proxy_success,
+        "success_rate_retention": (
+          proxy_success / nominal_success if nominal_success > 0.0 else None
         ),
+        "mean_success_rate": proxy_success,
         "mean_fall_rate": statistics.fmean(
           float(row["fall_rate"]) for row in selected
         ),
