@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 ARMS = ("nominal_ft", "reward_only_ft", "filter_only_ft", "dual_safe_ft")
+HARDWARE_PROXY_ARMS = ("filter_only_ft", "dual_safe_ft")
 CONTEXTS = ("F1", "F2", "F3")
 TRAINING_SEEDS = (201357000, 201357001, 201357002)
 REPRESENTATIVE_MODEL_SEED = TRAINING_SEEDS[0]
@@ -209,7 +210,7 @@ def main() -> None:
     proxy_root,
     result_dir / "hardware_proxy" / "policy_summaries",
   )
-  if evaluation_summary_count != 222 or proxy_summary_count != 78:
+  if evaluation_summary_count != 222 or proxy_summary_count != 42:
     raise RuntimeError(
       "formal summary count differs: "
       f"paired={evaluation_summary_count}, proxy={proxy_summary_count}"
@@ -474,10 +475,10 @@ def main() -> None:
     "task_learning_curve_metrics_complete": required_task_curve_fields.issubset(
       _csv_fieldnames(final_root / "learning_curves.csv")
     ),
-    "hardware_proxy_complete_78_of_78": (
+    "hardware_proxy_complete_42_of_42": (
       proxy_progress.get("status") == "complete"
-      and proxy_progress.get("completed_jobs") == 78
-      and proxy_progress.get("job_count") == 78
+      and proxy_progress.get("completed_jobs") == 42
+      and proxy_progress.get("job_count") == 42
     ),
     "main_table_contains_five_methods": (
       {row.get("arm") for row in final_results.get("main_table", [])}
@@ -501,9 +502,9 @@ def main() -> None:
     "paired_statistics_four_adaptation_methods": (
       set(final_results.get("paired_report_statistics", {})) == set(ARMS)
     ),
-    "hardware_proxy_five_method_aggregate": (
+    "hardware_proxy_three_method_aggregate": (
       {row.get("arm") for row in proxy_results.get("aggregate", [])}
-      == {"frozen", *ARMS}
+      == {"frozen", *HARDWARE_PROXY_ARMS}
     ),
     "checkpoint_index_36": len(checkpoint_index) == 36,
     "representative_fixed_round_4_models_3": sum(
@@ -665,7 +666,7 @@ def main() -> None:
     "- `training_safety_curves.*`: executed violations and falls figures",
     "- `paired_statistics.*`: report-only paired-bootstrap intervals and repair/regression counts",
     "- `evaluation/checkpoint_summaries/`: all 222 paired-condition summaries",
-    "- `hardware_proxy/`: 78 proxy summaries and aggregate table",
+    "- `hardware_proxy/`: 42 Frozen/Filter-only/Dual proxy summaries and aggregate table",
     "- `training/`: all 36 training summaries and round metrics",
     "- `checkpoints/`: fixed round-4 Dual Safe-FT models for F1/F2/F3, seed 201357000",
     "- `checkpoint_index.json`: hashes for all 36 fixed round-4 models",

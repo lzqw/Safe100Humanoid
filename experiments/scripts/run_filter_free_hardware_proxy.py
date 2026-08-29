@@ -27,7 +27,10 @@ from src.tasks.stairs_cbf.paper_hardware_proxy import (  # noqa: E402
   METHOD_ID,
 )
 
-ARMS = ("dual_safe_ft", "filter_only_ft", "reward_only_ft", "nominal_ft")
+# The frozen hardware-proxy bundle is a final deployment comparison, not a
+# second full ablation.  The frozen protocol therefore evaluates only v139,
+# Filter-only, and Dual Safe-FT.
+ARMS = ("dual_safe_ft", "filter_only_ft")
 EVALUATION_SEED = 201357901
 EPISODES = 256
 
