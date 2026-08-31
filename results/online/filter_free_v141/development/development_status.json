@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "status": "generation_1_running",
+  "snapshot_time": "2026-08-31T12:18:51+08:00",
+  "method_id": "intervention-aware-cbf-distillation-ppo-v141",
+  "implementation_commit": "86fa458",
+  "hardware": "NVIDIA GeForce RTX 4080 SUPER",
+  "carla_running": false,
+  "guardianflow_preserved": true,
+  "remote_artifact_root": "/home/carla/LZQW/SAFE100/humanoid/artifacts/filter_free_v141/development",
+  "completed_real_candidates": 1,
+  "current_stage": "Generation 1 credit-assignment search",
+  "first_candidate": {
+    "generation": 1,
+    "specialist": "F2",
+    "candidate": "g1_eta0_posadv_r0_l02",
+    "configuration": {
+      "actor_epochs": 2,
+      "actor_learning_rate_multiplier": 1.0,
+      "correction_loss_weight": 0.2,
+      "correction_weight_mode": "positive_advantage",
+      "dual_reward_scale": 0.0,
+      "exploration_std": 0.05,
+      "intervention_ppo_eta": 0.0,
+      "rounds": 2,
+      "target_fraction": 0.8
+    },
+    "target_off_success": 0.7421875,
+    "target_on_success": 0.703125,
+    "f1_retention_off_success": 0.7421875,
+    "shield_gap": -0.0390625,
+    "would_intervene_fraction": 0.09694649360351107,
+    "counterfactual_correction_norm": 0.018618186687441342,
+    "nominal_violation_steps_per_riser": 4.911848341232227,
+    "mean_reached_riser": 8.2421875,
+    "fall_rate": 0.2578125,
+    "actor_moving_forward_kl": 0.0004138631047680974,
+    "development_score": 0.751953125
+  },
+  "comparison_caveat": "The preliminary frozen reference below used the published v140 evaluation seed, not the fresh v141 development seed.",
+  "published_v140_frozen_reference": {
+    "F1_off_success": 0.73046875,
+    "F2_off_success": 0.689453125,
+    "F2_on_success": 0.763671875,
+    "F2_off_would_intervene_fraction": 0.1049239920687376
+  },
+  "preliminary_gate_assessment": {
+    "target_off_improvement_promising": true,
+    "f1_retention_promising": true,
+    "shield_gap_gate_satisfied": false,
+    "would_intervene_reduction_gate_satisfied": false,
+    "formal_claim_allowed": false
+  },
+  "remaining_work": [
+    "finish Generation 1 for F2 and F3",
+    "run successive-halving Generations 2 and 3",
+    "freeze a passing configuration independently for F2 and F3",
+    "retrain from v139 with three fresh formal seeds",
+    "run paired 512-episode CBF-off/on formal evaluation",
+    "publish formal tables, curves, checkpoints, and SHA256 manifest"
+  ]
+}
