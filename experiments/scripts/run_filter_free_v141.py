@@ -13,6 +13,7 @@ from typing import Any
 
 from filter_free_v141_protocol import (
     BASE_ACTOR_LEARNING_RATE,
+    CORRECTION_LOSS_WEIGHT_SCHEDULES,
     DEV_EVALUATION_EPISODES,
     DEV_EVALUATION_SEED,
     DEV_TRAIN_SEED,
@@ -106,10 +107,7 @@ class DevelopmentDriver:
         _atomic_json(self.state_path, self.state)
 
     def budget_exhausted(self) -> bool:
-        return bool(
-            self.args.max_new_jobs
-            and self.new_jobs >= self.args.max_new_jobs
-        )
+        return bool(self.args.max_new_jobs and self.new_jobs >= self.args.max_new_jobs)
 
     def run_job(self, job_id: str, command: list[str], expected: Path) -> bool:
         if expected.is_file():
@@ -157,7 +155,13 @@ class DevelopmentDriver:
         return True
 
     def training_dir(self, generation: int, specialist: str, candidate: str) -> Path:
-        return self.output / f"generation_{generation}" / specialist / candidate / "training"
+        return (
+            self.output
+            / f"generation_{generation}"
+            / specialist
+            / candidate
+            / "training"
+        )
 
     def evaluation_dir(
         self,
@@ -214,6 +218,8 @@ class DevelopmentDriver:
             str(configuration["correction_weight_mode"]),
             "--correction-loss-weight",
             str(configuration["correction_loss_weight"]),
+            "--correction-loss-weight-schedule",
+            str(configuration.get("correction_loss_weight_schedule", "constant")),
             "--dual-reward-scale",
             str(configuration["dual_reward_scale"]),
             "--actor-learning-rate",
@@ -339,10 +345,15 @@ class DevelopmentDriver:
         if target_on is None:
             return None
         training = json.loads(
-            (self.training_dir(generation, specialist, candidate) / "training_summary.json").read_text()
+            (
+                self.training_dir(generation, specialist, candidate)
+                / "training_summary.json"
+            ).read_text()
         )
         last_metrics = training["round_metrics"][-1]["metrics"]
-        shield_gap = float(target_on["success_rate"]) - float(target_off["success_rate"])
+        shield_gap = float(target_on["success_rate"]) - float(
+            target_off["success_rate"]
+        )
         result = {
             "generation": generation,
             "specialist": specialist,
@@ -410,12 +421,34 @@ class DevelopmentDriver:
         return json.loads(summary.read_text())
 
     @staticmethod
-    def generation_2_candidates(top_three: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def generation_2_candidates(
+        top_three: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
         templates = (
-            {"target_fraction": 0.80, "actor_learning_rate_multiplier": 1.0, "actor_epochs": 2, "rounds": 4},
-            {"target_fraction": 0.75, "actor_learning_rate_multiplier": 0.5, "actor_epochs": 3, "rounds": 4},
-            {"target_fraction": 0.67, "actor_learning_rate_multiplier": 1.0, "actor_epochs": 3, "rounds": 6},
-            {"target_fraction": 0.80, "actor_learning_rate_multiplier": 2.0, "actor_epochs": 4, "rounds": 6},
+            {
+                "target_fraction": 0.80,
+                "actor_learning_rate_multiplier": 1.0,
+                "actor_epochs": 2,
+                "rounds": 4,
+            },
+            {
+                "target_fraction": 0.75,
+                "actor_learning_rate_multiplier": 0.5,
+                "actor_epochs": 3,
+                "rounds": 4,
+            },
+            {
+                "target_fraction": 0.67,
+                "actor_learning_rate_multiplier": 1.0,
+                "actor_epochs": 3,
+                "rounds": 6,
+            },
+            {
+                "target_fraction": 0.80,
+                "actor_learning_rate_multiplier": 2.0,
+                "actor_epochs": 4,
+                "rounds": 6,
+            },
         )
         output: list[dict[str, Any]] = []
         for rank, result in enumerate(top_three, 1):
@@ -445,6 +478,7 @@ class DevelopmentDriver:
                 ("rounds", 2),
                 ("exploration_std", 0.05),
                 ("moving_kl_beta", 0.5),
+                ("correction_loss_weight_schedule", "constant"),
                 (
                     "correction_action_reduction",
                     LEGACY_CORRECTION_ACTION_REDUCTION,
@@ -506,8 +540,12 @@ class DevelopmentDriver:
     ) -> list[dict[str, Any]]:
         """Apply diagnostic rules A--E, then fill with untried local mutations."""
         base = dict(best["configuration"])
-        target_delta = best["target_off_success"] - baseline["target_off"]["success_rate"]
-        retention_delta = best["f1_retention_off_success"] - baseline["f1_off"]["success_rate"]
+        target_delta = (
+            best["target_off_success"] - baseline["target_off"]["success_rate"]
+        )
+        retention_delta = (
+            best["f1_retention_off_success"] - baseline["f1_off"]["success_rate"]
+        )
         gap = abs(best["shield_gap"])
         candidates: list[dict[str, Any]] = []
         weight_levels = (0.05, 0.1, 0.2, 0.4)
@@ -526,8 +564,7 @@ class DevelopmentDriver:
             }
             signature = cls.configuration_signature(configuration)
             if signature not in tried and all(
-                cls.configuration_signature(item) != signature
-                for item in candidates
+                cls.configuration_signature(item) != signature for item in candidates
             ):
                 candidates.append(configuration)
 
@@ -635,11 +672,8 @@ class DevelopmentDriver:
         # nominal actor still asks the runtime CBF to intervene too often. Use
         # the strongest allowed actor update while removing dual-reward
         # dominance; configuration selection still uses only development data.
-        if (
-            target_delta > 0.0
-            and best["would_intervene_fraction"]
-            > baseline_would
-            * (1.0 - DEVELOPMENT_THRESHOLDS["would_intervene_reduction_fraction"])
+        if target_delta > 0.0 and best["would_intervene_fraction"] > baseline_would * (
+            1.0 - DEVELOPMENT_THRESHOLDS["would_intervene_reduction_fraction"]
         ):
             add(
                 "internalize",
@@ -680,6 +714,11 @@ class DevelopmentDriver:
             add("C", actor_learning_rate_multiplier=2.0, actor_epochs=4, rounds=6)
         # D: success improves but the policy still depends on the shield.
         if target_delta > 0.0 and gap > 0.02:
+            add(
+                "D_front_decay",
+                correction_loss_weight_schedule="front_high_decay",
+                rounds=6,
+            )
             add(
                 "D",
                 intervention_ppo_eta=eta_levels[
@@ -739,6 +778,13 @@ class DevelopmentDriver:
             mutations.append((f"std{value:g}", {"exploration_std": value}))
         for value in (0.25, 0.5, 1.0):
             mutations.append((f"kl{value:g}", {"moving_kl_beta": value}))
+        for value in CORRECTION_LOSS_WEIGHT_SCHEDULES:
+            mutations.append(
+                (
+                    f"corr_schedule_{value}",
+                    {"correction_loss_weight_schedule": value},
+                )
+            )
 
         for label, updates in mutations:
             if len(candidates) >= maximum_candidates:
@@ -767,23 +813,27 @@ class DevelopmentDriver:
             ("rounds", (2, 4, 6)),
             ("exploration_std", (0.03, 0.05)),
             ("moving_kl_beta", (0.25, 0.5, 1.0)),
+            (
+                "correction_loss_weight_schedule",
+                CORRECTION_LOSS_WEIGHT_SCHEDULES,
+            ),
         )
         base_signature = cls.configuration_signature(base)
         for distance in range(2, len(domains) + 1):
             if len(candidates) >= maximum_candidates:
                 break
             for values in itertools.product(*(values for _, values in domains)):
-                if sum(
-                    value != base_value
-                    for value, base_value in zip(values, base_signature)
-                ) != distance:
+                if (
+                    sum(
+                        value != base_value
+                        for value, base_value in zip(values, base_signature)
+                    )
+                    != distance
+                ):
                     continue
                 add(
                     f"combo{distance}",
-                    **{
-                        name: value
-                        for (name, _), value in zip(domains, values)
-                    },
+                    **{name: value for (name, _), value in zip(domains, values)},
                 )
                 if len(candidates) >= maximum_candidates:
                     break
@@ -804,8 +854,7 @@ class DevelopmentDriver:
         return {
             "target_off_improves_2pp": target_improvement
             >= DEVELOPMENT_THRESHOLDS["target_off_improvement_pp"] / 100.0,
-            "shield_gap_target": gap
-            <= DEVELOPMENT_THRESHOLDS["shield_gap_pp"] / 100.0
+            "shield_gap_target": gap <= DEVELOPMENT_THRESHOLDS["shield_gap_pp"] / 100.0
             or gap
             <= base_gap
             * (1.0 - DEVELOPMENT_THRESHOLDS["shield_gap_reduction_fraction"]),
@@ -844,24 +893,11 @@ class DevelopmentDriver:
         )
         gap_limit = max(
             DEVELOPMENT_THRESHOLDS["shield_gap_pp"] / 100.0,
-            base_gap
-            * (
-                1.0
-                - DEVELOPMENT_THRESHOLDS[
-                    "shield_gap_reduction_fraction"
-                ]
-            ),
+            base_gap * (1.0 - DEVELOPMENT_THRESHOLDS["shield_gap_reduction_fraction"]),
         )
         would_limit = float(
-            baseline["target_off"][
-                "counterfactual_would_intervene_fraction"
-            ]
-        ) * (
-            1.0
-            - DEVELOPMENT_THRESHOLDS[
-                "would_intervene_reduction_fraction"
-            ]
-        )
+            baseline["target_off"]["counterfactual_would_intervene_fraction"]
+        ) * (1.0 - DEVELOPMENT_THRESHOLDS["would_intervene_reduction_fraction"])
         retention_floor = float(baseline["f1_off"]["success_rate"]) - (
             DEVELOPMENT_THRESHOLDS["f1_off_retention_loss_pp"] / 100.0
         )
@@ -878,14 +914,12 @@ class DevelopmentDriver:
                 / max(1.0e-8, gap_limit)
                 + max(
                     0.0,
-                    float(result["would_intervene_fraction"])
-                    - would_limit,
+                    float(result["would_intervene_fraction"]) - would_limit,
                 )
                 / max(1.0e-8, would_limit)
                 + max(
                     0.0,
-                    retention_floor
-                    - float(result["f1_retention_off_success"]),
+                    retention_floor - float(result["f1_retention_off_success"]),
                 )
                 / max(1.0e-8, retention_floor)
             )
@@ -927,10 +961,7 @@ class DevelopmentDriver:
         baseline: dict[str, dict[str, Any]],
     ) -> dict[str, Any]:
         ranked = sorted(
-            (
-                self.annotate_correction_action_reduction(result)
-                for result in results
-            ),
+            (self.annotate_correction_action_reduction(result) for result in results),
             key=lambda item: item["development_score"],
             reverse=True,
         )
@@ -949,7 +980,12 @@ class DevelopmentDriver:
                 item["candidate"] for item in ranked if item["development_success"]
             ],
         }
-        path = self.output / f"generation_{generation}" / specialist / "development_summary.json"
+        path = (
+            self.output
+            / f"generation_{generation}"
+            / specialist
+            / "development_summary.json"
+        )
         _atomic_json(path, summary)
         self.state["generations"].setdefault(str(generation), {})[specialist] = {
             "summary": str(path),
@@ -960,7 +996,17 @@ class DevelopmentDriver:
         return summary
 
     def run(self) -> None:
-        generation_one = [dict(item, rounds=2, target_fraction=0.80, actor_epochs=2, actor_learning_rate_multiplier=1.0, exploration_std=0.05) for item in GENERATION_1_CANDIDATES]
+        generation_one = [
+            dict(
+                item,
+                rounds=2,
+                target_fraction=0.80,
+                actor_epochs=2,
+                actor_learning_rate_multiplier=1.0,
+                exploration_std=0.05,
+            )
+            for item in GENERATION_1_CANDIDATES
+        ]
         summaries: dict[tuple[int, str], dict[str, Any]] = {}
         for specialist in SPECIALISTS:
             results = []
@@ -976,8 +1022,12 @@ class DevelopmentDriver:
             }
             if any(value is None for value in baseline_items.values()):
                 return
-            baseline = {key: value for key, value in baseline_items.items() if value is not None}
-            summaries[(1, specialist)] = self.summarize_generation(1, specialist, results, baseline)
+            baseline = {
+                key: value for key, value in baseline_items.items() if value is not None
+            }
+            summaries[(1, specialist)] = self.summarize_generation(
+                1, specialist, results, baseline
+            )
         if self.args.through_generation == 1:
             self.state["status"] = "generation_1_complete"
             self.save_state()
@@ -993,7 +1043,9 @@ class DevelopmentDriver:
                     return
                 results.append(result)
             baseline = g1["baseline"]
-            summaries[(2, specialist)] = self.summarize_generation(2, specialist, results, baseline)
+            summaries[(2, specialist)] = self.summarize_generation(
+                2, specialist, results, baseline
+            )
         if self.args.through_generation == 2:
             self.state["status"] = "generation_2_complete"
             self.save_state()
@@ -1011,9 +1063,7 @@ class DevelopmentDriver:
         while True:
             selected: dict[str, dict[str, Any]] = {}
             for specialist in SPECIALISTS:
-                existing_summary = self.load_generation_summary(
-                    generation, specialist
-                )
+                existing_summary = self.load_generation_summary(generation, specialist)
                 if existing_summary is not None:
                     summaries[(generation, specialist)] = existing_summary
                     history[specialist].extend(existing_summary["ranking"])
@@ -1099,8 +1149,7 @@ class DevelopmentDriver:
                 )
 
             both_pass = all(
-                item.get("development_success", False)
-                for item in selected.values()
+                item.get("development_success", False) for item in selected.values()
             )
             development_summary = {
                 "protocol_id": PROTOCOL_ID,

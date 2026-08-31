@@ -58,7 +58,11 @@ def _pure_helpers() -> dict[str, object]:
         ),
     }
     exec(  # noqa: S102 - selected local pure helper AST only
-        compile(ast.fix_missing_locations(ast.Module(functions, type_ignores=[])), "v141", "exec"),
+        compile(
+            ast.fix_missing_locations(ast.Module(functions, type_ignores=[])),
+            "v141",
+            "exec",
+        ),
         namespace,
     )
     return namespace
@@ -86,9 +90,7 @@ def test_v141_ppo_soft_weights_keep_population_normalization() -> None:
 
 
 def test_v141_group_advantages_are_separately_standardized() -> None:
-    advantages = torch.tensor(
-        [[1.0, 10.0, 3.0, 14.0], [5.0, 18.0, 7.0, 22.0]]
-    )
+    advantages = torch.tensor([[1.0, 10.0, 3.0, 14.0], [5.0, 18.0, 7.0, 22.0]])
     target = torch.tensor([True, False, True, False])
     normalized, metrics = HELPERS["normalize_context_group_advantages"](
         advantages, target
@@ -160,7 +162,78 @@ def test_v141_search_versions_vector_and_legacy_correction_reductions() -> None:
             "correction_action_reduction": "sum",
         }
     )
+    vector_front_decay = RUN_V141.DevelopmentDriver.configuration_signature(
+        {
+            **configuration,
+            "correction_action_reduction": "sum",
+            "correction_loss_weight_schedule": "front_high_decay",
+        }
+    )
     assert legacy != vector
+    assert vector != vector_front_decay
+
+
+def test_v141_front_high_correction_schedule_uses_only_allowed_weights() -> None:
+    protocol = _load(
+        "v141_schedule_protocol", "experiments/scripts/filter_free_v141_protocol.py"
+    )
+    actual = [
+        protocol.correction_loss_weight_for_round(0.4, "front_high_decay", round_index)
+        for round_index in range(1, 7)
+    ]
+    assert actual == [0.4, 0.4, 0.2, 0.2, 0.1, 0.1]
+    assert set(actual) <= set(protocol.CORRECTION_LOSS_WEIGHTS)
+    assert [
+        protocol.correction_loss_weight_for_round(0.2, "constant", round_index)
+        for round_index in range(1, 7)
+    ] == [0.2] * 6
+    with pytest.raises(ValueError):
+        protocol.correction_loss_weight_for_round(0.3, "front_high_decay", 1)
+
+
+def test_v141_shield_dependence_schedules_front_high_decay() -> None:
+    baseline = {
+        "target_off": {
+            "success_rate": 0.65,
+            "counterfactual_would_intervene_fraction": 0.10,
+            "mean_counterfactual_correction_norm": 0.02,
+            "nominal_barrier_violation_steps_per_riser": 5.0,
+        },
+        "target_on": {"success_rate": 0.70},
+        "f1_off": {"success_rate": 0.72},
+    }
+    best = {
+        "target_off_success": 0.71,
+        "target_on_success": 0.76,
+        "f1_retention_off_success": 0.73,
+        "shield_gap": 0.05,
+        "would_intervene_fraction": 0.09,
+        "counterfactual_correction_norm": 0.018,
+        "nominal_violation_steps_per_riser": 4.8,
+        "actor_moving_forward_kl": 0.001,
+        "development_score": 0.70,
+        "configuration": {
+            "candidate": "parent",
+            "intervention_ppo_eta": 0.0,
+            "correction_loss_weight": 0.4,
+            "correction_weight_mode": "positive_advantage",
+            "dual_reward_scale": 0.0,
+            "target_fraction": 0.75,
+            "actor_learning_rate_multiplier": 2.0,
+            "actor_epochs": 4,
+            "rounds": 6,
+            "exploration_std": 0.05,
+            "moving_kl_beta": 0.25,
+            "correction_action_reduction": "sum",
+        },
+    }
+    candidates = RUN_V141.DevelopmentDriver.adaptive_candidates(
+        11, best, baseline, set(), maximum_candidates=4
+    )
+    assert any(
+        item.get("correction_loss_weight_schedule") == "front_high_decay"
+        for item in candidates
+    )
 
 
 def test_v141_target80_requires_retention_headroom() -> None:
@@ -221,7 +294,12 @@ def test_v141_protocol_covers_required_search_values() -> None:
     protocol = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(protocol)
     candidates = protocol.GENERATION_1_CANDIDATES
-    assert {item["intervention_ppo_eta"] for item in candidates} == {0.0, 0.25, 0.5, 1.0}
+    assert {item["intervention_ppo_eta"] for item in candidates} == {
+        0.0,
+        0.25,
+        0.5,
+        1.0,
+    }
     assert {item["dual_reward_scale"] for item in candidates} == {0.0, 0.25, 1.0}
     assert {item["correction_weight_mode"] for item in candidates} == {
         "intervention_only",

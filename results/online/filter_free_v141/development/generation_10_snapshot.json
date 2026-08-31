@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "snapshot_time": "2026-08-31T20:34:36+08:00",
+  "snapshot_time": "2026-08-31T20:48:44+08:00",
   "status": "generation_10_paused_after_user_requested_shutdown",
   "method_id": "intervention-aware-cbf-distillation-ppo-v141",
   "correction_action_reduction": "sum_over_action_dimensions_then_weighted_transition_mean",
@@ -188,5 +188,21 @@
     "num_envs": 128,
     "remaining_training_time": null
   },
-  "next_action": "paused; if resumed, finish g10_internalize_4 from the recorded checkpoint before continuing mechanism refinement"
+  "offline_refinement": {
+    "status": "implemented_and_targeted_tested_without_restarting_training",
+    "correction_loss_weight_schedule": "front_high_decay",
+    "six_round_weight_sequence_for_base_0p4": [
+      0.4,
+      0.4,
+      0.2,
+      0.2,
+      0.1,
+      0.1
+    ],
+    "development_search_trigger": "target_success_improves_but_shield_gap_remains_above_gate",
+    "resume_safe": true,
+    "formal_pipeline_supported": true,
+    "targeted_test_result": "11 passed"
+  },
+  "next_action": "paused; after an explicit resume, pull the branch, finish g10_internalize_4 from round_01 under its original constant schedule, then allow Generation 11 to evaluate front_high_decay"
 }

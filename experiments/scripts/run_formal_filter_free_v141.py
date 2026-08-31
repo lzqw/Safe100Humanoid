@@ -23,6 +23,7 @@ from filter_free_v141_protocol import (
     RETENTION_CONTEXT,
     ROLLOUT_STEPS,
     SPECIALISTS,
+    correction_loss_weight_for_round,
 )
 from proximal_v23_io import file_sha256
 
@@ -140,7 +141,9 @@ class FormalDriver:
             if self.frozen.get(key) != value
         }
         if mismatches or set(self.frozen.get("specialists", {})) != set(SPECIALISTS):
-            raise RuntimeError(f"formal v141 frozen configuration differs: {mismatches}")
+            raise RuntimeError(
+                f"formal v141 frozen configuration differs: {mismatches}"
+            )
         source_hashes = self.frozen.get("source_files_sha256", {})
         if not source_hashes:
             raise RuntimeError("formal v141 freeze has no source hash manifest")
@@ -178,7 +181,9 @@ class FormalDriver:
             check=False,
         )
         if ancestry.returncode != 0:
-            raise RuntimeError("formal v141 source commit is not in the current history")
+            raise RuntimeError(
+                "formal v141 source commit is not in the current history"
+            )
         if subprocess.run(
             ["git", "status", "--porcelain"],
             cwd=self.repo,
@@ -187,16 +192,9 @@ class FormalDriver:
         ).stdout:
             raise RuntimeError("formal v141 execution requires a clean worktree")
 
-    def train_v141(
-        self, specialist: str, training_seed: int
-    ) -> tuple[Path, Path]:
+    def train_v141(self, specialist: str, training_seed: int) -> tuple[Path, Path]:
         configuration = self.frozen["specialists"][specialist]["configuration"]
-        directory = (
-            self.output
-            / "training"
-            / specialist
-            / f"seed_{training_seed}"
-        )
+        directory = self.output / "training" / specialist / f"seed_{training_seed}"
         summary = directory / "training_summary.json"
         command = [
             str(self.args.python),
@@ -229,6 +227,8 @@ class FormalDriver:
             str(configuration["correction_weight_mode"]),
             "--correction-loss-weight",
             str(configuration["correction_loss_weight"]),
+            "--correction-loss-weight-schedule",
+            str(configuration.get("correction_loss_weight_schedule", "constant")),
             "--dual-reward-scale",
             str(configuration["dual_reward_scale"]),
             "--actor-learning-rate",
@@ -249,9 +249,10 @@ class FormalDriver:
         training = json.loads(summary.read_text())
         checkpoint = Path(training["final_checkpoint"])
         expected_round = int(configuration.get("rounds", 2))
-        expected_target_fraction = round(
-            NUM_ENVS * float(configuration.get("target_fraction", 0.80))
-        ) / NUM_ENVS
+        expected_target_fraction = (
+            round(NUM_ENVS * float(configuration.get("target_fraction", 0.80)))
+            / NUM_ENVS
+        )
         expected_summary = {
             "method_id": METHOD_ID,
             "candidate": f"formal_{specialist}",
@@ -270,6 +271,19 @@ class FormalDriver:
             "intervention_ppo_eta": float(configuration["intervention_ppo_eta"]),
             "correction_weight_mode": str(configuration["correction_weight_mode"]),
             "correction_loss_weight": float(configuration["correction_loss_weight"]),
+            "correction_loss_weight_schedule": str(
+                configuration.get("correction_loss_weight_schedule", "constant")
+            ),
+            "correction_loss_weight_by_round": [
+                correction_loss_weight_for_round(
+                    float(configuration["correction_loss_weight"]),
+                    str(
+                        configuration.get("correction_loss_weight_schedule", "constant")
+                    ),
+                    round_index,
+                )
+                for round_index in range(1, expected_round + 1)
+            ],
             "dual_reward_scale": float(configuration["dual_reward_scale"]),
             "actor_learning_rate": BASE_ACTOR_LEARNING_RATE
             * float(configuration.get("actor_learning_rate_multiplier", 1.0)),
@@ -406,9 +420,11 @@ class FormalDriver:
             if result.get(key) != value
         }
         initial_state_signature = result.get("initial_state_signature")
-        if mismatches or not isinstance(initial_state_signature, str) or len(
-            initial_state_signature
-        ) != 64:
+        if (
+            mismatches
+            or not isinstance(initial_state_signature, str)
+            or len(initial_state_signature) != 64
+        ):
             raise RuntimeError(
                 f"formal v141 evaluation protocol differs for {job}: {mismatches}"
             )
@@ -570,7 +586,9 @@ class FormalDriver:
         self.run_job("publish_formal_v141", publish_command, completion)
         formal = json.loads(completion.read_text())
         self.state["status"] = (
-            "complete" if formal.get("formal_success") else "formal_failed_return_development"
+            "complete"
+            if formal.get("formal_success")
+            else "formal_failed_return_development"
         )
         self.state["formal_success"] = bool(formal.get("formal_success"))
         self.save_state()

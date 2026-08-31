@@ -24,6 +24,8 @@ from filter_free_v141_protocol import (
     BASE_ACTOR_LEARNING_RATE,
     BASE_CHECKPOINT_SHA256,
     BASE_CRITIC_LEARNING_RATE,
+    CORRECTION_LOSS_WEIGHTS,
+    CORRECTION_LOSS_WEIGHT_SCHEDULES,
     DEFAULT_MOVING_KL_BETA,
     DEFAULT_TARGET_FRACTION,
     GENERATION_1_ROUNDS,
@@ -34,6 +36,7 @@ from filter_free_v141_protocol import (
     SPECIALISTS,
     TASK_ID,
     TRAINING_ACTION_STD,
+    correction_loss_weight_for_round,
 )
 from proximal_v23_io import actor_state, actor_state_sha256, file_sha256
 
@@ -50,7 +53,9 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--rounds", type=int, default=GENERATION_1_ROUNDS)
     parser.add_argument("--num-envs", type=int, default=NUM_ENVS)
     parser.add_argument("--rollout-steps", type=int, default=ROLLOUT_STEPS)
-    parser.add_argument("--target-fraction", type=float, default=DEFAULT_TARGET_FRACTION)
+    parser.add_argument(
+        "--target-fraction", type=float, default=DEFAULT_TARGET_FRACTION
+    )
     parser.add_argument("--intervention-ppo-eta", type=float, required=True)
     parser.add_argument(
         "--correction-weight-mode",
@@ -64,14 +69,23 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--correction-loss-weight",
         type=float,
-        choices=(0.05, 0.1, 0.2, 0.4),
+        choices=CORRECTION_LOSS_WEIGHTS,
         required=True,
+    )
+    parser.add_argument(
+        "--correction-loss-weight-schedule",
+        choices=CORRECTION_LOSS_WEIGHT_SCHEDULES,
+        default="constant",
     )
     parser.add_argument(
         "--dual-reward-scale", type=float, choices=(0.0, 0.25, 1.0), required=True
     )
-    parser.add_argument("--actor-learning-rate", type=float, default=BASE_ACTOR_LEARNING_RATE)
-    parser.add_argument("--critic-learning-rate", type=float, default=BASE_CRITIC_LEARNING_RATE)
+    parser.add_argument(
+        "--actor-learning-rate", type=float, default=BASE_ACTOR_LEARNING_RATE
+    )
+    parser.add_argument(
+        "--critic-learning-rate", type=float, default=BASE_CRITIC_LEARNING_RATE
+    )
     parser.add_argument("--moving-kl-beta", type=float, default=DEFAULT_MOVING_KL_BETA)
     parser.add_argument("--actor-epochs", type=int, choices=(2, 3, 4), default=2)
     parser.add_argument(
@@ -94,7 +108,9 @@ def _git(repo: Path, *args: str) -> str:
     ).stdout.strip()
 
 
-def _save_checkpoint(runner, path: Path, round_index: int, metadata: dict[str, Any]) -> None:
+def _save_checkpoint(
+    runner, path: Path, round_index: int, metadata: dict[str, Any]
+) -> None:
     payload = runner.alg.save()
     payload["iter"] = round_index
     payload["infos"] = {"filter_free_v141": metadata}
@@ -113,8 +129,8 @@ def _restore_rng_state(payload: dict[str, Any]) -> None:
     np.random.set_state(payload["numpy_random_state"])
     # RNG APIs require CPU ByteTensors.  Checkpoint model tensors may be mapped
     # directly to CUDA for recovery, but RNG state must never follow that map.
-    torch_state = payload["torch_random_state"].detach().to(
-        device="cpu", dtype=torch.uint8
+    torch_state = (
+        payload["torch_random_state"].detach().to(device="cpu", dtype=torch.uint8)
     )
     torch.set_rng_state(torch_state.contiguous())
     if torch.cuda.is_available() and "torch_cuda_random_state_all" in payload:
@@ -177,17 +193,24 @@ def _configure_context_env(
     base = ManagerBasedRlEnv(env_cfg, device=device)
     agent_cfg = load_rl_cfg(TASK_ID)
     wrapper = RslRlVecEnvWrapper(base, clip_actions=agent_cfg.clip_actions)
-    return base, wrapper, env_cfg, {
-        "context": context,
-        "shift": shift,
-        "cbf": cbf,
-        "reward": reward,
-        "dual_reward_scale": dual_reward_scale,
-        "clearance": clearance_metadata,
-    }
+    return (
+        base,
+        wrapper,
+        env_cfg,
+        {
+            "context": context,
+            "shift": shift,
+            "cbf": cbf,
+            "reward": reward,
+            "dual_reward_scale": dual_reward_scale,
+            "clearance": clearance_metadata,
+        },
+    )
 
 
-def _configure_algorithm(agent_cfg, args: argparse.Namespace, actual_target_fraction: float) -> None:
+def _configure_algorithm(
+    agent_cfg, args: argparse.Namespace, actual_target_fraction: float
+) -> None:
     from src.tasks.stairs_cbf.filter_free_v141 import (
         InterventionAwareCbfDistillationPpoAlgorithmCfg,
     )
@@ -309,8 +332,10 @@ def _collect_round(runner) -> dict[str, Any]:
         "rollout_mean_task_reward": task_reward_sum / transition_count,
         "rollout_mean_scaled_cbf_reward": cbf_reward_sum / transition_count,
         "rollout_would_intervene_fraction": would_intervene_count / transition_count,
-        "rollout_nominal_violation_fraction": nominal_violation_count / transition_count,
-        "rollout_executed_violation_fraction": executed_violation_count / transition_count,
+        "rollout_nominal_violation_fraction": nominal_violation_count
+        / transition_count,
+        "rollout_executed_violation_fraction": executed_violation_count
+        / transition_count,
     }
     for name, stats in group_stats.items():
         count = int(stats["episodes"])
@@ -367,24 +392,69 @@ def main() -> None:
     )
 
     records_path = output / "round_metrics.json"
-    records = json.loads(records_path.read_text()) if args.resume and records_path.exists() else []
+    records = (
+        json.loads(records_path.read_text())
+        if args.resume and records_path.exists()
+        else []
+    )
     recovery = output / f"round_{len(records):02d}.pt" if records else None
+    correction_loss_weight_by_round = [
+        correction_loss_weight_for_round(
+            args.correction_loss_weight,
+            args.correction_loss_weight_schedule,
+            round_index,
+        )
+        for round_index in range(1, args.rounds + 1)
+    ]
+    training_started_path = output / "training_started.json"
+    training_started: dict[str, Any] | None = None
+    if records:
+        if not training_started_path.is_file():
+            raise RuntimeError("v141 recovery is missing training_started.json")
+        training_started = json.loads(training_started_path.read_text())
+        recorded_hyperparameters = training_started.get("hyperparameters", {})
+        recorded_schedule = recorded_hyperparameters.get(
+            "correction_loss_weight_schedule", "constant"
+        )
+        recorded_base_weight = float(
+            recorded_hyperparameters.get("correction_loss_weight")
+        )
+        recorded_weights = recorded_hyperparameters.get(
+            "correction_loss_weight_by_round"
+        )
+        if (
+            recorded_schedule != args.correction_loss_weight_schedule
+            or recorded_base_weight != args.correction_loss_weight
+            or int(training_started.get("rounds", -1)) != args.rounds
+            or (
+                recorded_weights is not None
+                and [float(value) for value in recorded_weights]
+                != correction_loss_weight_by_round
+            )
+        ):
+            raise RuntimeError(
+                "v141 recovery correction schedule differs from the original run"
+            )
     target_base = retention_base = env = runner = None
     started = time.monotonic()
     try:
-        target_base, target_wrapper, target_cfg, target_metadata = _configure_context_env(
-            context=args.specialist,
-            num_envs=target_count,
-            seed=args.seed,
-            device=args.device,
-            dual_reward_scale=args.dual_reward_scale,
+        target_base, target_wrapper, target_cfg, target_metadata = (
+            _configure_context_env(
+                context=args.specialist,
+                num_envs=target_count,
+                seed=args.seed,
+                device=args.device,
+                dual_reward_scale=args.dual_reward_scale,
+            )
         )
-        retention_base, retention_wrapper, retention_cfg, retention_metadata = _configure_context_env(
-            context=RETENTION_CONTEXT,
-            num_envs=retention_count,
-            seed=args.seed + 10_000,
-            device=args.device,
-            dual_reward_scale=args.dual_reward_scale,
+        retention_base, retention_wrapper, retention_cfg, retention_metadata = (
+            _configure_context_env(
+                context=RETENTION_CONTEXT,
+                num_envs=retention_count,
+                seed=args.seed + 10_000,
+                device=args.device,
+                dual_reward_scale=args.dual_reward_scale,
+            )
         )
         env = SpecialistMixedVecEnvV141(
             target_wrapper,
@@ -421,12 +491,11 @@ def main() -> None:
 
         initial_actor_sha = actor_state_sha256(actor_state(runner.alg.actor))
         if records:
-            initial_actor_sha = json.loads((output / "training_started.json").read_text())[
-                "initial_actor_sha256"
-            ]
+            assert training_started is not None
+            initial_actor_sha = training_started["initial_actor_sha256"]
         else:
             _atomic_json(
-                output / "training_started.json",
+                training_started_path,
                 {
                     "method_id": METHOD_ID,
                     "candidate": args.candidate,
@@ -447,6 +516,12 @@ def main() -> None:
                         "intervention_ppo_eta": args.intervention_ppo_eta,
                         "correction_weight_mode": args.correction_weight_mode,
                         "correction_loss_weight": args.correction_loss_weight,
+                        "correction_loss_weight_schedule": (
+                            args.correction_loss_weight_schedule
+                        ),
+                        "correction_loss_weight_by_round": (
+                            correction_loss_weight_by_round
+                        ),
                         "dual_reward_scale": args.dual_reward_scale,
                         "actor_learning_rate": args.actor_learning_rate,
                         "critic_learning_rate": args.critic_learning_rate,
@@ -463,6 +538,10 @@ def main() -> None:
             )
 
         for round_index in range(len(records) + 1, args.rounds + 1):
+            round_correction_loss_weight = correction_loss_weight_by_round[
+                round_index - 1
+            ]
+            runner.alg.teacher_distillation_weight = round_correction_loss_weight
             runner.alg.freeze_round_reference()
             start_hash = actor_state_sha256(actor_state(runner.alg.actor))
             round_started = time.monotonic()
@@ -472,6 +551,7 @@ def main() -> None:
                 "round": round_index,
                 "round_start_actor_sha256": start_hash,
                 "round_end_actor_sha256": end_hash,
+                "correction_loss_weight": round_correction_loss_weight,
                 "elapsed_seconds": time.monotonic() - round_started,
                 "metrics": metrics,
             }
@@ -485,6 +565,10 @@ def main() -> None:
                     "candidate": args.candidate,
                     "specialist": args.specialist,
                     "actor_sha256": end_hash,
+                    "correction_loss_weight": round_correction_loss_weight,
+                    "correction_loss_weight_schedule": (
+                        args.correction_loss_weight_schedule
+                    ),
                 },
             )
             _atomic_json(records_path, records)
@@ -512,9 +596,9 @@ def main() -> None:
             "final_checkpoint_sha256": file_sha256(final_checkpoint),
             "fixed_final_round_checkpoint": True,
             "best_so_far_selection": False,
-            "hyperparameters": json.loads((output / "training_started.json").read_text())[
-                "hyperparameters"
-            ],
+            "hyperparameters": json.loads(
+                (output / "training_started.json").read_text()
+            )["hyperparameters"],
             "round_metrics": records,
             "elapsed_seconds": time.monotonic() - started,
         }
