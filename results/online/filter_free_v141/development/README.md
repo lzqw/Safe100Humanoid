@@ -1,13 +1,13 @@
 # v141 Filter-Free Refinement — Development Status
 
-Status at 2026-08-31 12:26 CST: the initial development launch was stopped and
-invalidated after a formula audit found that soft PPO weights were normalized
-by their sum rather than by the transition population. Commit `c75b017`
-corrects the objective to the required `mean(c_t * L_t)`, adds explicit
-per-transition group IDs, and makes post-Generation-3 refinement continue
-automatically. Corrected successive-halving development is restarting on the
-RTX 4080 SUPER. CARLA is not running; unrelated GuardianFlow jobs remain
-untouched.
+Status at 2026-08-31 12:43 CST: corrected successive-halving Generation 1 is
+running on the RTX 4080 SUPER. Five valid F2 candidates had completed at this
+snapshot; the provisional leader reached 70.3125% target CBF-off success,
+73.4375% F1-retention CBF-off success, 71.8750% target CBF-on success, and a
+1.5625 percentage-point shield gap. Its would-intervene fraction was 10.3886%,
+so it is not yet a development pass. Fresh Frozen baseline evaluation and all
+F3 candidates are still pending. CARLA is not running; unrelated GuardianFlow
+jobs remain untouched.
 
 Implemented method: Intervention-Aware CBF Distillation PPO. Training always
 executes the CBF-safe action, attenuates nominal-action PPO credit on corrected
@@ -28,8 +28,10 @@ measurements:
 
 These numbers are retained only as an audit trail and are excluded from every
 ranking, gate, and claim because their PPO scaling did not match the specified
-algorithm. Fresh corrected candidates, fresh-seed frozen baselines, formal
-three-seed training, and 512-episode paired evaluation remain in progress.
+algorithm. The corrected implementation and autonomous
+freeze/formal/publication pipeline are committed in `839f695`. Fresh corrected
+candidates, fresh-seed Frozen baselines, formal three-seed training, and
+512-episode paired evaluation remain in progress.
 
 Machine-side resumable state and raw artifacts are currently stored at:
 
