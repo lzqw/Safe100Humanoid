@@ -163,6 +163,57 @@ def test_v141_search_versions_vector_and_legacy_correction_reductions() -> None:
     assert legacy != vector
 
 
+def test_v141_target80_requires_retention_headroom() -> None:
+    baseline = {
+        "target_off": {
+            "success_rate": 0.65,
+            "counterfactual_would_intervene_fraction": 0.10,
+            "mean_counterfactual_correction_norm": 0.02,
+            "nominal_barrier_violation_steps_per_riser": 5.0,
+        },
+        "target_on": {"success_rate": 0.70},
+        "f1_off": {"success_rate": 0.72},
+    }
+    best = {
+        "target_off_success": 0.70,
+        "target_on_success": 0.71,
+        "f1_retention_off_success": 0.73,
+        "shield_gap": 0.01,
+        "would_intervene_fraction": 0.09,
+        "counterfactual_correction_norm": 0.018,
+        "nominal_violation_steps_per_riser": 4.8,
+        "actor_moving_forward_kl": 0.001,
+        "development_score": 0.70,
+        "configuration": {
+            "candidate": "parent",
+            "intervention_ppo_eta": 0.25,
+            "correction_loss_weight": 0.4,
+            "correction_weight_mode": "positive_advantage",
+            "dual_reward_scale": 0.0,
+            "target_fraction": 0.75,
+            "actor_learning_rate_multiplier": 2.0,
+            "actor_epochs": 4,
+            "rounds": 6,
+            "exploration_std": 0.05,
+            "moving_kl_beta": 0.25,
+        },
+    }
+    low_headroom = RUN_V141.DevelopmentDriver.adaptive_candidates(
+        10, best, baseline, set(), maximum_candidates=8
+    )
+    assert any("would_success_lowkl" in item["candidate"] for item in low_headroom)
+    assert not any("target80" in item["candidate"] for item in low_headroom)
+
+    high_headroom = RUN_V141.DevelopmentDriver.adaptive_candidates(
+        10,
+        {**best, "f1_retention_off_success": 0.75},
+        baseline,
+        set(),
+        maximum_candidates=8,
+    )
+    assert any("target80" in item["candidate"] for item in high_headroom)
+
+
 def test_v141_protocol_covers_required_search_values() -> None:
     path = REPO / "experiments/scripts/filter_free_v141_protocol.py"
     spec = importlib.util.spec_from_file_location("v141_protocol", path)

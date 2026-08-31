@@ -581,37 +581,50 @@ class DevelopmentDriver:
                 exploration_std=0.03,
                 moving_kl_beta=0.25,
             )
-            # If 75/25 retains F1 comfortably but remains just below the
-            # target-success or internalization gate, restore the prescribed
-            # 80/20 target distribution while keeping the strongest allowed
-            # correction update.  This changes only rho_retention, one of the
-            # explicit v141 search variables.
             add(
-                "would_coverage_target80",
+                "would_success_lowkl",
                 intervention_ppo_eta=0.0,
-                correction_weight_mode="intervention_only",
+                correction_weight_mode="episode_success_positive_advantage",
                 correction_loss_weight=0.4,
                 dual_reward_scale=0.0,
-                target_fraction=0.80,
                 actor_learning_rate_multiplier=2.0,
                 actor_epochs=4,
                 rounds=6,
                 exploration_std=0.05,
                 moving_kl_beta=0.25,
             )
-            add(
-                "would_coverage_target80_lownoise",
-                intervention_ppo_eta=0.0,
-                correction_weight_mode="intervention_only",
-                correction_loss_weight=0.4,
-                dual_reward_scale=0.0,
-                target_fraction=0.80,
-                actor_learning_rate_multiplier=2.0,
-                actor_epochs=4,
-                rounds=6,
-                exploration_std=0.03,
-                moving_kl_beta=0.25,
-            )
+            # If 75/25 retains F1 comfortably but remains just below the
+            # target-success or internalization gate, restore the prescribed
+            # 80/20 target distribution while keeping the strongest allowed
+            # correction update.  This changes only rho_retention, one of the
+            # explicit v141 search variables.
+            if retention_delta >= 0.015:
+                add(
+                    "would_coverage_target80",
+                    intervention_ppo_eta=0.0,
+                    correction_weight_mode="intervention_only",
+                    correction_loss_weight=0.4,
+                    dual_reward_scale=0.0,
+                    target_fraction=0.80,
+                    actor_learning_rate_multiplier=2.0,
+                    actor_epochs=4,
+                    rounds=6,
+                    exploration_std=0.05,
+                    moving_kl_beta=0.25,
+                )
+                add(
+                    "would_coverage_target80_lownoise",
+                    intervention_ppo_eta=0.0,
+                    correction_weight_mode="intervention_only",
+                    correction_loss_weight=0.4,
+                    dual_reward_scale=0.0,
+                    target_fraction=0.80,
+                    actor_learning_rate_multiplier=2.0,
+                    actor_epochs=4,
+                    rounds=6,
+                    exploration_std=0.03,
+                    moving_kl_beta=0.25,
+                )
         # Internalization bottleneck: task performance has transferred, but the
         # nominal actor still asks the runtime CBF to intervene too often. Use
         # the strongest allowed actor update while removing dual-reward
