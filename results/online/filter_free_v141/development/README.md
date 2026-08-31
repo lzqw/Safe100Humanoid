@@ -1,5 +1,24 @@
 # v141 Filter-Free Refinement — Development Status
 
+## Latest snapshot — Generation 10 F2 complete, F3 running
+
+Status at 2026-08-31 20:14 CST: all four vector-Huber Generation-10 F2
+candidates are complete. The leader (`g10_would_coverage_lowkl_eta025_2`)
+reaches 79.6875% target CBF-off success, 81.25% target CBF-on success, 76.5625%
+F1 retention, and a 1.5625-point shield gap. It passes those three gates, but
+would-intervene is 9.71323% versus the required maximum of 7.48315%.
+
+The 80/20 target/F1 candidate reduced F1 retention to 66.40625% without
+improving would-intervene. Commit `bb5f25d` therefore requires explicit F1
+headroom before another 80/20 trial and prioritizes the allowed
+episode-success × positive-advantage correction weighting. The 4080 worker is
+now running that strongest allowed F3 candidate from Frozen v139 with 128
+environments. There is no current failure, and formal freezing remains
+disallowed.
+
+See `generation_10_snapshot.json` for the complete F2 ranking and exact running
+F3 configuration.
+
 ## Latest snapshot — Generation 9 complete, vector-Huber Generation 10 running
 
 Status at 2026-08-31 19:49 CST: all Generation-9 evaluations are complete.

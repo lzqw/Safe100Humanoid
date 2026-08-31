@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "snapshot_time": "2026-08-31T20:14:28+08:00",
+  "status": "generation_10_f2_complete_generation_10_f3_running",
+  "method_id": "intervention-aware-cbf-distillation-ppo-v141",
+  "correction_action_reduction": "sum_over_action_dimensions_then_weighted_transition_mean",
+  "remote_artifact_root": "/home/carla/LZQW/SAFE100/humanoid/artifacts/filter_free_v141/development",
+  "current_failure": false,
+  "historical_recovered_failed_job_records": 1,
+  "formal_freeze_allowed": false,
+  "f2_frozen": {
+    "target_off_success": 0.671875,
+    "target_on_success": 0.78125,
+    "f1_retention_off_success": 0.71875,
+    "shield_gap": 0.109375,
+    "would_intervene_fraction": 0.09977528953079685,
+    "would_intervene_gate_max": 0.07483146714809764
+  },
+  "generation_10_f2": {
+    "successful_candidates": 0,
+    "ranking": [
+      {
+        "candidate": "g10_would_coverage_lowkl_eta025_2",
+        "target_off_success": 0.796875,
+        "target_on_success": 0.8125,
+        "f1_retention_off_success": 0.765625,
+        "shield_gap": 0.015625,
+        "would_intervene_fraction": 0.09713231904103273,
+        "counterfactual_correction_norm": 0.017969289078806995,
+        "actor_moving_forward_kl": 0.000972843321505934,
+        "development_score": 0.7867187500000001,
+        "checks": {
+          "target_off_improves_2pp": true,
+          "f1_retention_within_1p5pp": true,
+          "shield_gap_target": true,
+          "would_intervene_reduced_25pct": false
+        }
+      },
+      {
+        "candidate": "g10_would_coverage_lowkl_eta0_1",
+        "target_off_success": 0.7578125,
+        "target_on_success": 0.765625,
+        "f1_retention_off_success": 0.703125,
+        "shield_gap": 0.0078125,
+        "would_intervene_fraction": 0.0976056616313114,
+        "counterfactual_correction_norm": 0.018565448075669417,
+        "actor_moving_forward_kl": 0.000983229954726994,
+        "development_score": 0.7449218750000001,
+        "checks": {
+          "target_off_improves_2pp": true,
+          "f1_retention_within_1p5pp": false,
+          "shield_gap_target": true,
+          "would_intervene_reduced_25pct": false
+        }
+      },
+      {
+        "candidate": "g10_would_low_noise_lowkl_3",
+        "target_off_success": 0.7109375,
+        "target_on_success": 0.765625,
+        "f1_retention_off_success": 0.7265625,
+        "shield_gap": 0.0546875,
+        "would_intervene_fraction": 0.0992234685073339,
+        "counterfactual_correction_norm": 0.020523564557354445,
+        "actor_moving_forward_kl": 0.0010389736853539944,
+        "development_score": 0.700390625,
+        "checks": {
+          "target_off_improves_2pp": true,
+          "f1_retention_within_1p5pp": true,
+          "shield_gap_target": true,
+          "would_intervene_reduced_25pct": false
+        }
+      },
+      {
+        "candidate": "g10_would_coverage_target80_4",
+        "target_off_success": 0.7109375,
+        "target_on_success": 0.7421875,
+        "f1_retention_off_success": 0.6640625,
+        "shield_gap": 0.03125,
+        "would_intervene_fraction": 0.09852198245910568,
+        "counterfactual_correction_norm": 0.018915025859285922,
+        "actor_moving_forward_kl": 0.0009578815079294145,
+        "development_score": 0.69375,
+        "checks": {
+          "target_off_improves_2pp": true,
+          "f1_retention_within_1p5pp": false,
+          "shield_gap_target": true,
+          "would_intervene_reduced_25pct": false
+        }
+      }
+    ]
+  },
+  "diagnosis": {
+    "remaining_bottleneck": "would_intervene_fraction",
+    "best_relative_would_intervene_reduction": 0.02648921289776407,
+    "target80_observation": "80/20 reduced F1 retention to 0.6640625 and did not improve intervention internalization; future target80 trials require explicit F1 headroom",
+    "next_weighting": "episode_success_positive_advantage"
+  },
+  "running": {
+    "remote_commit": "bb5f25d4e9f7dbc4cf6851cb205c1c4ca55b947f",
+    "generation": 10,
+    "specialist": "F3",
+    "candidate": "g10_would_success_lowkl_1",
+    "target_fraction": 0.75,
+    "intervention_ppo_eta": 0.0,
+    "correction_weight_mode": "episode_success_positive_advantage",
+    "correction_loss_weight": 0.4,
+    "dual_reward_scale": 0.0,
+    "actor_learning_rate_multiplier": 2.0,
+    "actor_epochs": 4,
+    "rounds": 6,
+    "num_envs": 128
+  },
+  "next_action": "finish the separately tuned Generation-10 F3 candidates, then continue mechanism refinement until both specialists pass all four development gates"
+}
