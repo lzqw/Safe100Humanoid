@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import itertools
 import json
 import subprocess
 import sys
@@ -47,6 +48,15 @@ def _parse_args() -> argparse.Namespace:
         type=int,
         default=0,
         help="Stop after this many new subprocess jobs; zero means unlimited.",
+    )
+    parser.add_argument(
+        "--ignore-success-through-generation",
+        type=int,
+        default=0,
+        help=(
+            "After an unsuccessful formal attempt, require a newly evaluated "
+            "development candidate from a later generation."
+        ),
     )
     return parser.parse_args()
 
@@ -546,6 +556,49 @@ class DevelopmentDriver:
             if len(candidates) >= maximum_candidates:
                 break
             add(label, **updates)
+
+        # Once all single-variable mutations around the current best have been
+        # tried, keep the staged search alive with a few untried combinations.
+        # This remains successive halving: at most four candidates run in one
+        # generation, and the full Cartesian product is never launched.
+        domains = (
+            ("intervention_ppo_eta", eta_levels),
+            ("correction_loss_weight", weight_levels),
+            (
+                "correction_weight_mode",
+                (
+                    "positive_advantage",
+                    "episode_success_positive_advantage",
+                    "intervention_only",
+                ),
+            ),
+            ("dual_reward_scale", (0.0, 0.25, 1.0)),
+            ("target_fraction", (0.80, 0.75, 0.67)),
+            ("actor_learning_rate_multiplier", (0.5, 1.0, 2.0)),
+            ("actor_epochs", (2, 3, 4)),
+            ("rounds", (2, 4, 6)),
+            ("exploration_std", (0.03, 0.05)),
+            ("moving_kl_beta", (0.25, 0.5, 1.0)),
+        )
+        base_signature = cls.configuration_signature(base)
+        for distance in range(2, len(domains) + 1):
+            if len(candidates) >= maximum_candidates:
+                break
+            for values in itertools.product(*(values for _, values in domains)):
+                if sum(
+                    value != base_value
+                    for value, base_value in zip(values, base_signature)
+                ) != distance:
+                    continue
+                add(
+                    f"combo{distance}",
+                    **{
+                        name: value
+                        for (name, _), value in zip(domains, values)
+                    },
+                )
+                if len(candidates) >= maximum_candidates:
+                    break
         return candidates[:maximum_candidates]
 
     @staticmethod
@@ -657,6 +710,7 @@ class DevelopmentDriver:
             for specialist in SPECIALISTS
         }
         generation = 3
+        success_cutoff = self.args.ignore_success_through_generation
         while True:
             selected: dict[str, dict[str, Any]] = {}
             for specialist in SPECIALISTS:
@@ -664,6 +718,7 @@ class DevelopmentDriver:
                     item
                     for item in history[specialist]
                     if item.get("development_success", False)
+                    and int(item.get("generation", 0)) > success_cutoff
                 ]
                 if successful:
                     selected[specialist] = max(
@@ -710,6 +765,7 @@ class DevelopmentDriver:
                     item
                     for item in history[specialist]
                     if item.get("development_success", False)
+                    and int(item.get("generation", 0)) > success_cutoff
                 ]
                 selected[specialist] = (
                     max(successful, key=lambda item: item["development_score"])
@@ -756,6 +812,8 @@ def main() -> None:
     args = _parse_args()
     if args.through_generation < 0:
         raise ValueError("through-generation must be non-negative")
+    if args.ignore_success_through_generation < 0:
+        raise ValueError("ignore-success-through-generation must be non-negative")
     driver = DevelopmentDriver(args)
     try:
         driver.run()
