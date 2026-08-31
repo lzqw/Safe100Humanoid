@@ -547,6 +547,12 @@ class DevelopmentDriver:
             and checks["f1_retention_within_1p5pp"]
             and not checks["would_intervene_reduced_25pct"]
         ):
+            # A material correction-objective change invalidates the old
+            # hyperparameter trial without invalidating its ranking evidence.
+            # Re-evaluate the gate-closest parent unchanged under vector-Huber
+            # before spending another generation on mutations.  The versioned
+            # signature makes this a no-op once that exact replay has run.
+            add("vector_parent_replay")
             add(
                 "would_coverage_lowkl_eta0",
                 intervention_ppo_eta=0.0,
