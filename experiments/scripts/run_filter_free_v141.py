@@ -474,6 +474,33 @@ class DevelopmentDriver:
         baseline_would = float(
             baseline["target_off"]["counterfactual_would_intervene_fraction"]
         )
+        # Internalization bottleneck: task performance has transferred, but the
+        # nominal actor still asks the runtime CBF to intervene too often. Use
+        # the strongest allowed actor update while removing dual-reward
+        # dominance; configuration selection still uses only development data.
+        if (
+            target_delta > 0.0
+            and best["would_intervene_fraction"]
+            > baseline_would
+            * (1.0 - DEVELOPMENT_THRESHOLDS["would_intervene_reduction_fraction"])
+        ):
+            add(
+                "internalize",
+                intervention_ppo_eta=eta_levels[
+                    max(0, eta_levels.index(current_eta) - 1)
+                ],
+                correction_weight_mode="positive_advantage",
+                correction_loss_weight=weight_levels[
+                    min(
+                        len(weight_levels) - 1,
+                        weight_levels.index(current_weight) + 1,
+                    )
+                ],
+                dual_reward_scale=0.0,
+                actor_learning_rate_multiplier=2.0,
+                actor_epochs=4,
+                rounds=6,
+            )
         # A: the policy internalizes interventions but task success falls.
         if best["would_intervene_fraction"] < baseline_would and target_delta < 0.0:
             add(
