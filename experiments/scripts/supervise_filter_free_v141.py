@@ -157,7 +157,43 @@ class Supervisor:
             raise RuntimeError("cannot resume development without generation evidence")
         return max(generations)
 
+    def publish_success(self, attempt: int, frozen: Path, attempt_root: Path) -> None:
+        self.run_command(
+            f"attempt_{attempt:02d}_publish",
+            [
+                str(self.args.python),
+                "experiments/scripts/publish_filter_free_v141.py",
+                "--repo",
+                str(self.repo),
+                "--raw-results",
+                str(attempt_root / "formal_raw_results.json"),
+                "--frozen-config",
+                str(frozen),
+                "--output-dir",
+                str(self.final_publish_dir()),
+                "--commit-and-push",
+            ],
+        )
+        revision = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=self.repo,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        self.state.update(
+            {
+                "status": "complete",
+                "formal_success": True,
+                "published_commit": revision,
+                "published_directory": str(self.final_publish_dir()),
+            }
+        )
+        self.save()
+
     def run(self) -> None:
+        if self.state.get("status") == "complete":
+            return
         while True:
             attempt = int(self.state["formal_attempt"])
             if (
@@ -165,6 +201,16 @@ class Supervisor:
                 and attempt > self.args.maximum_formal_attempts
             ):
                 raise RuntimeError("v141 maximum formal-attempt limit reached")
+
+            frozen = self.frozen_path(attempt)
+            attempt_root = self.formal / f"attempt_{attempt:02d}"
+            staging = attempt_root / "publication_staging"
+            staged_result = staging / "formal_results.json"
+            if staged_result.is_file():
+                resumed_result = json.loads(staged_result.read_text())
+                if resumed_result.get("formal_success") is True:
+                    self.publish_success(attempt, frozen, attempt_root)
+                    return
 
             self.run_command(
                 f"attempt_{attempt:02d}_development",
@@ -178,7 +224,6 @@ class Supervisor:
             ):
                 raise RuntimeError("v141 development returned without passing both gates")
 
-            frozen = self.frozen_path(attempt)
             self.run_command(
                 f"attempt_{attempt:02d}_freeze",
                 [
@@ -194,8 +239,6 @@ class Supervisor:
                 ],
             )
 
-            attempt_root = self.formal / f"attempt_{attempt:02d}"
-            staging = attempt_root / "publication_staging"
             self.run_command(
                 f"attempt_{attempt:02d}_formal",
                 [
@@ -232,38 +275,7 @@ class Supervisor:
                 }
             )
             if formal_result.get("formal_success") is True:
-                self.run_command(
-                    f"attempt_{attempt:02d}_publish",
-                    [
-                        str(self.args.python),
-                        "experiments/scripts/publish_filter_free_v141.py",
-                        "--repo",
-                        str(self.repo),
-                        "--raw-results",
-                        str(attempt_root / "formal_raw_results.json"),
-                        "--frozen-config",
-                        str(frozen),
-                        "--output-dir",
-                        str(self.final_publish_dir()),
-                        "--commit-and-push",
-                    ],
-                )
-                revision = subprocess.run(
-                    ["git", "rev-parse", "HEAD"],
-                    cwd=self.repo,
-                    check=True,
-                    capture_output=True,
-                    text=True,
-                ).stdout.strip()
-                self.state.update(
-                    {
-                        "status": "complete",
-                        "formal_success": True,
-                        "published_commit": revision,
-                        "published_directory": str(self.final_publish_dir()),
-                    }
-                )
-                self.save()
+                self.publish_success(attempt, frozen, attempt_root)
                 return
 
             # Only the binary gate outcome is carried back. Formal metrics do

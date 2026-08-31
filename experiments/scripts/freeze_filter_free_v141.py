@@ -97,6 +97,20 @@ def main() -> None:
         if existing.get("frozen_before_formal") is not True:
             raise RuntimeError("existing v141 frozen configuration is invalid")
         if args.commit_and_push:
+            relative = output.relative_to(repo)
+            committed = subprocess.run(
+                ["git", "show", f"HEAD:{relative}"],
+                cwd=repo,
+                check=False,
+                capture_output=True,
+            )
+            if committed.returncode != 0 or committed.stdout != output.read_bytes():
+                subprocess.run(["git", "add", str(relative)], cwd=repo, check=True)
+                subprocess.run(
+                    ["git", "commit", "-m", "Freeze v141 formal configuration"],
+                    cwd=repo,
+                    check=True,
+                )
             subprocess.run(
                 ["git", "push", "origin", "feature/online-safe-refinement"],
                 cwd=repo,
