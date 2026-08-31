@@ -497,7 +497,7 @@ class DevelopmentDriver:
             and not checks["would_intervene_reduced_25pct"]
         ):
             add(
-                "would_coverage_eta0",
+                "would_coverage_lowkl_eta0",
                 intervention_ppo_eta=0.0,
                 correction_weight_mode="intervention_only",
                 correction_loss_weight=0.4,
@@ -508,7 +508,7 @@ class DevelopmentDriver:
                 moving_kl_beta=0.25,
             )
             add(
-                "would_coverage_eta025",
+                "would_coverage_lowkl_eta025",
                 intervention_ppo_eta=0.25,
                 correction_weight_mode="intervention_only",
                 correction_loss_weight=0.4,
@@ -519,7 +519,7 @@ class DevelopmentDriver:
                 moving_kl_beta=0.25,
             )
             add(
-                "would_low_noise",
+                "would_low_noise_lowkl",
                 intervention_ppo_eta=0.0,
                 correction_weight_mode="positive_advantage",
                 correction_loss_weight=0.4,
