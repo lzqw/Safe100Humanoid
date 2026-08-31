@@ -1,16 +1,16 @@
 {
   "schema_version": 1,
-  "status": "generation_1_running",
-  "snapshot_time": "2026-08-31T12:18:51+08:00",
+  "status": "corrected_generation_1_restarting",
+  "snapshot_time": "2026-08-31T12:26:00+08:00",
   "method_id": "intervention-aware-cbf-distillation-ppo-v141",
-  "implementation_commit": "86fa458",
+  "implementation_commit": "c75b017",
   "hardware": "NVIDIA GeForce RTX 4080 SUPER",
   "carla_running": false,
   "guardianflow_preserved": true,
   "remote_artifact_root": "/home/carla/LZQW/SAFE100/humanoid/artifacts/filter_free_v141/development",
-  "completed_real_candidates": 1,
+  "completed_valid_candidates": 0,
   "current_stage": "Generation 1 credit-assignment search",
-  "first_candidate": {
+  "invalidated_first_candidate": {
     "generation": 1,
     "specialist": "F2",
     "candidate": "g1_eta0_posadv_r0_l02",
@@ -35,9 +35,18 @@
     "mean_reached_riser": 8.2421875,
     "fall_rate": 0.2578125,
     "actor_moving_forward_kl": 0.0004138631047680974,
-    "development_score": 0.751953125
+    "development_score": 0.751953125,
+    "valid_for_ranking": false,
+    "invalidation_reason": "Intervention PPO used sum-of-weight normalization instead of the required transition-population mean."
   },
-  "comparison_caveat": "The preliminary frozen reference below used the published v140 evaluation seed, not the fresh v141 development seed.",
+  "objective_correction": {
+    "superseded_behavior": "sum(c_t * L_t) / sum(c_t)",
+    "required_behavior": "mean(c_t * L_t)",
+    "per_transition_group_ids_added": true,
+    "automatic_post_generation_3_continuation_added": true,
+    "corrected_search_restarts_from_v139": true
+  },
+  "comparison_caveat": "The invalidated candidate and preliminary frozen reference are audit-only and cannot support a development or formal claim.",
   "published_v140_frozen_reference": {
     "F1_off_success": 0.73046875,
     "F2_off_success": 0.689453125,
@@ -45,8 +54,8 @@
     "F2_off_would_intervene_fraction": 0.1049239920687376
   },
   "preliminary_gate_assessment": {
-    "target_off_improvement_promising": true,
-    "f1_retention_promising": true,
+    "target_off_improvement_promising": false,
+    "f1_retention_promising": false,
     "shield_gap_gate_satisfied": false,
     "would_intervene_reduction_gate_satisfied": false,
     "formal_claim_allowed": false
