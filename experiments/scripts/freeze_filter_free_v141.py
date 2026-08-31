@@ -92,20 +92,38 @@ def main() -> None:
         for name in SPECIALISTS
     ):
         raise RuntimeError("v141 selected development candidates are incomplete")
+    published_summary = output.parent / "development_summary.json"
     if output.exists():
         existing = json.loads(output.read_text())
         if existing.get("frozen_before_formal") is not True:
             raise RuntimeError("existing v141 frozen configuration is invalid")
+        _atomic_json(published_summary, development)
         if args.commit_and_push:
             relative = output.relative_to(repo)
+            summary_relative = published_summary.relative_to(repo)
             committed = subprocess.run(
                 ["git", "show", f"HEAD:{relative}"],
                 cwd=repo,
                 check=False,
                 capture_output=True,
             )
-            if committed.returncode != 0 or committed.stdout != output.read_bytes():
-                subprocess.run(["git", "add", str(relative)], cwd=repo, check=True)
+            committed_summary = subprocess.run(
+                ["git", "show", f"HEAD:{summary_relative}"],
+                cwd=repo,
+                check=False,
+                capture_output=True,
+            )
+            if (
+                committed.returncode != 0
+                or committed.stdout != output.read_bytes()
+                or committed_summary.returncode != 0
+                or committed_summary.stdout != published_summary.read_bytes()
+            ):
+                subprocess.run(
+                    ["git", "add", str(relative), str(summary_relative)],
+                    cwd=repo,
+                    check=True,
+                )
                 subprocess.run(
                     ["git", "commit", "-m", "Freeze v141 formal configuration"],
                     cwd=repo,
@@ -165,10 +183,16 @@ def main() -> None:
             for name in SPECIALISTS
         },
     }
+    _atomic_json(published_summary, development)
     _atomic_json(output, frozen)
     if args.commit_and_push:
         relative = output.relative_to(repo)
-        subprocess.run(["git", "add", str(relative)], cwd=repo, check=True)
+        summary_relative = published_summary.relative_to(repo)
+        subprocess.run(
+            ["git", "add", str(relative), str(summary_relative)],
+            cwd=repo,
+            check=True,
+        )
         subprocess.run(
             ["git", "commit", "-m", "Freeze v141 formal configuration"],
             cwd=repo,
