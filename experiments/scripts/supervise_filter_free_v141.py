@@ -40,6 +40,11 @@ def _parse_args() -> argparse.Namespace:
         default=0,
         help="Zero keeps returning to development until the fixed formal gates pass.",
     )
+    parser.add_argument(
+        "--pause-only",
+        action="store_true",
+        help="Record an operator-requested pause without launching any subprocess.",
+    )
     return parser.parse_args()
 
 
@@ -75,6 +80,51 @@ class Supervisor:
         self.state["updated_unix_time"] = time.time()
         _atomic_json(self.state_path, self.state)
 
+    def pause(self, reason: str = "operator_request") -> None:
+        """Atomically turn stale running state into a resumable pause record."""
+        if self.state.get("status") == "complete":
+            return
+        paused_at = time.time()
+        stage = self.state.get("current_stage")
+        command = self.state.get("current_command")
+        if stage is not None:
+            self.state["paused_stage"] = stage
+        if command is not None:
+            self.state["paused_command"] = command
+        self.state.update(
+            {
+                "status": "paused_by_operator",
+                "pause_reason": reason,
+                "paused_unix_time": paused_at,
+                "current_stage": None,
+                "current_command": None,
+            }
+        )
+        self.save()
+
+        child_state_path: Path | None = None
+        if isinstance(stage, str) and stage.endswith("_development"):
+            child_state_path = self.development / "run_state.json"
+        elif isinstance(stage, str) and stage.endswith("_formal"):
+            attempt = int(self.state.get("formal_attempt", 1))
+            child_state_path = self.formal / f"attempt_{attempt:02d}" / "run_state.json"
+        if child_state_path is None or not child_state_path.is_file():
+            return
+        child_state = json.loads(child_state_path.read_text())
+        current_job = child_state.get("current_job")
+        if current_job is not None:
+            child_state["paused_job"] = current_job
+        child_state.update(
+            {
+                "status": "paused_by_operator",
+                "pause_reason": reason,
+                "paused_unix_time": paused_at,
+                "current_job": None,
+                "updated_unix_time": paused_at,
+            }
+        )
+        _atomic_json(child_state_path, child_state)
+
     def run_command(self, stage: str, command: list[str]) -> None:
         log = self.formal / "logs" / f"{stage}.log"
         log.parent.mkdir(parents=True, exist_ok=True)
@@ -82,6 +132,13 @@ class Supervisor:
         self.state["current_stage"] = stage
         self.state["current_command"] = command
         self.state["current_stage_started_unix_time"] = time.time()
+        for key in (
+            "paused_stage",
+            "paused_command",
+            "pause_reason",
+            "paused_unix_time",
+        ):
+            self.state.pop(key, None)
         self.save()
         started = time.monotonic()
         with log.open("a") as handle:
@@ -130,9 +187,7 @@ class Supervisor:
         ]
         cutoff = int(self.state.get("ignore_success_through_generation", 0))
         if cutoff:
-            command.extend(
-                ["--ignore-success-through-generation", str(cutoff)]
-            )
+            command.extend(["--ignore-success-through-generation", str(cutoff)])
         return command
 
     def frozen_path(self, attempt: int) -> Path:
@@ -150,9 +205,7 @@ class Supervisor:
     def formal_failure_cutoff(self) -> int:
         state_path = self.development / "run_state.json"
         development_state = json.loads(state_path.read_text())
-        generations = [
-            int(value) for value in development_state.get("generations", {})
-        ]
+        generations = [int(value) for value in development_state.get("generations", {})]
         if not generations:
             raise RuntimeError("cannot resume development without generation evidence")
         return max(generations)
@@ -222,7 +275,9 @@ class Supervisor:
                 development_summary.get("both_specialists_pass") is not True
                 or development_summary.get("next_phase") != "freeze_and_formal"
             ):
-                raise RuntimeError("v141 development returned without passing both gates")
+                raise RuntimeError(
+                    "v141 development returned without passing both gates"
+                )
 
             self.run_command(
                 f"attempt_{attempt:02d}_freeze",
@@ -294,6 +349,9 @@ def main() -> None:
     if args.maximum_formal_attempts < 0:
         raise ValueError("maximum-formal-attempts must be non-negative")
     supervisor = Supervisor(args)
+    if args.pause_only:
+        supervisor.pause()
+        return
     try:
         supervisor.run()
     except Exception:

@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import ast
 import importlib.util
+import json
 import math
 from pathlib import Path
 import sys
+from types import SimpleNamespace
 
 import pytest
 import torch
@@ -28,6 +30,9 @@ V30_MATH = _load("v141_v30_math", "src/tasks/stairs_cbf/teacher_v30_math.py")
 sys.path.insert(0, str(REPO / "experiments/scripts"))
 RUN_V141 = _load(
     "v141_development_driver", "experiments/scripts/run_filter_free_v141.py"
+)
+SUPERVISOR_V141 = _load(
+    "v141_supervisor", "experiments/scripts/supervise_filter_free_v141.py"
 )
 
 
@@ -320,3 +325,45 @@ def test_v30_soft_weight_hook_preserves_legacy_default() -> None:
     assert isinstance(method.body[-1], ast.Return)
     assert isinstance(method.body[-1].value, ast.Constant)
     assert method.body[-1].value.value is None
+
+
+def test_v141_pause_only_preserves_resumable_job_state(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    development = tmp_path / "development"
+    formal = tmp_path / "formal"
+    repo.mkdir()
+    development.mkdir()
+    run_state = development / "run_state.json"
+    run_state.write_text(
+        json.dumps(
+            {
+                "status": "running",
+                "current_job": {"id": "g10_F3_train", "command": ["train"]},
+                "completed_jobs": [{"id": "earlier"}],
+            }
+        )
+    )
+    supervisor = SUPERVISOR_V141.Supervisor(
+        SimpleNamespace(
+            repo=repo,
+            development_root=development,
+            formal_root=formal,
+        )
+    )
+    supervisor.state.update(
+        {
+            "current_stage": "attempt_01_development",
+            "current_command": ["develop"],
+        }
+    )
+    supervisor.pause()
+
+    saved_supervisor = json.loads(supervisor.state_path.read_text())
+    saved_development = json.loads(run_state.read_text())
+    assert saved_supervisor["status"] == "paused_by_operator"
+    assert saved_supervisor["paused_stage"] == "attempt_01_development"
+    assert saved_supervisor["current_stage"] is None
+    assert saved_development["status"] == "paused_by_operator"
+    assert saved_development["paused_job"]["id"] == "g10_F3_train"
+    assert saved_development["current_job"] is None
+    assert saved_development["completed_jobs"] == [{"id": "earlier"}]
