@@ -6,6 +6,7 @@ import ast
 import importlib.util
 import math
 from pathlib import Path
+import sys
 
 import pytest
 import torch
@@ -24,6 +25,10 @@ def _load(name: str, relative: str):
 
 
 V30_MATH = _load("v141_v30_math", "src/tasks/stairs_cbf/teacher_v30_math.py")
+sys.path.insert(0, str(REPO / "experiments/scripts"))
+RUN_V141 = _load(
+    "v141_development_driver", "experiments/scripts/run_filter_free_v141.py"
+)
 
 
 def _pure_helpers() -> dict[str, object]:
@@ -133,6 +138,29 @@ def test_v141_vector_huber_sums_action_coordinates() -> None:
     assert float(loss) == pytest.approx(3.0 * per_coordinate)
     loss.backward()
     assert policy_mean.grad is not None
+
+
+def test_v141_search_versions_vector_and_legacy_correction_reductions() -> None:
+    configuration = {
+        "intervention_ppo_eta": 0.0,
+        "correction_loss_weight": 0.4,
+        "correction_weight_mode": "intervention_only",
+        "dual_reward_scale": 0.0,
+        "target_fraction": 0.75,
+        "actor_learning_rate_multiplier": 2.0,
+        "actor_epochs": 4,
+        "rounds": 6,
+        "exploration_std": 0.05,
+        "moving_kl_beta": 0.25,
+    }
+    legacy = RUN_V141.DevelopmentDriver.configuration_signature(configuration)
+    vector = RUN_V141.DevelopmentDriver.configuration_signature(
+        {
+            **configuration,
+            "correction_action_reduction": "sum",
+        }
+    )
+    assert legacy != vector
 
 
 def test_v141_protocol_covers_required_search_values() -> None:

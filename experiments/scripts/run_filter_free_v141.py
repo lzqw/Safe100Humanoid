@@ -29,6 +29,10 @@ from filter_free_v141_protocol import (
 )
 
 
+CURRENT_CORRECTION_ACTION_REDUCTION = "sum"
+LEGACY_CORRECTION_ACTION_REDUCTION = "per_action_mean"
+
+
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo", type=Path, required=True)
@@ -441,8 +445,54 @@ class DevelopmentDriver:
                 ("rounds", 2),
                 ("exploration_std", 0.05),
                 ("moving_kl_beta", 0.5),
+                (
+                    "correction_action_reduction",
+                    LEGACY_CORRECTION_ACTION_REDUCTION,
+                ),
             )
         )
+
+    def annotate_correction_action_reduction(
+        self, result: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Version cached candidates by the correction objective they ran.
+
+        The vector-Huber correction changed after part of Generation 9 had
+        completed.  Hyperparameters evaluated with the inherited per-action
+        mean are therefore not evidence that the same configuration has been
+        tried with the corrected vector reduction.  Read the immutable round
+        telemetry so resumed successive-halving can distinguish the two
+        implementation epochs without discarding prior audit artifacts.
+        """
+        configuration = dict(result["configuration"])
+        reduction = configuration.get("correction_action_reduction")
+        if reduction is None:
+            training_summary = (
+                self.training_dir(
+                    int(result["generation"]),
+                    str(result["specialist"]),
+                    str(result["candidate"]),
+                )
+                / "training_summary.json"
+            )
+            reduction = LEGACY_CORRECTION_ACTION_REDUCTION
+            if training_summary.is_file():
+                training = json.loads(training_summary.read_text())
+                round_metrics = training.get("round_metrics", [])
+                if round_metrics:
+                    reduction = (
+                        round_metrics[-1]
+                        .get("metrics", {})
+                        .get(
+                            "v141_correction_action_reduction",
+                            LEGACY_CORRECTION_ACTION_REDUCTION,
+                        )
+                        or LEGACY_CORRECTION_ACTION_REDUCTION
+                    )
+            configuration["correction_action_reduction"] = str(reduction)
+            result["configuration"] = configuration
+        result["correction_action_reduction"] = str(reduction)
+        return result
 
     @classmethod
     def adaptive_candidates(
@@ -470,6 +520,7 @@ class DevelopmentDriver:
             configuration = {
                 **base,
                 **updates,
+                "correction_action_reduction": CURRENT_CORRECTION_ACTION_REDUCTION,
                 "candidate": f"g{generation}_{label}_{len(candidates) + 1}",
                 "parent_candidate": parent,
             }
@@ -811,6 +862,11 @@ class DevelopmentDriver:
             or not isinstance(summary.get("ranking"), list)
         ):
             raise RuntimeError(f"invalid cached v141 generation summary: {path}")
+        summary["ranking"] = [
+            self.annotate_correction_action_reduction(result)
+            for result in summary["ranking"]
+        ]
+        summary["top_three"] = summary["ranking"][:3]
         return summary
 
     def summarize_generation(
@@ -820,7 +876,14 @@ class DevelopmentDriver:
         results: list[dict[str, Any]],
         baseline: dict[str, dict[str, Any]],
     ) -> dict[str, Any]:
-        ranked = sorted(results, key=lambda item: item["development_score"], reverse=True)
+        ranked = sorted(
+            (
+                self.annotate_correction_action_reduction(result)
+                for result in results
+            ),
+            key=lambda item: item["development_score"],
+            reverse=True,
+        )
         for result in ranked:
             checks = self.success_checks(result, baseline)
             result["development_success_checks"] = checks
