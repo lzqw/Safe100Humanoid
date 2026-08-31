@@ -111,9 +111,18 @@ def _save_checkpoint(runner, path: Path, round_index: int, metadata: dict[str, A
 def _restore_rng_state(payload: dict[str, Any]) -> None:
     random.setstate(payload["python_random_state"])
     np.random.set_state(payload["numpy_random_state"])
-    torch.set_rng_state(payload["torch_random_state"])
+    # RNG APIs require CPU ByteTensors.  Checkpoint model tensors may be mapped
+    # directly to CUDA for recovery, but RNG state must never follow that map.
+    torch_state = payload["torch_random_state"].detach().to(
+        device="cpu", dtype=torch.uint8
+    )
+    torch.set_rng_state(torch_state.contiguous())
     if torch.cuda.is_available() and "torch_cuda_random_state_all" in payload:
-        torch.cuda.set_rng_state_all(payload["torch_cuda_random_state_all"])
+        cuda_states = [
+            state.detach().to(device="cpu", dtype=torch.uint8).contiguous()
+            for state in payload["torch_cuda_random_state_all"]
+        ]
+        torch.cuda.set_rng_state_all(cuda_states)
 
 
 def _configure_context_env(
@@ -402,7 +411,9 @@ def main() -> None:
                 {"boundary": "v139", "specialist": args.specialist},
             )
         else:
-            payload = torch.load(recovery, map_location=args.device, weights_only=False)
+            # Load the small metadata/RNG view on CPU; the runner separately
+            # restores model and optimizer tensors onto the requested device.
+            payload = torch.load(recovery, map_location="cpu", weights_only=False)
             warm_start = runner.load_recovery_checkpoint(
                 str(recovery), map_location=args.device
             )
