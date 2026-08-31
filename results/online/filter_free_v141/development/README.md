@@ -1,5 +1,32 @@
 # v141 Filter-Free Refinement — Development Status
 
+## Latest snapshot — Generation 7 complete, Generation 8 running
+
+Status at 2026-08-31 18:34 CST: the autonomous loop has completed Generations
+1–7 and is running Generation 8 on the RTX 4080 SUPER. No CARLA/Unreal process
+is running. One historical failed-job record is retained from the already
+recovered CUDA RNG resume bug; there is no current training failure.
+
+The Generation-7 F3 leader (`g7_epochs4_1`) reaches 76.5625% target CBF-off
+success versus Frozen's 64.84375%, retains F1 at 75.78125%, and has a -1.5625
+point shield gap. It passes target success, F1 retention, and shield-gap gates.
+Its would-intervene fraction is 9.06759% versus Frozen's 10.16317%, so the
+required 25% reduction remains the only failed F3 gate.
+
+The score-selected F2 leader remains `g3_eta0.25_3`: 78.90625% target CBF-off,
+71.875% F1 retention, -14.84375 points shield gap, and 9.62572%
+would-intervene. It passes target and retention but fails the absolute/reduced
+shield-gap gate and the would-intervene gate. This exposed a search-control
+problem: adaptive generations were mutating the highest `J_dev` parent even
+when another candidate satisfied more of the actual termination gates. Commit
+`6e4a84b` preserves the required `J_dev` ranking but chooses future mutation
+parents by gates passed, normalized gate deficit, then `J_dev`. It also resumes
+from completed adaptive-generation summaries instead of replaying G3 onward.
+
+See `generation_7_snapshot.json` for the compact machine-readable evidence.
+Formal freezing is not allowed yet; both specialists must pass every
+development gate first.
+
 Status at 2026-08-31 13:17 CST: all sixteen corrected Generation-1 candidates
 and the fresh paired Frozen baselines are complete. Generation 2 started
 automatically on the RTX 4080 SUPER with zero failed Generation-1 jobs. The F2
