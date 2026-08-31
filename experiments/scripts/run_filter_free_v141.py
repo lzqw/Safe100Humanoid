@@ -486,9 +486,13 @@ class DevelopmentDriver:
         ):
             add(
                 "internalize",
-                intervention_ppo_eta=eta_levels[
-                    max(0, eta_levels.index(current_eta) - 1)
-                ],
+                # G1/G2 can already establish that partial nominal-action
+                # credit (eta=0.25/0.5) preserves task success without
+                # internalizing enough interventions.  Once that exact
+                # bottleneck is observed, use the strongest allowed credit
+                # suppression directly instead of spending another generation
+                # on an already insufficient intermediate eta.
+                intervention_ppo_eta=0.0,
                 correction_weight_mode="positive_advantage",
                 correction_loss_weight=weight_levels[
                     min(
