@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "snapshot_time": "2026-08-31T20:48:44+08:00",
+  "snapshot_time": "2026-08-31T20:59:26+08:00",
   "status": "generation_10_paused_after_user_requested_shutdown",
   "method_id": "intervention-aware-cbf-distillation-ppo-v141",
   "correction_action_reduction": "sum_over_action_dimensions_then_weighted_transition_mean",
@@ -169,22 +169,30 @@
     "next_weighting": "episode_success_positive_advantage"
   },
   "execution": {
-    "state": "stopped",
+    "state": "paused_by_operator",
     "reason": "user_requested_carla_or_related_program_shutdown",
     "stopped_at": "2026-08-31T20:34:36+08:00",
+    "pause_state_recorded_at": "2026-08-31T20:59:26+08:00",
     "remote_process_group": 3517113,
-    "remote_commit": "bb5f25d4e9f7dbc4cf6851cb205c1c4ca55b947f",
+    "remote_commit": "2487ae908f36815e6298e7866c7575bc8d0c9229",
+    "current_job": null,
+    "paused_job": "g10_F3_g10_internalize_4_train",
     "generation": 10,
     "specialist": "F3",
     "candidate": "g10_internalize_4",
+    "completed_training_rounds": 1,
+    "resume_checkpoint": "generation_10/F3/g10_internalize_4/training/round_01.pt",
     "target_fraction": 0.75,
     "intervention_ppo_eta": 0.0,
-    "correction_weight_mode": "episode_success_positive_advantage",
+    "correction_weight_mode": "positive_advantage",
     "correction_loss_weight": 0.4,
+    "correction_loss_weight_schedule": "constant",
     "dual_reward_scale": 0.0,
     "actor_learning_rate_multiplier": 2.0,
+    "moving_kl_beta": 0.5,
     "actor_epochs": 4,
     "rounds": 6,
+    "exploration_std": 0.05,
     "num_envs": 128,
     "remaining_training_time": null
   },
@@ -202,7 +210,8 @@
     "development_search_trigger": "target_success_improves_but_shield_gap_remains_above_gate",
     "resume_safe": true,
     "formal_pipeline_supported": true,
-    "targeted_test_result": "11 passed"
+    "pause_only_state_applied_on_remote": true,
+    "targeted_test_result": "12 passed"
   },
-  "next_action": "paused; after an explicit resume, pull the branch, finish g10_internalize_4 from round_01 under its original constant schedule, then allow Generation 11 to evaluate front_high_decay"
+  "next_action": "paused; after an explicit resume, finish g10_internalize_4 from round_01 under its original constant schedule, then allow Generation 11 to evaluate front_high_decay"
 }
