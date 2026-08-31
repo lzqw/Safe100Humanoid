@@ -21,6 +21,21 @@ def masked_population_mean(
     return (values * mask.to(values.dtype)).mean()
 
 
+def weighted_population_mean(
+    values: torch.Tensor, weights: torch.Tensor
+) -> torch.Tensor:
+    """Apply soft transition weights and retain population normalization."""
+    if values.ndim != 1 or weights.shape != values.shape:
+        raise ValueError("soft-weighted actor terms must share one-dimensional shape")
+    if not bool(torch.isfinite(values).all()) or not bool(
+        torch.isfinite(weights).all()
+    ):
+        raise RuntimeError("soft-weighted actor objective contains non-finite values")
+    if bool((weights < 0.0).any()):
+        raise ValueError("soft actor weights must be non-negative")
+    return (values * weights.to(values.dtype)).mean()
+
+
 def success_population_smooth_l1_loss(
     policy_mean: torch.Tensor,
     safe_action_target: torch.Tensor,

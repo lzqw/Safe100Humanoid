@@ -247,8 +247,14 @@ class InterventionAwareCbfDistillationPPO(CbfTeacherV30PPO):
             t, n, dtype=torch.bool, device=self.device
         )
         self.v141_success_terminal = torch.zeros_like(self.v141_intervention_mask)
+        self.v141_success_telemetry_present = torch.zeros_like(
+            self.v141_intervention_mask
+        )
         self.v141_successful_episode = torch.zeros_like(
             self.v141_intervention_mask
+        )
+        self.v141_group_ids = torch.full(
+            (t, n), -1, dtype=torch.long, device=self.device
         )
         self.v141_task_rewards = torch.zeros(t, n, device=self.device)
         self.v141_cbf_rewards = torch.zeros_like(self.v141_task_rewards)
@@ -290,12 +296,16 @@ class InterventionAwareCbfDistillationPPO(CbfTeacherV30PPO):
             task_reward = extras.get("v141_task_reward")
             cbf_reward = extras.get("v141_cbf_reward")
             success = extras.get("v141_success_terminal")
+            group_ids = extras.get("v141_context_index")
             if task_reward is not None and cbf_reward is not None:
                 self.v141_task_rewards[step].copy_(task_reward)
                 self.v141_cbf_rewards[step].copy_(cbf_reward)
                 self.v141_reward_telemetry_present[step] = True
             if success is not None:
                 self.v141_success_terminal[step].copy_(success.bool())
+                self.v141_success_telemetry_present[step] = True
+            if group_ids is not None:
+                self.v141_group_ids[step].copy_(group_ids.long())
         super().process_env_step(obs, rewards, dones, extras)
 
     def _actor_ppo_transition_weights(self) -> torch.Tensor:
@@ -374,6 +384,20 @@ class InterventionAwareCbfDistillationPPO(CbfTeacherV30PPO):
         """Group-normalize PPO advantages and finish correction weights."""
         if self.v141_target_environment_mask is None:
             raise RuntimeError("v141 target/F1 environment mask was not configured")
+        if not bool(self.v141_reward_telemetry_present.all()):
+            raise RuntimeError("v141 task/CBF reward telemetry is incomplete")
+        if not bool(self.v141_success_telemetry_present.all()):
+            raise RuntimeError("v141 terminal-success telemetry is incomplete")
+        expected_group_ids = (
+            self.v141_target_environment_mask.long()
+            .unsqueeze(0)
+            .expand_as(self.v141_group_ids)
+        )
+        if not torch.equal(self.v141_group_ids, expected_group_ids):
+            mismatch = int((self.v141_group_ids != expected_group_ids).sum())
+            raise RuntimeError(
+                f"v141 target/retention group routing differs on {mismatch} transitions"
+            )
         advantages = self.storage.advantages.squeeze(-1)
         normalized, metrics = normalize_context_group_advantages(
             advantages, self.v141_target_environment_mask
@@ -429,6 +453,12 @@ class InterventionAwareCbfDistillationPPO(CbfTeacherV30PPO):
                 "v141_reward_telemetry_fraction": float(
                     self.v141_reward_telemetry_present.float().mean()
                 ),
+                "v141_group_id_telemetry_fraction": float(
+                    (self.v141_group_ids >= 0).float().mean()
+                ),
+                "v141_success_telemetry_fraction": float(
+                    self.v141_success_telemetry_present.float().mean()
+                ),
             }
         )
         self.last_update_metrics.update(metrics)
@@ -440,7 +470,9 @@ class InterventionAwareCbfDistillationPPO(CbfTeacherV30PPO):
             return
         self.v141_intervention_mask.zero_()
         self.v141_success_terminal.zero_()
+        self.v141_success_telemetry_present.zero_()
         self.v141_successful_episode.zero_()
+        self.v141_group_ids.fill_(-1)
         self.v141_task_rewards.zero_()
         self.v141_cbf_rewards.zero_()
         self.v141_reward_telemetry_present.zero_()

@@ -14,6 +14,17 @@ import torch
 REPO = Path(__file__).resolve().parents[2]
 
 
+def _load(name: str, relative: str):
+    specification = importlib.util.spec_from_file_location(name, REPO / relative)
+    assert specification is not None and specification.loader is not None
+    module = importlib.util.module_from_spec(specification)
+    specification.loader.exec_module(module)
+    return module
+
+
+V30_MATH = _load("v141_v30_math", "src/tasks/stairs_cbf/teacher_v30_math.py")
+
+
 def _pure_helpers() -> dict[str, object]:
     source = (REPO / "src/tasks/stairs_cbf/filter_free_v141.py").read_text()
     tree = ast.parse(source)
@@ -54,6 +65,16 @@ def test_v141_intervention_ppo_weights() -> None:
     assert torch.equal(actual, torch.tensor([[1.0, 0.25, 1.0, 0.25]]))
     with pytest.raises(ValueError):
         HELPERS["intervention_aware_ppo_weights"](mask, 1.1)
+
+
+def test_v141_ppo_soft_weights_keep_population_normalization() -> None:
+    values = torch.tensor([2.0, 4.0])
+    weights = torch.tensor([1.0, 0.25])
+    actual = V30_MATH.weighted_population_mean(values, weights)
+    assert float(actual) == pytest.approx(1.5)
+    assert float(actual) != pytest.approx(
+        float((values * weights).sum() / weights.sum())
+    )
 
 
 def test_v141_group_advantages_are_separately_standardized() -> None:

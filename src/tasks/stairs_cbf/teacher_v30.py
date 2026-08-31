@@ -24,6 +24,7 @@ from .teacher_v30_math import (
     masked_population_mean,
     residual_teacher_target,
     weighted_action_errors,
+    weighted_population_mean,
     weighted_smooth_l1_teacher_loss,
 )
 
@@ -537,7 +538,11 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
                         surrogate_maximum, batch_actor_ppo_mask
                     )
                 else:
-                    ppo_loss = self._weighted_mean(
+                    # Intervention-aware PPO is E[c_t L_t], not a
+                    # self-normalized importance-weighted mean.  Dividing by
+                    # minibatch population size makes eta attenuate the total
+                    # nominal-action gradient on corrected transitions.
+                    ppo_loss = weighted_population_mean(
                         surrogate_maximum, actor_ppo_weights[indices]
                     )
                 has_actor_ppo_signal = bool(batch_actor_ppo_mask.any())

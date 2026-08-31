@@ -36,7 +36,12 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--protocol", type=Path, required=True)
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--device", default="cuda:0")
-    parser.add_argument("--through-generation", type=int, choices=(1, 2, 3), default=3)
+    parser.add_argument(
+        "--through-generation",
+        type=int,
+        default=0,
+        help="Maximum generation to run; zero continues until both specialists pass.",
+    )
     parser.add_argument(
         "--max-new-jobs",
         type=int,
@@ -403,9 +408,34 @@ class DevelopmentDriver:
         return output
 
     @staticmethod
-    def generation_3_candidates(
-        best: dict[str, Any], baseline: dict[str, dict[str, Any]]
+    def configuration_signature(configuration: dict[str, Any]) -> tuple[Any, ...]:
+        return tuple(
+            configuration.get(name, default)
+            for name, default in (
+                ("intervention_ppo_eta", 0.25),
+                ("correction_loss_weight", 0.2),
+                ("correction_weight_mode", "positive_advantage"),
+                ("dual_reward_scale", 0.25),
+                ("target_fraction", 0.80),
+                ("actor_learning_rate_multiplier", 1.0),
+                ("actor_epochs", 2),
+                ("rounds", 2),
+                ("exploration_std", 0.05),
+                ("moving_kl_beta", 0.5),
+            )
+        )
+
+    @classmethod
+    def adaptive_candidates(
+        cls,
+        generation: int,
+        best: dict[str, Any],
+        baseline: dict[str, dict[str, Any]],
+        tried: set[tuple[Any, ...]],
+        *,
+        maximum_candidates: int = 4,
     ) -> list[dict[str, Any]]:
+        """Apply diagnostic rules A--E, then fill with untried local mutations."""
         base = dict(best["configuration"])
         target_delta = best["target_off_success"] - baseline["target_off"]["success_rate"]
         retention_delta = best["f1_retention_off_success"] - baseline["f1_off"]["success_rate"]
@@ -415,72 +445,108 @@ class DevelopmentDriver:
         eta_levels = (0.0, 0.25, 0.5, 1.0)
         current_weight = float(base["correction_loss_weight"])
         current_eta = float(base["intervention_ppo_eta"])
-        if target_delta < 0.0:
-            candidates.append(
-                {
-                    **base,
-                    "candidate": f"g3_A_{base['candidate']}",
-                    "correction_weight_mode": "episode_success_positive_advantage",
-                    "correction_loss_weight": weight_levels[max(0, weight_levels.index(current_weight) - 1)],
-                    "rounds": 6,
-                }
+        parent = str(base["candidate"])
+
+        def add(label: str, **updates: Any) -> None:
+            configuration = {
+                **base,
+                **updates,
+                "candidate": f"g{generation}_{label}_{len(candidates) + 1}",
+                "parent_candidate": parent,
+            }
+            signature = cls.configuration_signature(configuration)
+            if signature not in tried and all(
+                cls.configuration_signature(item) != signature
+                for item in candidates
+            ):
+                candidates.append(configuration)
+
+        baseline_would = float(
+            baseline["target_off"]["counterfactual_would_intervene_fraction"]
+        )
+        # A: the policy internalizes interventions but task success falls.
+        if best["would_intervene_fraction"] < baseline_would and target_delta < 0.0:
+            add(
+                "A",
+                correction_weight_mode="episode_success_positive_advantage",
+                correction_loss_weight=weight_levels[
+                    max(0, weight_levels.index(current_weight) - 1)
+                ],
+                rounds=6,
             )
+        # B: target adaptation damages F1 retention.
         if target_delta > 0.0 and retention_delta < -0.015:
-            candidates.append(
-                {
-                    **base,
-                    "candidate": f"g3_B_{base['candidate']}",
-                    "target_fraction": 0.67,
-                    "moving_kl_beta": 1.0,
-                    "rounds": 6,
-                }
-            )
+            add("B", target_fraction=0.67, moving_kl_beta=1.0, rounds=6)
+        # C: the actor barely changes.
         if abs(target_delta) < 0.01 and best["actor_moving_forward_kl"] < 1.0e-4:
-            candidates.append(
-                {
-                    **base,
-                    "candidate": f"g3_C_{base['candidate']}",
-                    "actor_learning_rate_multiplier": 2.0,
-                    "actor_epochs": 4,
-                    "rounds": 6,
-                }
-            )
+            add("C", actor_learning_rate_multiplier=2.0, actor_epochs=4, rounds=6)
+        # D: success improves but the policy still depends on the shield.
         if target_delta > 0.0 and gap > 0.02:
-            candidates.append(
-                {
-                    **base,
-                    "candidate": f"g3_D_{base['candidate']}",
-                    "intervention_ppo_eta": eta_levels[max(0, eta_levels.index(current_eta) - 1)],
-                    "correction_loss_weight": weight_levels[min(len(weight_levels) - 1, weight_levels.index(current_weight) + 1)],
-                    "rounds": 6,
-                }
+            add(
+                "D",
+                intervention_ppo_eta=eta_levels[
+                    max(0, eta_levels.index(current_eta) - 1)
+                ],
+                correction_loss_weight=weight_levels[
+                    min(
+                        len(weight_levels) - 1,
+                        weight_levels.index(current_weight) + 1,
+                    )
+                ],
+                rounds=6,
             )
-        if target_delta <= 0.0:
-            candidates.append(
-                {
-                    **base,
-                    "candidate": f"g3_E_{base['candidate']}",
-                    "dual_reward_scale": 0.0,
-                    "correction_weight_mode": "positive_advantage",
-                    "rounds": 6,
-                }
+        # E: safety-demand metrics improve without a task-success gain.
+        baseline_correction = float(
+            baseline["target_off"]["mean_counterfactual_correction_norm"]
+        )
+        baseline_violation = float(
+            baseline["target_off"]["nominal_barrier_violation_steps_per_riser"]
+        )
+        if (
+            target_delta <= 0.0
+            and best["counterfactual_correction_norm"] < baseline_correction
+            and best["nominal_violation_steps_per_riser"] < baseline_violation
+        ):
+            add(
+                "E",
+                dual_reward_scale=0.0,
+                correction_weight_mode="positive_advantage",
+                rounds=6,
             )
-        if not candidates:
-            candidates.append(
-                {
-                    **base,
-                    "candidate": f"g3_fallback_{base['candidate']}",
-                    "intervention_ppo_eta": 0.0,
-                    "correction_loss_weight": 0.2,
-                    "dual_reward_scale": 0.0,
-                    "correction_weight_mode": "positive_advantage",
-                    "rounds": 6,
-                }
+
+        mutations: list[tuple[str, dict[str, Any]]] = []
+        for value in eta_levels:
+            mutations.append((f"eta{value:g}", {"intervention_ppo_eta": value}))
+        for value in weight_levels:
+            mutations.append((f"corr{value:g}", {"correction_loss_weight": value}))
+        for value in (
+            "positive_advantage",
+            "episode_success_positive_advantage",
+            "intervention_only",
+        ):
+            mutations.append((f"weighting_{value}", {"correction_weight_mode": value}))
+        for value in (0.0, 0.25, 1.0):
+            mutations.append((f"dual{value:g}", {"dual_reward_scale": value}))
+        for value in (0.80, 0.75, 0.67):
+            mutations.append((f"target{value:g}", {"target_fraction": value}))
+        for value in (0.5, 1.0, 2.0):
+            mutations.append(
+                (f"lr{value:g}", {"actor_learning_rate_multiplier": value})
             )
-        unique: dict[str, dict[str, Any]] = {
-            item["candidate"]: item for item in candidates
-        }
-        return list(unique.values())
+        for value in (2, 3, 4):
+            mutations.append((f"epochs{value}", {"actor_epochs": value}))
+        for value in (2, 4, 6):
+            mutations.append((f"rounds{value}", {"rounds": value}))
+        for value in (0.03, 0.05):
+            mutations.append((f"std{value:g}", {"exploration_std": value}))
+        for value in (0.25, 0.5, 1.0):
+            mutations.append((f"kl{value:g}", {"moving_kl_beta": value}))
+
+        for label, updates in mutations:
+            if len(candidates) >= maximum_candidates:
+                break
+            add(label, **updates)
+        return candidates[:maximum_candidates]
 
     @staticmethod
     def success_checks(
@@ -583,56 +649,113 @@ class DevelopmentDriver:
             self.save_state()
             return
 
-        for specialist in SPECIALISTS:
-            g2 = summaries[(2, specialist)]
-            if g2["successful_candidates"]:
-                summaries[(3, specialist)] = g2
-                continue
-            configurations = self.generation_3_candidates(
-                g2["ranking"][0], g2["baseline"]
-            )
-            results = []
-            for configuration in configurations:
-                result = self.candidate_result(3, specialist, configuration)
-                if result is None:
-                    return
-                results.append(result)
-            summaries[(3, specialist)] = self.summarize_generation(
-                3, specialist, results, g2["baseline"]
-            )
-        selected: dict[str, Any] = {}
-        for specialist in SPECIALISTS:
-            candidates = []
-            for generation in (2, 3):
-                summary = summaries.get((generation, specialist))
-                if summary is not None:
-                    candidates.extend(summary["ranking"])
-            successful = [item for item in candidates if item["development_success"]]
-            selected[specialist] = (
-                max(successful, key=lambda item: item["development_score"])
-                if successful
-                else max(candidates, key=lambda item: item["development_score"])
-            )
-        final_summary = {
-            "protocol_id": PROTOCOL_ID,
-            "method_id": METHOD_ID,
-            "selected": selected,
-            "both_specialists_pass": all(
-                item["development_success"] for item in selected.values()
-            ),
-            "next_phase": (
-                "freeze_and_formal"
-                if all(item["development_success"] for item in selected.values())
-                else "continue_mechanism_refinement"
-            ),
+        history: dict[str, list[dict[str, Any]]] = {
+            specialist: [
+                *summaries[(1, specialist)]["ranking"],
+                *summaries[(2, specialist)]["ranking"],
+            ]
+            for specialist in SPECIALISTS
         }
-        _atomic_json(self.output / "development_summary.json", final_summary)
-        self.state["status"] = final_summary["next_phase"]
-        self.save_state()
+        generation = 3
+        while True:
+            selected: dict[str, dict[str, Any]] = {}
+            for specialist in SPECIALISTS:
+                successful = [
+                    item
+                    for item in history[specialist]
+                    if item.get("development_success", False)
+                ]
+                if successful:
+                    selected[specialist] = max(
+                        successful,
+                        key=lambda item: item["development_score"],
+                    )
+                    continue
+
+                best = max(
+                    history[specialist],
+                    key=lambda item: item["development_score"],
+                )
+                tried = {
+                    self.configuration_signature(item["configuration"])
+                    for item in history[specialist]
+                }
+                configurations = self.adaptive_candidates(
+                    generation,
+                    best,
+                    summaries[(1, specialist)]["baseline"],
+                    tried,
+                )
+                if not configurations:
+                    raise RuntimeError(
+                        f"v141 adaptive search exhausted local mutations for {specialist}"
+                    )
+                results = []
+                for configuration in configurations:
+                    result = self.candidate_result(
+                        generation, specialist, configuration
+                    )
+                    if result is None:
+                        return
+                    results.append(result)
+                generation_summary = self.summarize_generation(
+                    generation,
+                    specialist,
+                    results,
+                    summaries[(1, specialist)]["baseline"],
+                )
+                summaries[(generation, specialist)] = generation_summary
+                history[specialist].extend(generation_summary["ranking"])
+                successful = [
+                    item
+                    for item in history[specialist]
+                    if item.get("development_success", False)
+                ]
+                selected[specialist] = (
+                    max(successful, key=lambda item: item["development_score"])
+                    if successful
+                    else max(
+                        history[specialist],
+                        key=lambda item: item["development_score"],
+                    )
+                )
+
+            both_pass = all(
+                item.get("development_success", False)
+                for item in selected.values()
+            )
+            development_summary = {
+                "protocol_id": PROTOCOL_ID,
+                "method_id": METHOD_ID,
+                "latest_generation": generation,
+                "selected": selected,
+                "both_specialists_pass": both_pass,
+                "next_phase": (
+                    "freeze_and_formal"
+                    if both_pass
+                    else "continue_mechanism_refinement"
+                ),
+            }
+            _atomic_json(
+                self.output / "development_summary.json",
+                development_summary,
+            )
+            self.state["status"] = development_summary["next_phase"]
+            self.save_state()
+            if both_pass:
+                return
+            if (
+                self.args.through_generation > 0
+                and generation >= self.args.through_generation
+            ):
+                return
+            generation += 1
 
 
 def main() -> None:
     args = _parse_args()
+    if args.through_generation < 0:
+        raise ValueError("through-generation must be non-negative")
     driver = DevelopmentDriver(args)
     try:
         driver.run()
