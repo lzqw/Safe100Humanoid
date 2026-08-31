@@ -249,8 +249,56 @@ class FormalDriver:
         training = json.loads(summary.read_text())
         checkpoint = Path(training["final_checkpoint"])
         expected_round = int(configuration.get("rounds", 2))
-        if checkpoint.name != f"round_{expected_round:02d}.pt":
-            raise RuntimeError("formal v141 did not use the fixed final round")
+        expected_target_fraction = round(
+            NUM_ENVS * float(configuration.get("target_fraction", 0.80))
+        ) / NUM_ENVS
+        expected_summary = {
+            "method_id": METHOD_ID,
+            "candidate": f"formal_{specialist}",
+            "specialist": specialist,
+            "retention_context": RETENTION_CONTEXT,
+            "seed": training_seed,
+            "rounds": expected_round,
+            "num_envs": NUM_ENVS,
+            "rollout_steps": ROLLOUT_STEPS,
+            "target_fraction": expected_target_fraction,
+            "base_checkpoint_sha256": BASE_CHECKPOINT_SHA256,
+            "fixed_final_round_checkpoint": True,
+            "best_so_far_selection": False,
+        }
+        expected_hyperparameters = {
+            "intervention_ppo_eta": float(configuration["intervention_ppo_eta"]),
+            "correction_weight_mode": str(configuration["correction_weight_mode"]),
+            "correction_loss_weight": float(configuration["correction_loss_weight"]),
+            "dual_reward_scale": float(configuration["dual_reward_scale"]),
+            "actor_learning_rate": BASE_ACTOR_LEARNING_RATE
+            * float(configuration.get("actor_learning_rate_multiplier", 1.0)),
+            "moving_kl_beta": float(configuration.get("moving_kl_beta", 0.5)),
+            "actor_epochs": int(configuration.get("actor_epochs", 2)),
+            "exploration_std": float(configuration.get("exploration_std", 0.05)),
+        }
+        mismatches = {
+            key: (training.get(key), value)
+            for key, value in expected_summary.items()
+            if training.get(key) != value
+        }
+        hyperparameters = training.get("hyperparameters", {})
+        mismatches.update(
+            {
+                f"hyperparameters.{key}": (hyperparameters.get(key), value)
+                for key, value in expected_hyperparameters.items()
+                if hyperparameters.get(key) != value
+            }
+        )
+        if (
+            mismatches
+            or checkpoint.name != f"round_{expected_round:02d}.pt"
+            or not checkpoint.is_file()
+            or training.get("final_checkpoint_sha256") != file_sha256(checkpoint)
+        ):
+            raise RuntimeError(
+                f"formal v141 fixed training contract differs: {mismatches}"
+            )
         return checkpoint, summary
 
     def v140_checkpoint(self, specialist: str, training_seed: int) -> Path:
@@ -410,8 +458,19 @@ class FormalDriver:
                         "summary": str(summary),
                         "checkpoint": str(checkpoint),
                         "checkpoint_sha256": file_sha256(checkpoint),
+                        "initial_actor_sha256": json.loads(summary.read_text())[
+                            "initial_actor_sha256"
+                        ],
                     }
                 )
+
+        initial_actor_hashes = {
+            item["initial_actor_sha256"] for item in training_summaries
+        }
+        if len(initial_actor_hashes) != 1:
+            raise RuntimeError(
+                f"formal v141 runs did not share the v139 actor: {initial_actor_hashes}"
+            )
 
         records: list[dict[str, Any]] = []
         for specialist in SPECIALISTS:

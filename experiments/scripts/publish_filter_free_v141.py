@@ -133,12 +133,24 @@ def _validate_raw(raw: dict[str, Any]) -> None:
         for specialist in SPECIALISTS
         for seed in FORMAL_TRAINING_SEEDS
     }
+    training_summaries = raw.get("training_summaries", [])
     actual_training = {
         (item.get("specialist"), item.get("training_seed"))
-        for item in raw.get("training_summaries", [])
+        for item in training_summaries
         if item.get("method") == "v141_intervention_aware"
     }
-    if actual_training != expected_training or len(raw.get("training_summaries", [])) != 6:
+    initial_actor_hashes = {
+        item.get("initial_actor_sha256") for item in training_summaries
+    }
+    if (
+        actual_training != expected_training
+        or len(training_summaries) != 6
+        or len(initial_actor_hashes) != 1
+        or not all(
+            isinstance(value, str) and len(value) == 64
+            for value in initial_actor_hashes
+        )
+    ):
         raise RuntimeError("v141 formal training matrix is incomplete or duplicated")
 
     expected_evaluations: set[tuple[Any, ...]] = set()
@@ -592,6 +604,14 @@ def main() -> None:
         ),
         "frozen_configuration_sha256": _sha256(frozen_path),
         "formal_training_seeds": raw["formal_training_seeds"],
+        "shared_v139_initial_actor_sha256": next(
+            iter(
+                {
+                    item["initial_actor_sha256"]
+                    for item in raw["training_summaries"]
+                }
+            )
+        ),
         "formal_evaluation_seed": raw["formal_evaluation_seed"],
         "formal_evaluation_episodes": raw["formal_evaluation_episodes"],
         "paired_initial_conditions": raw["paired_initial_conditions"],
