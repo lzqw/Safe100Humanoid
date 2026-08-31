@@ -1,6 +1,29 @@
 # v141 Filter-Free Refinement — Development Status
 
-## Latest snapshot — Generation 9 F2 complete, vector-Huber F3 running
+## Latest snapshot — Generation 9 complete, vector-Huber Generation 10 running
+
+Status at 2026-08-31 19:49 CST: all Generation-9 evaluations are complete.
+The strongest F3 internalization candidate (`g9_would_coverage_lowkl_eta0_1`)
+reduced would-intervene from 10.16317% to 9.32343% and correction norm from
+0.0210803 to 0.0176641. Its 66.40625% target CBF-off success was one successful
+episode short of the discrete 128-episode target gate, while F1 retention and
+shield gap passed. The eta=0.25 candidate reached 71.875% target CBF-off but
+failed shield-gap and would-intervene gates. No Generation-9 F3 candidate
+passed all four gates.
+
+Vector-Huber increased the per-round policy-to-safe-target distance reduction
+from roughly 0.0002–0.0004 to 0.0022–0.0028, confirming that the correction
+signal now reaches the actor materially. Commit `4886f32` versions correction
+objectives in the resumed search so legacy trials do not block vector-Huber
+re-evaluation. Commit `1ab6d49` also prioritizes the allowed 80/20 target/F1
+distribution when 75/25 retains F1 comfortably but remains short of target or
+internalization gates.
+
+The RTX 4080 worker is now running Generation 10 F2 from Frozen v139 with 128
+environments and the strongest vector-Huber intervention-only configuration.
+Formal freezing remains disallowed; there is no current failure.
+
+## Prior snapshot — Generation 9 F2 complete, vector-Huber F3 running
 
 Status at 2026-08-31 19:28 CST: Generation 9 F2 completed and the supervisor
 stopped cleanly at the F2/F3 boundary. Its score leader, `g9_internalize_4`,
