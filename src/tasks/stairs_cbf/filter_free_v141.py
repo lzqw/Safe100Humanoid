@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import torch
+import torch.nn.functional as F
 
 from .online import OnlineSafePPO
 from .teacher_v30 import (
@@ -153,6 +154,51 @@ def correction_distillation_weights(
             raise ValueError("v141 successful-episode mask is missing or invalid")
         weights = weights * successful_episode_mask.to(weights.dtype)
     return weights
+
+
+def weighted_vector_huber_correction_loss(
+    policy_mean: torch.Tensor,
+    safe_action_target: torch.Tensor,
+    eligible: torch.Tensor,
+    weights: torch.Tensor,
+    *,
+    beta: float = 0.05,
+    epsilon: float = 1.0e-8,
+) -> torch.Tensor:
+    """Apply transition-normalized Huber loss to the full action vector.
+
+    The v141 objective normalizes ``sum_t w_t Huber(mu_t, a_t^s)`` by the
+    transition-weight sum.  Summing Huber coordinates inside each transition
+    preserves that vector objective; inheriting v30's per-action mean diluted
+    the correction gradient by the 12-D action width before global clipping.
+    """
+    if policy_mean.ndim != 2 or safe_action_target.shape != policy_mean.shape:
+        raise ValueError("v141 correction tensors must share [B, A] shape")
+    if eligible.shape != policy_mean.shape[:1] or weights.shape != eligible.shape:
+        raise ValueError("v141 correction mask and weights must have shape [B]")
+    if eligible.dtype != torch.bool:
+        raise TypeError("v141 correction eligibility must be boolean")
+    if not math.isfinite(beta) or beta <= 0.0 or epsilon <= 0.0:
+        raise ValueError("v141 Huber beta and epsilon must be positive")
+    if not bool(
+        torch.isfinite(policy_mean).all()
+        and torch.isfinite(safe_action_target).all()
+        and torch.isfinite(weights).all()
+    ):
+        raise RuntimeError("v141 correction loss received non-finite values")
+    if bool((weights < 0.0).any()):
+        raise ValueError("v141 correction weights must be non-negative")
+    effective = weights * eligible.to(weights.dtype)
+    weight_sum = effective.sum()
+    if not bool(weight_sum > 0.0):
+        return policy_mean.sum() * 0.0
+    per_transition = F.smooth_l1_loss(
+        policy_mean,
+        safe_action_target.detach(),
+        reduction="none",
+        beta=float(beta),
+    ).sum(dim=-1)
+    return (effective * per_transition).sum() / (weight_sum + float(epsilon))
 
 
 @dataclass
@@ -313,6 +359,25 @@ class InterventionAwareCbfDistillationPPO(CbfTeacherV30PPO):
             self.v141_intervention_mask, self.intervention_ppo_eta
         ).to(self.device)
 
+    def _teacher_loss(
+        self,
+        policy_mean: torch.Tensor,
+        policy_std: torch.Tensor,
+        target: torch.Tensor,
+        eligible: torch.Tensor,
+        weights: torch.Tensor,
+    ) -> torch.Tensor:
+        """Use the prescribed transition-normalized vector Huber objective."""
+        del policy_std
+        return weighted_vector_huber_correction_loss(
+            policy_mean,
+            target,
+            eligible,
+            weights,
+            beta=self.teacher_smooth_l1_beta,
+            epsilon=1.0e-8,
+        )
+
     def relabel_teacher_transitions(self) -> dict[str, Any]:
         """Build the detached safe-action target without a teacher network."""
         metrics: dict[str, Any] = dict(
@@ -372,6 +437,7 @@ class InterventionAwareCbfDistillationPPO(CbfTeacherV30PPO):
                 ),
                 "v141_nominal_policy_max_abs_error": nominal_policy_error,
                 "v141_safe_action_target_detached": True,
+                "v141_correction_action_reduction": "sum",
                 "v141_teacher_network_present": False,
                 "teacher_transition_count": float(intervention_count),
                 "teacher_transition_fraction": float(intervention.float().mean()),
@@ -490,6 +556,7 @@ class InterventionAwareCbfDistillationPPO(CbfTeacherV30PPO):
                 "v141_intervention_epsilon": self.v141_intervention_epsilon,
                 "v141_runtime_filter_training": True,
                 "v141_runtime_filter_deployment": False,
+                "v141_correction_action_reduction": "sum",
                 "v141_teacher_network_present": False,
             }
         )

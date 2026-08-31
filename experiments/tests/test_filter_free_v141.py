@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 import torch
+import torch.nn.functional as F
 
 
 REPO = Path(__file__).resolve().parents[2]
@@ -33,6 +34,7 @@ def _pure_helpers() -> dict[str, object]:
         "intervention_aware_ppo_weights",
         "successful_episode_transition_mask",
         "correction_distillation_weights",
+        "weighted_vector_huber_correction_loss",
     }
     functions = [
         node
@@ -43,6 +45,7 @@ def _pure_helpers() -> dict[str, object]:
     namespace = {
         "torch": torch,
         "math": math,
+        "F": F,
         "CORRECTION_WEIGHT_MODES": (
             "intervention_only",
             "positive_advantage",
@@ -112,6 +115,24 @@ def test_v141_episode_success_and_correction_weights() -> None:
         successful_episode_mask=successful,
     )
     assert torch.equal(weights.squeeze(1), torch.tensor([2.0, 0.0, 0.0, 0.0, 0.0]))
+
+
+def test_v141_vector_huber_sums_action_coordinates() -> None:
+    policy_mean = torch.zeros(2, 3, requires_grad=True)
+    target = torch.ones_like(policy_mean)
+    eligible = torch.tensor([True, True])
+    weights = torch.tensor([1.0, 3.0])
+    loss = HELPERS["weighted_vector_huber_correction_loss"](
+        policy_mean,
+        target,
+        eligible,
+        weights,
+        beta=0.5,
+    )
+    per_coordinate = 1.0 - 0.5 * 0.5
+    assert float(loss) == pytest.approx(3.0 * per_coordinate)
+    loss.backward()
+    assert policy_mean.grad is not None
 
 
 def test_v141_protocol_covers_required_search_values() -> None:
