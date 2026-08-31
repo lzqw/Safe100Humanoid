@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "snapshot_time": "2026-08-31T19:28:52+08:00",
+  "status": "generation_9_f2_complete_generation_9_f3_vector_huber_running",
+  "latest_fully_completed_generation": 8,
+  "latest_completed_specialist": {
+    "generation": 9,
+    "specialist": "F2"
+  },
+  "method_id": "intervention-aware-cbf-distillation-ppo-v141",
+  "remote_artifact_root": "/home/carla/LZQW/SAFE100/humanoid/artifacts/filter_free_v141/development",
+  "current_failure": false,
+  "historical_recovered_failed_job_records": 1,
+  "formal_freeze_allowed": false,
+  "f2_frozen": {
+    "target_off_success": 0.671875,
+    "target_on_success": 0.78125,
+    "f1_retention_off_success": 0.71875,
+    "shield_gap": 0.109375,
+    "would_intervene_fraction": 0.09977528953079685,
+    "would_intervene_gate_max": 0.07483146714809764
+  },
+  "generation_9_f2": {
+    "correction_reduction": "legacy_per_action_mean",
+    "successful_candidates": 0,
+    "ranking": [
+      {
+        "candidate": "g9_internalize_4",
+        "target_off_success": 0.78125,
+        "target_on_success": 0.7109375,
+        "f1_retention_off_success": 0.71875,
+        "shield_gap": -0.0703125,
+        "would_intervene_fraction": 0.09827182190978324,
+        "counterfactual_correction_norm": 0.018795691570239803,
+        "actor_moving_forward_kl": 0.00039105257019400597,
+        "development_score": 0.786328125,
+        "checks": {
+          "target_off_improves_2pp": true,
+          "f1_retention_within_1p5pp": true,
+          "shield_gap_target": false,
+          "would_intervene_reduced_25pct": false
+        }
+      },
+      {
+        "candidate": "g9_would_coverage_lowkl_eta0_1",
+        "target_off_success": 0.6953125,
+        "target_on_success": 0.7421875,
+        "f1_retention_off_success": 0.75,
+        "shield_gap": 0.046875,
+        "would_intervene_fraction": 0.0985062497581363,
+        "counterfactual_correction_norm": 0.01955501970540471,
+        "actor_moving_forward_kl": 0.0005616473499685526,
+        "development_score": 0.69453125,
+        "checks": {
+          "target_off_improves_2pp": true,
+          "f1_retention_within_1p5pp": true,
+          "shield_gap_target": true,
+          "would_intervene_reduced_25pct": false
+        }
+      },
+      {
+        "candidate": "g9_would_low_noise_lowkl_3",
+        "target_off_success": 0.6875,
+        "target_on_success": 0.7421875,
+        "f1_retention_off_success": 0.734375,
+        "shield_gap": 0.0546875,
+        "would_intervene_fraction": 0.10032594155660644,
+        "counterfactual_correction_norm": 0.019697064888657675,
+        "actor_moving_forward_kl": 0.0010494310408830643,
+        "development_score": 0.683203125,
+        "checks": {
+          "target_off_improves_2pp": false,
+          "f1_retention_within_1p5pp": true,
+          "shield_gap_target": true,
+          "would_intervene_reduced_25pct": false
+        }
+      },
+      {
+        "candidate": "g9_would_coverage_lowkl_eta025_2",
+        "target_off_success": 0.609375,
+        "target_on_success": 0.7265625,
+        "f1_retention_off_success": 0.796875,
+        "shield_gap": 0.1171875,
+        "would_intervene_fraction": 0.10242520529066095,
+        "counterfactual_correction_norm": 0.020101020454942838,
+        "actor_moving_forward_kl": 0.000560946820769459,
+        "development_score": 0.6175781250000001,
+        "checks": {
+          "target_off_improves_2pp": false,
+          "f1_retention_within_1p5pp": true,
+          "shield_gap_target": false,
+          "would_intervene_reduced_25pct": false
+        }
+      }
+    ]
+  },
+  "diagnosis": {
+    "remaining_bottleneck": "nominal-policy intervention internalization",
+    "observed_policy_to_safe_target_change_per_round": "approximately_0.0002_to_0.0004",
+    "root_cause": "the inherited Smooth-L1 mean reduced over both transitions and 12 action dimensions before global gradient clipping, diluting the correction term by 12x"
+  },
+  "vector_huber_restart": {
+    "implementation_commit": "decf8d1145e28b144b64783fa412c4fa60cc0c17",
+    "correction_reduction": "sum_over_action_dimensions_then_weighted_transition_mean",
+    "remote_commit_confirmed": true,
+    "current_generation": 9,
+    "current_specialist": "F3",
+    "current_candidate": "g9_would_coverage_lowkl_eta0_1",
+    "num_envs": 128,
+    "rounds": 6
+  },
+  "next_action": "evaluate vector-Huber F3 candidates, verify materially stronger correction internalization, and continue separate F2/F3 development until all four gates pass"
+}

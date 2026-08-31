@@ -1,6 +1,32 @@
 # v141 Filter-Free Refinement — Development Status
 
-## Latest snapshot — Generation 7 complete, Generation 8 running
+## Latest snapshot — Generation 9 F2 complete, vector-Huber F3 running
+
+Status at 2026-08-31 19:28 CST: Generation 9 F2 completed and the supervisor
+stopped cleanly at the F2/F3 boundary. Its score leader, `g9_internalize_4`,
+reached 78.125% target CBF-off success versus Frozen's 67.1875% and retained
+F1 at 71.875%. Its absolute shield gap was 7.03125 points and its
+would-intervene fraction was 9.82718%, however, so it did not pass all four
+development gates. None of the four Generation-9 F2 candidates reduced
+would-intervene to the required 7.48315% or lower.
+
+The diagnosis found that the inherited weighted Smooth-L1 loss averaged over
+the 12 action dimensions before global gradient clipping. Even the strongest
+allowed configurations therefore moved the policy toward the CBF-safe target
+by only about 0.0002–0.0004 per round. Commit `decf8d1` changes v141 correction
+distillation to sum across action dimensions and normalize across weighted
+transitions. The 4080 worker has fast-forwarded to that commit and resumed at
+Generation 9 F3 with 128 environments. This implementation change applies only
+to work launched after the specialist boundary; the completed F2 results remain
+labeled as legacy per-action-mean evidence.
+
+See `generation_9_snapshot.json` for compact machine-readable results and the
+exact running configuration. Formal freezing remains disallowed until both F2
+and F3 pass target success, F1 retention, shield-gap, and would-intervene gates.
+There is no current failure; one historical recovered RNG-resume failure record
+is retained for auditability.
+
+## Prior snapshot — Generation 7 complete, Generation 8 running
 
 Status at 2026-08-31 18:34 CST: the autonomous loop has completed Generations
 1–7 and is running Generation 8 on the RTX 4080 SUPER. No CARLA/Unreal process
