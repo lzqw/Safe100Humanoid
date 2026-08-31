@@ -483,6 +483,50 @@ class DevelopmentDriver:
         baseline_would = float(
             baseline["target_off"]["counterfactual_would_intervene_fraction"]
         )
+        checks = cls.success_checks(best, baseline)
+        # When task transfer, retention, and shield independence already pass,
+        # the remaining problem is coverage: positive-advantage gating teaches
+        # only a subset of the states counted by would-intervene.  Exercise the
+        # strongest allowed intervention-only variants as a compact mechanism
+        # group before falling back to unrelated single-variable mutations.
+        # This changes no gate, evaluator, scenario, or coefficient domain.
+        if (
+            checks["target_off_improves_2pp"]
+            and checks["shield_gap_target"]
+            and checks["f1_retention_within_1p5pp"]
+            and not checks["would_intervene_reduced_25pct"]
+        ):
+            add(
+                "would_coverage_eta0",
+                intervention_ppo_eta=0.0,
+                correction_weight_mode="intervention_only",
+                correction_loss_weight=0.4,
+                dual_reward_scale=0.0,
+                actor_learning_rate_multiplier=2.0,
+                actor_epochs=4,
+                rounds=6,
+            )
+            add(
+                "would_coverage_eta025",
+                intervention_ppo_eta=0.25,
+                correction_weight_mode="intervention_only",
+                correction_loss_weight=0.4,
+                dual_reward_scale=0.0,
+                actor_learning_rate_multiplier=2.0,
+                actor_epochs=4,
+                rounds=6,
+            )
+            add(
+                "would_low_noise",
+                intervention_ppo_eta=0.0,
+                correction_weight_mode="positive_advantage",
+                correction_loss_weight=0.4,
+                dual_reward_scale=0.0,
+                actor_learning_rate_multiplier=2.0,
+                actor_epochs=4,
+                rounds=6,
+                exploration_std=0.03,
+            )
         # Internalization bottleneck: task performance has transferred, but the
         # nominal actor still asks the runtime CBF to intervene too often. Use
         # the strongest allowed actor update while removing dual-reward
