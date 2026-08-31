@@ -188,6 +188,15 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
         """Select transitions that contribute PPO and entropy actor gradients."""
         return torch.ones_like(self.teacher_eligible, dtype=torch.bool)
 
+    def _actor_ppo_transition_weights(self) -> torch.Tensor | None:
+        """Optionally replace the historical boolean PPO mask with soft weights.
+
+        ``None`` deliberately preserves v30's exact population-mean path.  New
+        descendants may return a non-negative ``[T, N]`` tensor to attenuate
+        PPO gradients without removing the corresponding critic transitions.
+        """
+        return None
+
     def _actor_local_kl_transition_mask(self) -> torch.Tensor:
         """Select transitions receiving an additional round-reference KL."""
         return torch.zeros_like(self.teacher_eligible, dtype=torch.bool)
@@ -403,6 +412,12 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
         teacher_eligible = self.teacher_eligible.flatten().detach()
         teacher_weights = self.teacher_weights.flatten().detach()
         actor_ppo_mask = self._actor_ppo_transition_mask().flatten().detach()
+        actor_ppo_weights_2d = self._actor_ppo_transition_weights()
+        actor_ppo_weights = (
+            None
+            if actor_ppo_weights_2d is None
+            else actor_ppo_weights_2d.flatten().detach()
+        )
         actor_local_kl_mask = (
             self._actor_local_kl_transition_mask().flatten().detach()
         )
@@ -412,6 +427,18 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
             or actor_ppo_mask.dtype != torch.bool
         ):
             raise RuntimeError("v30 actor PPO mask must be boolean with shape [T*N]")
+        if actor_ppo_weights is not None:
+            if actor_ppo_weights.shape != advantages.shape:
+                raise RuntimeError(
+                    "v30 actor PPO weights must have shape [T*N]"
+                )
+            if not bool(torch.isfinite(actor_ppo_weights).all()) or bool(
+                (actor_ppo_weights < 0.0).any()
+            ):
+                raise RuntimeError(
+                    "v30 actor PPO weights must be finite and non-negative"
+                )
+            actor_ppo_mask = actor_ppo_weights > 0.0
         if (
             actor_local_kl_mask.shape != advantages.shape
             or actor_local_kl_mask.dtype != torch.bool
@@ -504,10 +531,15 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
                     ratio, 1.0 - self.clip_param, 1.0 + self.clip_param
                 )
                 batch_actor_ppo_mask = actor_ppo_mask[indices]
-                ppo_loss = masked_population_mean(
-                    torch.maximum(surrogate, surrogate_clipped),
-                    batch_actor_ppo_mask,
-                )
+                surrogate_maximum = torch.maximum(surrogate, surrogate_clipped)
+                if actor_ppo_weights is None:
+                    ppo_loss = masked_population_mean(
+                        surrogate_maximum, batch_actor_ppo_mask
+                    )
+                else:
+                    ppo_loss = self._weighted_mean(
+                        surrogate_maximum, actor_ppo_weights[indices]
+                    )
                 has_actor_ppo_signal = bool(batch_actor_ppo_mask.any())
                 actor_ppo_minibatches_with_signal += int(has_actor_ppo_signal)
                 actor_ppo_minibatches_without_signal += int(
@@ -763,6 +795,17 @@ class CbfTeacherV30PPO(CbfTeacherV29PPO):
             "teacher_minibatches_without_signal": teacher_minibatches_without_signal,
             "actor_ppo_transition_count": int(actor_ppo_mask.sum()),
             "actor_ppo_transition_fraction": float(actor_ppo_mask.float().mean()),
+            "actor_ppo_soft_weights_enabled": actor_ppo_weights is not None,
+            "actor_ppo_transition_weight_mean": (
+                float(actor_ppo_weights.mean())
+                if actor_ppo_weights is not None
+                else float(actor_ppo_mask.float().mean())
+            ),
+            "actor_ppo_transition_weight_sum": (
+                float(actor_ppo_weights.sum())
+                if actor_ppo_weights is not None
+                else float(actor_ppo_mask.sum())
+            ),
             "actor_ppo_minibatches_with_signal": (
                 actor_ppo_minibatches_with_signal
             ),
