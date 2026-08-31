@@ -1,0 +1,70 @@
+{
+  "schema_version": "paper_dual_v35.v127.decision.v1",
+  "method_id": "crossfit-state-value-occupancy-corrected-paper-dual-v127",
+  "decision": "reject_and_restore_v79",
+  "reason": "Both occupancy-corrected proposals regressed on the next aligned filter-off rollout; the selected v79 actor then scored 41/64 on the only new screen.",
+  "source_commit": "49cd14eda958af58784b4be6df4c50160141e32b",
+  "targeted_tests_passed": 1,
+  "hardware": "NVIDIA GeForce RTX 4080 SUPER",
+  "input_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "training": {
+    "num_envs": 128,
+    "rollout_steps": 1024,
+    "rounds": 4,
+    "training_filter_fraction": 0.5,
+    "actor_credit": "cross-fit occupancy-weighted filtered GAE only",
+    "critic_credit": "all filtered and filter-off transitions",
+    "feature_dim": 129,
+    "crossfit_folds": 2,
+    "elapsed_seconds": 97.06569485703949,
+    "transactional_rollback_count": 2,
+    "anchor_filter_off_success_count": 178,
+    "anchor_filter_off_episode_count": 262,
+    "anchor_filter_off_success_rate": 0.6793893129770993,
+    "proposal_filter_off_results": [
+      {
+        "success_count": 80,
+        "episode_count": 128,
+        "success_rate": 0.625,
+        "accepted": false
+      },
+      {
+        "success_count": 79,
+        "episode_count": 134,
+        "success_rate": 0.5895522388059702,
+        "accepted": false
+      }
+    ],
+    "occupancy_balanced_accuracy_by_round": [
+      0.5153045654296875,
+      0.520050048828125,
+      0.521392822265625,
+      0.512176513671875
+    ],
+    "occupancy_correction_active_by_round": [false, true, true, false]
+  },
+  "selected": {
+    "actor_unchanged_from_v79": true,
+    "actor_state_sha256": "b0a717cef34d128e4175226b86780e5210cc5287558d78cb5a44e095e37fb600",
+    "checkpoint_sha256": "97c8e08b5924de7f620e56fd0ceb4259220f42a7c0824acf799a6832a5352f15"
+  },
+  "screen": {
+    "seed": 201354880,
+    "runtime_filter": false,
+    "episode_count": 64,
+    "success_count": 41,
+    "success_rate": 0.640625,
+    "fall_count": 23,
+    "fall_rate": 0.359375,
+    "mean_reached_riser": 7.484375,
+    "independent_gate_trigger_count": 48,
+    "independent_gate_run": false
+  },
+  "global_best_changed": false,
+  "global_selected_version": "v79",
+  "global_selected_success_count": 139,
+  "global_selected_episode_count": 193,
+  "global_selected_success_rate": 0.7202072538860104,
+  "next_hypothesis": "The late-policy filter-on/off occupancy is nearly indistinguishable in actor-hidden/value space, so local occupancy weighting is not the missing mechanism; the remaining paper gap is the long, high-parallelism fully-filtered training regime rather than another local residual or density-ratio refinement."
+}
+

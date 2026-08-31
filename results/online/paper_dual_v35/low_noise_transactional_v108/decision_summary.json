@@ -1,0 +1,40 @@
+{
+  "schema_version": "paper_dual_v35.v108.decision.v1",
+  "candidate": "low-noise-native-cbf-dual-transactional-v108",
+  "context": "F2_18.4cm",
+  "deployment_filter": "off",
+  "gate_threshold": 0.75,
+  "std_002_diagnostic": {
+    "completed": false,
+    "completed_rollouts": 2,
+    "filter_off_success_rates": [
+      0.6479591836734694,
+      0.6424870466321243
+    ],
+    "first_proposal_rolled_back": true,
+    "stop_reason": "float32 log-prob recomputation max error 0.0010242462 exceeded frozen tolerance 0.001",
+    "oom": false
+  },
+  "std_003_formal": {
+    "training_transition_count": 1048576,
+    "elapsed_seconds": 211.3405529280426,
+    "proposal_count": 4,
+    "accepted_proposal_count": 0,
+    "rollback_count": 4,
+    "proposal_filter_off_success_rates": [
+      0.6770833333333334,
+      0.58,
+      0.6666666666666666,
+      0.6701570680628272
+    ],
+    "retained_anchor_success_count": 530,
+    "retained_anchor_episode_count": 785,
+    "retained_anchor_success_rate": 0.6751592356687898,
+    "retained_actor_sha256": "9d4efc6f67b4098b8cf9742aaa38d5744918781017c6f46266745881aa1d5b8e"
+  },
+  "training_threshold_passed": false,
+  "independent_gate_run": false,
+  "accepted": false,
+  "global_selection": "v79",
+  "reason": "Reducing rollout std did not improve the baseline and all four native CBF-dual proposals regressed, including proposals with moving KL below 1e-7."
+}

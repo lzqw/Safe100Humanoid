@@ -1,0 +1,369 @@
+"""Pure unit checks for intervention-aware filter-free refinement v141."""
+
+from __future__ import annotations
+
+import ast
+import importlib.util
+import json
+import math
+from pathlib import Path
+import sys
+from types import SimpleNamespace
+
+import pytest
+import torch
+import torch.nn.functional as F
+
+
+REPO = Path(__file__).resolve().parents[2]
+
+
+def _load(name: str, relative: str):
+    specification = importlib.util.spec_from_file_location(name, REPO / relative)
+    assert specification is not None and specification.loader is not None
+    module = importlib.util.module_from_spec(specification)
+    specification.loader.exec_module(module)
+    return module
+
+
+V30_MATH = _load("v141_v30_math", "src/tasks/stairs_cbf/teacher_v30_math.py")
+sys.path.insert(0, str(REPO / "experiments/scripts"))
+RUN_V141 = _load(
+    "v141_development_driver", "experiments/scripts/run_filter_free_v141.py"
+)
+SUPERVISOR_V141 = _load(
+    "v141_supervisor", "experiments/scripts/supervise_filter_free_v141.py"
+)
+
+
+def _pure_helpers() -> dict[str, object]:
+    source = (REPO / "src/tasks/stairs_cbf/filter_free_v141.py").read_text()
+    tree = ast.parse(source)
+    names = {
+        "normalize_context_group_advantages",
+        "intervention_aware_ppo_weights",
+        "successful_episode_transition_mask",
+        "correction_distillation_weights",
+        "weighted_vector_huber_correction_loss",
+    }
+    functions = [
+        node
+        for node in tree.body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+        and node.name in names
+    ]
+    namespace = {
+        "torch": torch,
+        "math": math,
+        "F": F,
+        "CORRECTION_WEIGHT_MODES": (
+            "intervention_only",
+            "positive_advantage",
+            "episode_success_positive_advantage",
+        ),
+    }
+    exec(  # noqa: S102 - selected local pure helper AST only
+        compile(
+            ast.fix_missing_locations(ast.Module(functions, type_ignores=[])),
+            "v141",
+            "exec",
+        ),
+        namespace,
+    )
+    return namespace
+
+
+HELPERS = _pure_helpers()
+
+
+def test_v141_intervention_ppo_weights() -> None:
+    mask = torch.tensor([[False, True, False, True]])
+    actual = HELPERS["intervention_aware_ppo_weights"](mask, 0.25)
+    assert torch.equal(actual, torch.tensor([[1.0, 0.25, 1.0, 0.25]]))
+    with pytest.raises(ValueError):
+        HELPERS["intervention_aware_ppo_weights"](mask, 1.1)
+
+
+def test_v141_ppo_soft_weights_keep_population_normalization() -> None:
+    values = torch.tensor([2.0, 4.0])
+    weights = torch.tensor([1.0, 0.25])
+    actual = V30_MATH.weighted_population_mean(values, weights)
+    assert float(actual) == pytest.approx(1.5)
+    assert float(actual) != pytest.approx(
+        float((values * weights).sum() / weights.sum())
+    )
+
+
+def test_v141_group_advantages_are_separately_standardized() -> None:
+    advantages = torch.tensor([[1.0, 10.0, 3.0, 14.0], [5.0, 18.0, 7.0, 22.0]])
+    target = torch.tensor([True, False, True, False])
+    normalized, metrics = HELPERS["normalize_context_group_advantages"](
+        advantages, target
+    )
+    assert float(normalized[:, target].mean()) == pytest.approx(0.0, abs=1e-6)
+    assert float(normalized[:, ~target].mean()) == pytest.approx(0.0, abs=1e-6)
+    assert float(normalized[:, target].std(unbiased=False)) == pytest.approx(1.0)
+    assert metrics["context_group_advantages_standardized_separately"] == 1.0
+
+
+def test_v141_episode_success_and_correction_weights() -> None:
+    episode_ids = torch.tensor([[0], [0], [1], [1], [2]])
+    success_terminal = torch.tensor([[False], [True], [False], [False], [False]])
+    successful = HELPERS["successful_episode_transition_mask"](
+        episode_ids, success_terminal
+    )
+    assert torch.equal(
+        successful.squeeze(1), torch.tensor([True, True, False, False, False])
+    )
+    intervention = torch.tensor([[True], [True], [True], [False], [True]])
+    correction = torch.tensor([[0.05], [0.025], [0.1], [0.1], [0.01]])
+    advantage = torch.tensor([[2.0], [-1.0], [3.0], [4.0], [5.0]])
+    weights = HELPERS["correction_distillation_weights"](
+        intervention,
+        correction,
+        advantage,
+        correction_scale=0.05,
+        mode="episode_success_positive_advantage",
+        successful_episode_mask=successful,
+    )
+    assert torch.equal(weights.squeeze(1), torch.tensor([2.0, 0.0, 0.0, 0.0, 0.0]))
+
+
+def test_v141_vector_huber_sums_action_coordinates() -> None:
+    policy_mean = torch.zeros(2, 3, requires_grad=True)
+    target = torch.ones_like(policy_mean)
+    eligible = torch.tensor([True, True])
+    weights = torch.tensor([1.0, 3.0])
+    loss = HELPERS["weighted_vector_huber_correction_loss"](
+        policy_mean,
+        target,
+        eligible,
+        weights,
+        beta=0.5,
+    )
+    per_coordinate = 1.0 - 0.5 * 0.5
+    assert float(loss) == pytest.approx(3.0 * per_coordinate)
+    loss.backward()
+    assert policy_mean.grad is not None
+
+
+def test_v141_search_versions_vector_and_legacy_correction_reductions() -> None:
+    configuration = {
+        "intervention_ppo_eta": 0.0,
+        "correction_loss_weight": 0.4,
+        "correction_weight_mode": "intervention_only",
+        "dual_reward_scale": 0.0,
+        "target_fraction": 0.75,
+        "actor_learning_rate_multiplier": 2.0,
+        "actor_epochs": 4,
+        "rounds": 6,
+        "exploration_std": 0.05,
+        "moving_kl_beta": 0.25,
+    }
+    legacy = RUN_V141.DevelopmentDriver.configuration_signature(configuration)
+    vector = RUN_V141.DevelopmentDriver.configuration_signature(
+        {
+            **configuration,
+            "correction_action_reduction": "sum",
+        }
+    )
+    vector_front_decay = RUN_V141.DevelopmentDriver.configuration_signature(
+        {
+            **configuration,
+            "correction_action_reduction": "sum",
+            "correction_loss_weight_schedule": "front_high_decay",
+        }
+    )
+    assert legacy != vector
+    assert vector != vector_front_decay
+
+
+def test_v141_front_high_correction_schedule_uses_only_allowed_weights() -> None:
+    protocol = _load(
+        "v141_schedule_protocol", "experiments/scripts/filter_free_v141_protocol.py"
+    )
+    actual = [
+        protocol.correction_loss_weight_for_round(0.4, "front_high_decay", round_index)
+        for round_index in range(1, 7)
+    ]
+    assert actual == [0.4, 0.4, 0.2, 0.2, 0.1, 0.1]
+    assert set(actual) <= set(protocol.CORRECTION_LOSS_WEIGHTS)
+    assert [
+        protocol.correction_loss_weight_for_round(0.2, "constant", round_index)
+        for round_index in range(1, 7)
+    ] == [0.2] * 6
+    with pytest.raises(ValueError):
+        protocol.correction_loss_weight_for_round(0.3, "front_high_decay", 1)
+
+
+def test_v141_shield_dependence_schedules_front_high_decay() -> None:
+    baseline = {
+        "target_off": {
+            "success_rate": 0.65,
+            "counterfactual_would_intervene_fraction": 0.10,
+            "mean_counterfactual_correction_norm": 0.02,
+            "nominal_barrier_violation_steps_per_riser": 5.0,
+        },
+        "target_on": {"success_rate": 0.70},
+        "f1_off": {"success_rate": 0.72},
+    }
+    best = {
+        "target_off_success": 0.71,
+        "target_on_success": 0.76,
+        "f1_retention_off_success": 0.73,
+        "shield_gap": 0.05,
+        "would_intervene_fraction": 0.09,
+        "counterfactual_correction_norm": 0.018,
+        "nominal_violation_steps_per_riser": 4.8,
+        "actor_moving_forward_kl": 0.001,
+        "development_score": 0.70,
+        "configuration": {
+            "candidate": "parent",
+            "intervention_ppo_eta": 0.0,
+            "correction_loss_weight": 0.4,
+            "correction_weight_mode": "positive_advantage",
+            "dual_reward_scale": 0.0,
+            "target_fraction": 0.75,
+            "actor_learning_rate_multiplier": 2.0,
+            "actor_epochs": 4,
+            "rounds": 6,
+            "exploration_std": 0.05,
+            "moving_kl_beta": 0.25,
+            "correction_action_reduction": "sum",
+        },
+    }
+    candidates = RUN_V141.DevelopmentDriver.adaptive_candidates(
+        11, best, baseline, set(), maximum_candidates=4
+    )
+    assert any(
+        item.get("correction_loss_weight_schedule") == "front_high_decay"
+        for item in candidates
+    )
+
+
+def test_v141_target80_requires_retention_headroom() -> None:
+    baseline = {
+        "target_off": {
+            "success_rate": 0.65,
+            "counterfactual_would_intervene_fraction": 0.10,
+            "mean_counterfactual_correction_norm": 0.02,
+            "nominal_barrier_violation_steps_per_riser": 5.0,
+        },
+        "target_on": {"success_rate": 0.70},
+        "f1_off": {"success_rate": 0.72},
+    }
+    best = {
+        "target_off_success": 0.70,
+        "target_on_success": 0.71,
+        "f1_retention_off_success": 0.73,
+        "shield_gap": 0.01,
+        "would_intervene_fraction": 0.09,
+        "counterfactual_correction_norm": 0.018,
+        "nominal_violation_steps_per_riser": 4.8,
+        "actor_moving_forward_kl": 0.001,
+        "development_score": 0.70,
+        "configuration": {
+            "candidate": "parent",
+            "intervention_ppo_eta": 0.25,
+            "correction_loss_weight": 0.4,
+            "correction_weight_mode": "positive_advantage",
+            "dual_reward_scale": 0.0,
+            "target_fraction": 0.75,
+            "actor_learning_rate_multiplier": 2.0,
+            "actor_epochs": 4,
+            "rounds": 6,
+            "exploration_std": 0.05,
+            "moving_kl_beta": 0.25,
+        },
+    }
+    low_headroom = RUN_V141.DevelopmentDriver.adaptive_candidates(
+        10, best, baseline, set(), maximum_candidates=8
+    )
+    assert any("would_success_lowkl" in item["candidate"] for item in low_headroom)
+    assert not any("target80" in item["candidate"] for item in low_headroom)
+
+    high_headroom = RUN_V141.DevelopmentDriver.adaptive_candidates(
+        10,
+        {**best, "f1_retention_off_success": 0.75},
+        baseline,
+        set(),
+        maximum_candidates=8,
+    )
+    assert any("target80" in item["candidate"] for item in high_headroom)
+
+
+def test_v141_protocol_covers_required_search_values() -> None:
+    path = REPO / "experiments/scripts/filter_free_v141_protocol.py"
+    spec = importlib.util.spec_from_file_location("v141_protocol", path)
+    assert spec is not None and spec.loader is not None
+    protocol = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(protocol)
+    candidates = protocol.GENERATION_1_CANDIDATES
+    assert {item["intervention_ppo_eta"] for item in candidates} == {
+        0.0,
+        0.25,
+        0.5,
+        1.0,
+    }
+    assert {item["dual_reward_scale"] for item in candidates} == {0.0, 0.25, 1.0}
+    assert {item["correction_weight_mode"] for item in candidates} == {
+        "intervention_only",
+        "positive_advantage",
+        "episode_success_positive_advantage",
+    }
+
+
+def test_v30_soft_weight_hook_preserves_legacy_default() -> None:
+    source = (REPO / "src/tasks/stairs_cbf/teacher_v30.py").read_text()
+    tree = ast.parse(source)
+    method = next(
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef)
+        and node.name == "_actor_ppo_transition_weights"
+    )
+    assert isinstance(method.body[-1], ast.Return)
+    assert isinstance(method.body[-1].value, ast.Constant)
+    assert method.body[-1].value.value is None
+
+
+def test_v141_pause_only_preserves_resumable_job_state(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    development = tmp_path / "development"
+    formal = tmp_path / "formal"
+    repo.mkdir()
+    development.mkdir()
+    run_state = development / "run_state.json"
+    run_state.write_text(
+        json.dumps(
+            {
+                "status": "running",
+                "current_job": {"id": "g10_F3_train", "command": ["train"]},
+                "completed_jobs": [{"id": "earlier"}],
+            }
+        )
+    )
+    supervisor = SUPERVISOR_V141.Supervisor(
+        SimpleNamespace(
+            repo=repo,
+            development_root=development,
+            formal_root=formal,
+        )
+    )
+    supervisor.state.update(
+        {
+            "current_stage": "attempt_01_development",
+            "current_command": ["develop"],
+        }
+    )
+    supervisor.pause()
+
+    saved_supervisor = json.loads(supervisor.state_path.read_text())
+    saved_development = json.loads(run_state.read_text())
+    assert saved_supervisor["status"] == "paused_by_operator"
+    assert saved_supervisor["paused_stage"] == "attempt_01_development"
+    assert saved_supervisor["current_stage"] is None
+    assert saved_development["status"] == "paused_by_operator"
+    assert saved_development["paused_job"]["id"] == "g10_F3_train"
+    assert saved_development["current_job"] is None
+    assert saved_development["completed_jobs"] == [{"id": "earlier"}]

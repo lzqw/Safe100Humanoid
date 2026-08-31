@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "protocol_id": "safe100-success-gated-cbf-teacher-v25",
+  "precalibration_revision": 7,
+  "orchestration_revision": "revision7_guard2",
+  "role": "zero-episode post-freeze resource-isolation hardening only; no algorithm, environment, gate, checkpoint, or seed changed",
+  "reason": "A later-deployed GuardianFlow automation tree could relaunch GPU trainers or evaluators after a transient zero-compute window, but revision-7 only enumerated the retired Guardian controller and CVCI schedulers. Guard2 additionally treats the live GuardianFlow automation/repository controllers as foreign GPU schedulers.",
+  "migration": {
+    "started_at": "2026-08-13T07:31:38+08:00",
+    "completed_at": "2026-08-13T07:31:49+08:00",
+    "old_process_ids": [
+      1809050,
+      1811512,
+      1811521,
+      1811535
+    ],
+    "new_process_ids": [
+      1842111,
+      1844672,
+      1844681,
+      1844705
+    ],
+    "stop_order": [
+      "revision7 watchdog",
+      "revision7 supervisor and completion child",
+      "revision7 calibration queue"
+    ],
+    "start_order": [
+      "revision7_guard2 calibration queue",
+      "revision7_guard2 supervisor and completion child",
+      "revision7_guard2 watchdog"
+    ],
+    "all_four_locks_released_at_transition": true,
+    "all_four_guard2_locks_held_after_start": true,
+    "old_processes_absent_after_transition": true,
+    "guard2_tmux_sessions_verified": 3,
+    "guard2_supervisor_restart_count": 0,
+    "guard2_watchdog_restart_count": 0
+  },
+  "zero_episode_boundary": {
+    "pre_migration_execution_marker_count": 0,
+    "transition_execution_marker_count": 0,
+    "post_migration_execution_marker_count": 0,
+    "pre_migration_calibration_training_final_file_count": 0,
+    "transition_calibration_training_final_file_count": 0,
+    "post_migration_calibration_training_final_file_count": 0,
+    "calibration_started": false,
+    "adaptation_started": false,
+    "final_evaluation_started": false,
+    "v25_simulator_episode_count": 0
+  },
+  "frozen_bindings": {
+    "git_head_before": "1ac36e9c4483b9ca43428f2ced270609cf8c8bc2",
+    "git_head_after": "1ac36e9c4483b9ca43428f2ced270609cf8c8bc2",
+    "github_branch_tip_before": "1ac36e9c4483b9ca43428f2ced270609cf8c8bc2",
+    "github_branch_tip_after": "1ac36e9c4483b9ca43428f2ced270609cf8c8bc2",
+    "precalibration_protocol_sha256": "9786e15582989ab37a62561a9272fd5ae6eeafba26fad27bda8f931df7067167",
+    "base_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+    "guardian_terminal_release_receipt_sha256": "4ada999c2dd0f3b741f1a539d968042246c29093c76333d697c4cd97eb2f578c"
+  },
+  "legacy_orchestration_sha256": {
+    "v25_wait_and_calibrate_revision7.sh": "4564f8ab15e9812b51e60e7e174e766b5dfee7e35cf7d4d74ab8769db7391a98",
+    "v25_complete_after_calibration_revision7.sh": "b73ad4f2bd702d063b815b1efed41afd8f7de49d7658a9ebcd7b0dfcf2532ffc",
+    "v25_completion_supervisor_revision7.sh": "f9a70f5a4b10805f952fe674fb03f6bccdf3cf9858d25c82860b9029fcc4647d",
+    "v25_supervisor_watchdog_revision7.sh": "c21aeceffb183e2354a4f5a6c09be0dc9ee8d7a7ab7147d8ec1bae9d3e5f2bb6"
+  },
+  "guard2_orchestration_sha256": {
+    "v25_wait_and_calibrate_revision7_guard2.sh": "e9ad3b03c63a6d0ce79b8b18167ef5e656f3bb7e58fd5d515dab98db34267c77",
+    "v25_complete_after_calibration_revision7_guard2.sh": "ef2e38d7a59c9a187916ae59f6a84b83aa6422f1b4f659c183920dd8b8351c60",
+    "v25_completion_supervisor_revision7_guard2.sh": "caba2ee00ef7316eece41b5654bb73ad8df701ae7500ff2672905c94f51e6075",
+    "v25_supervisor_watchdog_revision7_guard2.sh": "ce77dccd610661529ceed7ba9153809ed2ccf6ab40e3446c2f1a6720e1be1814"
+  },
+  "scheduler_detection_validation": {
+    "test_script_sha256": "d30073cabb603d7dc833cd53b6554c61bd2e5edb3e4282369b519baad41324c8",
+    "implementations_tested": [
+      "v25_wait_and_calibrate_revision7_guard2.sh",
+      "v25_complete_after_calibration_revision7_guard2.sh"
+    ],
+    "behavior_assertions_per_implementation": 15,
+    "behavior_assertions_passed": 30,
+    "behavior_assertions_total": 30,
+    "live_controller_classes_detected": [
+      "GuardianFlow automation watchdog",
+      "GuardianFlow supplemental dispatcher",
+      "GuardianFlow evaluation arbiter",
+      "GuardianFlow suite supervisor",
+      "GuardianFlow per-run supervisor",
+      "CVCI full scheduler"
+    ],
+    "fault_injected_controller_classes_detected": [
+      "future GuardianFlow automation controller",
+      "future GuardianFlow run supervisor",
+      "future GuardianFlow suite runner",
+      "future GuardianFlow trainer",
+      "future GuardianFlow evaluator",
+      "GuardianFlow publication supervisor",
+      "GuardianFlow publication watcher",
+      "CVCI scheduler identified by exact cwd"
+    ],
+    "unrelated_read_only_repository_script_rejected": true,
+    "test_processes_execute_sleep_only": true,
+    "passed": true
+  },
+  "live_post_migration_observation": {
+    "observed_at": "2026-08-13T07:32:43+08:00",
+    "pipeline_status": "running",
+    "pipeline_phase": "waiting_for_calibration",
+    "queue_detected_foreign_scheduler_pid_count": 20,
+    "queue_detected_cvci_and_guardianflow_controllers": true,
+    "calibration_training_final_file_count": 0
+  },
+  "passed": true
+}

@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "method_id": "last-layer-multi-seed-rescue-distillation-v40",
+  "source_git_commit": "96f9846",
+  "decision": "rejected_filter_off_gate",
+  "training": {
+    "source_training_seeds": [201350282, 201350292, 201350302],
+    "source_dataset_sha256": "1d9fa21bdfb18a5801b685b6f0800c03172a04115ae8484e8f4898f78276c4a6",
+    "actor_update_scope": "last-layer",
+    "trainable_parameter_count": 1548,
+    "teacher_transition_count": 860,
+    "trust_reference_forward_kl": 0.000223404767703177,
+    "teacher_distance_before": 0.13856060756065916,
+    "teacher_distance_after": 0.1373596819537713,
+    "elapsed_seconds": 9.5520964700263
+  },
+  "gate": {
+    "seed": 201350912,
+    "initial_state_signature": "f56bacd97c200ede74cf055e7817d16374b14f3f6f66d8f4eaf81106d8e9f1fd",
+    "baseline_filter_off_success_count": 43,
+    "candidate_filter_off_success_count": 36,
+    "candidate_filter_off_success_rate": 0.5625,
+    "candidate_minus_baseline_success_count": -7,
+    "filter_on_run": false
+  },
+  "candidate_actor_sha256": "e2f87f173954e3474f8b714abdf5e321f2d34fa34baedfcd7d45c9e0c214c6cd",
+  "candidate_checkpoint_sha256": "fccf63fb774e4df5097103aa1c736fb00ed329c2300020a407b96db7ef38f5fd"
+}

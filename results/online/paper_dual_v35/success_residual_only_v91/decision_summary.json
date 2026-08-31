@@ -1,0 +1,80 @@
+{
+  "schema_version": "paper_dual_v35.v91.decision.v1",
+  "candidate": "success-intervention-bounded-residual-only-actor-v91",
+  "evidence_role": "local_directional_screen_not_formal_gate",
+  "decision": "rejected_after_64_env_scale_up",
+  "reason": "The provisional 32-env +0.32 percentage-point result did not reproduce at 64 environments. Both the 1.25e-4 and 6.25e-5 proposals regressed against pooled base evidence and were rolled back.",
+  "source_commit": "21444c87a9a79f1a27e1091f6e7251b7131f23c4",
+  "targeted_tests_passed": 30,
+  "input_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "training": {
+    "seed": 201352637,
+    "hardware": "NVIDIA GeForce GTX 1660 SUPER",
+    "num_envs": 32,
+    "rounds": 4,
+    "rollout_steps_per_round": 1024,
+    "elapsed_seconds": 173.42804063297808,
+    "training_filter_fraction": 1.0,
+    "success_imitation_weight": 2.0,
+    "bounded_residual_fraction": 0.25,
+    "actor_ppo_transitions_per_round": [0, 0, 0, 0],
+    "transactional_rollback_count": 1
+  },
+  "aligned_filter_on_rollouts": [
+    {"round": 1, "success_count": 46, "episode_count": 66, "success_rate": 0.696969696969697, "actor_role": "base"},
+    {"round": 2, "success_count": 44, "episode_count": 68, "success_rate": 0.6470588235294118, "actor_role": "rejected_lr1e-3_proposal"},
+    {"round": 3, "success_count": 49, "episode_count": 68, "success_rate": 0.7205882352941176, "actor_role": "base_retry"},
+    {"round": 4, "success_count": 47, "episode_count": 66, "success_rate": 0.7121212121212122, "actor_role": "selected_lr1p25e-4_proposal"}
+  ],
+  "pooled_base_evidence": {
+    "success_count": 95,
+    "episode_count": 134,
+    "success_rate": 0.7089552238805971
+  },
+  "initial_screen_provisional_proposal": {
+    "rollout_round": 4,
+    "success_count": 47,
+    "episode_count": 66,
+    "success_rate": 0.7121212121212122,
+    "difference_from_pooled_base_percentage_points": 0.3165988240615032,
+    "learning_rate": 0.000125,
+    "moving_forward_kl": 4.837331289309077e-06,
+    "action_mean_shift": 0.00014089845353737473,
+    "checkpoint_name": "round_03.pt",
+    "checkpoint_sha256": "c9a276f694ad5ab7035ceaccbf65d6a42d1fce0c6292dbdf7e89e4ed5314d2a1",
+    "actor_sha256": "e6a27287bb73ed454fc0ba278adb750763a65cbfc1d5e699832c28ade11da6cd"
+  },
+  "scale_up": {
+    "seed": 201352638,
+    "hardware": "NVIDIA GeForce GTX 1660 SUPER",
+    "num_envs": 64,
+    "rounds": 4,
+    "rollout_steps_per_round": 1024,
+    "elapsed_seconds": 189.7658905389835,
+    "aligned_filter_on_rollouts": [
+      {"round": 1, "success_count": 101, "episode_count": 133, "success_rate": 0.7593984962406015, "actor_role": "base"},
+      {"round": 2, "success_count": 97, "episode_count": 136, "success_rate": 0.7132352941176471, "actor_role": "rejected_lr1p25e-4_proposal"},
+      {"round": 3, "success_count": 93, "episode_count": 136, "success_rate": 0.6838235294117647, "actor_role": "base_retry"},
+      {"round": 4, "success_count": 94, "episode_count": 132, "success_rate": 0.7121212121212122, "actor_role": "rejected_lr6p25e-5_proposal"}
+    ],
+    "pooled_base_evidence": {
+      "success_count": 194,
+      "episode_count": 269,
+      "success_rate": 0.7211895910780669
+    },
+    "transactional_rollback_count": 2,
+    "selected_actor_sha256": "b0a717cef34d128e4175226b86780e5210cc5287558d78cb5a44e095e37fb600",
+    "selected_checkpoint_sha256": "4164ce0597d4da0a22cdd6e7d106237477b1ac99031d61f96439ccd26934ea1c"
+  },
+  "diagnosis": {
+    "actor_gradient_norm_range": [0.11797869205474854, 0.12758906185626984],
+    "actor_gradient_clipped_every_round": false,
+    "actor_gradient_clipped_any_round": false,
+    "ppo_actor_gradient_disabled": true,
+    "formal_conclusion": "rejected after larger directional screen"
+  },
+  "deployment_filter_off_gate_run": false,
+  "formal_256_env_gate_run": false,
+  "global_best_changed": false,
+  "next_hypothesis": "Expose the deployable swing-foot/next-riser CBF geometry to a frozen 405-D actor through a small residual adapter, and learn it only from paired filter-rescued episodes."
+}

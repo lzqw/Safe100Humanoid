@@ -1,0 +1,324 @@
+{
+  "cases": {
+    "continuation_F1_LongDecay": {
+      "context": "F1",
+      "final_checkpoint_sha256": "98be8e1472eafaff8ffc982f48c0096da836b6f78116318df9d6d7043fb99e4a",
+      "integrity_checks": {
+        "actor_optimizer_steps": true,
+        "behavior_distribution_parameters": true,
+        "behavior_log_prob": true,
+        "critic_optimizer_steps": true,
+        "finite_core_metrics": true,
+        "no_KL_or_performance_gate": true,
+        "raw_action_storage": true,
+        "safe_action_execution_routing": true,
+        "teacher_reprojection": true
+      },
+      "kind": "continuation",
+      "schedule": "LongDecay",
+      "seed": 191400101,
+      "structural_audit": {
+        "F1": {
+          "actor_epochs": 1,
+          "actor_groups": [
+            "actor"
+          ],
+          "actor_observation_dim": 405,
+          "all_six_arm_configurations": 6,
+          "auxiliary_modules_absent": true,
+          "cbf_action": true,
+          "critic_epochs": 1,
+          "critic_groups": [
+            "actor",
+            "critic",
+            "online_privileged"
+          ],
+          "critic_observation_dim": 838,
+          "hard_kl_rollback_enabled": false,
+          "log_std_trainable_parameters": 0,
+          "minibatches": 4,
+          "num_risers": 9,
+          "plant_identity": true,
+          "reward_terms": [
+            "action_rate_l2",
+            "angular_momentum",
+            "body_ang_vel",
+            "body_orientation_l2",
+            "cbf_dual",
+            "dont_wait",
+            "fall_termination",
+            "foot_clearance",
+            "foot_gait",
+            "foot_slip",
+            "is_terminated",
+            "joint_acc_l2",
+            "joint_pos_limits",
+            "online_safety_telemetry",
+            "pose",
+            "riser_crossing",
+            "self_collisions",
+            "soft_landing",
+            "stair_progress",
+            "stand_still",
+            "swing_foot_force",
+            "top_completion",
+            "track_angular_velocity",
+            "track_linear_velocity"
+          ],
+          "runtime_cbf": true,
+          "single_actor": 1,
+          "single_critic": 1,
+          "stair_target_patch_slots": 10,
+          "target_kl_early_stopping_enabled": false,
+          "termination_terms": [
+            "fell_over",
+            "reached_top",
+            "time_out"
+          ],
+          "top_platform_patch_included": true,
+          "v30_algorithm": true
+        }
+      },
+      "summary_sha256": "db467c994507a029a3431dabbd7bcf120a2625fc54496b9bba2a6595f3bf66db"
+    },
+    "mixed_mixed_LongDecay": {
+      "context": "mixed",
+      "final_checkpoint_sha256": "4ece131c557d9aefdd434494e99860aca2e00567e3035815d04c3e6085edf0ff",
+      "integrity_checks": {
+        "actor_optimizer_steps": true,
+        "behavior_distribution_parameters": true,
+        "behavior_log_prob": true,
+        "critic_optimizer_steps": true,
+        "finite_core_metrics": true,
+        "no_KL_or_performance_gate": true,
+        "raw_action_storage": true,
+        "safe_action_execution_routing": true,
+        "teacher_reprojection": true
+      },
+      "kind": "mixed",
+      "schedule": "LongDecay",
+      "seed": 191400102,
+      "structural_audit": {
+        "F1": {
+          "actor_epochs": 1,
+          "actor_groups": [
+            "actor"
+          ],
+          "actor_observation_dim": 405,
+          "all_six_arm_configurations": 6,
+          "auxiliary_modules_absent": true,
+          "cbf_action": true,
+          "critic_epochs": 1,
+          "critic_groups": [
+            "actor",
+            "critic",
+            "online_privileged"
+          ],
+          "critic_observation_dim": 838,
+          "hard_kl_rollback_enabled": false,
+          "log_std_trainable_parameters": 0,
+          "minibatches": 4,
+          "num_risers": 9,
+          "plant_identity": true,
+          "reward_terms": [
+            "action_rate_l2",
+            "angular_momentum",
+            "body_ang_vel",
+            "body_orientation_l2",
+            "cbf_dual",
+            "dont_wait",
+            "fall_termination",
+            "foot_clearance",
+            "foot_gait",
+            "foot_slip",
+            "is_terminated",
+            "joint_acc_l2",
+            "joint_pos_limits",
+            "online_safety_telemetry",
+            "pose",
+            "riser_crossing",
+            "self_collisions",
+            "soft_landing",
+            "stair_progress",
+            "stand_still",
+            "swing_foot_force",
+            "top_completion",
+            "track_angular_velocity",
+            "track_linear_velocity"
+          ],
+          "runtime_cbf": true,
+          "single_actor": 1,
+          "single_critic": 1,
+          "stair_target_patch_slots": 10,
+          "target_kl_early_stopping_enabled": false,
+          "termination_terms": [
+            "fell_over",
+            "reached_top",
+            "time_out"
+          ],
+          "top_platform_patch_included": true,
+          "v30_algorithm": true
+        },
+        "F2": {
+          "actor_epochs": 1,
+          "actor_groups": [
+            "actor"
+          ],
+          "actor_observation_dim": 405,
+          "all_six_arm_configurations": 6,
+          "auxiliary_modules_absent": true,
+          "cbf_action": true,
+          "critic_epochs": 1,
+          "critic_groups": [
+            "actor",
+            "critic",
+            "online_privileged"
+          ],
+          "critic_observation_dim": 838,
+          "hard_kl_rollback_enabled": false,
+          "log_std_trainable_parameters": 0,
+          "minibatches": 4,
+          "num_risers": 9,
+          "plant_identity": true,
+          "reward_terms": [
+            "action_rate_l2",
+            "angular_momentum",
+            "body_ang_vel",
+            "body_orientation_l2",
+            "cbf_dual",
+            "dont_wait",
+            "fall_termination",
+            "foot_clearance",
+            "foot_gait",
+            "foot_slip",
+            "is_terminated",
+            "joint_acc_l2",
+            "joint_pos_limits",
+            "online_safety_telemetry",
+            "pose",
+            "riser_crossing",
+            "self_collisions",
+            "soft_landing",
+            "stair_progress",
+            "stand_still",
+            "swing_foot_force",
+            "top_completion",
+            "track_angular_velocity",
+            "track_linear_velocity"
+          ],
+          "runtime_cbf": true,
+          "single_actor": 1,
+          "single_critic": 1,
+          "stair_target_patch_slots": 10,
+          "target_kl_early_stopping_enabled": false,
+          "termination_terms": [
+            "fell_over",
+            "reached_top",
+            "time_out"
+          ],
+          "top_platform_patch_included": true,
+          "v30_algorithm": true
+        },
+        "F3": {
+          "actor_epochs": 1,
+          "actor_groups": [
+            "actor"
+          ],
+          "actor_observation_dim": 405,
+          "all_six_arm_configurations": 6,
+          "auxiliary_modules_absent": true,
+          "cbf_action": true,
+          "critic_epochs": 1,
+          "critic_groups": [
+            "actor",
+            "critic",
+            "online_privileged"
+          ],
+          "critic_observation_dim": 838,
+          "hard_kl_rollback_enabled": false,
+          "log_std_trainable_parameters": 0,
+          "minibatches": 4,
+          "num_risers": 11,
+          "plant_identity": true,
+          "reward_terms": [
+            "action_rate_l2",
+            "angular_momentum",
+            "body_ang_vel",
+            "body_orientation_l2",
+            "cbf_dual",
+            "dont_wait",
+            "fall_termination",
+            "foot_clearance",
+            "foot_gait",
+            "foot_slip",
+            "is_terminated",
+            "joint_acc_l2",
+            "joint_pos_limits",
+            "online_safety_telemetry",
+            "pose",
+            "riser_crossing",
+            "self_collisions",
+            "soft_landing",
+            "stair_progress",
+            "stand_still",
+            "swing_foot_force",
+            "top_completion",
+            "track_angular_velocity",
+            "track_linear_velocity"
+          ],
+          "runtime_cbf": true,
+          "single_actor": 1,
+          "single_critic": 1,
+          "stair_target_patch_slots": 12,
+          "target_kl_early_stopping_enabled": false,
+          "termination_terms": [
+            "fell_over",
+            "reached_top",
+            "time_out"
+          ],
+          "top_platform_patch_included": true,
+          "v30_algorithm": true
+        },
+        "mixed": {
+          "actor_observation_dim": 405,
+          "context_capacity": 22,
+          "critic_observation_dim": 838,
+          "episode_context_fixed": true,
+          "exposed_envs": 64,
+          "round_1_assignment": {
+            "absolute_round": 1,
+            "context_counts": {
+              "F1": 22,
+              "F2": 21,
+              "F3": 21
+            },
+            "episode_context_fixed": true,
+            "omitted_environment_ids": {
+              "F1": null,
+              "F2": 1,
+              "F3": 2
+            }
+          },
+          "underlying_envs": 66
+        }
+      },
+      "summary_sha256": "563a465a77d915ca3381552abe92c4fb88a7ec3663d49fcd83f33e5c4ce1b37e"
+    }
+  },
+  "checks": {
+    "all_integrity_checks": true,
+    "continuation_restores_v31_A2": true,
+    "exactly_two_cases": true,
+    "mixed_contains_all_contexts": true,
+    "mixed_exposes_64_envs": true
+  },
+  "complete": true,
+  "formal_ready": true,
+  "passed": true,
+  "performance_evidence": false,
+  "protocol_id": "safe100-cbf-protected-continual-refinement-v32",
+  "protocol_sha256": "37a843c6c14cc623ea4d898013e127a8ad830be8446d7ddf8e1cc70328ba1a15",
+  "schema_version": 1,
+  "simulator_case_attempts": 2,
+  "simulator_cases_rerun": false
+}

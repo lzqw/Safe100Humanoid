@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "experiment": "paper_dual_v35",
+  "version": "v129",
+  "method_id": "paper-cbf-dual-continuous-kl-controlled-ppo-v129",
+  "status": "rejected_screen_one_episode_below_gate",
+  "source_git_commit": "2e8da8b13acb6cfa14b76f04d2c1804b51850589",
+  "target": {
+    "context": "F2",
+    "riser_height_m": 0.184,
+    "runtime_filter_at_deployment": false,
+    "success_threshold": 0.75,
+    "screen_threshold_count": 48,
+    "screen_episode_count": 64
+  },
+  "training": {
+    "seed": 201355000,
+    "num_envs": 64,
+    "rollout_steps": 1024,
+    "rounds": 8,
+    "transition_count": 524288,
+    "elapsed_seconds": 281.6564290629467,
+    "runtime_filter_fraction": 1.0,
+    "continuous_without_rollback": true,
+    "teacher_free": true,
+    "moving_kl_beta": 0.0,
+    "actor_optimizer": "adam",
+    "initial_actor_learning_rate": 5e-06,
+    "target_forward_kl": 0.0006,
+    "start_aligned_filter_on": {
+      "success_count": 98,
+      "episode_count": 138,
+      "success_rate": 0.7101449275362319
+    },
+    "selected_aligned_filter_on": {
+      "rollout_round": 8,
+      "checkpoint_round": 7,
+      "success_count": 108,
+      "episode_count": 128,
+      "success_rate": 0.84375,
+      "mean_reached_riser": 8.3203125,
+      "improvement_percentage_points_vs_start": 13.360507246376806
+    },
+    "post_first_round_forward_kl_range": [
+      0.0004367810906842351,
+      0.0006317705847322941
+    ],
+    "selection_additional_evaluation_count": 0
+  },
+  "screen": {
+    "seed": 201355080,
+    "policy": "deterministic_mean",
+    "runtime_filter": false,
+    "success_count": 47,
+    "episode_count": 64,
+    "success_rate": 0.734375,
+    "fall_count": 17,
+    "fall_rate": 0.265625,
+    "mean_reached_riser": 8.203125,
+    "mean_return": -3.2384975366294384,
+    "mean_success_completion_time_s": 8.768510638297872,
+    "initial_state_signature": "c548b2fbbb1f8b568340065eccf4f7b3a4490de6dc9bc9c1ea4d7334ea9320d6"
+  },
+  "gate": {
+    "screen_passed": false,
+    "shortfall_episode_count": 1,
+    "independent_gate_run": false,
+    "additional_validation_run": false,
+    "reason": "47/64 is one success below the predeclared 48/64 threshold"
+  },
+  "decision": {
+    "accepted": false,
+    "replaces_v79": false,
+    "formal_best_remains": "v79 aligned filter-off 139/193 = 72.02%",
+    "development_screen_best": "v129 ties the existing 47/64 = 73.44% peak",
+    "interpretation": "KL control stabilized continuous fully filtered PPO and raised aligned filtered success to 84.38%, but the selected actor remained one episode below the filter-off deployment gate."
+  }
+}

@@ -1,0 +1,1889 @@
+{
+  "accepted_actor_changed": false,
+  "arms": {
+    "A_v12_global_anchor": {
+      "accepted_rounds": [],
+      "base_anchor_weight": 0.01,
+      "baseline_eval": {
+        "D0": {
+          "episodes": 48,
+          "fall_rate": 0.0,
+          "intervention_per_riser": 0.5069444654509425,
+          "mean_return": 8.451885517065724,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "success_rate": 0.9583333333333334
+        },
+        "DQH": {
+          "episodes": 48,
+          "fall_rate": 0.08333333333333333,
+          "intervention_per_riser": 0.6925926076558729,
+          "mean_return": 8.860390290617943,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "success_rate": 0.9166666666666666
+        },
+        "DQNH": {
+          "episodes": 48,
+          "fall_rate": 0.1875,
+          "intervention_per_riser": 1.26876653265208,
+          "mean_return": 7.038333406051,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "success_rate": 0.8125
+        }
+      },
+      "candidate_fractions": [
+        0.25,
+        0.5,
+        1.0,
+        1.5
+      ],
+      "candidate_screen_episodes_per_policy": 64,
+      "correction_distillation_weight": 0.0,
+      "d0_retention_anchor_weight_initial": 0.0,
+      "final_checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/retention_v13/arm_a_v12_global_anchor/accepted_final.pt",
+      "final_eval": {
+        "D0": {
+          "episodes": 48,
+          "fall_rate": 0.020833333333333332,
+          "intervention_per_riser": 0.5694444598630071,
+          "mean_return": 8.969829638799032,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "success_rate": 0.9583333333333334
+        },
+        "DQH": {
+          "episodes": 48,
+          "fall_rate": 0.125,
+          "intervention_per_riser": 0.7111111202587684,
+          "mean_return": 8.621320873498917,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "success_rate": 0.875
+        },
+        "DQNH": {
+          "episodes": 48,
+          "fall_rate": 0.0625,
+          "intervention_per_riser": 0.8486689963998894,
+          "mean_return": 9.112148960431417,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "success_rate": 0.9375
+        }
+      },
+      "formal_gate_episodes_per_domain_per_policy": 48,
+      "neighbor_retention_anchor_weight_initial": 0.0,
+      "rounds": [
+        {
+          "accepted": false,
+          "anchor_weight_after_adaptation": {
+            "d0": null,
+            "neighbor": null
+          },
+          "candidate_eval": {
+            "D0": {
+              "episodes": 48,
+              "fall_rate": 0.0,
+              "intervention_per_riser": 0.4784722374752164,
+              "mean_return": 8.04979476534451,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.8958333333333334
+            },
+            "DQH": {
+              "episodes": 48,
+              "fall_rate": 0.08333333333333333,
+              "intervention_per_riser": 0.8518518642522395,
+              "mean_return": 8.615789378682772,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.9166666666666666
+            },
+            "DQNH": {
+              "episodes": 48,
+              "fall_rate": 0.125,
+              "intervention_per_riser": 0.9109375065503021,
+              "mean_return": 8.702098275224367,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.875
+            }
+          },
+          "candidate_variants": [
+            {
+              "fraction": 0.25,
+              "precheck_reasons": [],
+              "screen": {
+                "episodes": 64,
+                "fall_rate": 0.03125,
+                "intervention_per_riser": 0.5590277841547504,
+                "mean_return": 9.520962089300156,
+                "seeds": [
+                  1042
+                ],
+                "success_rate": 0.96875
+              },
+              "screen_score_delta": 0.24698177697369839
+            },
+            {
+              "fraction": 0.5,
+              "precheck_reasons": [],
+              "screen": {
+                "episodes": 64,
+                "fall_rate": 0.09375,
+                "intervention_per_riser": 0.6221168272895738,
+                "mean_return": 8.919927079230547,
+                "seeds": [
+                  1042
+                ],
+                "success_rate": 0.90625
+              },
+              "screen_score_delta": 0.04431795741431421
+            },
+            {
+              "fraction": 1.0,
+              "precheck_reasons": [],
+              "screen": {
+                "episodes": 64,
+                "fall_rate": 0.15625,
+                "intervention_per_riser": 1.0158420231891796,
+                "mean_return": 7.941205307841301,
+                "seeds": [
+                  1042
+                ],
+                "success_rate": 0.84375
+              },
+              "screen_score_delta": -0.18246636860538268
+            },
+            {
+              "fraction": 1.5,
+              "precheck_reasons": [],
+              "screen": {
+                "episodes": 64,
+                "fall_rate": 0.09375,
+                "intervention_per_riser": 0.6241629562573507,
+                "mean_return": 8.91455014795065,
+                "seeds": [
+                  1042
+                ],
+                "success_rate": 0.90625
+              },
+              "screen_score_delta": 0.04399916273308924
+            }
+          ],
+          "fixed_bank_kl": {
+            "d0": null,
+            "neighbor": null
+          },
+          "gate_intervals": {
+            "neighbor_fall_tolerance_delta_95": [
+              -0.019999999999999993,
+              -0.08249999999999999,
+              0.04250000000000001
+            ],
+            "neighbor_success_tolerance_delta_95": [
+              0.020000000000000018,
+              -0.04249999999999998,
+              0.08250000000000002
+            ],
+            "retention_fall_tolerance_delta_95": [
+              -0.04083333333333334,
+              -0.0825,
+              -0.02
+            ],
+            "retention_success_tolerance_delta_95": [
+              -0.02166666666666665,
+              -0.10499999999999998,
+              0.020000000000000018
+            ],
+            "target_fall_delta_95": [
+              -0.020833333333333332,
+              -0.125,
+              0.0625
+            ],
+            "target_intervention_delta_95": [
+              0.11461639901002248,
+              -0.015277787111699581,
+              0.18005951773375273
+            ],
+            "target_intervention_ratio_delta_95": [
+              0.07775462574791163,
+              -0.04659723222721368,
+              0.14305554879829285
+            ],
+            "target_return_delta_95": [
+              -0.22788014511267343,
+              -1.2342589646577835,
+              1.4036688059568405
+            ],
+            "target_safe_improvement_score_delta_95": [
+              0.052238344987854325,
+              -0.2211613873392344,
+              0.4038640333153307
+            ],
+            "target_success_delta_95": [
+              0.020833333333333332,
+              -0.0625,
+              0.125
+            ]
+          },
+          "old_eval": {
+            "D0": {
+              "episodes": 48,
+              "fall_rate": 0.020833333333333332,
+              "intervention_per_riser": 0.6215277975425124,
+              "mean_return": 8.69646886860331,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.9375
+            },
+            "DQH": {
+              "episodes": 48,
+              "fall_rate": 0.10416666666666667,
+              "intervention_per_riser": 0.737235465242217,
+              "mean_return": 8.843669523795446,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.8958333333333334
+            },
+            "DQNH": {
+              "episodes": 48,
+              "fall_rate": 0.125,
+              "intervention_per_riser": 1.1218584802312155,
+              "mean_return": 8.021873871485392,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.875
+            }
+          },
+          "old_total_kl_from_base": 0.0016871124971657991,
+          "rejection_reasons": [
+            "target metrics show no strict improvement",
+            "target task metrics show no strict improvement",
+            "D0 retention bound violated"
+          ],
+          "round": 1,
+          "selected_fraction": 0.25,
+          "total_kl_from_base": 0.0016603446565568447
+        },
+        {
+          "accepted": false,
+          "anchor_weight_after_adaptation": {
+            "d0": null,
+            "neighbor": null
+          },
+          "candidate_eval": {
+            "D0": {
+              "episodes": 48,
+              "fall_rate": 0.041666666666666664,
+              "intervention_per_riser": 0.3645833420256774,
+              "mean_return": 7.819230031842987,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.8541666666666666
+            },
+            "DQH": {
+              "episodes": 48,
+              "fall_rate": 0.08333333333333333,
+              "intervention_per_riser": 0.7080439911223948,
+              "mean_return": 8.892859876155853,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.9166666666666666
+            },
+            "DQNH": {
+              "episodes": 48,
+              "fall_rate": 0.020833333333333332,
+              "intervention_per_riser": 0.8240740915449957,
+              "mean_return": 9.526850908994675,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.9791666666666666
+            }
+          },
+          "candidate_variants": [
+            {
+              "fraction": 0.25,
+              "precheck_reasons": [],
+              "screen": {
+                "episodes": 64,
+                "fall_rate": 0.015625,
+                "intervention_per_riser": 0.5000000096624717,
+                "mean_return": 9.929835803806782,
+                "seeds": [
+                  2042
+                ],
+                "success_rate": 0.984375
+              },
+              "screen_score_delta": 0.1039835151506121
+            },
+            {
+              "fraction": 0.5,
+              "precheck_reasons": [],
+              "screen": {
+                "episodes": 64,
+                "fall_rate": 0.046875,
+                "intervention_per_riser": 0.5430555646307766,
+                "mean_return": 9.613382738083601,
+                "seeds": [
+                  2042
+                ],
+                "success_rate": 0.953125
+              },
+              "screen_score_delta": 0.0017579784640109342
+            },
+            {
+              "fraction": 1.0,
+              "precheck_reasons": [],
+              "screen": {
+                "episodes": 64,
+                "fall_rate": 0.03125,
+                "intervention_per_riser": 0.626736126258038,
+                "mean_return": 9.695596035569906,
+                "seeds": [
+                  2042
+                ],
+                "success_rate": 0.96875
+              },
+              "screen_score_delta": 0.046057579972548446
+            },
+            {
+              "fraction": 1.5,
+              "precheck_reasons": [],
+              "screen": {
+                "episodes": 64,
+                "fall_rate": 0.0625,
+                "intervention_per_riser": 0.5137648879317567,
+                "mean_return": 9.618903312832117,
+                "seeds": [
+                  2042
+                ],
+                "success_rate": 0.9375
+              },
+              "screen_score_delta": -0.04367769714561298
+            }
+          ],
+          "fixed_bank_kl": {
+            "d0": null,
+            "neighbor": null
+          },
+          "gate_intervals": {
+            "neighbor_fall_tolerance_delta_95": [
+              -0.10333333333333333,
+              -0.2075,
+              -0.020000000000000004
+            ],
+            "neighbor_success_tolerance_delta_95": [
+              0.10333333333333335,
+              0.020000000000000018,
+              0.20750000000000002
+            ],
+            "retention_fall_tolerance_delta_95": [
+              0.0008333333333333295,
+              -0.020000000000000004,
+              0.0425
+            ],
+            "retention_success_tolerance_delta_95": [
+              -0.08416666666666665,
+              -0.10499999999999998,
+              -0.04249999999999998
+            ],
+            "target_fall_delta_95": [
+              -0.020833333333333332,
+              -0.0625,
+              0.0
+            ],
+            "target_intervention_delta_95": [
+              0.049884256441146135,
+              -0.09288195008412004,
+              0.20138889411464334
+            ],
+            "target_intervention_ratio_delta_95": [
+              0.016976269707083658,
+              -0.1304253534879536,
+              0.17326389362569894
+            ],
+            "target_return_delta_95": [
+              0.26526742180188495,
+              -0.06097729504108429,
+              0.8231961876153946
+            ],
+            "target_safe_improvement_score_delta_95": [
+              0.0653335305458556,
+              -0.009375382317230008,
+              0.20863041618838907
+            ],
+            "target_success_delta_95": [
+              0.020833333333333332,
+              0.0,
+              0.0625
+            ]
+          },
+          "old_eval": {
+            "D0": {
+              "episodes": 48,
+              "fall_rate": 0.020833333333333332,
+              "intervention_per_riser": 0.611111125908792,
+              "mean_return": 8.626048877835274,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.9583333333333334
+            },
+            "DQH": {
+              "episodes": 48,
+              "fall_rate": 0.10416666666666667,
+              "intervention_per_riser": 0.6581597346812487,
+              "mean_return": 8.627592454353968,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.8958333333333334
+            },
+            "DQNH": {
+              "episodes": 48,
+              "fall_rate": 0.10416666666666667,
+              "intervention_per_riser": 0.9827215677748123,
+              "mean_return": 8.38266028960546,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.8958333333333334
+            }
+          },
+          "old_total_kl_from_base": 0.0016870375256985426,
+          "rejection_reasons": [
+            "target metrics show no strict improvement",
+            "target task metrics show no strict improvement",
+            "D0 retention bound violated",
+            "D0 paired success regressed"
+          ],
+          "round": 2,
+          "selected_fraction": 0.25,
+          "total_kl_from_base": 0.0016646425938233733
+        },
+        {
+          "accepted": false,
+          "anchor_weight_after_adaptation": {
+            "d0": null,
+            "neighbor": null
+          },
+          "candidate_eval": {
+            "D0": {
+              "episodes": 48,
+              "fall_rate": 0.020833333333333332,
+              "intervention_per_riser": 0.5833333482344946,
+              "mean_return": 8.909347360332807,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.9375
+            },
+            "DQH": {
+              "episodes": 48,
+              "fall_rate": 0.0625,
+              "intervention_per_riser": 0.7385499402880669,
+              "mean_return": 8.979438419143358,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.9375
+            },
+            "DQNH": {
+              "episodes": 48,
+              "fall_rate": 0.125,
+              "intervention_per_riser": 0.982986125163734,
+              "mean_return": 8.263334780931473,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.875
+            }
+          },
+          "candidate_variants": [
+            {
+              "fraction": 0.25,
+              "precheck_reasons": [],
+              "screen": {
+                "episodes": 64,
+                "fall_rate": 0.09375,
+                "intervention_per_riser": 0.5683593819849193,
+                "mean_return": 8.806096762418747,
+                "seeds": [
+                  3042
+                ],
+                "success_rate": 0.90625
+              },
+              "screen_score_delta": 0.10453741792240179
+            },
+            {
+              "fraction": 0.5,
+              "precheck_reasons": [],
+              "screen": {
+                "episodes": 64,
+                "fall_rate": 0.078125,
+                "intervention_per_riser": 0.5084635480307043,
+                "mean_return": 8.990809507668018,
+                "seeds": [
+                  3042
+                ],
+                "success_rate": 0.921875
+              },
+              "screen_score_delta": 0.15810066742938944
+            },
+            {
+              "fraction": 1.0,
+              "precheck_reasons": [],
+              "screen": {
+                "episodes": 64,
+                "fall_rate": 0.15625,
+                "intervention_per_riser": 0.7917968861293048,
+                "mean_return": 7.945177357643843,
+                "seeds": [
+                  3042
+                ],
+                "success_rate": 0.84375
+              },
+              "screen_score_delta": -0.11142100131255583
+            },
+            {
+              "fraction": 1.5,
+              "precheck_reasons": [],
+              "screen": {
+                "episodes": 64,
+                "fall_rate": 0.09375,
+                "intervention_per_riser": 0.6312500117346644,
+                "mean_return": 8.673091679811478,
+                "seeds": [
+                  3042
+                ],
+                "success_rate": 0.90625
+              },
+              "screen_score_delta": 0.0985096251091453
+            }
+          ],
+          "fixed_bank_kl": {
+            "d0": null,
+            "neighbor": null
+          },
+          "gate_intervals": {
+            "neighbor_fall_tolerance_delta_95": [
+              0.021666666666666678,
+              -0.08249999999999999,
+              0.1675
+            ],
+            "neighbor_success_tolerance_delta_95": [
+              -0.02166666666666665,
+              -0.16749999999999998,
+              0.08250000000000002
+            ],
+            "retention_fall_tolerance_delta_95": [
+              0.0008333333333333318,
+              -0.02,
+              0.0425
+            ],
+            "retention_success_tolerance_delta_95": [
+              -0.02166666666666665,
+              -0.10499999999999998,
+              0.08250000000000002
+            ],
+            "target_fall_delta_95": [
+              -0.0625,
+              -0.125,
+              0.0
+            ],
+            "target_intervention_delta_95": [
+              0.11077215382829309,
+              -0.003993063233792782,
+              0.2638888992369175
+            ],
+            "target_intervention_ratio_delta_95": [
+              0.07938326450530438,
+              -0.043298619543202244,
+              0.24409723260905591
+            ],
+            "target_return_delta_95": [
+              0.32441605627536774,
+              -0.10042554140090942,
+              0.5411635041236877
+            ],
+            "target_safe_improvement_score_delta_95": [
+              0.1884700329136103,
+              -0.015182636310346553,
+              0.38604324272368123
+            ],
+            "target_success_delta_95": [
+              0.0625,
+              0.0,
+              0.125
+            ]
+          },
+          "old_eval": {
+            "D0": {
+              "episodes": 48,
+              "fall_rate": 0.0,
+              "intervention_per_riser": 0.6145833550641934,
+              "mean_return": 8.610358119010925,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.9791666666666666
+            },
+            "DQH": {
+              "episodes": 48,
+              "fall_rate": 0.125,
+              "intervention_per_riser": 0.6277777864597738,
+              "mean_return": 8.65502236286799,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.875
+            },
+            "DQNH": {
+              "episodes": 48,
+              "fall_rate": 0.08333333333333333,
+              "intervention_per_riser": 1.068055569815139,
+              "mean_return": 8.49009927113851,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.9166666666666666
+            }
+          },
+          "old_total_kl_from_base": 0.001686096889898181,
+          "rejection_reasons": [
+            "target metrics show no strict improvement",
+            "target task metrics show no strict improvement",
+            "D0 retention bound violated"
+          ],
+          "round": 3,
+          "selected_fraction": 0.5,
+          "total_kl_from_base": 0.0016657774103805423
+        }
+      ],
+      "seed": 42,
+      "summary_file": "/home/carla/LZQW/SAFE100/humanoid/artifacts/retention_v13/arm_a_v12_global_anchor/online_refinement_summary.json",
+      "summary_sha256": "82d8a6fb242095390aee5bf00d34b472dda635ee70eb31d4391d867212773584"
+    },
+    "B_state_conditioned_retention": {
+      "accepted_rounds": [],
+      "base_anchor_weight": 0.0,
+      "baseline_eval": {
+        "D0": {
+          "episodes": 48,
+          "fall_rate": 0.0,
+          "intervention_per_riser": 0.5069444654509425,
+          "mean_return": 8.451885517065724,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "success_rate": 0.9583333333333334
+        },
+        "DQH": {
+          "episodes": 48,
+          "fall_rate": 0.08333333333333333,
+          "intervention_per_riser": 0.6925926076558729,
+          "mean_return": 8.860390290617943,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "success_rate": 0.9166666666666666
+        },
+        "DQNH": {
+          "episodes": 48,
+          "fall_rate": 0.1875,
+          "intervention_per_riser": 1.26876653265208,
+          "mean_return": 7.038333406051,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "success_rate": 0.8125
+        }
+      },
+      "candidate_fractions": [
+        0.25,
+        0.5,
+        1.0,
+        1.5
+      ],
+      "candidate_screen_episodes_per_policy": 64,
+      "correction_distillation_weight": 0.0,
+      "d0_retention_anchor_weight_initial": 0.02,
+      "final_checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/retention_v13/arm_b_state_retention/accepted_final.pt",
+      "final_eval": {
+        "D0": {
+          "episodes": 48,
+          "fall_rate": 0.0,
+          "intervention_per_riser": 0.6250000183160106,
+          "mean_return": 8.632101035366455,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "success_rate": 0.875
+        },
+        "DQH": {
+          "episodes": 48,
+          "fall_rate": 0.10416666666666667,
+          "intervention_per_riser": 0.9627314958100518,
+          "mean_return": 8.379660308361053,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "success_rate": 0.8958333333333334
+        },
+        "DQNH": {
+          "episodes": 48,
+          "fall_rate": 0.14583333333333334,
+          "intervention_per_riser": 1.1567377921504278,
+          "mean_return": 7.837368627389272,
+          "seeds": [
+            42,
+            43,
+            44
+          ],
+          "success_rate": 0.8541666666666666
+        }
+      },
+      "formal_gate_episodes_per_domain_per_policy": 48,
+      "neighbor_retention_anchor_weight_initial": 0.01,
+      "rounds": [
+        {
+          "accepted": false,
+          "anchor_weight_after_adaptation": {
+            "d0": 0.02,
+            "neighbor": 0.01
+          },
+          "candidate_eval": {
+            "D0": {
+              "episodes": 48,
+              "fall_rate": 0.0,
+              "intervention_per_riser": 0.39756945458551246,
+              "mean_return": 8.447552052016059,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.9166666666666666
+            },
+            "DQH": {
+              "episodes": 48,
+              "fall_rate": 0.14583333333333334,
+              "intervention_per_riser": 0.7247437336482108,
+              "mean_return": 8.353294014930725,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.8541666666666666
+            },
+            "DQNH": {
+              "episodes": 48,
+              "fall_rate": 0.10416666666666667,
+              "intervention_per_riser": 0.8550347353642186,
+              "mean_return": 8.69261352221171,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.8958333333333334
+            }
+          },
+          "candidate_variants": [
+            {
+              "fraction": 0.25,
+              "precheck_reasons": [],
+              "screen": {
+                "episodes": 64,
+                "fall_rate": 0.140625,
+                "intervention_per_riser": 0.688120053964667,
+                "mean_return": 8.334865279495716,
+                "seeds": [
+                  1042
+                ],
+                "success_rate": 0.859375
+              },
+              "screen_score_delta": -0.026312423587078193
+            },
+            {
+              "fraction": 0.5,
+              "precheck_reasons": [],
+              "screen": {
+                "episodes": 64,
+                "fall_rate": 0.140625,
+                "intervention_per_riser": 0.7814670242369175,
+                "mean_return": 8.325917799025774,
+                "seeds": [
+                  1042
+                ],
+                "success_rate": 0.859375
+              },
+              "screen_score_delta": -0.03124704950721935
+            },
+            {
+              "fraction": 1.0,
+              "precheck_reasons": [],
+              "screen": {
+                "episodes": 64,
+                "fall_rate": 0.125,
+                "intervention_per_riser": 0.7267485216725618,
+                "mean_return": 8.315652463585138,
+                "seeds": [
+                  1042
+                ],
+                "success_rate": 0.875
+              },
+              "screen_score_delta": 0.017928952495567585
+            },
+            {
+              "fraction": 1.5,
+              "precheck_reasons": [],
+              "screen": {
+                "episodes": 64,
+                "fall_rate": 0.09375,
+                "intervention_per_riser": 0.6062500092666596,
+                "mean_return": 8.74571355804801,
+                "seeds": [
+                  1042
+                ],
+                "success_rate": 0.90625
+              },
+              "screen_score_delta": 0.1260049193724989
+            }
+          ],
+          "fixed_bank_kl": {
+            "d0": 0.0003177645554145177,
+            "neighbor": 0.00033368578056494397
+          },
+          "gate_intervals": {
+            "neighbor_fall_tolerance_delta_95": [
+              -0.0825,
+              -0.20750000000000002,
+              0.04250000000000001
+            ],
+            "neighbor_success_tolerance_delta_95": [
+              0.08250000000000002,
+              -0.04249999999999998,
+              0.20750000000000002
+            ],
+            "retention_fall_tolerance_delta_95": [
+              -0.04083333333333334,
+              -0.0825,
+              -0.02
+            ],
+            "retention_success_tolerance_delta_95": [
+              0.020000000000000018,
+              0.020000000000000018,
+              0.020000000000000018
+            ],
+            "target_fall_delta_95": [
+              0.041666666666666664,
+              -0.125,
+              0.125
+            ],
+            "target_intervention_delta_95": [
+              0.03711144765838981,
+              -0.24084821622818708,
+              0.28968255827203393
+            ],
+            "target_intervention_ratio_delta_95": [
+              0.0027298333588987034,
+              -0.28357639145106084,
+              0.2667658914113417
+            ],
+            "target_return_delta_95": [
+              -0.23866334557533264,
+              -1.3619034737348557,
+              1.7304780632257462
+            ],
+            "target_safe_improvement_score_delta_95": [
+              -0.13231764756608763,
+              -0.4174110056599603,
+              0.42096316380426274
+            ],
+            "target_success_delta_95": [
+              -0.041666666666666664,
+              -0.125,
+              0.125
+            ]
+          },
+          "old_eval": {
+            "D0": {
+              "episodes": 48,
+              "fall_rate": 0.020833333333333332,
+              "intervention_per_riser": 0.6458333476136128,
+              "mean_return": 8.48868313090255,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.9166666666666666
+            },
+            "DQH": {
+              "episodes": 48,
+              "fall_rate": 0.10416666666666667,
+              "intervention_per_riser": 0.687632285989821,
+              "mean_return": 8.591957360506058,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.8958333333333334
+            },
+            "DQNH": {
+              "episodes": 48,
+              "fall_rate": 0.16666666666666666,
+              "intervention_per_riser": 1.053240758056442,
+              "mean_return": 7.787116880218188,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.8333333333333334
+            }
+          },
+          "old_total_kl_from_base": 0.0016827152576297522,
+          "rejection_reasons": [
+            "target metrics show no strict improvement",
+            "target task metrics show no strict improvement",
+            "target safe improvement score did not increase",
+            "D0 retention bound violated"
+          ],
+          "round": 1,
+          "selected_fraction": 1.5,
+          "total_kl_from_base": 0.002371523529291153
+        },
+        {
+          "accepted": false,
+          "anchor_weight_after_adaptation": {
+            "d0": 0.02,
+            "neighbor": 0.01
+          },
+          "candidate_eval": {
+            "D0": {
+              "episodes": 48,
+              "fall_rate": 0.020833333333333332,
+              "intervention_per_riser": 0.7256944580003619,
+              "mean_return": 8.88464737807711,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.8958333333333334
+            },
+            "DQH": {
+              "episodes": 48,
+              "fall_rate": 0.10416666666666667,
+              "intervention_per_riser": 0.6501736224939426,
+              "mean_return": 9.078686371445656,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.8958333333333334
+            },
+            "DQNH": {
+              "episodes": 48,
+              "fall_rate": 0.14583333333333334,
+              "intervention_per_riser": 1.0184524031355977,
+              "mean_return": 7.941126709183057,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.8541666666666666
+            }
+          },
+          "candidate_variants": [
+            {
+              "fraction": 0.25,
+              "precheck_reasons": [],
+              "screen": {
+                "episodes": 64,
+                "fall_rate": 0.09375,
+                "intervention_per_riser": 0.5786830455763265,
+                "mean_return": 8.987393833696842,
+                "seeds": [
+                  2042
+                ],
+                "success_rate": 0.90625
+              },
+              "screen_score_delta": -0.049987721528159446
+            },
+            {
+              "fraction": 0.5,
+              "precheck_reasons": [],
+              "screen": {
+                "episodes": 64,
+                "fall_rate": 0.09375,
+                "intervention_per_riser": 0.5199652861338109,
+                "mean_return": 8.730212546885014,
+                "seeds": [
+                  2042
+                ],
+                "success_rate": 0.90625
+              },
+              "screen_score_delta": -0.052236443771980556
+            },
+            {
+              "fraction": 1.0,
+              "precheck_reasons": [],
+              "screen": {
+                "episodes": 64,
+                "fall_rate": 0.0625,
+                "intervention_per_riser": 0.5834573596948758,
+                "mean_return": 9.354264099150896,
+                "seeds": [
+                  2042
+                ],
+                "success_rate": 0.9375
+              },
+              "screen_score_delta": 0.05068491772399286
+            },
+            {
+              "fraction": 1.5,
+              "precheck_reasons": [],
+              "screen": {
+                "episodes": 64,
+                "fall_rate": 0.046875,
+                "intervention_per_riser": 0.7064732264261693,
+                "mean_return": 9.567178789526224,
+                "seeds": [
+                  2042
+                ],
+                "success_rate": 0.953125
+              },
+              "screen_score_delta": 0.09546159835066648
+            }
+          ],
+          "fixed_bank_kl": {
+            "d0": 0.00031854787468910215,
+            "neighbor": 0.00033553431431452435
+          },
+          "gate_intervals": {
+            "neighbor_fall_tolerance_delta_95": [
+              0.0008333333333333387,
+              -0.08249999999999999,
+              0.04250000000000001
+            ],
+            "neighbor_success_tolerance_delta_95": [
+              -0.0008333333333333156,
+              -0.04249999999999998,
+              0.08250000000000002
+            ],
+            "retention_fall_tolerance_delta_95": [
+              -0.020000000000000004,
+              -0.0825,
+              0.0425
+            ],
+            "retention_success_tolerance_delta_95": [
+              -0.02166666666666665,
+              -0.04249999999999998,
+              0.020000000000000018
+            ],
+            "target_fall_delta_95": [
+              -0.020833333333333332,
+              -0.0625,
+              0.0625
+            ],
+            "target_intervention_delta_95": [
+              -0.020659719904263813,
+              -0.118055559694767,
+              0.09079861314967275
+            ],
+            "target_intervention_ratio_delta_95": [
+              -0.05420138702417417,
+              -0.14722222671844065,
+              0.06065972361247984
+            ],
+            "target_return_delta_95": [
+              0.48723643521467846,
+              -0.4023738205432892,
+              1.1188304275274277
+            ],
+            "target_safe_improvement_score_delta_95": [
+              0.07287256446667016,
+              -0.19004984865896402,
+              0.20493152766022837
+            ],
+            "target_success_delta_95": [
+              0.020833333333333332,
+              -0.0625,
+              0.0625
+            ]
+          },
+          "old_eval": {
+            "D0": {
+              "episodes": 48,
+              "fall_rate": 0.020833333333333332,
+              "intervention_per_riser": 0.6145833522702256,
+              "mean_return": 8.26108744321391,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.9375
+            },
+            "DQH": {
+              "episodes": 48,
+              "fall_rate": 0.125,
+              "intervention_per_riser": 0.6708333423982064,
+              "mean_return": 8.591449936230978,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.875
+            },
+            "DQNH": {
+              "episodes": 48,
+              "fall_rate": 0.125,
+              "intervention_per_riser": 0.9822668652050197,
+              "mean_return": 7.9925548285245895,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.875
+            }
+          },
+          "old_total_kl_from_base": 0.0016953295562416315,
+          "rejection_reasons": [
+            "target metrics show no strict improvement",
+            "target task metrics show no strict improvement",
+            "D0 retention bound violated"
+          ],
+          "round": 2,
+          "selected_fraction": 1.5,
+          "total_kl_from_base": 0.0021004797890782356
+        },
+        {
+          "accepted": false,
+          "anchor_weight_after_adaptation": {
+            "d0": 0.02,
+            "neighbor": 0.01
+          },
+          "candidate_eval": {
+            "D0": {
+              "episodes": 48,
+              "fall_rate": 0.041666666666666664,
+              "intervention_per_riser": 0.6701389032726487,
+              "mean_return": 8.763887417813143,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.875
+            },
+            "DQH": {
+              "episodes": 48,
+              "fall_rate": 0.10416666666666667,
+              "intervention_per_riser": 0.7352430643513799,
+              "mean_return": 8.929080630342165,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.8958333333333334
+            },
+            "DQNH": {
+              "episodes": 48,
+              "fall_rate": 0.08333333333333333,
+              "intervention_per_riser": 0.8321759360842407,
+              "mean_return": 8.860237886508306,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.9166666666666666
+            }
+          },
+          "candidate_variants": [
+            {
+              "fraction": 0.25,
+              "precheck_reasons": [],
+              "screen": {
+                "episodes": 64,
+                "fall_rate": 0.0625,
+                "intervention_per_riser": 0.5491071564611048,
+                "mean_return": 9.158504109829664,
+                "seeds": [
+                  3042
+                ],
+                "success_rate": 0.9375
+              },
+              "screen_score_delta": 0.10492667147656909
+            },
+            {
+              "fraction": 0.5,
+              "precheck_reasons": [],
+              "screen": {
+                "episodes": 64,
+                "fall_rate": 0.109375,
+                "intervention_per_riser": 1.2727864666376263,
+                "mean_return": 8.234295964241028,
+                "seeds": [
+                  3042
+                ],
+                "success_rate": 0.875
+              },
+              "screen_score_delta": -0.10603406786220138
+            },
+            {
+              "fraction": 1.0,
+              "precheck_reasons": [],
+              "screen": {
+                "episodes": 64,
+                "fall_rate": 0.078125,
+                "intervention_per_riser": 5.38910591066815,
+                "mean_return": -10.89650409296155,
+                "seeds": [
+                  3042
+                ],
+                "success_rate": 0.90625
+              },
+              "screen_score_delta": -0.6008534206007607
+            },
+            {
+              "fraction": 1.5,
+              "precheck_reasons": [],
+              "screen": {
+                "episodes": 64,
+                "fall_rate": 0.078125,
+                "intervention_per_riser": 0.57797620666679,
+                "mean_return": 9.051876414567232,
+                "seeds": [
+                  3042
+                ],
+                "success_rate": 0.921875
+              },
+              "screen_score_delta": 0.054088679925771266
+            }
+          ],
+          "fixed_bank_kl": {
+            "d0": 9.296064575513204e-06,
+            "neighbor": 9.26150878270467e-06
+          },
+          "gate_intervals": {
+            "neighbor_fall_tolerance_delta_95": [
+              0.02166666666666667,
+              -0.0825,
+              0.1675
+            ],
+            "neighbor_success_tolerance_delta_95": [
+              -0.02166666666666665,
+              -0.16749999999999998,
+              0.08250000000000002
+            ],
+            "retention_fall_tolerance_delta_95": [
+              0.021666666666666664,
+              -0.02,
+              0.0425
+            ],
+            "retention_success_tolerance_delta_95": [
+              -0.10499999999999998,
+              -0.2925,
+              0.020000000000000018
+            ],
+            "target_fall_delta_95": [
+              -0.041666666666666664,
+              -0.25,
+              0.125
+            ],
+            "target_intervention_delta_95": [
+              -0.09153439772004883,
+              -0.32755458587780595,
+              0.2239583428017795
+            ],
+            "target_intervention_ratio_delta_95": [
+              -0.13287327082362024,
+              -0.38121530157513916,
+              0.19548612015787514
+            ],
+            "target_return_delta_95": [
+              0.7691016644239426,
+              -1.6734042465686798,
+              4.016292989253998
+            ],
+            "target_safe_improvement_score_delta_95": [
+              0.14493355356467255,
+              -0.41969120168127133,
+              0.8466783894691615
+            ],
+            "target_success_delta_95": [
+              0.041666666666666664,
+              -0.125,
+              0.25
+            ]
+          },
+          "old_eval": {
+            "D0": {
+              "episodes": 48,
+              "fall_rate": 0.0,
+              "intervention_per_riser": 0.6527777990947167,
+              "mean_return": 8.93335708975792,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 1.0
+            },
+            "DQH": {
+              "episodes": 48,
+              "fall_rate": 0.14583333333333334,
+              "intervention_per_riser": 0.8267774620714287,
+              "mean_return": 8.159978965918222,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.8541666666666666
+            },
+            "DQNH": {
+              "episodes": 48,
+              "fall_rate": 0.041666666666666664,
+              "intervention_per_riser": 0.7222222347433368,
+              "mean_return": 9.349328393737474,
+              "seeds": [
+                42,
+                43,
+                44
+              ],
+              "success_rate": 0.9583333333333334
+            }
+          },
+          "old_total_kl_from_base": 0.0016862018965184689,
+          "rejection_reasons": [
+            "target metrics show no strict improvement",
+            "target task metrics show no strict improvement",
+            "D0 retention bound violated"
+          ],
+          "round": 3,
+          "selected_fraction": 0.25,
+          "total_kl_from_base": 0.0017114015063270926
+        }
+      ],
+      "seed": 42,
+      "summary_file": "/home/carla/LZQW/SAFE100/humanoid/artifacts/retention_v13/arm_b_state_retention/online_refinement_summary.json",
+      "summary_sha256": "f8d9aec5a1401fdd5c6efba6a4c80ab3107437cb1dbc63e1015c35212c8120d2"
+    }
+  },
+  "banks": {
+    "D0": {
+      "actor_observation_dim": 405,
+      "actor_observation_key": "actor",
+      "bank_file": "/home/carla/LZQW/SAFE100/humanoid/artifacts/retention_v13/banks/D0_actor_observations.pt",
+      "bank_file_sha256": "51a4012c4a61d25da158ab8b9b448d84f761e5f8f564d72236a1653c8144bfd0",
+      "bank_size": 24000,
+      "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/online_framework_v2/online_dqh_offgate_round5_v7c/accepted_final.pt",
+      "checkpoint_sha256": "cc27f228809a4a5b9862119eded31e81588c95ad066168b77a77232d035620a5",
+      "collection_environment_transitions": 55584,
+      "collection_steps": 3474,
+      "contains_privileged_observations": false,
+      "created_utc": "2026-08-04T03:12:15.920986+00:00",
+      "domain": "D0",
+      "kind": "actor_observation_retention_bank",
+      "num_stages": 6,
+      "observation_sha256": "49685396180c50dfdbb17094a5badd70af437c253dc1e7fbc692e9e7754bb8a3",
+      "ordering": "stage_round_robin_v1",
+      "policy_mode": "deterministic_mean",
+      "runtime_filter": true,
+      "schema_version": 1,
+      "seed": 17001,
+      "size": 24000,
+      "stage_counts": [
+        4000,
+        4000,
+        4000,
+        4000,
+        4000,
+        4000
+      ],
+      "task": "Unitree-G1-Stairs-Online-D0"
+    },
+    "DQNH": {
+      "actor_observation_dim": 405,
+      "actor_observation_key": "actor",
+      "bank_file": "/home/carla/LZQW/SAFE100/humanoid/artifacts/retention_v13/banks/DQNH_actor_observations.pt",
+      "bank_file_sha256": "90c7115eed7ca2197773842c4cb6d466ff4972b25b19d35d35764edc0cb0e8d5",
+      "bank_size": 24000,
+      "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/online_framework_v2/online_dqh_offgate_round5_v7c/accepted_final.pt",
+      "checkpoint_sha256": "cc27f228809a4a5b9862119eded31e81588c95ad066168b77a77232d035620a5",
+      "collection_environment_transitions": 38064,
+      "collection_steps": 2379,
+      "contains_privileged_observations": false,
+      "created_utc": "2026-08-04T03:13:56.003868+00:00",
+      "domain": "DQNH",
+      "kind": "actor_observation_retention_bank",
+      "num_stages": 9,
+      "observation_sha256": "6acf2b7c6ea34dffae6b698e7cd371705dfb8ddd54410f1897c1a08ad8cb2f0b",
+      "ordering": "stage_round_robin_v1",
+      "policy_mode": "deterministic_mean",
+      "runtime_filter": true,
+      "schema_version": 1,
+      "seed": 18001,
+      "size": 24000,
+      "stage_counts": [
+        2667,
+        2667,
+        2667,
+        2667,
+        2667,
+        2667,
+        2666,
+        2666,
+        2666
+      ],
+      "task": "Unitree-G1-Stairs-Online-DQNH"
+    }
+  },
+  "final_audits": {
+    "A_v12_global_anchor": {
+      "accepted": false,
+      "candidate_checkpoint_sha256": "802ee8bdf27f8454d89af9fae41e7b0aecae8eeaf1820f612fcbe20271532671",
+      "candidate_eval": {
+        "D0": {
+          "episodes": 512,
+          "fall_rate": 0.015625,
+          "intervention_per_riser": 0.6735677244432736,
+          "mean_return": 8.5919973506534,
+          "seeds": [
+            23000,
+            23001,
+            23002,
+            23003,
+            23004,
+            23005,
+            23006,
+            23007
+          ],
+          "success_rate": 0.896484375
+        },
+        "DQH": {
+          "episodes": 512,
+          "fall_rate": 0.103515625,
+          "intervention_per_riser": 0.7109289857471595,
+          "mean_return": 8.752328005153686,
+          "seeds": [
+            23000,
+            23001,
+            23002,
+            23003,
+            23004,
+            23005,
+            23006,
+            23007
+          ],
+          "success_rate": 0.896484375
+        },
+        "DQNH": {
+          "episodes": 512,
+          "fall_rate": 0.138671875,
+          "intervention_per_riser": 0.8330008524790173,
+          "mean_return": 8.026841575745493,
+          "seeds": [
+            23000,
+            23001,
+            23002,
+            23003,
+            23004,
+            23005,
+            23006,
+            23007
+          ],
+          "success_rate": 0.861328125
+        }
+      },
+      "decision": "rollback",
+      "episodes_per_domain_per_policy": 512,
+      "file": "/home/carla/LZQW/SAFE100/humanoid/artifacts/retention_v13/final_audits/arm_a_round_003_512.json",
+      "file_sha256": "e54b3d7aa8215fdd6d01ea595d24b0be4e2b7c3e290f57971ac18f329e559d25",
+      "gate_intervals": {
+        "neighbor_fall_tolerance_delta_95": [
+          -0.018046874999999993,
+          -0.04148437499999999,
+          0.009296875000000005
+        ],
+        "neighbor_success_tolerance_delta_95": [
+          0.018046875000000018,
+          -0.009296874999999982,
+          0.04148437500000002
+        ],
+        "retention_fall_tolerance_delta_95": [
+          -0.029765625000000004,
+          -0.037578125000000004,
+          -0.023906250000000004
+        ],
+        "retention_success_tolerance_delta_95": [
+          0.004375000000000018,
+          -0.04445312499999998,
+          0.05906250000000002
+        ],
+        "target_fall_delta_95": [
+          -0.017578125,
+          -0.041015625,
+          0.0078125
+        ],
+        "target_intervention_delta_95": [
+          -0.08614908994059078,
+          -0.19092213503608946,
+          0.0014742376861249667
+        ],
+        "target_intervention_ratio_delta_95": [
+          -0.12600299372497833,
+          -0.2359243634906307,
+          -0.03424161674525758
+        ],
+        "target_return_delta_95": [
+          0.33977037156000733,
+          -0.05585264485562216,
+          0.7482272563502192
+        ],
+        "target_safe_improvement_score_delta_95": [
+          0.06581068140774732,
+          -0.02044629200840064,
+          0.14197874463148757
+        ],
+        "target_success_delta_95": [
+          0.01953125,
+          -0.0078125,
+          0.04296875
+        ]
+      },
+      "old_checkpoint_sha256": "cc27f228809a4a5b9862119eded31e81588c95ad066168b77a77232d035620a5",
+      "old_eval": {
+        "D0": {
+          "episodes": 512,
+          "fall_rate": 0.025390625,
+          "intervention_per_riser": 0.6283203287457582,
+          "mean_return": 8.27794347674353,
+          "seeds": [
+            23000,
+            23001,
+            23002,
+            23003,
+            23004,
+            23005,
+            23006,
+            23007
+          ],
+          "success_rate": 0.912109375
+        },
+        "DQH": {
+          "episodes": 512,
+          "fall_rate": 0.12109375,
+          "intervention_per_riser": 0.7970780756877502,
+          "mean_return": 8.412557633593678,
+          "seeds": [
+            23000,
+            23001,
+            23002,
+            23003,
+            23004,
+            23005,
+            23006,
+            23007
+          ],
+          "success_rate": 0.876953125
+        },
+        "DQNH": {
+          "episodes": 512,
+          "fall_rate": 0.13671875,
+          "intervention_per_riser": 0.8361320472322404,
+          "mean_return": 8.105730255600065,
+          "seeds": [
+            23000,
+            23001,
+            23002,
+            23003,
+            23004,
+            23005,
+            23006,
+            23007
+          ],
+          "success_rate": 0.86328125
+        }
+      },
+      "rejection_reasons": [
+        "target metrics show no strict improvement",
+        "target task metrics show no strict improvement",
+        "D0 retention bound violated"
+      ],
+      "round": 3,
+      "seed": 23000
+    },
+    "B_state_conditioned_retention": {
+      "accepted": false,
+      "candidate_checkpoint_sha256": "dee4bd7d79c2bc1707b624926fd725d918e44c0f9ca60e37e8bed36c13c286e1",
+      "candidate_eval": {
+        "D0": {
+          "episodes": 512,
+          "fall_rate": 0.015625,
+          "intervention_per_riser": 0.6246744929230772,
+          "mean_return": 8.62546750191541,
+          "seeds": [
+            23000,
+            23001,
+            23002,
+            23003,
+            23004,
+            23005,
+            23006,
+            23007
+          ],
+          "success_rate": 0.921875
+        },
+        "DQH": {
+          "episodes": 512,
+          "fall_rate": 0.119140625,
+          "intervention_per_riser": 0.7413496836670674,
+          "mean_return": 8.556740750558674,
+          "seeds": [
+            23000,
+            23001,
+            23002,
+            23003,
+            23004,
+            23005,
+            23006,
+            23007
+          ],
+          "success_rate": 0.880859375
+        },
+        "DQNH": {
+          "episodes": 512,
+          "fall_rate": 0.109375,
+          "intervention_per_riser": 0.7778808696602937,
+          "mean_return": 8.555330199655145,
+          "seeds": [
+            23000,
+            23001,
+            23002,
+            23003,
+            23004,
+            23005,
+            23006,
+            23007
+          ],
+          "success_rate": 0.890625
+        }
+      },
+      "decision": "rollback",
+      "episodes_per_domain_per_policy": 512,
+      "file": "/home/carla/LZQW/SAFE100/humanoid/artifacts/retention_v13/final_audits/arm_b_round_003_512.json",
+      "file_sha256": "f87fb217dd09d28ca94b07cb7baf51a244c7684715a36561694052c780c142ff",
+      "gate_intervals": {
+        "neighbor_fall_tolerance_delta_95": [
+          -0.04734374999999999,
+          -0.08445312499999999,
+          -0.004374999999999995
+        ],
+        "neighbor_success_tolerance_delta_95": [
+          0.04734375000000002,
+          0.004375000000000018,
+          0.08445312500000002
+        ],
+        "retention_fall_tolerance_delta_95": [
+          -0.029765625000000004,
+          -0.049296875000000004,
+          -0.010234375000000004
+        ],
+        "retention_success_tolerance_delta_95": [
+          0.029765625000000018,
+          -0.015156249999999982,
+          0.07468750000000002
+        ],
+        "target_fall_delta_95": [
+          -0.001953125,
+          -0.037109375,
+          0.033203125
+        ],
+        "target_intervention_delta_95": [
+          -0.055728392020682804,
+          -0.20748509911136354,
+          0.06559787289006636
+        ],
+        "target_intervention_ratio_delta_95": [
+          -0.09558229580507036,
+          -0.25164925206792765,
+          0.02849213660743766
+        ],
+        "target_return_delta_95": [
+          0.14418311696499586,
+          -0.3277491359040141,
+          0.6124776931712401
+        ],
+        "target_safe_improvement_score_delta_95": [
+          0.013457382330525375,
+          -0.10275717143944356,
+          0.13042904932448066
+        ],
+        "target_success_delta_95": [
+          0.00390625,
+          -0.02734375,
+          0.037109375
+        ]
+      },
+      "old_checkpoint_sha256": "cc27f228809a4a5b9862119eded31e81588c95ad066168b77a77232d035620a5",
+      "old_eval": {
+        "D0": {
+          "episodes": 512,
+          "fall_rate": 0.025390625,
+          "intervention_per_riser": 0.6283203287457582,
+          "mean_return": 8.27794347674353,
+          "seeds": [
+            23000,
+            23001,
+            23002,
+            23003,
+            23004,
+            23005,
+            23006,
+            23007
+          ],
+          "success_rate": 0.912109375
+        },
+        "DQH": {
+          "episodes": 512,
+          "fall_rate": 0.12109375,
+          "intervention_per_riser": 0.7970780756877502,
+          "mean_return": 8.412557633593678,
+          "seeds": [
+            23000,
+            23001,
+            23002,
+            23003,
+            23004,
+            23005,
+            23006,
+            23007
+          ],
+          "success_rate": 0.876953125
+        },
+        "DQNH": {
+          "episodes": 512,
+          "fall_rate": 0.13671875,
+          "intervention_per_riser": 0.8361320472322404,
+          "mean_return": 8.105730255600065,
+          "seeds": [
+            23000,
+            23001,
+            23002,
+            23003,
+            23004,
+            23005,
+            23006,
+            23007
+          ],
+          "success_rate": 0.86328125
+        }
+      },
+      "rejection_reasons": [
+        "target metrics show no strict improvement",
+        "target task metrics show no strict improvement",
+        "D0 retention bound violated"
+      ],
+      "round": 3,
+      "seed": 23000
+    }
+  },
+  "hidden_context_scale_3x5": {
+    "state_retention_gate_passed": false,
+    "status": "not_run_state_retention_gate_failed"
+  },
+  "overall_decision": "rollback",
+  "policy_gradient_scope": "target-domain on-policy rollouts only",
+  "runtime_cbf_removed": false,
+  "schema_version": 1,
+  "scope": "simulation evidence for safe adaptation to an unknown fixed combined deployment shift; not exhaustive sim-to-real validation"
+}

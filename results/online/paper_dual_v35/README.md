@@ -1,0 +1,659 @@
+# v35 Paper-Aligned Dual CBF-RL Pilot
+
+## 最新实验：v80 pooled-anchor 诊断
+
+v80 从 v79 best 用 `5e-5` continuation；同一 base actor 两次 off rollout 分别为
+63.82% 和 72.49%，暴露 8.67 pp 单轮噪声。合并后 base 为 264/388（68.04%），
+最终 proposal 138/202（68.32%）只持平 +0.28 pp，且未过 75%。事务门槛现已修复
+为累计相同 actor 的 episode 证据；下一步用 256 environments 降低训练选择噪声。
+完整证据见 [`mixed_cont_v80/`](mixed_cont_v80/README.md)。
+
+## 最新实验：v79 mixed unit-balanced Eq. (27)
+
+v79 用 v72 相同 base、seed、25/75 execution 和 `1e-4` full-batch SGD，只替换为
+Eq. (27) foot-task 单位平衡 reward package。aligned filter-off 从本次 61.11%
+振荡后达到 **72.02%（+10.91 pp）**，但仍未过 75%，不追加部署 gate。跨进程
+base 与 v72 相差 6.75 pp，绝对值不可直接作严格 reward 归因；运行内提升仍表明
+balanced reward 更适合 mixed deployment distribution。完整证据见
+[`mixed_unit_balanced_v79/`](mixed_unit_balanced_v79/README.md)。
+
+## 最新实验：v78 Eq. (27) reward 单位平衡
+
+v78 将 margin weight 调到实测单位桥接值 0.1，使 manager-scaled margin 与
+proximity 各约 `-0.0014` 和 `-0.0016/step`，CBF penalty 从 nominal 的
+73%–82% 降到 14%–16%。事务训练在回滚首个候选后由 68.40% 提高到 70.29%，
+仍未过 75% filter-on gate。下一步用 v72 相同 base/seed/25-75 execution 做只改变
+reward 的 controlled comparison。完整证据见
+[`unit_balanced_v78/`](unit_balanced_v78/README.md)。
+
+## 最新实验：v76–v77 Eq. (27) reward 分解
+
+v76 改用 Eq. (27) reduced-order swing-foot proximity 与 next-riser clearance，
+aligned filter-on 从 70.18% 逐轮到 73.96%；但同 seed v77 只复现 70.79%，下一
+proposal 降到 68.82% 并回滚，故没有部署 gate。按 MJLab RewardManager 的
+`step_dt=0.02` 修正后，nominal reward 为 `+0.0203`–`+0.0216/step`，margin
+contribution 为 `-0.0154`–`-0.0136`，proximity 约 `-0.0016`；margin 占 CBF
+penalty 约 90%。完整证据与对先前未乘 `dt` 推断的更正见
+[`sloped_exact_v76_v77/`](sloped_exact_v76_v77/README.md)。
+
+## 最新实验：v75 论文式 100% safety-filtered PPO
+
+v75 恢复全环境执行 filtered action、PPO 保存 nominal action 的论文数据流，两项
+路由审计误差均为 0，CBF 介入比例提高到约 10%。但两个 aligned proposal 分别从
+71.06% 降到 70.48% 和 66.79%，均被完整回滚；filter-on 未过 75%，因此不追加
+filter-off gate。下一步核对 Eq. (22)–(23) reward 数值分解，而不再调整过滤比例。
+完整证据见 [`full_filter_v75/`](full_filter_v75/README.md)。
+
+## 最新实验：v74 同 seed 超小步长 continuation
+
+v74 用同一 seed 检查 v73 最后的 unaligned proposal：其 filter-off 为 64.10%，
+与原起点 64.43% 基本一致；新的 `1.25e-5` proposal 又降到 61.73% 并被回滚。
+moving forward KL 已只有 `1.9e-7`–`6.3e-7`，说明继续缩小同方向更新没有价值。
+因此不追加评估，下一步恢复论文的 100% 训练期 safety-filtered 分布。完整证据见
+[`matched_continuation_v74/`](matched_continuation_v74/README.md)。
+
+## 最新实验：v73 自适应小步长与事务回滚
+
+v73 从 v72 最佳 aligned checkpoint 继续，用下一轮 filter-off rollout 接受或
+回滚 full-batch proposal。首个 `5e-5` 候选从 64.43% 降到 61.86% 后，actor、
+critic 和 optimizer 均成功恢复；LR 降到 `2.5e-5` 后，后续对齐结果达到
+68.21% 和 **69.54%**，最后一轮 filter-on 为 76.19%。moving forward KL 全部
+控制在 `1e-5` 以下，但 off 仍未过 75%，且同一 base actor 在两次 rollout 间有
+3.77 pp 波动。因此未追加独立评估，当前最佳不变。完整证据见
+[`transactional_v73/`](transactional_v73/README.md)。
+
+## 最新实验：v72 单步 full-batch SGD
+
+v72 保持 v71 的 25% filter-on / 75% filter-off 论文式 CBF-dual PPO 数据流，
+把每轮 8 个 Adam minibatch actor step 改为一次保方向的 full-batch SGD step。
+moving forward KL 稳定在 `2.63e-5`–`4.25e-5`；严格对齐的 round-2 checkpoint
+将本次 filter-off 从 67.86% 提高到 **71.58%（+3.72 pp）**，但仍未达到 75%
+门槛，下一 checkpoint 又降到 60.91%。因此没有追加验证或上传 rejected checkpoint，
+当前正式最佳不变。完整证据见
+[`full_batch_sgd_v72/`](full_batch_sgd_v72/README.md)。
+
+## 最新实验：v71 25/75 deployment-weighted CBF-dual PPO
+
+v71 关闭 supervised teacher，只保留论文式 CBF-dual PPO，并把执行分布调整为
+25% filter-on、75% filter-off。配置路由准确，但所有更新后的 off 都低于本次
+base 66.33%，最佳仅 64.50%；round 3 更分裂为 on **78.79%**、off **62.50%**。
+四轮 actor 梯度仍全部裁剪，pre-clip 最大值达到 11.16–14.40。因此没有追加评估
+或上传 checkpoint，下一步转向单次 full-batch 保方向更新。完整证据见
+[`deployment_weighted_ppo_v71/`](deployment_weighted_ppo_v71/README.md)。
+
+## 最新实验：v70 投影后 CBF teacher 梯度范数平衡
+
+v70 在任务优先投影后把 teacher 梯度稳定到 deployment 梯度的 0.5，实测达到
+0.488–0.500，平均放大 2.57–3.30 倍。尽管 teacher target distance 下降更快，
+所有更新后的 filter-off 均低于本次 base 71.76%，最佳仅 **68.99%**。因此没有
+追加评估或上传 checkpoint，并停止继续放大 supervised CBF teacher。完整证据见
+[`norm_balanced_surgery_v70/`](norm_balanced_surgery_v70/README.md)。
+
+## 最新实验：v69 任务优先 CBF teacher 梯度投影
+
+v69 显式分开 filter-off PPO+KL 与 filter-on CBF teacher 的全参数梯度，并只在
+点积为负时投影 teacher。实测每轮 25%–62.5% minibatch 存在冲突，但 teacher
+梯度仍保留 98.3%–100%，说明相反方向分量不是主要瓶颈；deployment 梯度约为
+teacher 的 5 倍且仍全量触发裁剪。最佳对齐 off/on 为 **72.44%/72.39%**，未过
+75% 门槛，因此没有追加评估或上传 checkpoint。完整证据见
+[`task_priority_surgery_v69/`](task_priority_surgery_v69/README.md)。
+
+## 最新实验：v68 混合过滤分流 actor 目标
+
+v68 将 filter-off transition 只用于 PPO actor，将 filter-on 环境的 CBF 介入只
+用于 deterministic-mean teacher，critic 和 moving KL 仍共享全部数据。路由审计
+符合配置，但最佳对齐 checkpoint 的 off/on 仅为 **69.70%/69.57%**，未过 75%
+门槛且低于 v67 的 72.22%；四轮 actor gradient 仍全部触发裁剪。因此未追加独立
+评估或上传 checkpoint，当前最佳不变。完整证据见
+[`split_objective_v68/`](split_objective_v68/README.md)。
+
+## 最新实验：v67 混合过滤分组优势 PPO
+
+v67 将 128 个环境等分为 filter-on/off 两组，并分别归一化 PPO advantage。最佳
+对齐 round-2 checkpoint 的 off/on 为 **72.22%/71.83%**，比本次 base off
+69.70% 有改善，但未过 75% 门槛；下一轮又分裂为 off 60.94%、on 77.86%。
+因此没有追加独立评估，当前最佳不变。该结果证明尺度平衡有效执行，但 filtered
+与 deployment 梯度方向仍需显式分流。完整证据见
+[`mixed_balanced_ppo_v67/`](mixed_balanced_ppo_v67/README.md)。
+
+## 最新实验：v66 成功状态保护蒸馏
+
+v66 在 v65 的纯安全蒸馏中加入成功 episode local KL（`beta=4`），使用 256 环境
+完成 4×1024 steps，4080 训练耗时 119.21 秒。base filtered rollout 为 65.27%；
+严格对齐后的 round 1–3 checkpoint 分别为 **62.90%、62.79%、61.28%**，全部
+更差。虽然安全 teacher 距离每轮略降，但任务能力没有被保护，因此在训练门槛拒绝，
+没有追加 filter-off 或多 seed 校验，当前最佳模型不变。完整配置与逐轮证据见
+[`success_preserved_distill_v66/`](success_preserved_distill_v66/README.md)。
+
+## 最新实验：v65 介入局部安全蒸馏
+
+v65 隔离了 actor 的 PPO 梯度，只在 deterministic mean 的 CBF 介入状态做
+低学习率 residual 蒸馏。`round_01.pt` 在下一轮新 DR 的 filtered rollout 从
+66.42% 提高到 **71.11%**，但单次 128-episode deterministic filter-off gate
+只有 **76/128（59.38%）**，未通过 75% 门槛。完整训练、checkpoint、逐 episode
+结果及同时到顶/跌倒标签修复见
+[`intervention_local_distill_v65/`](intervention_local_distill_v65/README.md)。
+
+## 最新实验：v63--v64 全过滤 Eq. (27) continuation
+
+从 v60 目标高度 checkpoint 出发，v63 用论文水平 CBF、v64 用高台阶适配的
+斜坡 CBF；两者都使用 256 环境、每轮 DR 刷新和训练期 100% 过滤。v63 最佳
+filtered 为 54.99%；v64 起点为 66.79%，但所有更新后的对齐 rollout 均低于
+起点，最佳只有 65.18%。因此两者均在训练门槛拒绝，没有追加 filter-off 评估。
+完整证据见 [`paper_filter_reward_v63_v64/`](paper_filter_reward_v63_v64/README.md)。
+
+## 最新实验：v62 每轮物理域随机化刷新
+
+v62 在单调 18.4 cm 目标高度课程中，每轮刷新 friction、base COM 和 encoder
+bias；6 轮产生 6 个不同物理状态哈希、共 768 个环境级抽样。最终纯无过滤训练
+rollout 为 **176/264（66.67%）**，未达到 75% 门槛，也略低于 v60 的
+175/260（67.31%），因此未做额外独立评估。完整配置、逐轮指标和对齐 checkpoint
+见 [`dr_refresh_v62/`](dr_refresh_v62/README.md)。
+
+## 当前最佳结果：A2×4 → A1×4
+
+第一阶段 ablation 后冻结 `raw_moderate` reward，并将前四轮 A2 residual
+teacher 与后四轮 A1 full-action teacher 串联。三个 context 分别从同一 base
+checkpoint 独立训练；每个 context 只做一次独立种子的 64-episode on/off pilot。
+
+| Context | Stair profile | Filter on | Filter off | Off - on |
+|---|---|---:|---:|---:|
+| F1 | uniform 18.0 cm, 9 risers | **78.12% (50/64)** | **76.56% (49/64)** | -1.56 pp |
+| F2 | uniform 18.4 cm, 9 risers | 70.31% (45/64) | 68.75% (44/64) | -1.56 pp |
+| F3 | nonuniform 17.6–18.4 cm, 11 risers | 65.62% (42/64) | 59.38% (38/64) | -6.25 pp |
+| Macro / micro mean | 3 contexts, 192 episodes/condition | **71.35% (137/192)** | **68.23% (131/192)** | **-3.12 pp** |
+
+该 staged actor 在 F1 同时超过第一阶段最高 on 和最高 off，并把三 context
+平均 on/off gap 收窄到 3.12 pp，说明训练时过滤得到的行为已经较强地内化到
+filter-free actor 中。它是当前 v35 best result，但仍不是最终论文级复现：F2/F3
+绝对成功率未达到 75%，每个条件只有一个 64-episode pilot，而且 A1 阶段最终
+moving KL 为 0.67–0.71，表明 full-action teacher 更新过强。
+
+后续已经分别测试 soft-A1 与 stair-height curriculum。前者降低 KL 但降低任务
+成功率；后者把 F2 filter-on 提高到 81.25%，但没有同步改善 filter-off。因此
+staged actor 仍是当前综合结果，下一步是把 curriculum 的 A2 阶段接到固定目标
+高度的 A1 consolidation，而不是增加相同配置的重复评估。
+
+### Soft-A1 follow-up（已拒绝）
+
+按实测梯度比例把 A1 teacher weight 从 `0.1` 降到 `0.0075` 后，F2 第 5
+轮 KL 从原方法的 `0.2214` 降至 `0.00497`，最终 KL 从 `0.7107` 降至
+`0.00606`。但同一训练/评估 seed 下，filter-on/off 只有
+62.50%/64.06%，低于 current best 的 70.31%/68.75%。该方向按预设 gate
+停止，没有运行 F3；详见 [`soft_a1_f2_summary.json`](soft_a1_f2_summary.json)。
+这说明单纯抑制策略移动能修复优化诊断，却不能提升困难台阶的任务能力，下一步
+转向 stair-height curriculum；该后续实验结果见下一节。
+
+### Stair-height curriculum follow-up（仅改善 filter-on）
+
+F2 使用 13.0 cm 到 18.4 cm 的五级高度课程，训练期间仍执行 CBF-filtered
+action，teacher schedule 保持 A2×4 → A1×4。最终在固定 18.4 cm F2、同一独立
+评估 seed 的 64 episodes 上得到：
+
+| F2 run | Filter on | Filter off | Off - on | Training time |
+|---|---:|---:|---:|---:|
+| fixed-height staged（当前综合最佳） | 70.31% (45/64) | **68.75% (44/64)** | -1.56 pp | 231.0 s |
+| five-level height curriculum | **81.25% (52/64)** | 67.19% (43/64) | -14.06 pp | 233.8 s |
+
+课程训练将 filter-on 提高 10.94 pp，并使其超过 75% gate；但 filter-off 降低
+1.56 pp，on/off gap 扩大到 14.06 pp，所以没有把它选为最终 actor。结果表明
+课程提高了安全过滤器辅助下的目标高度通过能力，但高台阶上的 CBF correction
+还没有充分内化。下一次算法实验将使用 curriculum A2 warm-up，随后只在固定
+18.4 cm 目标高度做 A1 consolidation。精确 provenance 与逐轮诊断见
+[`height_curriculum_f2_summary.json`](height_curriculum_f2_summary.json)。
+
+### Fixed-target continuation follow-up（前一阶段的 F2 Pareto 最优）
+
+课程训练第 4 轮 A2 checkpoint 被精确 SHA-256 锁定后，用作三个固定 18.4 cm
+F2 continuation 的共同起点。每个 candidate 只运行一次训练和一次预设 gate；
+明显失败时早停。
+
+| Continuation from curriculum round 4 | Filter on | Filter off | Final KL | Decision |
+|---|---:|---:|---:|---|
+| A1 Gaussian-NLL ×4 | **81.25% (52/64)** | **68.75% (44/64)** | 0.6518 | 当时的 F2 Pareto best，仍未达 off≥75% |
+| sampled-action A2 η=1 ×4 | 79.69% (51/64) | 51.56% (33/64) | 0.00056 | rejected |
+| deterministic-mean CBF A2 η=1 ×4 | 65.62% (42/64) | not run | 0.00067 | on gate 早停 |
+
+A1 continuation 保持课程模型的 81.25% filter-on，同时将 filter-off 从 67.19%
+提高到 68.75%，因此成为当时 F2 的 Pareto 最优；它相对原 fixed-height staged
+F2 则是 on +10.94 pp、off 持平。结果仍不足以宣称达到论文级效果，因为
+filter-off 未达到 75%，paired gap 仍为 12.50 pp，而且 A1 更新的 KL/clip 仍过高。
+
+两个 A2 follow-up 证明“优化稳定”不等于“安全行为内化”：把 sampled correction
+扩大到 η=1 会显著降低 off；进一步对 frozen deterministic mean 做同状态 shadow
+CBF projection 后，训练数据流误差虽为 0，filter-on 仍明显退化，因此按门槛不再
+运行 off。代码保留该机制用于审计，但不选择其 actor。完整结果、模型哈希及逐轮
+诊断见 [`continuation_f2_summary.json`](continuation_f2_summary.json)。
+
+### Unshielded counterfactual + on-policy mean DAgger（当前 F2 off 最佳）
+
+为缩小训练时过滤与部署时无过滤的分布差异，后续 rollout 直接执行 nominal
+unshielded action；CBF 不再替换训练动作，而是在同一状态上投影 deterministic
+policy mean，作为反事实监督。所有候选仍只做一次预设训练 gate，只有通过 gate
+的 actor 才运行同一个 seed 的 64-episode paired on/off 评估。
+
+| Candidate | Filter on | Filter off | Off - on | Decision |
+|---|---:|---:|---:|---|
+| 50/50 curriculum–A1 model soup | 65.62% (42/64) | not run | — | on gate rejected |
+| unshielded A0，selected round 3 | 76.56% (49/64) | 70.31% (45/64) | -6.25 pp | next-stage base |
+| all-intervention mean-CBF DAgger，η=0.25 ×3 | **79.69% (51/64)** | **71.88% (46/64)** | -7.81 pp | **current F2 off best** |
+| failure-only mean-CBF teacher ×3 | 78.12% (50/64) | 70.31% (45/64) | -7.81 pp | rejected |
+
+当前最佳相对 fixed-target A1 将 filter-off 从 44/64 提高到 46/64（+3.12 pp），
+并把 gap 从 12.50 pp 缩到 7.81 pp；相对 unshielded A0，它的 on/off 分别提高
+3.12/1.56 pp。它仍不满足目标：filter-off 距 75% gate 还差 2 个成功 episode，
+且目前只有一个评估 seed，因此不宣称达到论文级复现。
+
+额外两轮、强 reward、2048-step double batch、较小 rollout noise，以及仅按失败
+episode 过滤 teacher label 均未改善训练 gate 或 paired 结果，已停止，避免消耗
+4080 做低价值重复验证。精确训练配置、逐轮指标、checkpoint/actor SHA-256 与这些
+负结果见 [`unshielded_f2_summary.json`](unshielded_f2_summary.json)。
+
+#### Failure-focused actor ablation（已拒绝）
+
+为直接保护成功轨迹，又尝试只让完整失败 episode 进入 PPO 与 mean-CBF teacher；
+成功 episode 只保留 round-reference KL，critic 仍使用全部 transition。两种损失
+归一化都从当前最佳 checkpoint 独立训练 3 轮：
+
+| PPO mask normalization | Round 1 | Round 2 | Round 3 | Decision |
+|---|---:|---:|---:|---|
+| failed-transition mean | 68.46% | 68.61% | 68.70% | rejected，全部 actor step gradient-clipped |
+| full-rollout mean | 66.67% | 65.89% | 64.71% | rejected，成功率持续下降 |
+
+第一种做法因失败 transition 只占约 20% 而将 PPO 梯度隐式放大约 5 倍；第二种
+修正尺度后虽降低了梯度范数，仍未恢复任务成功率。这说明问题不是简单的成功样本
+覆盖失败信号；该方向已按训练 gate 停止，未追加 paired 评估，当前最佳不变。
+
+#### Checkpoint alignment + success-local KL（已拒绝）
+
+最新审计确认训练过程的时序为：第 N 轮 rollout 在该轮更新之前完成，因此它评估
+的是第 N−1 轮 checkpoint。训练器现已显式记录 rollout actor SHA-256、checkpoint
+轮次及 `rollout_precedes_update`，后续不再用同编号的 pre-update rollout 为
+post-update checkpoint 排名。
+
+| Audit / candidate | Filter on | Filter off | Off - on | Decision |
+|---|---:|---:|---:|---|
+| 原 mean-CBF run 的 aligned round-2 checkpoint | 79.69% (51/64) | 59.38% (38/64) | -20.31 pp | rejected |
+| success-local KL β=2、LR=5e-6，selected round 1 | 68.75% (44/64) | 70.31% (45/64) | +1.56 pp | rejected |
+| success-local KL β=2、LR=1e-6 | not run | not run | — | rollout gate rejected |
+
+原 run 的第 3 轮 stochastic rollout 成功率为 73.68%，它实际对应 round-2
+checkpoint；该 checkpoint 的 deterministic filter-off 只有 38/64，说明训练
+rollout 不能单独用于筛选部署 actor。随后在当前最佳 checkpoint 上加入完整成功
+episode 的 local reference KL：LR=5e-6 时 aligned rollout 一度由 67.42% 升至
+77.60%，但选中的 round-1 actor 在 deterministic paired 评估中只有 44/64 on、
+45/64 off；LR=1e-6 时 aligned rollout 仅由 61.65% 升至 63.43%，因此未评估。
+
+本节两组新 paired 评估内部使用相同初始状态签名
+`8ea76a17dff5c8248231bbf34d984be2bb9506415c0830f3b6d8560d14fda1ee`；它与历史
+current-best 评估的 `3f8c032be07f7741ddf1da02b72cc65ba59e4bc8f61227d09dc99de9582fa40b`
+不同，所以只比较各自内部的 on/off，不宣称跨历史结果的逐 episode 配对。当前
+F2 off 最佳仍为 46/64，距离 75% gate 还差 2 个成功 episode。
+
+#### Stable reset + shielded/unshielded bridge（未改善 filter-off）
+
+评估器现在在 runner 构造及 checkpoint 加载后，紧邻最终 episode reset 重新设置
+底层环境 seed，避免模型初始化消耗全局 RNG 后改变测试 episode。新协议在相同
+seed `201350902` 下固定得到初始状态签名
+`bc4c4cd08aef0d22b69dbf985eaef78a226c402428c72b1ea431593dda42b22c`；所有后续
+candidate 都与该固定基线比较。
+
+| Stable-reset F2 run | Filter on | Filter off | Off - on | Decision |
+|---|---:|---:|---:|---|
+| 当前最佳 actor 的固定基线 | 75.00% (48/64) | **68.75% (44/64)** | -6.25 pp | future comparison baseline |
+| 成功 shielded episode 的 CBF 蒸馏，round 1 | **84.38% (54/64)** | 67.19% (43/64) | -17.19 pp | rejected |
+| 50/50 shielded/unshielded filter-dropout 蒸馏 | not run | not run | — | rollout gate rejected |
+
+第一项新方法只在完整 reached-top 的 shielded episode 上学习 deterministic-mean
+CBF correction，并关闭 PPO/entropy actor 梯度；它把 filter-on 提高 6 个 episode，
+但 filter-off 降低 1 个，说明更新仍依赖过滤后的状态分布。第二项因此让 32 个环境
+中的 16 个执行 CBF、16 个执行 nominal action，并在下一轮交换两组。运行时审计
+确认 filter fraction 精确为 0.5、executed-action routing 误差为 0；但 rollout 从
+43/66（65.15%）降至 39/67（58.21%），故不再做 paired 评估。固定-reset 协议下
+filter-off 距 75% gate 为 4 个 episode；历史未固定 reset 的最高记录仍是 46/64，
+两者不做逐 episode 混合比较。
+
+#### Matched filter-rescue off-state distillation（已拒绝）
+
+为避免 shielded 成功轨迹中混入本来就能无过滤成功的样本，v36 用独立训练 seed
+对相同初始状态分别执行 filter-on/off，只保留“on 成功、off 失败”的 episode；
+监督状态和 CBF correction 均取自对应的 unshielded 失败轨迹。受共享 GPU 显存
+限制，本次短 pilot 使用 32 个环境，识别到 5 个 filter-rescued episode、238 个
+CBF teacher transition，并用全数据 reference KL 约束一次 actor 更新。
+
+| Stable-reset F2 candidate | Training pair on/off | Teacher distance | Held-out filter off | Decision |
+|---|---:|---:|---:|---|
+| matched rescue v36 | 24/32 vs 25/32；5 rescued | 0.14530 → 0.14089 | 43/64（67.19%） | rejected |
+| 固定基线 | — | — | **44/64（68.75%）** | retained |
+
+候选在独立 seed `201350902`、固定初始状态签名
+`bc4c4cd08aef0d22b69dbf985eaef78a226c402428c72b1ea431593dda42b22c`
+上比基线少 1 个成功 episode，因此按部署 gate 停止，没有追加 filter-on 或多 seed
+验证。候选 actor SHA-256 为
+`ef07a91527c376d4d2baaa563a770725329d1ca4f3763487147eb346811d1f7e`；
+训练、配对样本与逐 episode 结果见
+[`rescue_distill_v36/`](rescue_distill_v36/)。
+
+#### Matched-rescue shielded distillation + trust region（独立 seed 未泛化）
+
+v36 的逐 episode 对比显示，它虽然救回 12 个基线失败 episode，却破坏了 13 个
+原成功 episode；平均 forward-KL `0.00455` 对当前 humanoid policy 仍然过大。
+v37 因此改用更贴近论文训练分布的 filter-on 成功 rescue 轨迹作为 teacher 状态，
+并在更新后用二分参数投影把数据集平均 KL 硬限制为 `2.5e-4`。32-env 短 pilot
+识别出 7 个 matched rescue episode 和 291 个 teacher transition；未投影更新的
+KL 为 `0.004827`，最终只保留 `22.75%` 参数位移，实际 KL 为 `0.00024986`。
+
+| Stable-reset F2 | Filter on | Filter off | Off - on | Decision |
+|---|---:|---:|---:|---|
+| 固定基线，adaptive seed `201350902` | 75.00% (48/64) | 68.75% (44/64) | -6.25 pp | retained |
+| matched-rescue shielded v37，同 seed | **81.25% (52/64)** | **75.00% (48/64)** | -6.25 pp | provisional gate passed |
+| 固定基线，untouched seed `201350912` | not run | 67.19% (43/64) | — | confirmation baseline |
+| matched-rescue shielded v37，同 untouched seed | not run | 67.19% (43/64) | — | rejected; no improvement |
+
+候选在已反复用于 gate 的 seed `201350902` 上相对基线的 filter-on/off 各净增
+4 个成功 episode，并首次达到 `filter-off >= 75%`。但在预先未使用的 seed
+`201350912` 上，候选与基线同为 43/64（67.19%），没有泛化提升，因此停止该 seed
+的 filter-on 并不选择该 actor。actor SHA-256 为
+`fdc872355f38a31f7c35d16e1ee5f151d156ae2907cf2f5cf8492f7d18891733`。
+完整训练摘要、比较摘要、adaptive paired on/off 与 untouched filter-off 逐 episode
+证据见
+[`rescue_shielded_v37/`](rescue_shielded_v37/)。
+
+#### Multi-seed rescue aggregation + off-success trust anchor（已拒绝）
+
+v38 将 3 个训练 seed、每个 32 个环境的 matched-rescue shielded 数据合并，得到
+23 个 rescue episode 和 860 个 teacher transition。KL 投影不再使用 teacher
+状态，而是在 30,797 个“原策略 filter-off 成功”状态上限制平均 forward-KL，
+希望直接保护既有成功行为。训练耗时 97.6 秒，最终 KL 为 `0.00024972`。
+
+在较难 gate seed `201350912` 上，固定基线 filter-off 为 43/64（67.19%），v38
+只有 38/64（59.38%），净少 5 个成功 episode，因此立即停止且不运行 filter-on。
+这说明问题不只是单 seed 标签过拟合；当前 supervised correction 的聚合方向本身
+不能可靠替代论文中由 on-policy return 决定的策略更新。完整证据见
+[`multi_seed_rescue_v38/`](multi_seed_rescue_v38/)。
+
+#### Paper-style filtered PPO + bounded dual reward continuation（已拒绝）
+
+v39 完全移除显式 teacher，只保留论文的训练时 CBF filtering、PPO 与 bounded
+negative-margin/action-distance reward；从固定基线以 `2e-6` actor LR 训练 4 轮。
+第 4 轮 pre-update rollout 达到 76.81%，按 checkpoint alignment 对应 round-3
+actor，训练耗时 115.2 秒。
+
+但该 round-3 actor 在 hard seed `201350912` 的 filter-off 只有 33/64
+（51.56%），比同 seed 基线 43/64 少 10 个成功 episode，因此不运行 filter-on。
+这直接表明训练 rollout 的提升依赖运行时 filter，未被 nominal actor 内化；仅延长
+相同 filtered PPO 方向不符合部署目标。完整证据见
+[`filtered_ppo_v39/`](filtered_ppo_v39/)。
+
+#### Last-layer-only rescue distillation（已拒绝）
+
+v40 复用 v38 的冻结多 seed 数据，不再进行 rollout，只更新 actor 最后一个线性层
+的 1,548 个参数。离线训练耗时 9.6 秒，off-success 状态上的 KL 为 `0.0002234`，
+低于预设上限且无需参数缩放。但 hard seed `201350912` 的 filter-off 仍只有
+36/64（56.25%），比基线少 7 个成功 episode。
+
+因此 v36–v38 的失败不是单纯由全网络表征漂移造成；CBF correction 的 supervised
+方向本身无法稳定提高 filter-free task return。该路线至此停止，证据见
+[`last_layer_rescue_v40/`](last_layer_rescue_v40/)。
+
+#### Filter-free elite self-imitation（单 gate seed 成功，独立 seed 未通过）
+
+v41 不再拟合反事实 CBF correction，而是在 3 个新训练 seed 上用 std=0.05 的
+当前策略执行无过滤探索，收集 96 个 episode，其中 72 个成功；只把成功 episode
+的实际执行动作作为 deterministic actor 的监督。4-minibatch 更新使全数据 elite
+loss 略升，因此未评估。v42 复用完全相同的数据，只做一次 full-batch 输出层更新，
+elite Smooth-L1 从 `0.02121596` 降至 `0.02121466`，KL 为 `9.996e-5`。
+
+| v42 stable-reset F2 seed | Filter on | Filter off | Off - on | Result |
+|---|---:|---:|---:|---|
+| gate `201350912` | 76.56% (49/64) | **75.00% (48/64)** | -1.56 pp | gate passed；off 比基线 +5 |
+| untouched `201350922` | not run | 68.75% (44/64) | — | stopped below gate |
+
+v42 首次在较难 seed 上同时达到 on/off 75% 且 gap 仅 1.56 pp，证明成功动作的
+filter-free self-imitation 比直接 CBF 蒸馏更接近论文部署目标；但 untouched seed
+仍未达到绝对 gate，所以尚不选择为最终稳健 actor。完整训练、paired gate 与
+untouched 逐 episode 证据见
+[`elite_self_imitation_v41_v42/`](elite_self_imitation_v41_v42/)。
+
+#### Six-seed elite self-imitation（有改善，仍低于 gate）
+
+v43 新增 3 个训练 seed 的 96 个无过滤探索 episode（64 个成功），并与 v41
+数据合并为 6 个 seed、80,044 transitions，其中 60,976 个来自成功 episode。
+只对 actor 最后一层做一次 full-batch 更新；elite Smooth-L1 从
+`0.02121494` 降至 `0.02121404`，reference KL 为 `9.991e-5`，训练耗时 10.3 秒。
+
+在 v42 未通过的 stable-reset seed `201350922` 上，无过滤成功率从 44/64 提高到
+46/64（71.875%），但仍比 75% gate 少 2 个 episode。因此按预设早停，不运行
+filter-on 或额外 seed，也不选择该 actor。代码提交、训练摘要及逐 episode 证据见
+[`elite_self_imitation_v43_6seed/`](elite_self_imitation_v43_6seed/)。
+
+把同一 elite 更新的 KL 上限从 `1e-4` 提高到 `2e-4` 后，该 seed 降至
+42/64，证明不是继续增大成功轨迹拟合步长即可解决。
+
+#### Episode-balanced outcome PPO（最佳点 47/64，仍未通过）
+
+v44 把六个训练 seed 的成功/失败 episode 做中心化 PPO 优势，每个 episode 等权，
+并用逐坐标 trimmed mean 聚合 seed gradient。离线 6/6 seed surrogate 均改善，
+但 seed gradient 平均余弦只有 `-0.0032`。Adam 候选在 gate seed `201350922`
+达到 48/64，却在 untouched seed `201350932` 从 base 的 46/64 降到 37/64，
+说明 Adam 第一步的逐坐标符号缩放放大了不一致梯度。
+
+v45 改用保留梯度幅度的 SGD trust-region step。KL=`2.5e-5` 时，同一独立对照从
+46/64 小幅提高到 **47/64（73.44%）**；将 KL 增至 `5e-5` 后反而降到 42/64。
+因此 47/64 是该路线最佳点，但仍比 75% gate 少一个 episode，按计划停止且不跑
+filter-on。完整离线诊断、base 对照和逐 episode 证据见
+[`outcome_ppo_v44_v45/`](outcome_ppo_v44_v45/)。
+
+#### Paired multi-rollout CBF-dual GAE consensus（与 base 持平）
+
+v46 回到论文式逐步 bounded CBF-dual reward 和 critic GAE，不再使用整回合二值
+标签。3 个独立训练 seed 分别采集完全 filter-on/off 的配对 rollout，共 6 批、
+49,152 transitions；actor 全部 MLP 层只做一次 SGD 更新并投影到 KL=`2.5e-5`。
+6/6 rollout surrogate 均改善，但原始 batch gradient 平均余弦为 `-0.0020`。
+在全新 seed `201350942` 上，candidate 与 base 均为 38/64。
+
+v47 进一步先平均每个 seed 内的 on/off 梯度，再在 3 个 seed 间逐坐标取中位数；
+paired-seed gradient 平均余弦提高到 `0.0275`，6/6 离线门控仍通过。但在开发
+seed `201350932` 上，candidate 与 base 仍同为 46/64（71.875%）。两者均未改善
+filter-off control，因此不运行 filter-on。完整训练与逐 episode 证据见
+[`multi_rollout_gae_v46_v47/`](multi_rollout_gae_v46_v47/)。
+
+v48 将每批从 `16×512` 扩大为 `32×1024`，总数据增加到 196,608 transitions。
+全 batch、paired on/off、paired seed 的平均梯度余弦分别提高到
+`0.0624/0.1251/0.0827`，且 paired-seed 最差余弦也为正；训练耗时 181.1 秒。
+尽管离线信号明显更一致，同一开发 seed 的 filter-off 仍从 base 46/64 降到
+44/64。因此停止继续放大局部 GAE surrogate；这条负结果也收录在同一证据目录。
+
+#### Deployable CBF-geometry actor adapter（单 seed paired gate 通过）
+
+v48 的大 batch 已把 paired-seed 梯度余弦提高到正值，但部署结果仍下降。进一步
+审计发现根本的信息缺口：runtime CBF 使用摆动脚尖与下一台阶边缘的相对 x/z
+几何，而 405-D actor 只有五帧本体感知历史，没有该相对位置。v49 因此追加 5 个
+可部署量：水平/垂直 clearance、sloped barrier、摆动脚侧别和 geometric-active。
+旧 actor 的新增输入列严格初始化为零；CBF 未激活时五个量也全为零，所以这些状态
+中的候选动作与 base 完全一致。
+
+3 个训练 seed × 8 环境的配对短训练耗时 89.1 秒。最初模仿所有 shielded-success
+轨迹的 candidate 在 seed `201350932` 上只有 44/64，低于 base 46/64。v49b 随后
+只学习同初始状态下“off 失败、on 成功”的 matched-rescue 轨迹，共 190 个 teacher
+transition；教师方向余弦从 0 提高到 0.8355，所有旧 actor 参数保持不变。
+
+| F2 stable-reset seed `201350932` | Filter on | Filter off | On - off | Decision |
+|---|---:|---:|---:|---|
+| 405-D base control | not rerun | 71.88% (46/64) | — | comparison control |
+| v49 all-success teacher | not run | 68.75% (44/64) | — | rejected |
+| v49b rescued-only geometry adapter | **79.69% (51/64)** | **75.00% (48/64)** | 4.69 pp | paired gate passed |
+
+这是当前序列中首个在 F2 同时达到 filter-off 75% 且 paired filter-on 也高于
+75% 的 actor，filter-off 相对精确 base 对照增加 2 个成功 episode。但在预先未
+使用的 seed `201350952` 上，filter-off 只有 45/64（70.31%），未达到门槛，因而
+不运行该 seed 的 filter-on 并拒绝将 v49b 作为最终稳健 actor。这表明加入正确的
+几何可观测性是有效方向，但 4 个 rescue episode、190 个 teacher transition 仍
+不足以泛化。checkpoint、训练摘要和逐 episode 证据见
+[`observable_cbf_adapter_v49/`](observable_cbf_adapter_v49/)。
+
+#### Six-seed rescued-only expansion v50（未通过 untouched gate）
+
+v50 将 rescued-only 数据扩大到 6 个新训练 seed、每个 16 个环境，共收集
+37,549 个 transition、17 个 matched-rescue episode 和 555 个 teacher
+transition。teacher correction cosine 提高到 `0.89922`，active-state forward
+KL 为 `0.00493496`，旧 actor 参数仍严格不变；RTX 4080 训练耗时 165.2 秒。
+
+但在预先未使用的 seed `201350972` 上，filter-off 只有 **45/64（70.31%）**，
+低于 48/64 门槛，因此按协议不运行 filter-on 并拒绝该 candidate。完整训练摘要、
+逐 episode 结果和可复现 checkpoint 见
+[`observable_cbf_adapter_v50/`](observable_cbf_adapter_v50/)。
+
+#### Geometry-aware paired CBF PPO v51（正式 gate 差 1 episode）
+
+v51 不再直接回归 safe action，而是在 410-D 几何可观测 actor 上使用论文式
+filter-on/off 配对 rollout、bounded CBF dual reward、critic GAE 和 PPO
+surrogate。每个 seed 先平均 on/off 梯度，再跨 seed 逐坐标取中位数；仅训练新增
+5 个输入列，旧 405-D 策略严格冻结。
+
+3 seed × 2 env × 64 step 的 RTX 4080 smoke 耗时 20.4 秒，offline gate 通过。
+随后正式训练改用 3 个未使用 seed、每条件 16 环境 × 512 step，共 49,152 个
+transition，耗时 92.7 秒；6/6 batch 的 post-update surrogate 均为正，旧策略参数
+保持零变化。在全新 seed `201350992` 上 filter-off 得到 **47/64（73.44%）**，
+距门槛只差 1 个成功 episode，故不追加 filter-on。
+
+正式更新的 reference KL 仅 `2.98e-6`，只使用约 0.3% 的 `0.001` 预算，说明当前
+主要问题是固定 SGD 步长过小，而非 trust-region 饱和。代码、smoke/正式诊断、
+逐 episode 证据和两个 checkpoint 见
+[`observable_cbf_ppo_v51/`](observable_cbf_ppo_v51/)。
+
+#### KL-targeted paired CBF PPO v52（离线改善、部署退化）
+
+v52 针对 v51 只使用 0.3% KL 预算的问题，沿同一 paired consensus gradient
+自适应放大步长，同时要求全部 6 个 on/off rollout 的 PPO surrogate 保持为正。
+正式运行选择 `14.0923×` 步长，reference KL 达到 `0.000249991`，6/6 batch
+均改善，最差 surrogate gain 仍为 `+0.00026076`。
+
+然而在全新 seed `201351012` 上，filter-off 只有 **42/64（65.63%）**，因此立即
+停止且不运行 filter-on。这证明扩大训练 batch 上的局部 surrogate 改善不能解决
+部署泛化；完整线搜索轨迹、checkpoint 与逐 episode 证据见
+[`observable_cbf_ppo_v52/`](observable_cbf_ppo_v52/)。
+
+#### Multi-round observable CBF PPO v53（刷新 rollout 后仍未泛化）
+
+v53 将 v51/v52 的单次 actor 更新扩展为 4 轮论文式循环：每轮都用 3 个新 seed
+重新收集 filter-on/off 配对 rollout，做仅限新增 5 个几何输入列的 consensus PPO
+更新，并重新拟合扩展后的 privileged critic。每轮 24,576 个 transition，共
+98,304 个；RTX 4080 训练耗时 276.8 秒。4/4 轮均通过事务式离线 gate，每轮
+6/6 batch 的 post-update surrogate 为正，critic MSE 也逐轮更新下降，旧 405-D
+actor 参数严格零变化。
+
+但在全新 seed `201351512` 上，filter-off 仅 **39/64（60.94%）**，低于
+48/64 门槛，因此不运行 filter-on，也不追加更多验证。该结果说明增加刷新
+rollout 的多轮局部 PPO 改善仍不足以解决 F2 部署泛化。完整四轮诊断、逐 episode
+证据和精确 checkpoint 见
+[`observable_cbf_ppo_v53/`](observable_cbf_ppo_v53/)。
+
+#### Paper-exact horizontal stair CBF PPO v54（已拒绝）
+
+v54 对照 CBF-RL v6 修正了两个实现偏差：台阶 CBF 改为下一 riser 的水平超平面
+（`barrier_slope=0`），dual reward 的 imitation distance 改为一个控制周期的摆动脚
+任务空间位移，而不是 12-D joint-action correction。原 405-D blind actor 输入不变。
+
+同 seed 的 32-episode filter-on 假设对比中，paper-exact barrier 为 26/32，历史
+slope=0.8 为 27/32；前者把 intervention steps/riser 从 4.4569 降至 1.6509，约少
+63%。正式训练使用 64 env × 1,024 step × 8 round，共 524,288 transitions，RTX
+4080 用时 231.88 秒。训练期间的 filtered stochastic rollout 没有形成上升趋势；
+最终 round-8 checkpoint 在全新 seed `201351812` 的 deterministic filter-off gate
+上为 **39/64（60.94%）**，比 48/64 门槛少 9 个成功 episode。因此按协议停止，
+未运行 filter-on 或额外 seed。代码、逐轮指标、两个 smoke、几何对比、64 个逐
+episode 记录和精确 checkpoint 见
+[`paper_exact_cbf_ppo_v54/`](paper_exact_cbf_ppo_v54/)。
+
+#### Persistent next-riser clearance + demo-scale CBF PPO v55（已拒绝）
+
+v55 修正了论文对齐审计中的下一处训练信号偏差：足端 clearance 参考高度不再只在
+短暂 CBF 激活窗口内使用，而是在完整摆动期间持续跟随机器人前方的下一 riser，
+越过最后一级后继续使用顶层平台高度。同时保留 Eq. (27) 的摆动脚任务空间距离，
+但采用作者公开 demo 的 margin `10×` / proximity `100×` 比例，并去掉额外的
+moving-reference KL，恢复标准 clipped PPO。
+
+65,536-transition smoke 中，第一次更新后的对齐 rollout 从 39/61（63.93%）升至
+42/59（71.19%）。独立正式训练原计划 8 轮；由于 round-1 checkpoint 对应的下一轮
+rollout 达到 91/132（68.94%）后，后续四个 checkpoint 均更低，故在 6 轮、393,216
+transitions 时早停。选中的 `round_01.pt` 在全新 seed `201352112` 的 deterministic
+filter-off gate 为 **42/64（65.63%）**，低于 48/64 门槛，因此不运行 filter-on
+或额外 seed。完整早停轨迹、smoke、逐 episode 证据和 checkpoint 见
+[`paper_demo_clearance_v55/`](paper_demo_clearance_v55/)。
+
+## 方法与第一阶段 F1 ablation
+
+本目录发布 v35 第一阶段 F1 pilot 的关键结果。该阶段依据
+[CBF-RL](https://arxiv.org/abs/2510.14959) 的训练时安全过滤与双重奖励，
+并参考作者公开的
+[navigation demo](https://github.com/lzyang2000/cbf-rl-navigation-demo)
+把策略动作与安全动作之间的距离改到 actor 原生动作坐标中计算。
+
+三组训练均从同一个 838-D privileged-critic checkpoint 开始，在 RTX 4080
+上使用 64 个并行环境、8 轮、每轮 1024 steps。训练种子为 `201350101`；
+随后用独立种子 `201350901` 做 64 个 deterministic episodes 的 F1 评估。
+训练 rollout 始终执行 CBF-filtered action。
+
+| Run | Teacher | Margin / imitation weight | Filter on | Filter off | Off - on | Training time |
+|---|---|---:|---:|---:|---:|---:|
+| `raw_moderate` | A0, no teacher | 1 / 10 | 71.88% (46/64) | 65.62% (42/64) | -6.25 pp | 231.3 s |
+| `raw_demo` | A0, no teacher | 10 / 100 | **76.56% (49/64)** | 57.81% (37/64) | -18.75 pp | 206.7 s |
+| `raw_moderate_A1` | A1, corrective full-action teacher | 1 / 10 | 67.19% (43/64) | **76.56% (49/64)** | +9.38 pp | 217.5 s |
+
+第一阶段核心观察：A1 corrective teacher 将相同 `raw_moderate` reward 的 filter-off
+成功率从 65.62% 提高到 76.56%（+10.94 pp），说明安全动作确实更多地被策略
+内化；但 filter-on 成功率同时从 71.88% 降到 67.19%（-4.69 pp）。作者 demo
+的强权重则提高了 filter-on 表现，却显著扩大 on/off 差距。因此目前没有一个
+方案同时保持较高的 filter-on 与 filter-off 成功率，所以该 ablation 本身没有
+winner。后续 staged experiment 解决了 F1 矛盾，并已冻结扩展到 F2/F3。
+
+## Published evidence
+
+- [`pilot_summary.json`](pilot_summary.json): protocol、精确指标、代码与模型哈希。
+- [`eval_summary.csv`](eval_summary.csv): 三个 actor 的 filter-on/off 独立评估。
+- [`round_metrics.csv`](round_metrics.csv): 24 个训练轮次的 rollout 与 CBF 诊断。
+- [`staged_summary.json`](staged_summary.json): 当前最佳 staged 方法的三 context 汇总。
+- [`staged_eval_summary.csv`](staged_eval_summary.csv): staged 方法的六个 on/off 结果。
+- [`staged_round_metrics.csv`](staged_round_metrics.csv): staged 方法全部 24 轮及 KL 诊断。
+- [`soft_a1_f2_summary.json`](soft_a1_f2_summary.json): 低 KL 但成功率退化的 F2 负结果。
+- [`height_curriculum_f2_summary.json`](height_curriculum_f2_summary.json): F2 五级高度课程的配对评估、模型哈希与逐轮诊断。
+- [`continuation_f2_summary.json`](continuation_f2_summary.json): 三个固定目标 continuation 的 gate、早停决定与 provenance。
+- [`unshielded_f2_summary.json`](unshielded_f2_summary.json): 无过滤 rollout、反事实 mean-CBF DAgger、模型哈希、paired 评估及训练 gate 负结果。
+- [`rescue_distill_v36/`](rescue_distill_v36/): matched filter-rescue 训练摘要、配对结果及留出 filter-off 逐 episode 证据。
+- [`rescue_shielded_v37/`](rescue_shielded_v37/): trust-region 训练、adaptive paired gate 与失败的 untouched-seed 泛化确认。
+- [`multi_seed_rescue_v38/`](multi_seed_rescue_v38/): 三训练 seed 聚合、off-success trust anchor 及失败的 filter-off gate。
+- [`filtered_ppo_v39/`](filtered_ppo_v39/): 论文式 filtered PPO continuation、checkpoint 对齐及失败的 hard-seed filter-off gate。
+- [`last_layer_rescue_v40/`](last_layer_rescue_v40/): 输出层局部更新、离线 KL 审计及失败的 hard-seed gate。
+- [`elite_self_imitation_v41_v42/`](elite_self_imitation_v41_v42/): 无过滤成功轨迹收集、full-batch 更新、成功的 paired gate 与失败的 untouched-seed 确认。
+- [`elite_self_imitation_v43_6seed/`](elite_self_imitation_v43_6seed/): 六训练 seed 合并、KL 放大负结果及稳定 seed gate。
+- [`outcome_ppo_v44_v45/`](outcome_ppo_v44_v45/): episode-balanced outcome PPO、Adam 泛化失败、SGD trust-region 最佳点与独立 base 对照。
+- [`multi_rollout_gae_v46_v47/`](multi_rollout_gae_v46_v47/): 配对 on/off CBF-dual GAE、两级梯度共识及与 base 持平的独立 gate。
+- [`observable_cbf_adapter_v49/`](observable_cbf_adapter_v49/): 410-D 可部署 CBF 几何 actor、被拒绝的 all-success ablation、达到 75% 的 rescued-only paired gate、逐 episode 证据与候选 checkpoint。
+- [`observable_cbf_adapter_v50/`](observable_cbf_adapter_v50/): 六训练 seed rescued-only 扩展、失败的 untouched filter-off gate、逐 episode 证据与 rejected checkpoint。
+- [`observable_cbf_ppo_v51/`](observable_cbf_ppo_v51/): 论文式几何感知 paired on/off GAE-PPO、正式 49,152-transition 训练、47/64 untouched gate 与 checkpoint。
+- [`observable_cbf_ppo_v52/`](observable_cbf_ppo_v52/): KL 目标线搜索、6/6 离线 surrogate 改善、失败的 untouched filter-off gate 与 rejected checkpoint。
+- [`observable_cbf_ppo_v53/`](observable_cbf_ppo_v53/): 四轮刷新 on-policy rollout、逐轮 actor/critic 更新、98,304-transition 诊断、失败的 untouched gate 与 checkpoint。
+- [`paper_exact_cbf_ppo_v54/`](paper_exact_cbf_ppo_v54/): paper-exact 水平台阶 CBF、摆动脚任务空间 dual reward、524,288-transition 正式训练、失败的 untouched gate 与精确 checkpoint。
+- [`paper_demo_clearance_v55/`](paper_demo_clearance_v55/): 持续 next-riser clearance、demo-scale CBF reward、标准 PPO、393,216-transition 早停轨迹、失败的 untouched gate 与精确 checkpoint。
+- [`filter_anneal_v56/`](filter_anneal_v56/): 训练期 CBF filter 从 100% 线性退火至 0%、完整 unshielded rollout 诊断、失败的正式 gate 与精确 checkpoint。
+- [`paper_domain_randomization_v57/`](paper_domain_randomization_v57/): 恢复并缩放论文式训练域随机化、三组 screening、独立 filter-off gate、逐 episode 证据与被拒绝 checkpoint。
+- [`target_height_curriculum_v58_v61/`](target_height_curriculum_v58_v61/): DR25 高度课程、过滤退火、目标高度单调锁定、失败 episode CBF 教师、固定高度评估与精确 v60 checkpoint。
+
+历史大型 `.pt` checkpoint 没有提交进 Git；其 SHA-256 已写入相应 summary。
+v49b、v50、v51 smoke、v53、v54 与 v55 的候选 checkpoint 已随各自结果目录
+提交，便于精确复现；其中 v50、v53、v54 与 v55 已被 untouched gate 拒绝，
+v51 仅为 smoke，均不是最终稳健 actor。
+
+## Reproduction boundary
+
+- Base checkpoint SHA-256:
+  `cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8`
+- A0 source commit: `e532d606c78a42839bf78221a37d6a020aac878a`
+- A1 source commit: `c767e7b9df913dedea93c3715e0f8c422301f218`
+- Staged source commit: `b21eceecc10ec651a4d3c45fe9675a89f00c1410`
+- Reward implementation: `src/tasks/stairs_cbf/paper_dual_v35.py`
+- Trainer: `experiments/scripts/refine_paper_dual_v35.py`
+- Target contexts: F1, F2, F3 as listed in the staged table
+- Original/staged runs enable the runtime filter during training. The newest
+  unshielded runs execute nominal actions during training and use CBF only for
+  same-state counterfactual labels; paired evaluation still toggles the filter.

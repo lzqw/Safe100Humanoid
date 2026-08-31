@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "protocol_id": "safe100-deployment-unit-local-matched-success-v21",
+  "event_id": "v21-base-policy-L2-extended-yaw-pilot-5",
+  "stage": "base_policy_only_context_range_feasibility_pilot",
+  "formal_context_selection": false,
+  "started_at_utc": "2026-08-08T17:25:06Z",
+  "completed_at_utc": "2026-08-08T17:30:10Z",
+  "prospective_protocol": {
+    "file": "results/online/specialist_v21/protocol_range_pilot_5.json",
+    "git_commit": "afdd519c246c4933bffeba83d7977d521a6e95ae",
+    "sha256": "3d7169f273e71c47e5a69f752d2fbcb1607b048341829674908607993dced23b"
+  },
+  "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "episodes_per_candidate": 128,
+  "candidates_per_context": 12,
+  "context_count": 1,
+  "total_base_policy_episodes": 1536,
+  "gates": {
+    "success_rate_min": 0.7,
+    "success_rate_max": 0.85,
+    "minimum_fall_count": 25,
+    "lateral_target_failure_fraction_min": 0.8,
+    "lateral_second_failure_fraction_max": 0.3
+  },
+  "qualifying_contexts": {},
+  "contexts_without_qualifier": [
+    "L2"
+  ],
+  "contexts_requiring_robustness_confirmation": [
+    "L2"
+  ],
+  "near_qualifying_cluster": [
+    {
+      "candidate_seed": 21417,
+      "candidate_severity": 0.818181818182,
+      "success_rate": 0.8125,
+      "fall_count": 24,
+      "target_failure_fraction": 0.8333333333333334,
+      "second_failure_fraction": 0.16666666666666666,
+      "failed_gate": "minimum_fall_count",
+      "gate_distance": -1
+    },
+    {
+      "candidate_seed": 21418,
+      "candidate_severity": 0.909090909091,
+      "success_rate": 0.7734375,
+      "fall_count": 29,
+      "target_failure_fraction": 0.7931034482758621,
+      "second_failure_fraction": 0.20689655172413793,
+      "failed_gate": "lateral_target_failure_fraction",
+      "gate_distance": -0.006896551724137945
+    },
+    {
+      "candidate_seed": 21419,
+      "candidate_severity": 1.0,
+      "success_rate": 0.828125,
+      "fall_count": 22,
+      "target_failure_fraction": 0.8181818181818182,
+      "second_failure_fraction": 0.18181818181818182,
+      "failed_gate": "minimum_fall_count",
+      "gate_distance": -3
+    }
+  ],
+  "interpretation": "The extended command-side yaw range produced three adjacent high-severity near misses rather than a strict qualifier. Difficulty and mechanism purity landed in the intended neighborhood, but 128-episode fall counts and purity were too noisy to establish robust range feasibility. A 256-episode confirmation should vary persistent yaw bias above the centerline correction authority while holding pulse magnitude fixed, so the primary severity axis is both identifiable and better powered.",
+  "base_policy_outcomes_observed": true,
+  "adaptation_process_started": false,
+  "adapted_policy_outcomes_observed": false,
+  "formal_adaptation_or_audit_outcomes_observed": false,
+  "execution": {
+    "queue_completed_marker_observed": true,
+    "tmux_session_running_after_completion": false,
+    "v21_calibration_or_adaptation_process_running_after_completion": false,
+    "process_audit_at_utc": "2026-08-08T17:31:14Z"
+  },
+  "committed_evidence": {
+    "progress_commit": "baa7d1a8edce4021feab8aa327713818aaa7a5ce",
+    "progress_file_count": 1,
+    "progress_file_sha256": "7e952b90fa7d5a3bc2bed2ff56db38918bfa62eb977d3b9d9d4e898c6ea0dc22",
+    "progress_manifest_sha256": "8cde0f725eb668c92cfb1d82dfaed8cef41df2634ee5054f0f031dfb086d9211",
+    "manifest_definition": "SHA-256 of the relative ./L2/calibration_progress.json sha256sum line"
+  },
+  "external_evidence": {
+    "artifact_root": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_range_pilot_5",
+    "artifact_file_count": 49,
+    "artifact_total_bytes": 48260574,
+    "artifact_manifest_sha256": "3b09aad54e55e76057947cd46c201196616fa00a293266e99147fd3dac7bd692",
+    "log_root": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v21_range_pilot_5",
+    "log_file_count": 2,
+    "log_total_bytes": 78245,
+    "log_manifest_sha256": "fb821dc577d9c4c002324f1315faf18e138be5367dcb3b0ffe2ffd428676c31d",
+    "queue_log_sha256": "595129e253b942d4e875abcafdd6f746edc452f445ec33aa073f6e62cccd7081",
+    "context_log_sha256": "6b3742dc2734e022fdc9192297ca22274c42c1f4b3018e621aab14b030d6ff39",
+    "manifest_definition": "SHA-256 of sorted sha256sum lines rooted at the corresponding directory and using relative paths"
+  },
+  "disposition": "run_higher_power_persistent_yaw_bias_confirmation",
+  "formal_calibration_ready": false,
+  "next_boundary": {
+    "pending_contexts": [
+      "L2"
+    ],
+    "confirmation_episodes_per_candidate": 256,
+    "primary_axis": "persistent_yaw_bias_above_centerline_correction_authority",
+    "pulse_magnitude_fixed_within_family": true,
+    "next_test_remains_base_policy_only_and_non_formal": true,
+    "new_candidate_and_evaluation_randomness_required": true,
+    "next_protocol_must_bind_this_near_miss_result": true,
+    "next_protocol_must_be_committed_before_execution": true,
+    "adaptation_outcomes_must_remain_absent": true
+  }
+}

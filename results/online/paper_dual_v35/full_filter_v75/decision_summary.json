@@ -1,0 +1,69 @@
+{
+  "schema_version": "paper_dual_v35.v75.decision.v1",
+  "candidate": "paper-fully-filtered-full-batch-ppo-v75",
+  "decision": "rejected_at_training_gate",
+  "reason": "Both aligned fully filtered PPO proposals regressed from the 71.06% anchor to 70.48% and 66.79%, and were transactionally rolled back.",
+  "source_commit": "7810d2f5718088205f0f02a62f1707605039358a",
+  "base_checkpoint_sha256": "3285223174b01c97009db54361042c4c3d2d87054ca2156c84769f6d13ceccbc",
+  "training": {
+    "seed": 201352622,
+    "num_envs": 128,
+    "filter_on_envs": 128,
+    "filter_off_envs": 0,
+    "rounds": 4,
+    "rollout_steps_per_round": 1024,
+    "elapsed_seconds": 89.6697936130222,
+    "initial_actor_learning_rate": 0.00005,
+    "final_actor_learning_rate": 0.00001165083339773357,
+    "transactional_acceptance_group": "filter_on",
+    "transactional_rollback_count": 2,
+    "teacher_arm": "A0",
+    "domain_randomization": false
+  },
+  "paper_dataflow_audit": {
+    "runtime_filter_fraction_by_round": [1.0, 1.0, 1.0, 1.0],
+    "fully_safety_filtered_execution": true,
+    "ppo_storage_uses_nominal_policy_action": true,
+    "executed_action_routing_max_abs_error_by_round": [0.0, 0.0, 0.0, 0.0],
+    "policy_storage_max_abs_error_by_round": [0.0, 0.0, 0.0, 0.0],
+    "cbf_intervention_fraction_by_round": [0.10077667236328125, 0.09844970703125, 0.09743499755859375, 0.0980377197265625]
+  },
+  "aligned_filter_on_rollouts": [
+    {
+      "rollout_round": 1,
+      "success_count": 194,
+      "episode_count": 273,
+      "success_rate": 0.7106227106227107,
+      "rollback_applied": false
+    },
+    {
+      "rollout_round": 2,
+      "success_count": 191,
+      "episode_count": 271,
+      "success_rate": 0.7047970479704797,
+      "rollback_applied": true
+    },
+    {
+      "rollout_round": 3,
+      "success_count": 190,
+      "episode_count": 266,
+      "success_rate": 0.7142857142857143,
+      "rollback_applied": false
+    },
+    {
+      "rollout_round": 4,
+      "success_count": 185,
+      "episode_count": 277,
+      "success_rate": 0.6678700361010831,
+      "rollback_applied": true
+    }
+  ],
+  "deployment_filter_off_gate": {
+    "planned_episode_count": 128,
+    "success_threshold": 0.75,
+    "run": false,
+    "reason": "filtered_training_gate_failed"
+  },
+  "current_best_changed": false,
+  "next_hypothesis": "Audit the numerical decomposition of the Eq. (22)-(23) dual reward to determine whether the action-proximity term dominates the task/barrier signal near the current actor."
+}

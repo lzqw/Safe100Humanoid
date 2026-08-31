@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "protocol_id": "safe100-deployment-unit-local-matched-success-v21",
+  "event_id": "v21-base-policy-L2-bilateral-hip-yaw-offset-pilot-4",
+  "stage": "base_policy_only_context_range_feasibility_pilot",
+  "formal_context_selection": false,
+  "started_at_utc": "2026-08-08T17:12:07Z",
+  "completed_at_utc": "2026-08-08T17:16:19Z",
+  "prospective_protocol": {
+    "file": "results/online/specialist_v21/protocol_range_pilot_4.json",
+    "git_commit": "d7c4dabdeaea7cbd196935c4a654478c7ebfd900",
+    "sha256": "ba7b9f584e0595084c3371991fb0d51c8d26b005a84aeb1faca3d79899ce7af3"
+  },
+  "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "episodes_per_candidate": 128,
+  "candidates_per_context": 12,
+  "context_count": 1,
+  "total_base_policy_episodes": 1536,
+  "gates": {
+    "success_rate_min": 0.7,
+    "success_rate_max": 0.85,
+    "minimum_fall_count": 25,
+    "lateral_target_failure_fraction_min": 0.8,
+    "lateral_second_failure_fraction_max": 0.3
+  },
+  "qualifying_contexts": {},
+  "contexts_without_qualifier": [
+    "L2"
+  ],
+  "contexts_requiring_robustness_confirmation": [],
+  "matched_success_low_purity_candidate": {
+    "context_id": "L2",
+    "candidate_seed": 19412,
+    "candidate_severity": 0.363636363636,
+    "success_rate": 0.78125,
+    "fall_count": 28,
+    "target_failure_fraction": 0.5357142857142857,
+    "second_failure_fraction": 0.4642857142857143,
+    "qualifies": false
+  },
+  "closest_mechanism_candidate": {
+    "context_id": "L2",
+    "candidate_seed": 19413,
+    "candidate_severity": 0.454545454545,
+    "success_rate": 0.671875,
+    "fall_count": 42,
+    "target_failure_fraction": 0.7619047619047619,
+    "second_failure_fraction": 0.23809523809523808,
+    "qualifies": false,
+    "failed_gates": [
+      "success_rate_at_least_0p70",
+      "lateral_target_failure_fraction_at_least_0p80"
+    ]
+  },
+  "endpoint_observation": {
+    "candidate_seed": 19419,
+    "candidate_severity": 1.0,
+    "success_rate": 0.0703125,
+    "fall_count": 119,
+    "target_failure_fraction": 0.5378151260504201,
+    "second_failure_fraction": 0.46218487394957986,
+    "qualifies": false
+  },
+  "interpretation": "The same-sign bilateral hip-yaw raw-action offset created a sharp difficulty cliff but did not isolate lateral-heading failures. The matched-success point had only 53.57% lateral purity; the closest mechanism point was already below 70% success and still below 80% purity. Increasing the offset further made the policy catastrophically hard without improving mechanism purity. This actuator-offset family is rejected before any adaptation.",
+  "base_policy_outcomes_observed": true,
+  "adaptation_process_started": false,
+  "adapted_policy_outcomes_observed": false,
+  "formal_adaptation_or_audit_outcomes_observed": false,
+  "execution": {
+    "queue_completed_marker_observed": true,
+    "tmux_session_running_after_completion": false,
+    "v21_calibration_or_adaptation_process_running_after_completion": false,
+    "process_audit_at_utc": "2026-08-08T17:17:18Z"
+  },
+  "committed_evidence": {
+    "progress_commit": "c6d9c81322e408d5bc671d4eef0aa6f2527b26cd",
+    "progress_file_count": 1,
+    "progress_file_sha256": "ce44df1cc0ad1b05bc3845fb9e282adffa0113c03cb8f0871cf2b7d831b0b671",
+    "progress_manifest_sha256": "b0f8d057a4bd55701668698474a204503d9d3bb40819f45b9be92a398cee19c1",
+    "manifest_definition": "SHA-256 of the relative ./L2/calibration_progress.json sha256sum line"
+  },
+  "external_evidence": {
+    "artifact_root": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_range_pilot_4",
+    "artifact_file_count": 49,
+    "artifact_total_bytes": 48274665,
+    "artifact_manifest_sha256": "047e7753f7dd0bd99a7461a4d2ee556decf660c7ac151ee0734dd8b174ccf7e8",
+    "log_root": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v21_range_pilot_4",
+    "log_file_count": 2,
+    "log_total_bytes": 78567,
+    "log_manifest_sha256": "122eb726929191dd5815fbb38e4b6b0c40829be5bf44aab82e49025025b42f98",
+    "queue_log_sha256": "9b2b348c7a57a21eca3fd98f0c89fdcf5b4c407a6193a9f9b1e9404233ae627d",
+    "context_log_sha256": "6fb65ead7c901847e8b758db91c6a1c99867fc53ff05be0ebd7ee89f60d9915d",
+    "manifest_definition": "SHA-256 of sorted sha256sum lines rooted at the corresponding directory and using relative paths"
+  },
+  "disposition": "reject_same_sign_bilateral_hip_yaw_offset_and_redesign_L2",
+  "formal_calibration_ready": false,
+  "next_boundary": {
+    "pending_contexts": [
+      "L2"
+    ],
+    "next_test_remains_base_policy_only_and_non_formal": true,
+    "new_candidate_and_evaluation_randomness_required": true,
+    "next_protocol_must_bind_this_negative_result": true,
+    "next_protocol_must_be_committed_before_execution": true,
+    "adaptation_outcomes_must_remain_absent": true
+  }
+}

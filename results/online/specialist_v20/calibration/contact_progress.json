@@ -1,0 +1,80 @@
+{
+  "attempts": [
+    {
+      "base_policy_only": true,
+      "candidate_seed": 8212,
+      "evaluation_seed_start": 4810000,
+      "evaluation_seeds": [
+        4810000,
+        4810001,
+        4810002,
+        4810003
+      ],
+      "failure_type_counts": {
+        "contact_stability": 135,
+        "lateral_heading_drift": 5,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "failure_type_fractions": {
+        "contact_stability": 0.9642857142857143,
+        "lateral_heading_drift": 0.03571428571428571,
+        "non_lateral_balance_or_phase": 0.0,
+        "non_lateral_high_cbf_demand": 0.0,
+        "other_non_lateral": 0.0
+      },
+      "fall_count": 140,
+      "fall_rate": 0.2734375,
+      "mean_reached_riser": 20.919921875,
+      "num_episodes": 512,
+      "parameters_sha256": "9cd591c555b08323ad780f50a80e769052a849748e298c06252a9f9b56b220a9",
+      "qualifies": true,
+      "second_failure_fraction": 0.03571428571428571,
+      "success_rate": 0.7265625,
+      "target_failure_fraction": 0.9642857142857143,
+      "target_failure_type": "contact_stability"
+    }
+  ],
+  "base_policy_checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/retention_v13/arm_b_state_retention/accepted_final.pt",
+  "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "candidate_seeds": [
+    8212,
+    8213,
+    8214,
+    8215,
+    8216,
+    8217,
+    8218,
+    8219
+  ],
+  "exploratory": false,
+  "mode": "contact_stability",
+  "prospective_protocol": {
+    "git_commit": "7206d120d30610f562921ea43c805e19244d6a51",
+    "path": "/home/carla/LZQW/SAFE100/humanoid/worktrees/v20_precalibration/results/online/specialist_v20/protocol_precalibration.json",
+    "sha256": "8f78ac22500b0f503c4c6bd9ee4ab55e08c091020cd6489a0621ee318904e7b8",
+    "tracked_worktree_and_index_clean": true
+  },
+  "protocol": "Fixed-Budget Observable Failure-Conditioned Brief PPO v20 calibration",
+  "protocol_id": "safe100-fixed-budget-observable-failure-conditioned-v20",
+  "selection_rule": "first base-only 70--85% success context with >=100 falls, target purity >=0.75, and second fraction <=0.20",
+  "target_failure_type": "contact_stability",
+  "warm_start": {
+    "actor_layout": "legacy_prefix_plus_v19_deployable_failure",
+    "critic_layout": "online_prefix",
+    "expanded_actor_width": 410,
+    "expanded_critic_width": 843,
+    "legacy_tensor_copy_max_abs_error": 0.0,
+    "loaded_task_first_heads": false,
+    "new_first_layer_column_max_abs": 0.0,
+    "new_normalizer_identity_max_abs_error": 0.0,
+    "optimizer_reset": true,
+    "pi0_exact_preservation_proof": true,
+    "source_actor_width": 405,
+    "source_critic_offset": 0,
+    "source_critic_width": 838,
+    "source_iteration": 3,
+    "zero_initialized_actor_columns": 5
+  }
+}

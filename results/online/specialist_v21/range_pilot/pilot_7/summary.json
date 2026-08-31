@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "protocol_id": "safe100-deployment-unit-local-matched-success-v21",
+  "event_id": "v21-base-policy-L2-fixed-yaw-carrier-pilot-7",
+  "stage": "base_policy_only_context_range_feasibility_pilot",
+  "formal_context_selection": false,
+  "started_at_utc": "2026-08-08T17:53:24Z",
+  "completed_at_utc": "2026-08-08T18:02:21Z",
+  "prospective_protocol": {
+    "file": "results/online/specialist_v21/protocol_range_pilot_7.json",
+    "git_commit": "c32ef0b3d000afbca195e899b9c3dd1f7dbd5afb",
+    "sha256": "324e40fbb5918104593beda62fd795a2eceb5c773a1ba18e426066461fb05e3d"
+  },
+  "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "episodes_per_candidate": 256,
+  "candidates_per_context": 12,
+  "context_count": 1,
+  "total_base_policy_episodes": 3072,
+  "gates": {
+    "success_rate_min": 0.7,
+    "success_rate_max": 0.85,
+    "minimum_fall_count": 50,
+    "lateral_target_failure_fraction_min": 0.8,
+    "lateral_second_failure_fraction_max": 0.3
+  },
+  "qualifying_contexts": {},
+  "contexts_without_qualifier": [
+    "L2"
+  ],
+  "contexts_requiring_robustness_confirmation": [
+    "L2"
+  ],
+  "difficulty_without_purity_candidates": [
+    {
+      "candidate_seed": 25410,
+      "success_rate": 0.80078125,
+      "fall_count": 51,
+      "target_failure_fraction": 0.6862745098039216,
+      "second_failure_fraction": 0.3137254901960784
+    },
+    {
+      "candidate_seed": 25411,
+      "success_rate": 0.79296875,
+      "fall_count": 53,
+      "target_failure_fraction": 0.7735849056603774,
+      "second_failure_fraction": 0.22641509433962265
+    },
+    {
+      "candidate_seed": 25419,
+      "success_rate": 0.7890625,
+      "fall_count": 54,
+      "target_failure_fraction": 0.7222222222222222,
+      "second_failure_fraction": 0.2777777777777778
+    }
+  ],
+  "purity_without_difficulty_candidates": [
+    {
+      "candidate_seed": 25416,
+      "success_rate": 0.81640625,
+      "fall_count": 47,
+      "target_failure_fraction": 0.8297872340425532,
+      "second_failure_fraction": 0.1702127659574468
+    },
+    {
+      "candidate_seed": 25418,
+      "success_rate": 0.8203125,
+      "fall_count": 46,
+      "target_failure_fraction": 0.8260869565217391,
+      "second_failure_fraction": 0.17391304347826086
+    }
+  ],
+  "pooled_comparison": {
+    "pilot_7_total_falls": 524,
+    "pilot_7_lateral_heading_failures": 388,
+    "pilot_7_lateral_failure_fraction": 0.7404580152671756,
+    "pulse_free_pilot_6_total_falls": 532,
+    "pulse_free_pilot_6_lateral_heading_failures": 402,
+    "pulse_free_pilot_6_lateral_failure_fraction": 0.7556390977443609,
+    "fixed_carrier_improved_pooled_purity": false
+  },
+  "interpretation": "The fixed low yaw-pulse carrier did not close the gate intersection. It created enough failures only in candidates with sub-threshold lateral purity, while mechanism-pure candidates remained below the fall-count gate. Pooled purity was also lower than in pulse-free pilot 6. The carrier is rejected; the next pilot should use stronger pulse-free persistent yaw bias.",
+  "base_policy_outcomes_observed": true,
+  "adaptation_process_started": false,
+  "adapted_policy_outcomes_observed": false,
+  "formal_adaptation_or_audit_outcomes_observed": false,
+  "execution": {
+    "queue_completed_marker_observed": true,
+    "tmux_session_running_after_completion": false,
+    "v21_calibration_or_adaptation_process_running_after_completion": false,
+    "process_audit_at_utc": "2026-08-08T18:03:27Z"
+  },
+  "committed_evidence": {
+    "progress_commit": "bc4ab69eb6c4e1069d923af02fa6033e741e55d6",
+    "progress_file_count": 1,
+    "progress_file_sha256": "07e3715a1f99c1116ec7522f762e9abd3eea080979079a346eda8b36d16d662d",
+    "progress_manifest_sha256": "ab8e71e0b74e5955e712d8c7ef99c2e21c8f4d3ceb5769666a525eb907879088",
+    "manifest_definition": "SHA-256 of the relative ./L2/calibration_progress.json sha256sum line"
+  },
+  "external_evidence": {
+    "artifact_root": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_range_pilot_7",
+    "artifact_file_count": 73,
+    "artifact_total_bytes": 49505745,
+    "artifact_manifest_sha256": "ab5b29186fa6d35341d06138984d8bbaca405c67199b7608a934ff8be4e0e44b",
+    "log_root": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v21_range_pilot_7",
+    "log_file_count": 2,
+    "log_total_bytes": 80433,
+    "log_manifest_sha256": "9b791221180a324bdda7c59f2bf9a4e7b4818d4db4ccb2320fea4efd54cb8c8b",
+    "queue_log_sha256": "c7be529ba95c111b1c148554c4cb30ea4edf1a6d8d782c621f127f86f4e8d87c",
+    "context_log_sha256": "48de86f4aad46b2b6c5175aad1b4275d737b9b3415bacbe5f7b326810cf99db7",
+    "manifest_definition": "SHA-256 of sorted sha256sum lines rooted at the corresponding directory and using relative paths"
+  },
+  "disposition": "reject_fixed_yaw_pulse_carrier_and_extend_pulse_free_bias",
+  "formal_calibration_ready": false,
+  "next_boundary": {
+    "pending_contexts": [
+      "L2"
+    ],
+    "confirmation_episodes_per_candidate": 256,
+    "primary_axis": "stronger_pulse_free_persistent_yaw_bias",
+    "all_disturbance_pulses_disabled": true,
+    "next_test_remains_base_policy_only_and_non_formal": true,
+    "new_candidate_and_evaluation_randomness_required": true,
+    "next_protocol_must_bind_this_negative_carrier_result": true,
+    "next_protocol_must_be_committed_before_execution": true,
+    "adaptation_outcomes_must_remain_absent": true
+  }
+}

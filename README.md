@@ -46,6 +46,31 @@ See [the training framework summary](docs/TRAINING_FRAMEWORK_SUMMARY.md) and
 [the implementation report](docs/ALGORITHM_IMPLEMENTATION_REPORT.md) for the
 full observation, action, reward, curriculum, and CBF definitions.
 
+The repository also contains a simulation prototype for CBF-protected online
+safe refinement under long-stair and joystick-command OOD shifts. It adds a
+799-D full privileged critic, conservative single-clipped PPO, temporal credit
+for actual CBF interventions, and transactional candidate rollback. See
+[the online refinement report](docs/ONLINE_SAFE_REFINEMENT.md).
+Measured OOD calibration and candidate rollback evidence are summarized in
+[the online refinement results](docs/ONLINE_REFINEMENT_RESULTS.md).
+One fall-aware, backtracked PPO candidate passed the robust safety gate by
+retaining DQ success while reducing CBF intervention and correction. This is a
+modest simulation result; filter-free performance did not improve. Curated GPU
+artifacts, the accepted and rollback checkpoints, and successful and failed DQ
+videos are under `results/online/`.
+A resumed second round improved D0/DQN but regressed 512-episode DQ success and
+was therefore rolled back, demonstrating that acceptance remains transactional
+across rounds.
+
+The later prospectively frozen specialist v21 study selected beta 0 in its
+excluded development contexts. Its full 10-context formal run completed, but
+neither the lateral nor contact-stability v21 claim passed the registered
+cross-context gate. The negative result, paired intervals, D0 rollbacks,
+mechanism diagnostics, figures, and integrity manifests are reported in
+[the v21 formal results](docs/FORMAL_V21_RESULTS.md); see also
+[the frozen v21 protocol](docs/DEPLOYMENT_V21_PROTOCOL.md) and
+[the v21 development result](docs/DEVELOPMENT_V21_RESULTS.md).
+
 ## One-seed result
 
 Evaluation uses a fixed 13 cm six-step staircase, 128 deterministic episodes,
@@ -69,11 +94,12 @@ A successful filter-free rollout is provided at
 ## Repository layout
 
 ```text
-src/tasks/stairs_cbf/       Stair terrain, commands, CBF, rewards, and configs
-experiments/scripts/        Smoke, evaluation, capacity, and video scripts
-experiments/tests/          Pure tensor CBF tests
+src/tasks/stairs_cbf/       Stair terrain, CBF, online PPO, rewards, and configs
+experiments/scripts/        Smoke, evaluation, online refinement, and video scripts
+experiments/tests/          Pure tensor CBF and online-refinement tests
 docs/                       Method, training, evaluation, and assumption reports
 results/evaluation/         Aggregate JSON/CSV and per-episode CSV
+results/online/             Online gate audits, rollback checkpoint, and videos
 results/models/             Final CBF and nominal PT/ONNX artifacts
 results/tensorboard/        Final TensorBoard event files
 results/videos/             Deterministic stair-climbing rollout
@@ -117,6 +143,8 @@ Pure tensor tests:
 
 ```bash
 pytest -q experiments/tests/test_cbf_math.py
+pytest -q experiments/tests/test_cbf_math.py \
+  experiments/tests/test_online_refinement.py
 ```
 
 GPU environment smoke:

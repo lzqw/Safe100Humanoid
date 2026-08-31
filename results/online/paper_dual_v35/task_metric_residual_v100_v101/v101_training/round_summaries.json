@@ -1,0 +1,150 @@
+[
+  {
+    "correction_norm_max": 2.6050162315368652,
+    "correction_norm_mean": 0.5236122012138367,
+    "elapsed_seconds": 12.774516275967471,
+    "fall_count": 46,
+    "fit": {
+      "after": {
+        "prediction_norm": 0.18573019340459482,
+        "smooth_l1": 0.017918213790762888,
+        "target_distance": 0.16993778711495006,
+        "transition_count": 3153
+      },
+      "before": {
+        "prediction_norm": 0.0,
+        "smooth_l1": 0.034188442066893136,
+        "target_distance": 0.2957202295556811,
+        "transition_count": 3153
+      },
+      "epochs": 3,
+      "maximum_gradient_norm_pre_clip": 0.47827234864234924,
+      "mean_teacher_loss_during_update": 0.028780543555816013,
+      "mean_trust_loss_during_update": 0.005632005321482818,
+      "optimizer_updates": 3
+    },
+    "initial_state_signature": "00cc6af556dde1617a4efaa23869a509853d331c48acff7ad4b71ea1c8af7844",
+    "intervention_count": 5268,
+    "intervention_fraction": 0.10603651295263783,
+    "replay_teacher_transition_count": 3153,
+    "replay_trust_transition_count": 49681,
+    "residual_state_sha256": "7ba5c046f787a754a715ef1091424a10962fbe22e1cd236b229efcf20cda5df3",
+    "round": 1,
+    "seed": 201353220,
+    "success_count": 82,
+    "teacher_successful_episodes_only": true,
+    "teacher_transition_count": 3153,
+    "transition_count": 49681
+  },
+  {
+    "correction_norm_max": 3.8108372688293457,
+    "correction_norm_mean": 0.5159362554550171,
+    "elapsed_seconds": 13.449041203013621,
+    "fall_count": 44,
+    "fit": {
+      "after": {
+        "prediction_norm": 0.3529138110593376,
+        "smooth_l1": 0.010098916262115324,
+        "target_distance": 0.11402457630583068,
+        "transition_count": 5351
+      },
+      "before": {
+        "prediction_norm": 0.18624307043952065,
+        "smooth_l1": 0.018976752278159165,
+        "target_distance": 0.1773298217568124,
+        "transition_count": 5351
+      },
+      "epochs": 3,
+      "maximum_gradient_norm_pre_clip": 0.4028947651386261,
+      "mean_teacher_loss_during_update": 0.012151848990470171,
+      "mean_trust_loss_during_update": 0.022685936652123928,
+      "optimizer_updates": 6
+    },
+    "initial_state_signature": "0026733644a3f1cac0ebebd7a299812ad8f2e4f4d31de259db35e8bdfe6d9b16",
+    "intervention_count": 3652,
+    "intervention_fraction": 0.07928272149013307,
+    "replay_teacher_transition_count": 5351,
+    "replay_trust_transition_count": 95744,
+    "residual_state_sha256": "c6be949aea04dd38b8e1bd7e1051f981cd89c9e5c9bb9ed2c718d946cfd08376",
+    "round": 2,
+    "seed": 201353230,
+    "success_count": 84,
+    "teacher_successful_episodes_only": true,
+    "teacher_transition_count": 2198,
+    "transition_count": 46063
+  },
+  {
+    "correction_norm_max": 3.800020933151245,
+    "correction_norm_mean": 0.5325987935066223,
+    "elapsed_seconds": 20.816957207978703,
+    "fall_count": 42,
+    "fit": {
+      "after": {
+        "prediction_norm": 0.36498529673654795,
+        "smooth_l1": 0.007961942261947698,
+        "target_distance": 0.0946766741864093,
+        "transition_count": 7392
+      },
+      "before": {
+        "prediction_norm": 0.35324522736784697,
+        "smooth_l1": 0.008709884309149409,
+        "target_distance": 0.1018939410453235,
+        "transition_count": 7392
+      },
+      "epochs": 3,
+      "maximum_gradient_norm_pre_clip": 0.5003253817558289,
+      "mean_teacher_loss_during_update": 0.008428727742284536,
+      "mean_trust_loss_during_update": 0.02184806267420451,
+      "optimizer_updates": 6
+    },
+    "initial_state_signature": "f815652eb8932cfcc4b6ef0bafd2f2ccf9fb87c8746786f10e4e2ac1eaae90ae",
+    "intervention_count": 3385,
+    "intervention_fraction": 0.07434985064136355,
+    "replay_teacher_transition_count": 7392,
+    "replay_trust_transition_count": 141272,
+    "residual_state_sha256": "8a9a41dfa80e275a478aca895a40ebb935576d3261903b3949e4e7281a39016d",
+    "round": 3,
+    "seed": 201353240,
+    "success_count": 86,
+    "teacher_successful_episodes_only": true,
+    "teacher_transition_count": 2041,
+    "transition_count": 45528
+  },
+  {
+    "correction_norm_max": 3.3063971996307373,
+    "correction_norm_mean": 0.5708922147750854,
+    "elapsed_seconds": 12.400780896074139,
+    "fall_count": 52,
+    "fit": {
+      "after": {
+        "prediction_norm": 0.3624082117385612,
+        "smooth_l1": 0.006853342844869494,
+        "target_distance": 0.0866129949836773,
+        "transition_count": 9070
+      },
+      "before": {
+        "prediction_norm": 0.3653427712841097,
+        "smooth_l1": 0.0074389193260419985,
+        "target_distance": 0.09025679381180231,
+        "transition_count": 9070
+      },
+      "epochs": 3,
+      "maximum_gradient_norm_pre_clip": 0.3685084283351898,
+      "mean_teacher_loss_during_update": 0.0072607834202547865,
+      "mean_trust_loss_during_update": 0.01802635110086865,
+      "optimizer_updates": 9
+    },
+    "initial_state_signature": "76749b4d430a43874f3480829216030ef3304114f4818ff2b44bbf7a47057652",
+    "intervention_count": 2917,
+    "intervention_fraction": 0.06981141106643692,
+    "replay_teacher_transition_count": 9070,
+    "replay_trust_transition_count": 183056,
+    "residual_state_sha256": "e23d95e2a5acf0dd9fcf78e263f617923f5b02940a5eeb99e04629b6ae34b7ce",
+    "round": 4,
+    "seed": 201353250,
+    "success_count": 76,
+    "teacher_successful_episodes_only": true,
+    "teacher_transition_count": 1678,
+    "transition_count": 41784
+  }
+]

@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "experiment": "paper_dual_v35_dr_refresh_v62",
+  "decision": "rejected_training_gate",
+  "reason": "The final fixed-target, fully filter-off rollout reached 66.67%, below the predeclared 75% gate.",
+  "independent_evaluation_run": false,
+  "source_commit": "4675ede990e7f7e58287ae3dfaa2cfac6ae2a418",
+  "seed": 201352408,
+  "training": {
+    "gpu": "NVIDIA GeForce RTX 4080 SUPER",
+    "num_envs": 128,
+    "rounds": 6,
+    "rollout_steps": 1024,
+    "transition_count": 786432,
+    "elapsed_seconds": 192.40413272904698,
+    "target_height_m": 0.184,
+    "target_floor_start_round": 3,
+    "filter_fractions": [1.0, 0.8, 0.6, 0.4, 0.2, 0.0],
+    "domain_randomization_mode": "paper_static",
+    "domain_randomization_strength": 0.25,
+    "domain_randomization_refresh": "round",
+    "physical_parameter_draw_sets": 6,
+    "physical_parameter_draw_count": 768
+  },
+  "final_rollout": {
+    "round": 6,
+    "rollout_checkpoint_round": 5,
+    "runtime_filter_fraction": 0.0,
+    "target_row_environment_count": 128,
+    "success_count": 176,
+    "episode_count": 264,
+    "success_rate": 0.6666666666666666,
+    "acceptance_threshold": 0.75
+  },
+  "comparison": {
+    "v60_final_filter_off_rate": 0.6730769230769231,
+    "v62_final_filter_off_rate": 0.6666666666666666,
+    "difference_percentage_points": -0.6410256410256472,
+    "v60_round_4_filter_off_rate": 0.6456,
+    "v62_round_4_filter_off_rate": 0.7018633540372671,
+    "v60_round_5_filter_off_rate": 0.6481,
+    "v62_round_5_filter_off_rate": 0.6912442396313364
+  },
+  "artifacts": {
+    "aligned_checkpoint": "round_05.pt",
+    "aligned_checkpoint_sha256": "57788a70c78e270e587a3c2d8c7609b82c59713e06635211deaa458533777e69",
+    "aligned_actor_sha256": "bbba78b727cde278584402889747b380a22eb004fab6985be63ae91eb38e4eb6",
+    "final_post_update_checkpoint_sha256": "928fafedbd1f23455c2eec39529deb4cc575e0e93cb7f95f6465d1558a29a226",
+    "final_post_update_actor_sha256": "7304a41ecd5a8983add9c3321005223f742e1a527271e21c0a3cc9faa4487fb2"
+  }
+}

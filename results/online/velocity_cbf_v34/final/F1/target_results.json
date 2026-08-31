@@ -1,0 +1,295 @@
+{
+  "conditions": {
+    "base_current": {
+      "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+      "all_finite": true,
+      "checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+      "condition": "base_current",
+      "fall_rate": 0.259765625,
+      "initial_state_signatures": [
+        "a268cae581f97980d55c52691f6d03bf77f564048ed964090de1c0e4e671562c",
+        "2271542f25afb9c398a6f19c35be48a1cae2ca9d0db7bd8dd0e97e5c8a9410d9"
+      ],
+      "intervention_events_per_riser": 2.4934880416765335,
+      "intervention_steps_per_riser": 6.134738337674639,
+      "maximum_nominal_safe_target_error": 3.5762786865234375e-07,
+      "mean_cbf_compute_time_ms": 2.8635008946312617,
+      "mean_completion_time_s": 8.4991796875,
+      "mean_reached_riser": 8.248046875,
+      "mean_return": -5.230422325432301,
+      "mean_success_completion_time_s": 9.166015831134565,
+      "mean_toe_riser_contact_impulse": 43.88889047689736,
+      "mean_velocity_correction_jerk": 48.08491153240246,
+      "mean_velocity_correction_norm": 1.4667847266113552,
+      "minimum_filtered_margin": -9.179115295410156e-06,
+      "num_episodes": 512,
+      "post_intervention_episode_count": 512,
+      "post_intervention_fall_rate": 0.259765625,
+      "post_intervention_mean_abs_root_pitch": 0.1372287308229117,
+      "post_intervention_mean_abs_root_roll": 0.06516584064088007,
+      "post_intervention_mean_support_foot_slip": 0.15355192187490418,
+      "seeds": [
+        1003241789,
+        1003241790
+      ],
+      "success_count": 379,
+      "success_rate": 0.740234375,
+      "toe_riser_contact_force_peak": 1164.1177978515625,
+      "total_reached_risers": 4223,
+      "total_steps": 217579,
+      "unsafe_overlap_steps_per_riser": 0.8105612124082406
+    },
+    "trained_A2_off": {
+      "actor_state_sha256": "a84192131edd5a590b3e39fcd5ebfb142292e5283108eea870ffb6e7308275c7",
+      "all_finite": true,
+      "checkpoint_sha256": "a05a8e3b0705fc055b6b4afaeaa234747035b29df521e7d3ba63e74e3401d43f",
+      "condition": "trained_A2_off",
+      "fall_rate": 0.3828125,
+      "initial_state_signatures": [
+        "a268cae581f97980d55c52691f6d03bf77f564048ed964090de1c0e4e671562c",
+        "2271542f25afb9c398a6f19c35be48a1cae2ca9d0db7bd8dd0e97e5c8a9410d9"
+      ],
+      "intervention_events_per_riser": 0.0,
+      "intervention_steps_per_riser": 0.0,
+      "maximum_nominal_safe_target_error": 3.5762786865234375e-07,
+      "mean_cbf_compute_time_ms": 2.8414568772219626,
+      "mean_completion_time_s": 8.44671875,
+      "mean_reached_riser": 7.974609375,
+      "mean_return": -5.171929440461099,
+      "mean_success_completion_time_s": 9.45613924050633,
+      "mean_toe_riser_contact_impulse": 43.319377634092234,
+      "mean_velocity_correction_jerk": 0.0,
+      "mean_velocity_correction_norm": 0.0,
+      "minimum_filtered_margin": -37.160736083984375,
+      "num_episodes": 512,
+      "post_intervention_episode_count": 0,
+      "post_intervention_fall_rate": 0.0,
+      "post_intervention_mean_abs_root_pitch": 0.0,
+      "post_intervention_mean_abs_root_roll": 0.0,
+      "post_intervention_mean_support_foot_slip": 0.0,
+      "seeds": [
+        1003241789,
+        1003241790
+      ],
+      "success_count": 316,
+      "success_rate": 0.6171875,
+      "toe_riser_contact_force_peak": 2394.4599609375,
+      "total_reached_risers": 4083,
+      "total_steps": 216236,
+      "unsafe_overlap_steps_per_riser": 0.8334557923095763
+    },
+    "trained_A2_optimized": {
+      "actor_state_sha256": "a84192131edd5a590b3e39fcd5ebfb142292e5283108eea870ffb6e7308275c7",
+      "all_finite": true,
+      "checkpoint_sha256": "a05a8e3b0705fc055b6b4afaeaa234747035b29df521e7d3ba63e74e3401d43f",
+      "condition": "trained_A2_optimized",
+      "fall_rate": 0.283203125,
+      "initial_state_signatures": [
+        "a268cae581f97980d55c52691f6d03bf77f564048ed964090de1c0e4e671562c",
+        "2271542f25afb9c398a6f19c35be48a1cae2ca9d0db7bd8dd0e97e5c8a9410d9"
+      ],
+      "intervention_events_per_riser": 2.4867065868263474,
+      "intervention_steps_per_riser": 6.195209580838323,
+      "maximum_nominal_safe_target_error": 3.5762786865234375e-07,
+      "mean_cbf_compute_time_ms": 2.8660196336563697,
+      "mean_completion_time_s": 8.37859375,
+      "mean_reached_riser": 8.154296875,
+      "mean_return": -5.485281963367015,
+      "mean_success_completion_time_s": 9.203814713896458,
+      "mean_toe_riser_contact_impulse": 42.48331841221079,
+      "mean_velocity_correction_jerk": 48.625240127235955,
+      "mean_velocity_correction_norm": 1.500446575538916,
+      "minimum_filtered_margin": -1.4424324035644531e-05,
+      "num_episodes": 512,
+      "post_intervention_episode_count": 512,
+      "post_intervention_fall_rate": 0.283203125,
+      "post_intervention_mean_abs_root_pitch": 0.13830937431314405,
+      "post_intervention_mean_abs_root_roll": 0.0664954566976553,
+      "post_intervention_mean_support_foot_slip": 0.15477680293284202,
+      "seeds": [
+        1003241789,
+        1003241790
+      ],
+      "success_count": 367,
+      "success_rate": 0.716796875,
+      "toe_riser_contact_force_peak": 1083.5860595703125,
+      "total_reached_risers": 4175,
+      "total_steps": 214492,
+      "unsafe_overlap_steps_per_riser": 0.8074251497005988
+    },
+    "v31_A2_current": {
+      "actor_state_sha256": "adeb5c6c0afc9d58b7881636e51c3970f91cacefd981eaba3634f413f8866f60",
+      "all_finite": true,
+      "checkpoint_sha256": "65ebc05a007fda98076b4c671028cf3ce2026db0fc0da5ac6c056c207363967f",
+      "condition": "v31_A2_current",
+      "fall_rate": 0.267578125,
+      "initial_state_signatures": [
+        "a268cae581f97980d55c52691f6d03bf77f564048ed964090de1c0e4e671562c",
+        "2271542f25afb9c398a6f19c35be48a1cae2ca9d0db7bd8dd0e97e5c8a9410d9"
+      ],
+      "intervention_events_per_riser": 2.455350730189131,
+      "intervention_steps_per_riser": 6.06679435001197,
+      "maximum_nominal_safe_target_error": 3.5762786865234375e-07,
+      "mean_cbf_compute_time_ms": 2.868482306450823,
+      "mean_completion_time_s": 8.3880078125,
+      "mean_reached_riser": 8.158203125,
+      "mean_return": -5.378815622534603,
+      "mean_success_completion_time_s": 9.10572192513369,
+      "mean_toe_riser_contact_impulse": 42.37099634541664,
+      "mean_velocity_correction_jerk": 47.78938285150193,
+      "mean_velocity_correction_norm": 1.4982658656575796,
+      "minimum_filtered_margin": -1.4483928680419922e-05,
+      "num_episodes": 512,
+      "post_intervention_episode_count": 512,
+      "post_intervention_fall_rate": 0.267578125,
+      "post_intervention_mean_abs_root_pitch": 0.13830171932374719,
+      "post_intervention_mean_abs_root_roll": 0.06504307909841711,
+      "post_intervention_mean_support_foot_slip": 0.15407049326677547,
+      "seeds": [
+        1003241789,
+        1003241790
+      ],
+      "success_count": 374,
+      "success_rate": 0.73046875,
+      "toe_riser_contact_force_peak": 1141.25146484375,
+      "total_reached_risers": 4177,
+      "total_steps": 214733,
+      "unsafe_overlap_steps_per_riser": 0.7871678237969835
+    },
+    "v31_A2_off": {
+      "actor_state_sha256": "adeb5c6c0afc9d58b7881636e51c3970f91cacefd981eaba3634f413f8866f60",
+      "all_finite": true,
+      "checkpoint_sha256": "65ebc05a007fda98076b4c671028cf3ce2026db0fc0da5ac6c056c207363967f",
+      "condition": "v31_A2_off",
+      "fall_rate": 0.373046875,
+      "initial_state_signatures": [
+        "a268cae581f97980d55c52691f6d03bf77f564048ed964090de1c0e4e671562c",
+        "2271542f25afb9c398a6f19c35be48a1cae2ca9d0db7bd8dd0e97e5c8a9410d9"
+      ],
+      "intervention_events_per_riser": 0.0,
+      "intervention_steps_per_riser": 0.0,
+      "maximum_nominal_safe_target_error": 3.5762786865234375e-07,
+      "mean_cbf_compute_time_ms": 2.89076121541431,
+      "mean_completion_time_s": 8.4084765625,
+      "mean_reached_riser": 7.8671875,
+      "mean_return": -5.20650300802663,
+      "mean_success_completion_time_s": 9.501869158878506,
+      "mean_toe_riser_contact_impulse": 45.05119336838834,
+      "mean_velocity_correction_jerk": 0.0,
+      "mean_velocity_correction_norm": 0.0,
+      "minimum_filtered_margin": -36.07416534423828,
+      "num_episodes": 512,
+      "post_intervention_episode_count": 0,
+      "post_intervention_fall_rate": 0.0,
+      "post_intervention_mean_abs_root_pitch": 0.0,
+      "post_intervention_mean_abs_root_roll": 0.0,
+      "post_intervention_mean_support_foot_slip": 0.0,
+      "seeds": [
+        1003241789,
+        1003241790
+      ],
+      "success_count": 321,
+      "success_rate": 0.626953125,
+      "toe_riser_contact_force_peak": 8342.154296875,
+      "total_reached_risers": 4028,
+      "total_steps": 215257,
+      "unsafe_overlap_steps_per_riser": 0.8833167825223436
+    },
+    "v31_A2_optimized": {
+      "actor_state_sha256": "adeb5c6c0afc9d58b7881636e51c3970f91cacefd981eaba3634f413f8866f60",
+      "all_finite": true,
+      "checkpoint_sha256": "65ebc05a007fda98076b4c671028cf3ce2026db0fc0da5ac6c056c207363967f",
+      "condition": "v31_A2_optimized",
+      "fall_rate": 0.25390625,
+      "initial_state_signatures": [
+        "a268cae581f97980d55c52691f6d03bf77f564048ed964090de1c0e4e671562c",
+        "2271542f25afb9c398a6f19c35be48a1cae2ca9d0db7bd8dd0e97e5c8a9410d9"
+      ],
+      "intervention_events_per_riser": 2.458293612964728,
+      "intervention_steps_per_riser": 6.079599618684461,
+      "maximum_nominal_safe_target_error": 3.5762786865234375e-07,
+      "mean_cbf_compute_time_ms": 2.8960961550659086,
+      "mean_completion_time_s": 8.441484375,
+      "mean_reached_riser": 8.1953125,
+      "mean_return": -5.293048318475485,
+      "mean_success_completion_time_s": 9.147068062827225,
+      "mean_toe_riser_contact_impulse": 43.57656470790971,
+      "mean_velocity_correction_jerk": 47.87014524590095,
+      "mean_velocity_correction_norm": 1.491006566800089,
+      "minimum_filtered_margin": -1.5616416931152344e-05,
+      "num_episodes": 512,
+      "post_intervention_episode_count": 512,
+      "post_intervention_fall_rate": 0.25390625,
+      "post_intervention_mean_abs_root_pitch": 0.13787323957446337,
+      "post_intervention_mean_abs_root_roll": 0.06497707748755675,
+      "post_intervention_mean_support_foot_slip": 0.15430262614781085,
+      "seeds": [
+        1003241789,
+        1003241790
+      ],
+      "success_count": 382,
+      "success_rate": 0.74609375,
+      "toe_riser_contact_force_peak": 2691.47265625,
+      "total_reached_risers": 4196,
+      "total_steps": 216102,
+      "unsafe_overlap_steps_per_riser": 0.8110104861773118
+    }
+  },
+  "evaluation_context": "F1",
+  "paired_effects": {
+    "trained_optimized_minus_v31_current": {
+      "bootstrap_95_percent_CI": [
+        -0.064453125,
+        0.04296875
+      ],
+      "interference_count": 100,
+      "interference_rate": 0.1953125,
+      "paired_episodes": 512,
+      "rescue_count": 93,
+      "rescue_rate": 0.181640625,
+      "success_delta": -0.013671875,
+      "success_delta_pp": -1.3671875
+    },
+    "trained_optimized_on_minus_off": {
+      "bootstrap_95_percent_CI": [
+        0.041015625,
+        0.15625
+      ],
+      "interference_count": 91,
+      "interference_rate": 0.177734375,
+      "paired_episodes": 512,
+      "rescue_count": 142,
+      "rescue_rate": 0.27734375,
+      "success_delta": 0.099609375,
+      "success_delta_pp": 9.9609375
+    },
+    "v31_current_on_minus_off": {
+      "bootstrap_95_percent_CI": [
+        0.046875,
+        0.158203125
+      ],
+      "interference_count": 83,
+      "interference_rate": 0.162109375,
+      "paired_episodes": 512,
+      "rescue_count": 136,
+      "rescue_rate": 0.265625,
+      "success_delta": 0.103515625,
+      "success_delta_pp": 10.3515625
+    },
+    "v31_optimized_minus_v31_current": {
+      "bootstrap_95_percent_CI": [
+        -0.021484375,
+        0.0546875
+      ],
+      "interference_count": 46,
+      "interference_rate": 0.08984375,
+      "paired_episodes": 512,
+      "rescue_count": 54,
+      "rescue_rate": 0.10546875,
+      "success_delta": 0.015625,
+      "success_delta_pp": 1.5625
+    }
+  },
+  "paired_identity_seed_base": 1003241789,
+  "source_context": "F1"
+}

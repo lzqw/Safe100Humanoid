@@ -1,0 +1,74 @@
+{
+  "adaptation_seeds": [
+    42,
+    142,
+    242
+  ],
+  "created_date": "2026-08-06",
+  "evaluation": {
+    "audit_seed": 3100000,
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 4000000,
+    "d0_paired_episodes_per_adaptation_seed": 256,
+    "eval_batch_size": 128,
+    "macro_average_computed": false,
+    "off_diagonal_evaluation": false,
+    "paired_baseline_and_final_randomness": true,
+    "runtime_cbf": true,
+    "target_paired_episodes_per_adaptation_seed": 512
+  },
+  "fresh_evidence_boundary": {
+    "fresh_v18_audit_results_seen_before_freeze": false,
+    "historical_v17_result_may_not_be_relabelled_as_v18_evidence": true,
+    "historical_v17_results_known_when_protocol_was_created": true,
+    "new_audit_randomness_required": true,
+    "sealed_v17_actors_may_not_be_reselected_after_the_fresh_audit": true
+  },
+  "independent_scene_acceptance": {
+    "confidence_interval_is_a_gate": false,
+    "joint_three_scene_claim_defined": false,
+    "maximum_diagonal_fall_increase": 0.03,
+    "mean_diagonal_success_delta_strictly_above": 0.0,
+    "minimum_d0_success_delta": -0.05,
+    "minimum_positive_adaptation_seed_count": 2
+  },
+  "policy_method": "Failure-Mode-Conditioned Brief PPO v17",
+  "protocol_id": "safe100-diagonal-specialist-v18",
+  "protocol_revision": 2,
+  "protocol_revision_note": "Before any fresh episode evaluation, the GPU smoke preflight caught two incorrectly transcribed full context-parameter hashes in revision 1. Revision 2 copies the exact hashes from the sealed context files and training manifest; no evaluation outcome was generated or inspected.",
+  "removed_conditions": {
+    "cbf_independence_gate": true,
+    "cross_scene_all_pass_requirement": true,
+    "individual_2pp_success_floor": true,
+    "macro_lcb_gate": true,
+    "off_diagonal_gate_or_report": true
+  },
+  "sealed_inputs": {
+    "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+    "contexts": {
+      "balance": {
+        "file_sha256": "0c8f3c94353b3199289614b91da38c70539efc6a6b8201d4de31282a6cd1c5ae",
+        "parameters_sha256": "5bf28258852b76c5c18cc005a604f9bf7183fe7a1984ee83e44d2d25fc811e81"
+      },
+      "cbf": {
+        "file_sha256": "a4f9ecf8b718e7da395d9c60d35e55d1bf1d0c5b5c71e6a70c7a69fc8b675beb",
+        "parameters_sha256": "da07fd6cc606c3cb1e8b7064a5712cbc31b26f978a36f1b250f41ae2b0aae3d1"
+      },
+      "lateral": {
+        "file_sha256": "db4bb299278c02734aa54bfb4d94b8684a21d5bc731deff522964fba86650eb9",
+        "parameters_sha256": "e79dad659a30c99837c0c9ff11da2186a01b9dcbfd3bc1ee118e8f77b173bf85"
+      }
+    },
+    "historical_v17_compact_audit_sha256": "62f3c84c5085e51c771ef67208e74a604e008f54056d34a0f090685ca816a458",
+    "historical_v17_final_audit_summary_sha256": "8a3d4562c507de60e0a61b2608bf5197fb9b0cc590f0642c7a12fd6a59d1848c",
+    "initial_actor_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+    "training_manifest_sha256": "6d8149d9a47ec786405feab2503fe5e2b21e64df3d3e943911c5f92e0044494d"
+  },
+  "specialist_modes": [
+    "lateral",
+    "cbf",
+    "balance"
+  ],
+  "status": "frozen_before_fresh_audit",
+  "supersedes_protocol_commit": "a5834b3c4843e06f655f51b1349ff1e516fea1a0"
+}

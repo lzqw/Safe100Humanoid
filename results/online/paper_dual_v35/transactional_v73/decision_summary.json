@@ -1,0 +1,89 @@
+{
+  "schema_version": "paper_dual_v35.v73.decision.v1",
+  "candidate": "transactional-adaptive-full-batch-cbf-ppo-v73",
+  "decision": "rejected_at_training_gate",
+  "reason": "Transactional rollback rejected the 61.86% proposal and the smaller-step proposal reached 69.54% filter-off, still below the 75% training gate and v72's 71.58% single-run high.",
+  "source_commit": "241bfb1abd0f6816a500f9fefb3194b2794cce69",
+  "base_checkpoint_sha256": "3285223174b01c97009db54361042c4c3d2d87054ca2156c84769f6d13ceccbc",
+  "training": {
+    "seed": 201352620,
+    "num_envs": 128,
+    "filter_on_envs": 32,
+    "filter_off_envs": 96,
+    "rounds": 4,
+    "rollout_steps_per_round": 1024,
+    "elapsed_seconds": 99.26505269005429,
+    "initial_actor_learning_rate": 0.00005,
+    "final_actor_learning_rate": 0.000025,
+    "target_moving_forward_kl": 0.00001,
+    "transactional_rollback_count": 1,
+    "filter_group_balanced_advantages": true,
+    "teacher_arm": "A0",
+    "domain_randomization": false
+  },
+  "rollout_checkpoint_alignment": "round_N_rollout_uses_round_N_minus_1_checkpoint",
+  "aligned_rollouts": [
+    {
+      "rollout_round": 1,
+      "filter_off_success_count": 125,
+      "filter_off_episode_count": 194,
+      "filter_off_success_rate": 0.6443298969072165,
+      "filter_on_success_count": 47,
+      "filter_on_episode_count": 69,
+      "filter_on_success_rate": 0.6811594202898551,
+      "rollback_applied": false
+    },
+    {
+      "rollout_round": 2,
+      "filter_off_success_count": 120,
+      "filter_off_episode_count": 194,
+      "filter_off_success_rate": 0.6185567010309279,
+      "filter_on_success_count": 49,
+      "filter_on_episode_count": 68,
+      "filter_on_success_rate": 0.7205882352941176,
+      "rollback_applied": true
+    },
+    {
+      "rollout_round": 3,
+      "filter_off_success_count": 133,
+      "filter_off_episode_count": 195,
+      "filter_off_success_rate": 0.6820512820512821,
+      "filter_on_success_count": 43,
+      "filter_on_episode_count": 68,
+      "filter_on_success_rate": 0.6323529411764706,
+      "rollback_applied": false
+    },
+    {
+      "rollout_round": 4,
+      "filter_off_success_count": 137,
+      "filter_off_episode_count": 197,
+      "filter_off_success_rate": 0.6954314720812182,
+      "filter_on_success_count": 48,
+      "filter_on_episode_count": 63,
+      "filter_on_success_rate": 0.7619047619047619,
+      "rollback_applied": false
+    }
+  ],
+  "selected_aligned_checkpoint": {
+    "checkpoint_round": 3,
+    "checkpoint_sha256": "c8d09065c3c3a5409c446f5eb895cb01c550bb5e919534cb0152e6471e269ab9",
+    "actor_sha256": "a1d6ab2c124f92b30fb4e84a2403dddd7ad20affd576cc880bd5277d1a986c82",
+    "filter_off_success_rate": 0.6954314720812182,
+    "selected_for_continuation": true,
+    "accepted_as_final_result": false,
+    "uploaded": false
+  },
+  "optimization_diagnostics": {
+    "actor_learning_rate_by_round": [0.00005, 0.00005, 0.000025, 0.000025],
+    "moving_forward_kl_by_round": [9.16895987757016e-06, 9.289537047152407e-06, 1.9505559976096265e-06, 2.5140352590824477e-06],
+    "transactional_rollback_by_round": [false, true, false, false]
+  },
+  "deployment_filter_off_gate": {
+    "planned_episode_count": 128,
+    "success_threshold": 0.75,
+    "run": false,
+    "reason": "training_gate_failed"
+  },
+  "current_best_changed": false,
+  "next_hypothesis": "Continue from the selected checkpoint with 1.25e-5 full-batch steps while treating cross-rollout raw-rate differences as noisy rather than paired evidence."
+}

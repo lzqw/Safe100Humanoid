@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "version": "v134",
+  "remote_artifact_root": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/uniform_swa_v134_49f20b1",
+  "checkpoints": {
+    "uniform_swa_candidate": {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/uniform_swa_v134_49f20b1/actor_swa_round01_07.pt",
+      "checkpoint_sha256": "d1f2fd282d301069dce6aeda8926c04130a989fa183e54f23b70ea029dad3700",
+      "actor_sha256": "6acd1fded2e95284eed9b503c96ecc4f8945adf2489dedfe844a75b3d76fe816",
+      "deterministic_actor_sha256": "a5a2b716a38267dd19c11d16b75a56fa23d4d15b41d304282bd63e1b1f8c80ba",
+      "source_rounds": [1, 2, 3, 4, 5, 6, 7],
+      "uniform_snapshot_weight": 0.14285714285714285,
+      "deployment_only": true,
+      "resume_training_supported": false
+    }
+  },
+  "binary_upload": {
+    "uploaded_to_git": false,
+    "reason": "The single SWA candidate scored 40/64 and did not trigger the independent gate; the complete build manifest, paths, and SHA-256 identities are published instead."
+  }
+}

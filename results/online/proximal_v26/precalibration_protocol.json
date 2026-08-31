@@ -1,0 +1,341 @@
+{
+  "base_checkpoint": {
+    "reference": "/home/carla/LZQW/SAFE100/humanoid/artifacts/retention_v13/arm_b_state_retention/accepted_final.pt",
+    "sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8"
+  },
+  "calibration": {
+    "adapted_policy_evaluations_used": false,
+    "alignment_coverage_minimum": 0.8,
+    "base_policy_only": true,
+    "batch_size": 128,
+    "episodes_per_candidate": 256,
+    "off_success_bounds_inclusive": [
+      0.4,
+      0.65
+    ],
+    "on_success_bounds_inclusive": [
+      0.8,
+      0.95
+    ],
+    "ordered_light_to_severe": true,
+    "outcome_dependent_reselection_forbidden": true,
+    "paired_same_initial_conditions_cbf_off_on": true,
+    "repeats_per_candidate": 2,
+    "select_first_qualifier": true,
+    "shield_rescue_rate_minimum": 0.6,
+    "toe_riser_event_definition": "debounced entry of the selected swing toe into exact riser overlap"
+  },
+  "environment": {
+    "actor_observation_corruption": "disabled",
+    "clearance_barrier": "sloped_xz",
+    "clearance_barrier_slope": 0.8,
+    "command": "nominal",
+    "controller": "nominal",
+    "curriculum": "disabled",
+    "encoder_bias": "absent",
+    "fresh_initial_state_reset_events": [
+      "reset_base",
+      "reset_robot_joints"
+    ],
+    "friction": "nominal",
+    "geometry": "uniform_higher_riser_from_frozen_height_grid",
+    "registered_variant": "fixed_deployment_play",
+    "task_id": "Unitree-G1-Stairs-Online-DQHMED"
+  },
+  "evaluation": {
+    "all_four_conditions_share_initial_state_signatures": true,
+    "batch_size": 128,
+    "conditions": [
+      "pi0_off",
+      "pi0_on",
+      "pi8_on",
+      "pi8_off"
+    ],
+    "deterministic_policy_mean": true,
+    "fresh_paired_conditions": 512,
+    "seed_base": 149260000
+  },
+  "excluded": {
+    "candidate_line_search": true,
+    "failure_bank": true,
+    "hidden_variable_shift": true,
+    "multiple_adaptation_seeds": true,
+    "new_actor_observation": true,
+    "performance_gate_or_best_checkpoint": true,
+    "random_per_riser_geometry": true,
+    "state_restart": true
+  },
+  "experiment_name": "v26 Higher-Riser Sloped-Clearance CBF Teacher",
+  "implementation_boundary": {
+    "all_execution_sources_committed_before_first_v26_episode": true,
+    "git_commit": "905210d94584f0830862b326480473d1fd005213",
+    "source_files": {
+      ".gitattributes": "54dad713a5c8a284449e401d14b6e303de5297ad7abb1173e8486c0f6de31fa6",
+      "conda-list.txt": "d40179f07b6a46b63a14a93864202f112dbde7bc6e8927e847e0a86fd7847452",
+      "experiments/scripts/audit_cbf_teacher_v26.py": "d1e30f909279cb8428af134d917b976bbd60edd67aa236cd5355d20353532935",
+      "experiments/scripts/calibrate_cbf_teacher_v26.py": "4d41bb8f58a9024ba385cd292cb657d710933870558029f9940edb53f6cf93af",
+      "experiments/scripts/cbf_teacher_v26_protocol.py": "29c90a8d461e36d4dc13c0b90e32a3ab655a423737dee8bc507f0f2316d248cc",
+      "experiments/scripts/evaluate_cbf_teacher_v26.py": "19b67f475bd5aeddcd0c2c4c9f38b512b8759cc48a6cc323f27f695e39ac21a8",
+      "experiments/scripts/freeze_cbf_teacher_v26_precalibration.py": "b849164540285082b242ba0a6291579a6a4bb3e7c59fe9313b88d7e338886a41",
+      "experiments/scripts/freeze_cbf_teacher_v26_protocol.py": "2ac1578ce73241beaf16abed47a9291c23f80b79054c298860ca500ab2d56e2f",
+      "experiments/scripts/proximal_v23_io.py": "04077ac25965163cde89f3d2ec0ff27ea822c686acc19562bc3c90990fd61052",
+      "experiments/scripts/refine_cbf_teacher_v26.py": "c6ed45b9063436e36343b6a2c15a7211e64b26b987efeb7065a98e94a505da4f",
+      "experiments/scripts/run_cbf_teacher_v26.sh": "a65612e835f9ac22b73a596610bcfb6bd1a20af3546c4a2f4cc6a1635a32510e",
+      "requirements-lock.txt": "3ddb9bf19e33771f009e9f57677b2e2678bc68d933e5daa1526844f2c728326e",
+      "setup.py": "15476af3b59ad75dbbfc2deb6cbdff30dfedb99fbb65be5ebb9a4d52061c73de",
+      "src/assets/robots/__init__.py": "9f45d1126dc5fe58e9673adb5f3c8b4eaa6f20d4a4af5a75e0f9a183ecc7095e",
+      "src/assets/robots/unitree_g1/g1_constants.py": "136b59af97082a74fd3a2a4250bc2e290b3ba6a26533b1492be52114dd844c5d",
+      "src/tasks/__init__.py": "310ff3bbeed45f4792394e36ff98eb4b5b70e0657c2e5ef67dd363d510133d9b",
+      "src/tasks/stairs_cbf/__init__.py": "ee5255b1ef8cdebfab6ac9fd9b2f5b115b3a6c34c5eb306ba993306159363f25",
+      "src/tasks/stairs_cbf/actions.py": "83151afb1f9aa8b38c8985a3885c084b6e988716acee36ac0324cbb4985d0c6d",
+      "src/tasks/stairs_cbf/cbf_math.py": "6a931cbbcd80e6af518857ece6a5fb755285a18f35636da7977ea836943a31da",
+      "src/tasks/stairs_cbf/command.py": "efd9ec3faed1f5aa14aff03802cf3cce4a9d61a8041fffc684e54d152a6a4104",
+      "src/tasks/stairs_cbf/config.py": "22a57df095616e1f19f7cf6f18d7ba173ecef7901bf2a85da2a5faaa11c32f8a",
+      "src/tasks/stairs_cbf/edge_detection.py": "302735da8506bd7d40bb7745e76fa280496775520329bf1bd059732e8746b662",
+      "src/tasks/stairs_cbf/mdp.py": "631a9fefcf2026521c1c43ecf2dc1851124ce47921a1ddf4191ae7db31475754",
+      "src/tasks/stairs_cbf/online.py": "0b53dd2d58a2bc4745cb523b73853f5af5f172a6406c7d121415ad9ee18aa90a",
+      "src/tasks/stairs_cbf/proximal.py": "d879fc138dc3bebe26d913182519b0280884e30ed7f529be2bdd9e259b8c4838",
+      "src/tasks/stairs_cbf/teacher.py": "afc276f213d06470c407e867ffafb7370a19bb5ab83506dbf6a7762e96172586",
+      "src/tasks/stairs_cbf/teacher_math.py": "f23e589bd0e98600b588b4ee61518be6a6d96f69355cd5478a34e6b36b224453",
+      "src/tasks/stairs_cbf/teacher_v26.py": "6ed9a18d2eb2e4e5a0b4c9c3f245316ffcecc57936b89b4d24f0bb5e14ad7d44",
+      "src/tasks/stairs_cbf/terrain.py": "f24dcfc9fb2d364c42e1b872a787dd940d4abee1656d2e9a840c19828075bcf8",
+      "src/tasks/velocity/config/g1/env_cfgs.py": "c3ec7ec2730ee0ecbc9da21e493c89161da6a6142084b7400b39ce34492dbed0",
+      "src/tasks/velocity/config/g1/rl_cfg.py": "816d29bc673326ab75d949c542eb7cb8f0f4bbb334a575e316e699ea66f55f7c",
+      "src/tasks/velocity/rl/__init__.py": "c0df1a85535f191511cf7ee3d45c6bf9236081e8a72903e0b52e0a017a07d6df",
+      "src/tasks/velocity/rl/runner.py": "1a12eb152cb307b57e024814a3a3f9026458759bab6cf43a5cfcccc0b9a0e0cf"
+    }
+  },
+  "learning_semantics": {
+    "final_policy": "unconditional round-8 actor",
+    "moving_reference": "current round-start pi_k",
+    "one_actor_original_405D_observation": true,
+    "one_privileged_critic_original_838D_observation": true,
+    "ppo_ratio_uses_sampled_raw_policy_action": true,
+    "runtime_cbf_executes_filtered_action": true,
+    "teacher_reprojection_audited_at_1e-6": true,
+    "teacher_requires_actual_intervention": true,
+    "teacher_requires_next_riser_within_H": true,
+    "teacher_requires_no_fall_within_H": true,
+    "teacher_target": "stop-gradient actor-coordinate CBF safe action",
+    "teacher_weight_clipped_by_actor_coordinate_correction": true
+  },
+  "policy_method": "Success-Gated CBF Action Teacher + Moving-KL PPO v26",
+  "prior_results_immutable": {
+    "checks": {
+      "v23_final_byte_unchanged": true,
+      "v23_protocol_byte_unchanged": true,
+      "v23_result_tree_unchanged": true,
+      "v24_final_byte_unchanged": true,
+      "v24_protocol_byte_unchanged": true,
+      "v24_result_tree_unchanged": true
+    },
+    "git_trees": {
+      "v23": "68f489ac49af8020912f7e3e71d317e7f8fc1f0f",
+      "v24": "6718715354ed4cb729d85f3cec4f36dcc16cc824"
+    },
+    "rerun_or_recomputed": false,
+    "sha256": {
+      "v23_final": "7cbbbfc596e5ad39177c946998055fa460c646730a00385701b595f77cff0148",
+      "v23_protocol": "745e888e47d9d33fe87fffa4bbaba618a7e91f37b55ebbf8cb08f578fc1d8f38",
+      "v24_final": "262c570ed5c15368f454e7fa2064ec789a29379cbefdf27481e9b0ad0a43a62a",
+      "v24_protocol": "d52de9034523350dc5ebda1143d26ab02737d31cafccc764d3c9a092c4e6f39b"
+    },
+    "unchanged": true
+  },
+  "prospective_execution": {
+    "adaptation_started": false,
+    "adapted_policy_outcomes_observed": false,
+    "calibration_started": false,
+    "final_evaluation_started": false,
+    "fresh_adaptation_count_planned": 1,
+    "v26_simulator_episode_started": false
+  },
+  "prospective_freeze": {
+    "before_any_formal_v26_simulator_episode": true,
+    "development_episodes_already_observed_and_excluded": true,
+    "development_seeds": [
+      146260000,
+      146260001,
+      146260002,
+      146260003,
+      146260004,
+      146261000
+    ],
+    "formal_seed_overlap": false
+  },
+  "protocol_id": "safe100-success-gated-cbf-teacher-v26",
+  "randomness_preflight": {
+    "collisions": [],
+    "historical_collisions": [],
+    "historical_json_file_count": 329,
+    "historical_json_files_sha256": "4de7585f2caf3764a781978383e485c38d07f9ca2376a5bb027a341f4acc0ebb",
+    "historical_scope": "all parseable JSON below results/online except proximal_v26",
+    "paired_arm_seed_reuse": "intentional within each off/on condition identity",
+    "passed": true,
+    "proposed_internal_collisions": [],
+    "proposed_seed_occurrence_count": 27,
+    "proposed_unique_seed_count": 27,
+    "protocol_id": "safe100-success-gated-cbf-teacher-v26",
+    "schema_version": 1
+  },
+  "revision": 1,
+  "schema_version": 1,
+  "shift_family": {
+    "actor_observation_interface_unchanged": true,
+    "baseline_riser_height_m": 0.13,
+    "candidate_grid": [
+      {
+        "candidate_index": 0,
+        "evaluation_seeds": [
+          147260000,
+          147260001
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "riser_height_m": 0.17,
+        "severity_order": "light_to_severe"
+      },
+      {
+        "candidate_index": 1,
+        "evaluation_seeds": [
+          147260100,
+          147260101
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "riser_height_m": 0.172,
+        "severity_order": "light_to_severe"
+      },
+      {
+        "candidate_index": 2,
+        "evaluation_seeds": [
+          147260200,
+          147260201
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "riser_height_m": 0.174,
+        "severity_order": "light_to_severe"
+      },
+      {
+        "candidate_index": 3,
+        "evaluation_seeds": [
+          147260300,
+          147260301
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "riser_height_m": 0.176,
+        "severity_order": "light_to_severe"
+      },
+      {
+        "candidate_index": 4,
+        "evaluation_seeds": [
+          147260400,
+          147260401
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "riser_height_m": 0.178,
+        "severity_order": "light_to_severe"
+      },
+      {
+        "candidate_index": 5,
+        "evaluation_seeds": [
+          147260500,
+          147260501
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "riser_height_m": 0.18,
+        "severity_order": "light_to_severe"
+      },
+      {
+        "candidate_index": 6,
+        "evaluation_seeds": [
+          147260600,
+          147260601
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "riser_height_m": 0.182,
+        "severity_order": "light_to_severe"
+      },
+      {
+        "candidate_index": 7,
+        "evaluation_seeds": [
+          147260700,
+          147260701
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "riser_height_m": 0.184,
+        "severity_order": "light_to_severe"
+      },
+      {
+        "candidate_index": 8,
+        "evaluation_seeds": [
+          147260800,
+          147260801
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "riser_height_m": 0.186,
+        "severity_order": "light_to_severe"
+      },
+      {
+        "candidate_index": 9,
+        "evaluation_seeds": [
+          147260900,
+          147260901
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "riser_height_m": 0.188,
+        "severity_order": "light_to_severe"
+      },
+      {
+        "candidate_index": 10,
+        "evaluation_seeds": [
+          147261000,
+          147261001
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "riser_height_m": 0.19,
+        "severity_order": "light_to_severe"
+      }
+    ],
+    "cbf_uses_exact_generated_riser_geometry": true,
+    "clearance_barrier": "sloped_xz",
+    "clearance_barrier_slope": 0.8,
+    "context_id": "higher_riser_sloped_clearance_v26",
+    "family": "fixed_uniform_higher_riser",
+    "fixed_within_and_across_episodes_after_selection": true,
+    "friction_command_controller_nominal": true,
+    "only_changed_axis": "uniform stair riser height",
+    "plant_action_transform": "identity"
+  },
+  "status": "prospectively_frozen_before_v26_base_only_paired_calibration",
+  "supersession": null,
+  "training": {
+    "actor_learning_rate": 5e-06,
+    "clearance_barrier_slope": 0.8,
+    "critic_epochs": 2,
+    "critic_learning_rate": 0.0001,
+    "empty_teacher_minibatch": "exact differentiable zero",
+    "entropy_coefficient": 0.0,
+    "freeze_log_std": true,
+    "gae_lambda": 0.95,
+    "gamma": 0.99,
+    "hard_kl_ceiling": 0.01,
+    "maximum_actor_epochs": 2,
+    "maximum_gradient_norm": 0.5,
+    "maximum_std": 0.25,
+    "mini_batches": 4,
+    "minimum_std": 0.05,
+    "moving_kl_beta": 0.5,
+    "num_envs": 64,
+    "ppo_clip": 0.05,
+    "rollout_steps": 1024,
+    "rounds": 8,
+    "std_scale_from_base": 0.35,
+    "target_kl": 0.003,
+    "teacher_correction_scale": 0.05,
+    "teacher_distillation_weight": 0.1,
+    "teacher_loss": "weighted standardized Gaussian NLL up to a constant",
+    "teacher_normalization": "valid teacher transition count per minibatch",
+    "teacher_success_horizon_seconds": 1.0,
+    "teacher_success_horizon_steps": 50,
+    "whole_batch_advantage_normalization": true
+  }
+}

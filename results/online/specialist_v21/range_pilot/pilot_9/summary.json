@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "protocol_id": "safe100-deployment-unit-local-matched-success-v21",
+  "event_id": "v21-base-policy-L2-heading-authority-pilot-9",
+  "stage": "base_policy_only_context_range_feasibility_pilot",
+  "formal_context_selection": false,
+  "started_at_utc": "2026-08-08T18:32:03Z",
+  "completed_at_utc": "2026-08-08T18:41:09Z",
+  "prospective_protocol": {
+    "file": "results/online/specialist_v21/protocol_range_pilot_9.json",
+    "git_commit": "e1f9c2769ad3b09bcef42cfe8ff9a0a6640226a7",
+    "sha256": "60f38baec35ec824501052a1e1ebf0d08dd3560bbe7aa49d1a087a475d4f406a"
+  },
+  "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "episodes_per_candidate": 256,
+  "candidates_per_context": 12,
+  "context_count": 1,
+  "total_base_policy_episodes": 3072,
+  "gates": {
+    "success_rate_min": 0.7,
+    "success_rate_max": 0.85,
+    "minimum_fall_count": 50,
+    "lateral_target_failure_fraction_min": 0.8,
+    "lateral_second_failure_fraction_max": 0.3
+  },
+  "qualifying_contexts": {},
+  "contexts_without_qualifier": [
+    "L2"
+  ],
+  "contexts_requiring_mechanism_redesign": [
+    "L2"
+  ],
+  "purity_without_difficulty_candidates": [
+    {
+      "candidate_seed": 29408,
+      "success_rate": 0.83984375,
+      "fall_count": 41,
+      "target_failure_fraction": 0.8048780487804879,
+      "second_failure_fraction": 0.1951219512195122
+    },
+    {
+      "candidate_seed": 29409,
+      "success_rate": 0.859375,
+      "fall_count": 36,
+      "target_failure_fraction": 0.8055555555555556,
+      "second_failure_fraction": 0.19444444444444445
+    },
+    {
+      "candidate_seed": 29414,
+      "success_rate": 0.8515625,
+      "fall_count": 38,
+      "target_failure_fraction": 0.8421052631578947,
+      "second_failure_fraction": 0.15789473684210525
+    }
+  ],
+  "difficulty_without_purity_candidates": [
+    {
+      "candidate_seed": 29411,
+      "success_rate": 0.80078125,
+      "fall_count": 51,
+      "target_failure_fraction": 0.6470588235294118,
+      "second_failure_fraction": 0.35294117647058826
+    },
+    {
+      "candidate_seed": 29415,
+      "success_rate": 0.79296875,
+      "fall_count": 53,
+      "target_failure_fraction": 0.7547169811320755,
+      "second_failure_fraction": 0.24528301886792453
+    },
+    {
+      "candidate_seed": 29418,
+      "success_rate": 0.78515625,
+      "fall_count": 55,
+      "target_failure_fraction": 0.6909090909090909,
+      "second_failure_fraction": 0.3090909090909091
+    },
+    {
+      "candidate_seed": 29419,
+      "success_rate": 0.796875,
+      "fall_count": 52,
+      "target_failure_fraction": 0.6346153846153846,
+      "second_failure_fraction": 0.36538461538461536
+    }
+  ],
+  "pooled_outcomes": {
+    "total_falls": 550,
+    "lateral_heading_failures": 401,
+    "contact_stability_failures": 149,
+    "lateral_failure_fraction": 0.7290909090909091
+  },
+  "interpretation": "Reducing heading correction authority under a fixed modest yaw bias produced several mechanism-pure but too-easy candidates. Candidates with enough failures lost target purity. The tested authority-loss range does not close the difficulty/purity intersection and should not be extended. The next mechanism should use a bounded biased visual heading reference with nominal feedback authority.",
+  "base_policy_outcomes_observed": true,
+  "adaptation_process_started": false,
+  "adapted_policy_outcomes_observed": false,
+  "formal_adaptation_or_audit_outcomes_observed": false,
+  "execution": {
+    "queue_completed_marker_observed": true,
+    "tmux_session_running_after_completion": false,
+    "v21_calibration_or_adaptation_process_running_after_completion": false,
+    "process_audit_at_utc": "2026-08-08T18:41:52Z"
+  },
+  "committed_evidence": {
+    "progress_commit": "15892be7e516dd0931ff2769f4a913397d38a876",
+    "progress_file_count": 1,
+    "progress_file_sha256": "d309acf7abc7a5104a911fb2133e4f921b63f075588b7d9d5ee8aa3b13464822",
+    "progress_manifest_sha256": "27b84f123ac0f4a156f0ba4cc278414afd53ccea6d8a29b158f90f3106b31fb3",
+    "manifest_definition": "SHA-256 of the relative ./L2/calibration_progress.json sha256sum line"
+  },
+  "external_evidence": {
+    "artifact_root": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_range_pilot_9",
+    "artifact_file_count": 73,
+    "artifact_total_bytes": 49509424,
+    "artifact_manifest_sha256": "d7d15eba5a577b6879dfab0c19183abdfcab146661e8b0da0184bef9e17bc31d",
+    "log_root": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v21_range_pilot_9",
+    "log_file_count": 2,
+    "log_total_bytes": 80381,
+    "log_manifest_sha256": "24bed2ae0801dbaecdf61456757625fcad752d78124f3e863d2e4c821d9dc17b",
+    "queue_log_sha256": "8752992bba6e23a18a9d70c0273c6bf70e63ed6cb8e076a1138f29eb2b5a7625",
+    "context_log_sha256": "7d95b73a3f7c497bc2f5019b0a2f1359d10e171215b80f2d106761aca0863e82",
+    "manifest_definition": "SHA-256 of sorted sha256sum lines rooted at the corresponding directory and using relative paths"
+  },
+  "disposition": "reject_heading_authority_extension_and_test_biased_visual_heading_reference",
+  "formal_calibration_ready": false,
+  "next_boundary": {
+    "pending_contexts": [
+      "L2"
+    ],
+    "confirmation_episodes_per_candidate": 256,
+    "primary_axis": "bounded_visual_heading_reference_bias_with_nominal_feedback_authority",
+    "preserve_lateral_and_heading_feedback_authority": true,
+    "do_not_extend_yaw_command_magnitude_or_authority_loss": true,
+    "next_test_remains_base_policy_only_and_non_formal": true,
+    "new_candidate_and_evaluation_randomness_required": true,
+    "next_protocol_must_bind_this_negative_result": true,
+    "next_protocol_must_be_committed_before_execution": true,
+    "adaptation_outcomes_must_remain_absent": true
+  }
+}

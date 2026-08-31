@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "decision": "rejected_below_75_percent_filter_off_screen",
+  "binary_uploaded_to_github": false,
+  "source_commit": "bdd57f0669f7406340c346422c09351f393e8258",
+  "input": {
+    "label": "v79_round_03",
+    "checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt"
+  },
+  "base_expanded": {
+    "actor_observation_dim": 415,
+    "new_geometry_columns_zero": true,
+    "checkpoint_sha256": "74f834b1352a12032c84af113381028da7ca3224e7cfff021eee845c3e9069c6",
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/deployment_counterfactual_v110_bdd57f0_4x32_s201353400/base_expanded.pt"
+  },
+  "candidate": {
+    "actor_observation_interface": "deployable-cbf-persistent-geometry-415",
+    "actor_state_sha256": "aaeba19083c43f86fd53de4d83d1d2064e0bc843bdc96a0badc517ae40501eda",
+    "actor_deterministic_state_sha256": "b7d0a990ba41b2b45470bfab92d1d6a618084f3b9cfc551c1b0d7f9cb3beb754",
+    "checkpoint_sha256": "473724b36cc416ab0ae5f011d4daee5645aaef9b1579369843476cab050e0ca6",
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/deployment_counterfactual_v110_bdd57f0_4x32_s201353400/candidate.pt",
+    "selected": false
+  }
+}

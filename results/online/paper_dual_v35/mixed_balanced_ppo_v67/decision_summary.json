@@ -1,0 +1,79 @@
+{
+  "schema_version": "paper_dual_v35.v67.decision.v1",
+  "candidate": "mixed-filter-group-balanced-ppo-v67",
+  "decision": "rejected_at_training_gate",
+  "reason": "The best rollout-aligned filter-off rate was 72.22%, below the predeclared 75% gate, and the next checkpoint diverged between filter-on and filter-off.",
+  "source_commit": "707ffc92cfb73616b2abfb61e5611478f36a6f9e",
+  "base_checkpoint_sha256": "3ec45cd196447901cf815d0fa1ff400af1b519ed2bb85c2fc179458ce3e81d3f",
+  "training": {
+    "seed": 201352614,
+    "num_envs": 128,
+    "filter_on_envs": 64,
+    "filter_off_envs": 64,
+    "rounds": 4,
+    "rollout_steps_per_round": 1024,
+    "elapsed_seconds": 142.68189383402932,
+    "actor_learning_rate": 1e-6,
+    "moving_kl_beta": 0.5,
+    "filter_group_balanced_advantages": true,
+    "domain_randomization": false
+  },
+  "rollout_checkpoint_alignment": "round_N_rollout_uses_round_N_minus_1_checkpoint",
+  "aligned_rollouts": [
+    {
+      "rollout_round": 1,
+      "checkpoint_round": 0,
+      "filter_off_success_count": 92,
+      "filter_off_episode_count": 132,
+      "filter_off_success_rate": 0.696969696969697,
+      "filter_on_success_count": 91,
+      "filter_on_episode_count": 130,
+      "filter_on_success_rate": 0.7
+    },
+    {
+      "rollout_round": 2,
+      "checkpoint_round": 1,
+      "filter_off_success_count": 85,
+      "filter_off_episode_count": 133,
+      "filter_off_success_rate": 0.6390977443609023,
+      "filter_on_success_count": 89,
+      "filter_on_episode_count": 136,
+      "filter_on_success_rate": 0.6544117647058824
+    },
+    {
+      "rollout_round": 3,
+      "checkpoint_round": 2,
+      "filter_off_success_count": 91,
+      "filter_off_episode_count": 126,
+      "filter_off_success_rate": 0.7222222222222222,
+      "filter_on_success_count": 102,
+      "filter_on_episode_count": 142,
+      "filter_on_success_rate": 0.7183098591549296
+    },
+    {
+      "rollout_round": 4,
+      "checkpoint_round": 3,
+      "filter_off_success_count": 78,
+      "filter_off_episode_count": 128,
+      "filter_off_success_rate": 0.609375,
+      "filter_on_success_count": 102,
+      "filter_on_episode_count": 131,
+      "filter_on_success_rate": 0.7786259541984732
+    }
+  ],
+  "best_aligned_checkpoint": {
+    "checkpoint_round": 2,
+    "checkpoint_sha256": "5352dea634bed77c01c673a410c3da98776d1860dcb5a7e2d8df028eee559b07",
+    "actor_sha256": "bd694f1d65ee5c717fa83a4de773390d0c7bd07e08ec0360f7716e2560751f2b",
+    "selected": false,
+    "uploaded": false
+  },
+  "deployment_filter_off_gate": {
+    "planned_episode_count": 128,
+    "success_threshold": 0.75,
+    "run": false,
+    "reason": "training_gate_failed"
+  },
+  "current_best_changed": false,
+  "next_hypothesis": "Route filter-off transitions to PPO actor gradients and filter-on interventions to the deterministic-mean CBF teacher instead of attributing filtered returns to nominal actions."
+}

@@ -1,0 +1,522 @@
+{
+  "base_checkpoint": {
+    "reference": "/home/carla/LZQW/SAFE100/humanoid/artifacts/retention_v13/arm_b_state_retention/accepted_final.pt",
+    "sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8"
+  },
+  "calibration": {
+    "adapted_policy_evaluations_used": false,
+    "alignment_coverage_minimum": 0.8,
+    "base_policy_only": true,
+    "batch_size": 128,
+    "episodes_per_candidate": 512,
+    "off_success_bounds_inclusive": [
+      0.4,
+      0.65
+    ],
+    "on_success_bounds_inclusive": [
+      0.8,
+      0.95
+    ],
+    "ordered_light_to_severe": true,
+    "outcome_dependent_reselection_forbidden": true,
+    "paired_same_initial_conditions_cbf_off_on": true,
+    "repeats_per_candidate": 4,
+    "select_first_qualifier": true,
+    "shield_rescue_rate_minimum": 0.6,
+    "toe_riser_event_definition": "debounced entry of the selected swing toe into exact CBF h<=0 half-space"
+  },
+  "environment": {
+    "actor_observation_corruption": "disabled",
+    "command": "nominal",
+    "controller": "nominal",
+    "curriculum": "disabled",
+    "encoder_bias": "absent",
+    "fresh_initial_state_reset_events": [
+      "reset_base",
+      "reset_robot_joints"
+    ],
+    "friction": "nominal",
+    "geometry": "nominal_fixed_DQHMED",
+    "registered_variant": "fixed_deployment_play",
+    "task_id": "Unitree-G1-Stairs-Online-DQHMED"
+  },
+  "evaluation": {
+    "all_four_conditions_share_initial_state_signatures": true,
+    "batch_size": 128,
+    "conditions": [
+      "pi0_off",
+      "pi0_on",
+      "pi8_on",
+      "pi8_off"
+    ],
+    "deterministic_policy_mean": true,
+    "fresh_paired_conditions": 512,
+    "seed_base": 145000000
+  },
+  "excluded": {
+    "candidate_line_search": true,
+    "failure_bank": true,
+    "hidden_variable_shift": true,
+    "multiple_adaptation_seeds": true,
+    "new_actor_observation": true,
+    "performance_gate_or_best_checkpoint": true,
+    "random_per_riser_geometry": true,
+    "state_restart": true
+  },
+  "experiment_name": "v25 Swing-Foot Under-Clearance CBF Teacher",
+  "implementation_boundary": {
+    "all_execution_sources_committed_before_first_v25_episode": true,
+    "git_commit": "283dd708a7954631da564edacfd751c402855926",
+    "source_files": {
+      "conda-list.txt": "d40179f07b6a46b63a14a93864202f112dbde7bc6e8927e847e0a86fd7847452",
+      "docs/CBF_TEACHER_V25_SWING_UNDERRESPONSE.md": "d5e6473a4502c5aa8ccd3f5db0533e8271774d1ab4089aeb1fac4dd589da82ee",
+      "experiments/scripts/audit_cbf_teacher_v25.py": "303a2753a6a850bc45bd49991a39ccfbbe27930a26ae22cd97684b2a0272a975",
+      "experiments/scripts/calibrate_cbf_teacher_v25.py": "49293f58ec639bdaa767e3878e86f08e3f9bd629d8bcefb9d4cc79ce7cf26c49",
+      "experiments/scripts/cbf_teacher_v25_protocol.py": "0d058d98d77ea466ec4b0242ac8d1d67dee7cbf851bd892509cef9a8cd52bac9",
+      "experiments/scripts/evaluate_cbf_teacher_v25.py": "bd629997d9bad03a9e1b1c918c64f9fb40c6a615a6420b72c3d29474fcc16834",
+      "experiments/scripts/freeze_cbf_teacher_v25_precalibration.py": "e3d25e1b70d62551560c4702d03217efbd5feb5ea05c81c4ff842dd3fe27ec09",
+      "experiments/scripts/freeze_cbf_teacher_v25_protocol.py": "c7e14e31ebceaf18e7b328051e29474e85f23a5efd393e1e025981127e00fa9b",
+      "experiments/scripts/plot_cbf_teacher_v25.py": "ab2f7845c74546b2c681423a120ba4cd1672046bc58a33ba54c6daac38ae0d0f",
+      "experiments/scripts/proximal_v23_io.py": "04077ac25965163cde89f3d2ec0ff27ea822c686acc19562bc3c90990fd61052",
+      "experiments/scripts/refine_cbf_teacher_v25.py": "bf6e6a278081f7dc4098ccc1c4bc1ace31376323111eb325c9187bd7d2b4cfc4",
+      "experiments/scripts/run_cbf_teacher_v25.sh": "3ba4aa1583c2563b137192bbd7d5cb57399f6b66bbb70116359ad620620c0c6b",
+      "experiments/scripts/verify_cbf_teacher_v25.py": "edce3422e3dca7925c91124818f54b0aca64e356adb13bb6b80b12381e52753b",
+      "experiments/tests/test_cbf_teacher_v25.py": "581468da6eb9e0d480b67563e544d3d64bf213c27ca569d87fc4f35e140c6d6f",
+      "requirements-lock.txt": "3ddb9bf19e33771f009e9f57677b2e2678bc68d933e5daa1526844f2c728326e",
+      "setup.py": "15476af3b59ad75dbbfc2deb6cbdff30dfedb99fbb65be5ebb9a4d52061c73de",
+      "src/assets/robots/__init__.py": "9f45d1126dc5fe58e9673adb5f3c8b4eaa6f20d4a4af5a75e0f9a183ecc7095e",
+      "src/assets/robots/unitree_g1/g1_constants.py": "136b59af97082a74fd3a2a4250bc2e290b3ba6a26533b1492be52114dd844c5d",
+      "src/tasks/__init__.py": "310ff3bbeed45f4792394e36ff98eb4b5b70e0657c2e5ef67dd363d510133d9b",
+      "src/tasks/stairs_cbf/__init__.py": "ee5255b1ef8cdebfab6ac9fd9b2f5b115b3a6c34c5eb306ba993306159363f25",
+      "src/tasks/stairs_cbf/actions.py": "e04354c1bb9bfe4f57055a98dde22a1e13a30ff3a7b02af93633bd90001a5514",
+      "src/tasks/stairs_cbf/cbf_math.py": "a127af17fbda043b612c595459cb1a22144e7b3222fccff76a618c4f682f8a0c",
+      "src/tasks/stairs_cbf/command.py": "efd9ec3faed1f5aa14aff03802cf3cce4a9d61a8041fffc684e54d152a6a4104",
+      "src/tasks/stairs_cbf/config.py": "22a57df095616e1f19f7cf6f18d7ba173ecef7901bf2a85da2a5faaa11c32f8a",
+      "src/tasks/stairs_cbf/edge_detection.py": "302735da8506bd7d40bb7745e76fa280496775520329bf1bd059732e8746b662",
+      "src/tasks/stairs_cbf/mdp.py": "631a9fefcf2026521c1c43ecf2dc1851124ce47921a1ddf4191ae7db31475754",
+      "src/tasks/stairs_cbf/online.py": "0b53dd2d58a2bc4745cb523b73853f5af5f172a6406c7d121415ad9ee18aa90a",
+      "src/tasks/stairs_cbf/proximal.py": "d879fc138dc3bebe26d913182519b0280884e30ed7f529be2bdd9e259b8c4838",
+      "src/tasks/stairs_cbf/teacher.py": "afc276f213d06470c407e867ffafb7370a19bb5ab83506dbf6a7762e96172586",
+      "src/tasks/stairs_cbf/teacher_math.py": "f23e589bd0e98600b588b4ee61518be6a6d96f69355cd5478a34e6b36b224453",
+      "src/tasks/stairs_cbf/terrain.py": "f24dcfc9fb2d364c42e1b872a787dd940d4abee1656d2e9a840c19828075bcf8",
+      "src/tasks/velocity/config/g1/env_cfgs.py": "c3ec7ec2730ee0ecbc9da21e493c89161da6a6142084b7400b39ce34492dbed0",
+      "src/tasks/velocity/config/g1/rl_cfg.py": "816d29bc673326ab75d949c542eb7cb8f0f4bbb334a575e316e699ea66f55f7c",
+      "src/tasks/velocity/rl/__init__.py": "c0df1a85535f191511cf7ee3d45c6bf9236081e8a72903e0b52e0a017a07d6df",
+      "src/tasks/velocity/rl/runner.py": "1a12eb152cb307b57e024814a3a3f9026458759bab6cf43a5cfcccc0b9a0e0cf"
+    }
+  },
+  "learning_semantics": {
+    "final_policy": "unconditional round-8 actor",
+    "moving_reference": "current round-start pi_k",
+    "one_actor_original_405D_observation": true,
+    "one_privileged_critic_original_838D_observation": true,
+    "ppo_ratio_uses_sampled_raw_policy_action": true,
+    "runtime_cbf_executes_filtered_action": true,
+    "teacher_reprojection_audited_at_1e-6": true,
+    "teacher_requires_actual_intervention": true,
+    "teacher_requires_next_riser_within_H": true,
+    "teacher_requires_no_fall_within_H": true,
+    "teacher_target": "stop-gradient inverse-plant actor-coordinate CBF safe action",
+    "teacher_weight_clipped_by_actor_coordinate_correction": true
+  },
+  "policy_method": "Success-Gated CBF Action Teacher + Moving-KL PPO v25",
+  "prior_results_immutable": {
+    "checks": {
+      "v23_final_byte_unchanged": true,
+      "v23_protocol_byte_unchanged": true,
+      "v23_result_tree_unchanged": true,
+      "v24_final_byte_unchanged": true,
+      "v24_protocol_byte_unchanged": true,
+      "v24_result_tree_unchanged": true
+    },
+    "git_trees": {
+      "v23": "68f489ac49af8020912f7e3e71d317e7f8fc1f0f",
+      "v24": "6718715354ed4cb729d85f3cec4f36dcc16cc824"
+    },
+    "rerun_or_recomputed": false,
+    "sha256": {
+      "v23_final": "7cbbbfc596e5ad39177c946998055fa460c646730a00385701b595f77cff0148",
+      "v23_protocol": "745e888e47d9d33fe87fffa4bbaba618a7e91f37b55ebbf8cb08f578fc1d8f38",
+      "v24_final": "262c570ed5c15368f454e7fa2064ec789a29379cbefdf27481e9b0ad0a43a62a",
+      "v24_protocol": "d52de9034523350dc5ebda1143d26ab02737d31cafccc764d3c9a092c4e6f39b"
+    },
+    "unchanged": true
+  },
+  "prospective_execution": {
+    "adaptation_started": false,
+    "adapted_policy_outcomes_observed": false,
+    "calibration_started": false,
+    "final_evaluation_started": false,
+    "fresh_adaptation_count_planned": 1,
+    "v25_simulator_episode_started": false
+  },
+  "protocol_id": "safe100-success-gated-cbf-teacher-v25",
+  "randomness_preflight": {
+    "collisions": [],
+    "historical_collisions": [],
+    "historical_json_file_count": 312,
+    "historical_json_files_sha256": "0eade0abff36e9cf2f40a0591481980429a553b1bb139ce7416e9f9534a9cabb",
+    "historical_scope": "all parseable JSON below results/online except proximal_v25",
+    "paired_arm_seed_reuse": "intentional within each off/on condition identity",
+    "passed": true,
+    "proposed_internal_collisions": [],
+    "proposed_seed_occurrence_count": 105,
+    "proposed_unique_seed_count": 105,
+    "protocol_id": "safe100-success-gated-cbf-teacher-v25",
+    "schema_version": 1
+  },
+  "revision": 2,
+  "schema_version": 1,
+  "shift_family": {
+    "actor_observation_interface_unchanged": true,
+    "candidate_grid": [
+      {
+        "candidate_index": 0,
+        "evaluation_seeds": [
+          142500000,
+          142500001,
+          142500002,
+          142500003
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "severity_order": "light_to_severe",
+        "swing_underresponse_gain": 0.98
+      },
+      {
+        "candidate_index": 1,
+        "evaluation_seeds": [
+          142500100,
+          142500101,
+          142500102,
+          142500103
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "severity_order": "light_to_severe",
+        "swing_underresponse_gain": 0.96
+      },
+      {
+        "candidate_index": 2,
+        "evaluation_seeds": [
+          142500200,
+          142500201,
+          142500202,
+          142500203
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "severity_order": "light_to_severe",
+        "swing_underresponse_gain": 0.94
+      },
+      {
+        "candidate_index": 3,
+        "evaluation_seeds": [
+          142500300,
+          142500301,
+          142500302,
+          142500303
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "severity_order": "light_to_severe",
+        "swing_underresponse_gain": 0.92
+      },
+      {
+        "candidate_index": 4,
+        "evaluation_seeds": [
+          142500400,
+          142500401,
+          142500402,
+          142500403
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "severity_order": "light_to_severe",
+        "swing_underresponse_gain": 0.9
+      },
+      {
+        "candidate_index": 5,
+        "evaluation_seeds": [
+          142500500,
+          142500501,
+          142500502,
+          142500503
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "severity_order": "light_to_severe",
+        "swing_underresponse_gain": 0.88
+      },
+      {
+        "candidate_index": 6,
+        "evaluation_seeds": [
+          142500600,
+          142500601,
+          142500602,
+          142500603
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "severity_order": "light_to_severe",
+        "swing_underresponse_gain": 0.86
+      },
+      {
+        "candidate_index": 7,
+        "evaluation_seeds": [
+          142500700,
+          142500701,
+          142500702,
+          142500703
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "severity_order": "light_to_severe",
+        "swing_underresponse_gain": 0.84
+      },
+      {
+        "candidate_index": 8,
+        "evaluation_seeds": [
+          142500800,
+          142500801,
+          142500802,
+          142500803
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "severity_order": "light_to_severe",
+        "swing_underresponse_gain": 0.82
+      },
+      {
+        "candidate_index": 9,
+        "evaluation_seeds": [
+          142500900,
+          142500901,
+          142500902,
+          142500903
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "severity_order": "light_to_severe",
+        "swing_underresponse_gain": 0.8
+      },
+      {
+        "candidate_index": 10,
+        "evaluation_seeds": [
+          142501000,
+          142501001,
+          142501002,
+          142501003
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "severity_order": "light_to_severe",
+        "swing_underresponse_gain": 0.78
+      },
+      {
+        "candidate_index": 11,
+        "evaluation_seeds": [
+          142501100,
+          142501101,
+          142501102,
+          142501103
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "severity_order": "light_to_severe",
+        "swing_underresponse_gain": 0.76
+      },
+      {
+        "candidate_index": 12,
+        "evaluation_seeds": [
+          142501200,
+          142501201,
+          142501202,
+          142501203
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "severity_order": "light_to_severe",
+        "swing_underresponse_gain": 0.74
+      },
+      {
+        "candidate_index": 13,
+        "evaluation_seeds": [
+          142501300,
+          142501301,
+          142501302,
+          142501303
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "severity_order": "light_to_severe",
+        "swing_underresponse_gain": 0.72
+      },
+      {
+        "candidate_index": 14,
+        "evaluation_seeds": [
+          142501400,
+          142501401,
+          142501402,
+          142501403
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "severity_order": "light_to_severe",
+        "swing_underresponse_gain": 0.7
+      },
+      {
+        "candidate_index": 15,
+        "evaluation_seeds": [
+          142501500,
+          142501501,
+          142501502,
+          142501503
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "severity_order": "light_to_severe",
+        "swing_underresponse_gain": 0.68
+      },
+      {
+        "candidate_index": 16,
+        "evaluation_seeds": [
+          142501600,
+          142501601,
+          142501602,
+          142501603
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "severity_order": "light_to_severe",
+        "swing_underresponse_gain": 0.66
+      },
+      {
+        "candidate_index": 17,
+        "evaluation_seeds": [
+          142501700,
+          142501701,
+          142501702,
+          142501703
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "severity_order": "light_to_severe",
+        "swing_underresponse_gain": 0.64
+      },
+      {
+        "candidate_index": 18,
+        "evaluation_seeds": [
+          142501800,
+          142501801,
+          142501802,
+          142501803
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "severity_order": "light_to_severe",
+        "swing_underresponse_gain": 0.62
+      },
+      {
+        "candidate_index": 19,
+        "evaluation_seeds": [
+          142501900,
+          142501901,
+          142501902,
+          142501903
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "severity_order": "light_to_severe",
+        "swing_underresponse_gain": 0.6
+      },
+      {
+        "candidate_index": 20,
+        "evaluation_seeds": [
+          142502000,
+          142502001,
+          142502002,
+          142502003
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "severity_order": "light_to_severe",
+        "swing_underresponse_gain": 0.58
+      },
+      {
+        "candidate_index": 21,
+        "evaluation_seeds": [
+          142502100,
+          142502101,
+          142502102,
+          142502103
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "severity_order": "light_to_severe",
+        "swing_underresponse_gain": 0.56
+      },
+      {
+        "candidate_index": 22,
+        "evaluation_seeds": [
+          142502200,
+          142502201,
+          142502202,
+          142502203
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "severity_order": "light_to_severe",
+        "swing_underresponse_gain": 0.54
+      },
+      {
+        "candidate_index": 23,
+        "evaluation_seeds": [
+          142502300,
+          142502301,
+          142502302,
+          142502303
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "severity_order": "light_to_severe",
+        "swing_underresponse_gain": 0.52
+      },
+      {
+        "candidate_index": 24,
+        "evaluation_seeds": [
+          142502400,
+          142502401,
+          142502402,
+          142502403
+        ],
+        "paired_filter_arms_share_each_seed": true,
+        "severity_order": "light_to_severe",
+        "swing_underresponse_gain": 0.5
+      }
+    ],
+    "cbf_uses_exact_generated_riser_geometry": true,
+    "context_id": "swing_underresponse_v25",
+    "family": "fixed_phase_selective_swing_leg_underresponse",
+    "fixed_within_and_across_episodes_after_selection": true,
+    "geometry_friction_command_controller_nominal": true,
+    "only_changed_axis": "current swing leg hip-pitch/knee/ankle-pitch raw-action gain",
+    "other_joint_gain": 1.0,
+    "stance_leg_gain": 1.0
+  },
+  "status": "prospectively_frozen_before_v25_base_only_paired_calibration",
+  "supersession": {
+    "outcomes_observed_before_revision": false,
+    "reason": "pre-execution audit unified calibration/adaptation/final evaluation on the fixed deployment environment, keyed kick debouncing by toe/riser identity, and pooled interventions per crossed riser",
+    "revision": 2,
+    "superseded_before_any_v25_simulator_episode": true,
+    "supersedes_file": "results/online/proximal_v25/precalibration_protocol.json",
+    "supersedes_sha256": "74da073fdc974aa69bca1c71b9852e1e0623bee4f9a844f18a6f71891ece9adb"
+  },
+  "training": {
+    "actor_learning_rate": 5e-06,
+    "critic_epochs": 2,
+    "critic_learning_rate": 0.0001,
+    "empty_teacher_minibatch": "exact differentiable zero",
+    "entropy_coefficient": 0.0,
+    "freeze_log_std": true,
+    "gae_lambda": 0.95,
+    "gamma": 0.99,
+    "hard_kl_ceiling": 0.01,
+    "maximum_actor_epochs": 2,
+    "maximum_gradient_norm": 0.5,
+    "maximum_std": 0.25,
+    "mini_batches": 4,
+    "minimum_std": 0.05,
+    "moving_kl_beta": 0.5,
+    "num_envs": 64,
+    "ppo_clip": 0.05,
+    "rollout_steps": 1024,
+    "rounds": 8,
+    "std_scale_from_base": 0.35,
+    "target_kl": 0.003,
+    "teacher_correction_scale": 0.05,
+    "teacher_distillation_weight": 0.1,
+    "teacher_loss": "weighted standardized Gaussian NLL up to a constant",
+    "teacher_normalization": "valid teacher transition count per minibatch",
+    "teacher_success_horizon_seconds": 1.0,
+    "teacher_success_horizon_steps": 50,
+    "whole_batch_advantage_normalization": true
+  }
+}

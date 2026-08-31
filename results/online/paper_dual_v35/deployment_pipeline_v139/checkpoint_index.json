@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "source_git_commit": "7edc4da60a089985681cb6b78243b53cfb730003",
+  "v139_initializer": {
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/clearance_mixed_v139_fdc2a63_128x1024x4_s201356000/round_01.pt",
+    "git_path": "results/online/paper_dual_v35/clearance_mixed_v139/checkpoints/selected_round_01.pt",
+    "checkpoint_sha256": "323f1e00b58d379b8746c0191a44272f2e1df134139050417c56e733cc484728",
+    "actor_sha256": "4a4926d9227c31fb239ceead6c39bed61304d1f2c7e3a47aea510e060cee2acd"
+  },
+  "v139_deployment_actor": {
+    "git_path": "results/online/paper_dual_v35/deployment_pipeline_v139/deployment_artifacts/v139_actor_405x12.onnx",
+    "onnx_sha256": "d3f75cbb7699ddcc824d16a34a46b48e03d5345676d544366ba89db414a89d6b",
+    "size_bytes": 1499237,
+    "input_shape": [1, 405],
+    "output_shape": [1, 12],
+    "observation_normalization_embedded": true,
+    "deterministic_equivalence_max_abs_error": 4.76837158203125e-07,
+    "hardware_control_ready": false
+  },
+  "full_filter_control": {
+    "context": "F2",
+    "primary_checkpoint_round": 1,
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/deployment_pipeline/full_filter_control_7edc4da_F2_128x1024x4_s201356000/round_01.pt",
+    "checkpoint_sha256": "ba3b8067f13494eda1ef61f07e4d38bf809cbdb238efd35792e501e63514e523",
+    "actor_sha256": "993de91690ed81d0bd213704e6f05d9639080e1d60ce91cf45df15c49bc502f0",
+    "binary_uploaded_to_git": false
+  },
+  "safe_ft": {
+    "F1": {
+      "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/deployment_pipeline/safe_ft_7edc4da_F1_128x1024x2_s201356300/round_02.pt",
+      "git_path": "results/online/paper_dual_v35/deployment_pipeline_v139/checkpoints/safe_ft_F1_round_02.pt",
+      "checkpoint_sha256": "c88e0bd32bfc50460a1f3e431c1ebda8c18be4e02f49f2742531d6df26d8c7c7",
+      "actor_sha256": "ec77cc3585a22729d7d0b25810690a0349c70c1df79e9724ad9ece2b3d73cd12",
+      "deterministic_actor_sha256": "9f243028556d39a0c23d07caf1e536c672e2f857d117f5a9024c23aa37f8c3d5"
+    },
+    "F2": {
+      "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/deployment_pipeline/safe_ft_7edc4da_F2_128x1024x2_s201356300/round_02.pt",
+      "git_path": "results/online/paper_dual_v35/deployment_pipeline_v139/checkpoints/safe_ft_F2_round_02.pt",
+      "checkpoint_sha256": "bc1e5fc06d95b68096c99d16e37cf7da6f23f5bb8c1937d1a071660bacda73d2",
+      "actor_sha256": "13c745840deb9ebb72857de45949cf8f580083eeff9024490f3c49480ae7e5c5",
+      "deterministic_actor_sha256": "13d9fd95ed64a6c3b155792ac44e69c44ca831e5630e6deac270abde56207c43"
+    },
+    "F3": {
+      "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/deployment_pipeline/safe_ft_7edc4da_F3_128x1024x2_s201356300/round_02.pt",
+      "git_path": "results/online/paper_dual_v35/deployment_pipeline_v139/checkpoints/safe_ft_F3_round_02.pt",
+      "checkpoint_sha256": "9ba0018c0c96fd83ecfc56e160a80353b0ce5c8eb5e6bb67b6d2a3c3bf9e733b",
+      "actor_sha256": "55b5dcada73d35f5f273c434d864b767d3224e44665cbadcba95159bb0cc3480",
+      "deterministic_actor_sha256": "8572851cacb21ef14417d415dee90bc80e43d68b0da45c9d67eeb1aeceff7238"
+    }
+  },
+  "binary_upload": {
+    "safe_ft_checkpoints_uploaded": true,
+    "v139_deployment_onnx_uploaded": true,
+    "each_size_bytes": 13173745,
+    "full_filter_control_uploaded": false,
+    "reason": "The three fixed round-2 actors are the outputs required for the protected adaptation pipeline; the control is identified by immutable remote path and hashes only."
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "schema_version": "paper_dual_v35.v88.decision.v1",
+  "candidate": "success-safe-action-imitation-v88",
+  "decision": "reject_updates_below_filtered_gate",
+  "reason": "Both success-conditioned imitation proposals regressed; the unchanged base pooled to 754/1078 (69.94%), below the 75% prerequisite for filter-off evaluation.",
+  "source_commit": "5920ef7",
+  "input_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "training": {
+    "seed": 201352634,
+    "num_envs": 256,
+    "rounds": 4,
+    "rollout_steps_per_round": 1024,
+    "elapsed_seconds": 111.81232283590361,
+    "training_filter_fraction": 1.0,
+    "success_imitation_weight": 0.5,
+    "actor_gradient_accumulation_microbatches": 2,
+    "transactional_rollback_count": 2
+  },
+  "aligned_filter_on_rollouts": [
+    {"round": 1, "success_count": 384, "episode_count": 537, "success_rate": 0.7150837988826816, "actor_role": "base"},
+    {"round": 2, "success_count": 377, "episode_count": 547, "success_rate": 0.6892138939670932, "actor_role": "rejected_proposal"},
+    {"round": 3, "success_count": 370, "episode_count": 541, "success_rate": 0.6839186691312384, "actor_role": "base_retry"},
+    {"round": 4, "success_count": 379, "episode_count": 544, "success_rate": 0.6966911764705882, "actor_role": "rejected_proposal"}
+  ],
+  "selected_actor_pooled_evidence": {
+    "success_count": 754,
+    "episode_count": 1078,
+    "success_rate": 0.699443413729128
+  },
+  "diagnosis": {
+    "success_transition_fraction_range": [0.60528564453125, 0.6269073486328125],
+    "success_intervention_fraction_range": [0.08469673288292831, 0.08825605452111476],
+    "policy_to_target_distance_range": [0.20258374512195587, 0.20466215908527374],
+    "dominant_target_component": "stochastic exploration noise on successful but non-intervened transitions"
+  },
+  "selected_checkpoint_sha256": "6e3c07140aaa7b548d1477bb9f0b2d463e624f55c8fee2a62314a1fced3a69dd",
+  "selected_actor_sha256": "b0a717cef34d128e4175226b86780e5210cc5287558d78cb5a44e095e37fb600",
+  "deployment_filter_off_gate_run": false,
+  "global_best_changed": false,
+  "next_hypothesis": "Gate imitation to successful transitions with an actual deterministic-mean CBF intervention and target the same-state deterministic safe mean, eliminating sampled-action exploration noise."
+}

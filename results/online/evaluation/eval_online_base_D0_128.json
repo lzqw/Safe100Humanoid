@@ -1,0 +1,31 @@
+{
+  "checkpoint": "<SERVER_REPO>/results/models/cbf/model_1500.pt",
+  "conditional_failure_hazard": {
+    "1": 0.0,
+    "2": 0.0,
+    "3": 0.0,
+    "4": 0.0078125,
+    "5": 0.007874015748031496,
+    "6": 0.007936507936507936
+  },
+  "correction_mean": 0.0011578456539520499,
+  "fall_rate": 0.0390625,
+  "intervention_per_riser": 0.4106770959915593,
+  "mean_reached_riser": 5.953125,
+  "minimum_cbf_h": -0.14775024354457855,
+  "num_envs": 32,
+  "num_episodes": 128,
+  "num_risers": 6,
+  "seed": 42,
+  "success_rate": 0.9453125,
+  "survival_curve": {
+    "1": 1.0,
+    "2": 1.0,
+    "3": 1.0,
+    "4": 0.9921875,
+    "5": 0.984375,
+    "6": 0.9765625
+  },
+  "task": "Unitree-G1-Stairs-Online-D0",
+  "timeout_rate": 0.015625
+}

@@ -1,0 +1,154 @@
+{
+  "calibration": {
+    "adapted_policy_evaluations_used": false,
+    "attempts": [
+      {
+        "balance_telemetry": {
+          "mean_contact_mismatch_fraction": 0.2567797557276208,
+          "mean_maximum_angular_velocity_signal": 1.0,
+          "mean_maximum_pitch_signal": 0.7678929979447275,
+          "mean_maximum_roll_signal": 0.5355599018512294,
+          "mean_slip_signal": 0.09191225823451532
+        },
+        "base_policy_only": true,
+        "candidate_seed": 2212,
+        "evaluation_seed_start": 1832100,
+        "evaluation_seeds": [
+          1832100,
+          1832101,
+          1832102,
+          1832103
+        ],
+        "failure_type_counts": {
+          "lateral_heading_drift": 21,
+          "non_lateral_balance_or_phase": 10,
+          "non_lateral_high_cbf_demand": 77
+        },
+        "failure_type_fractions": {
+          "lateral_heading_drift": 0.19444444444444445,
+          "non_lateral_balance_or_phase": 0.09259259259259259,
+          "non_lateral_high_cbf_demand": 0.7129629629629629
+        },
+        "fall_count": 108,
+        "fall_rate": 0.2109375,
+        "intervention_per_riser": 2.8160111121833324,
+        "mean_reached_riser": 10.265625,
+        "num_episodes": 512,
+        "parameters_sha256": "da07fd6cc606c3cb1e8b7064a5712cbc31b26f978a36f1b250f41ae2b0aae3d1",
+        "qualifies": true,
+        "second_failure_fraction": 0.19444444444444445,
+        "success_rate": 0.7890625,
+        "target_failure_fraction": 0.7129629629629629,
+        "target_failure_type": "non_lateral_high_cbf_demand"
+      }
+    ],
+    "base_policy_checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/retention_v13/arm_b_state_retention/accepted_final.pt",
+    "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+    "calibration_training_and_audit_seeds_disjoint": true,
+    "candidate_seeds": [
+      2212
+    ],
+    "episodes_per_candidate": 512,
+    "kind": "base_policy_single_dominant_failure_first_qualifying_v1",
+    "maximum_second_failure_fraction": 0.3,
+    "minimum_fall_count": 100,
+    "minimum_target_failure_fraction": 0.6,
+    "selected_candidate_seed": 2212,
+    "selected_parameters_sha256": "da07fd6cc606c3cb1e8b7064a5712cbc31b26f978a36f1b250f41ae2b0aae3d1",
+    "selection_metric_fields": [
+      "success_rate",
+      "fall_count",
+      "failure_type_counts"
+    ],
+    "selection_rule": "select the first base-only context satisfying all success, sample-count, target-purity, and second-class gates",
+    "success_rate_bounds": [
+      0.7,
+      0.85
+    ]
+  },
+  "calibration_candidate_seed": 2212,
+  "kind": "failure_mode_conditioned_brief_ppo_v17",
+  "parameters_sha256": "da07fd6cc606c3cb1e8b7064a5712cbc31b26f978a36f1b250f41ae2b0aae3d1",
+  "scenario": {
+    "angular_velocity_signal_weight": 0.0,
+    "centerline_heading_gain": 2.6,
+    "centerline_lateral_gain": 1.6,
+    "centerline_max_lateral_velocity": 0.3,
+    "centerline_max_yaw_velocity": 0.8,
+    "centerline_signal_weight": 0.0,
+    "contact_mismatch_signal_weight": 0.0,
+    "disturbance_pulses_with_centering": false,
+    "edge_signal_weight": 0.0,
+    "failure_signal_scale": 0.35,
+    "foot_friction": 0.68,
+    "heading_signal_weight": 0.0,
+    "intervention_signal_weight": 0.6,
+    "lateral_command_bias": 0.0,
+    "lateral_pulse_max": 0.0,
+    "lateral_pulse_min": 0.0,
+    "nominal_margin_signal_weight": 0.4,
+    "pitch_signal_weight": 0.0,
+    "pulse_duration_max_s": 0.6,
+    "pulse_duration_min_s": 0.2,
+    "pulse_interval_max_s": 7.0,
+    "pulse_interval_min_s": 3.0,
+    "roll_signal_weight": 0.0,
+    "slip_signal_weight": 0.0,
+    "toe_margin": 0.129211,
+    "yaw_command_bias": 0.0,
+    "yaw_pulse_max": 0.0,
+    "yaw_pulse_min": 0.0
+  },
+  "schema_version": 1,
+  "specialist_mode": "cbf",
+  "target": {
+    "action_bias": [
+      0.000269,
+      -0.005893,
+      -0.00584,
+      -0.002808,
+      0.004611,
+      0.002497,
+      0.002524,
+      0.007399,
+      -0.001519,
+      0.000537,
+      0.004559,
+      -0.008135
+    ],
+    "action_delay_steps": 1,
+    "action_gain": 0.977895,
+    "command_delay_s": 0.095263,
+    "command_forward_scale": 1.043158,
+    "command_low_pass_s": 0.078947,
+    "encoder_bias": 0.0027,
+    "episode_length_s": 40.0,
+    "num_steps": 11,
+    "rise_profile": [
+      0.153277,
+      0.148544,
+      0.149511,
+      0.145401,
+      0.153258,
+      0.150368,
+      0.149084,
+      0.149755,
+      0.147355,
+      0.145248,
+      0.145461
+    ],
+    "tread_profile": [
+      0.313706,
+      0.317687,
+      0.32237,
+      0.32287,
+      0.325032,
+      0.319933,
+      0.313878,
+      0.319136,
+      0.322953,
+      0.322244,
+      0.319034
+    ]
+  }
+}

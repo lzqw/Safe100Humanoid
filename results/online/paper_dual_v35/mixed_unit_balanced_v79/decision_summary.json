@@ -1,0 +1,47 @@
+{
+  "schema_version": "paper_dual_v35.v79.decision.v1",
+  "candidate": "mixed-execution-unit-balanced-eq27-v79",
+  "decision": "rejected_at_training_gate",
+  "reason": "The aligned round-3 actor improved filter-off success by 10.91 percentage points over this run's base to 72.02%, but remained below the 75% gate.",
+  "source_commit": "d65f0b6a18d02b085338cf54af14079b8cd05851",
+  "base_checkpoint_sha256": "3ec45cd196447901cf815d0fa1ff400af1b519ed2bb85c2fc179458ce3e81d3f",
+  "training": {
+    "seed": 201352619,
+    "num_envs": 128,
+    "filter_on_envs": 32,
+    "filter_off_envs": 96,
+    "rounds": 4,
+    "rollout_steps_per_round": 1024,
+    "elapsed_seconds": 134.51323790091556,
+    "actor_learning_rate": 0.0001,
+    "filter_group_balanced_advantages": true,
+    "transactional_rollout_acceptance": false
+  },
+  "aligned_rollouts": [
+    {"round": 1, "checkpoint_round": 0, "filter_off_success_count": 121, "filter_off_episode_count": 198, "filter_off_success_rate": 0.6111111111111112, "filter_on_success_count": 47, "filter_on_episode_count": 69, "filter_on_success_rate": 0.6811594202898551},
+    {"round": 2, "checkpoint_round": 1, "filter_off_success_count": 126, "filter_off_episode_count": 190, "filter_off_success_rate": 0.6631578947368421, "filter_on_success_count": 52, "filter_on_episode_count": 65, "filter_on_success_rate": 0.8},
+    {"round": 3, "checkpoint_round": 2, "filter_off_success_count": 115, "filter_off_episode_count": 195, "filter_off_success_rate": 0.5897435897435898, "filter_on_success_count": 48, "filter_on_episode_count": 68, "filter_on_success_rate": 0.7058823529411765},
+    {"round": 4, "checkpoint_round": 3, "filter_off_success_count": 139, "filter_off_episode_count": 193, "filter_off_success_rate": 0.7202072538860104, "filter_on_success_count": 48, "filter_on_episode_count": 67, "filter_on_success_rate": 0.7164179104477612}
+  ],
+  "best_aligned_checkpoint": {
+    "round": 3,
+    "sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+    "actor_sha256": "b0a717cef34d128e4175226b86780e5210cc5287558d78cb5a44e095e37fb600",
+    "filter_off_success_rate": 0.7202072538860104,
+    "improvement_over_run_base_percentage_points": 10.90961427748993,
+    "uploaded": false
+  },
+  "optimization_diagnostics": {
+    "moving_forward_kl_by_round": [4.214969158056192e-05, 4.0112769056577235e-05, 4.029046613140963e-05, 4.641045234166086e-05],
+    "manager_scaled_dual_reward_mean_by_round": [-0.0028124207638816224, -0.0027669796764610054, -0.0028841030493292406, -0.0026972877647294525],
+    "manager_scaled_nominal_reward_mean_by_round": [0.018576618412702375, 0.019892747189454666, 0.018110261500258247, 0.020460954227783504]
+  },
+  "deployment_filter_off_gate": {
+    "planned_episode_count": 128,
+    "success_threshold": 0.75,
+    "run": false,
+    "reason": "training_gate_failed"
+  },
+  "current_best_changed": false,
+  "next_hypothesis": "Continue from the best aligned round-3 checkpoint with 5e-5 full-batch steps and transactional filter-off rollback to reduce the observed ~4e-5 KL oscillation."
+}

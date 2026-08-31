@@ -1,0 +1,222 @@
+{
+  "adaptation_seeds": [
+    53,
+    153,
+    253,
+    353,
+    453
+  ],
+  "calibration": {
+    "adapted_policy_evaluations_used": false,
+    "base_policy_only": true,
+    "contact_stability_candidate_seeds": [
+      7217,
+      7218,
+      7219
+    ],
+    "contact_stability_evaluation_seed_base": 4710000,
+    "contact_stability_maximum_second_failure_fraction": 0.2,
+    "contact_stability_minimum_target_failure_fraction": 0.75,
+    "episodes_per_candidate": 512,
+    "eval_batch_size": 128,
+    "first_qualifying_candidate_is_frozen": true,
+    "lateral_candidate_seeds": [
+      7312,
+      7313,
+      7314,
+      7315,
+      7316,
+      7317,
+      7318,
+      7319
+    ],
+    "lateral_evaluation_seed_base": 4720000,
+    "lateral_maximum_second_failure_fraction": 0.3,
+    "lateral_minimum_target_failure_fraction": 0.8,
+    "minimum_fall_count": 100,
+    "reused_revision_2_base_only_contexts": true,
+    "success_rate_bounds_inclusive": [
+      0.7,
+      0.85
+    ],
+    "v18_audit_randomness_reused": false
+  },
+  "created_date": "2026-08-06",
+  "development_exclusions": {
+    "development_only_adaptation_seeds": [
+      143
+    ],
+    "development_results_are_formal_evidence": false,
+    "revision_2_declared_adaptation_seeds": [
+      43,
+      143,
+      243,
+      343,
+      443
+    ],
+    "revision_3_formal_seed_overlap": false
+  },
+  "evaluation": {
+    "audit_seed": 5300000,
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 6300000,
+    "cbf_independence_gate": false,
+    "d0_paired_episodes_per_adaptation_seed": 256,
+    "eval_batch_size": 128,
+    "filter_free_evaluation": false,
+    "macro_average_computed": false,
+    "off_diagonal_evaluation": false,
+    "paired_baseline_and_final_randomness": true,
+    "runtime_cbf": true,
+    "target_paired_episodes_per_adaptation_seed": 512
+  },
+  "failure_classification": {
+    "attitude_outcomes_are_not_primary_causes": true,
+    "contact_stability_context": "first sustained severe support-foot-slip or lateral event wins; contact therefore precedes later terminal lateral drift",
+    "lateral_context": "an observed geometric lateral or heading event is primary in the lateral-instrumented family even when stair slip is an earlier mediator; without a lateral event, contact instability remains contact",
+    "support_foot_slip_only": true
+  },
+  "fresh_evidence_boundary": {
+    "formal_adaptation_must_follow_this_revision_3_commit": true,
+    "formal_audit_must_follow_all_ten_sealed_adaptations": true,
+    "historical_v17_v18_and_v19_revision_2_results_may_not_be_relabelled": true,
+    "no_revision_3_formal_adaptation_or_audit_outcomes_seen_before_freeze": true,
+    "revision_2_failure_and_nonformal_seed143_development_seen_before_freeze": true,
+    "smoke_and_development_results_are_not_formal_evidence": true
+  },
+  "independent_specialist_acceptance": {
+    "confidence_interval_is_a_gate": false,
+    "joint_two_specialist_claim_defined": false,
+    "lcb95_positive_is_strong_evidence_only": true,
+    "maximum_diagonal_fall_increase": 0.03,
+    "mean_diagonal_success_delta_strictly_above": 0.0,
+    "minimum_d0_success_delta": -0.05,
+    "minimum_positive_adaptation_seed_count": 4
+  },
+  "method_invariants": {
+    "actor_count": 1,
+    "actor_observation_width": 410,
+    "candidate_rollback": true,
+    "critic_count": 1,
+    "critic_observation_width": 843,
+    "deployable_failure_feature_count": 5,
+    "exact_failure_success_restart_pairs": true,
+    "initial_policy_preservation": "legacy first-layer prefix copied exactly; five appended columns zero; appended normalizer state identity",
+    "legacy_actor_input_columns_frozen_during_adaptation": true,
+    "new_actor_input_columns_use_full_actor_learning_rate": true,
+    "privileged_critic": true,
+    "raw_policy_action_stored_for_ppo": true,
+    "required_restart_marginals_jointly_balanced": true,
+    "runtime_cbf": true,
+    "scalar_reward": true
+  },
+  "policy_method": "Observable Failure-Conditioned Brief PPO v19",
+  "protocol_id": "safe100-observable-failure-conditioned-v19",
+  "protocol_revision": 3,
+  "revision_history": [
+    {
+      "commit": "45aca13add2f03a09e5783f4624bf3a681c740e3",
+      "outcome": "all six declared lateral contexts failed the 80% mechanism-purity gate; no context was selected and no adaptation began",
+      "revision": 1,
+      "scope": "base-policy-only calibration preflight"
+    },
+    {
+      "commit": "16f669231c8eea1721037ff900ee459bdacd2825",
+      "outcome": "formal training stopped when lateral seed 143 obtained only one of three required accepted updates; no formal audit began",
+      "revision": 2
+    },
+    {
+      "implementation_parent_commit": "d5e0d278985f20a839ce5551e7c2596368eb653f",
+      "development_evidence_commit": "5233dec59bd1c1137ca263ef0fc1ccb479281f68",
+      "changes": "preserve exact replay pairs, jointly balance every required marginal with exact fallback, freeze legacy input columns, and train five new columns at full actor LR",
+      "revision": 3
+    }
+  ],
+  "removed_conditions": {
+    "cbf_specialist": true,
+    "cross_specialist_all_pass_requirement": true,
+    "filter_free_evaluation": true,
+    "macro_gate": true,
+    "off_diagonal_evaluation": true
+  },
+  "sealed_inputs": {
+    "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+    "contexts": {
+      "contact_stability": {
+        "file_sha256": "db2d128134056e8aaa2b4cbeb3d61d8304110d5ef8abd886d153c1c268fc6bec",
+        "parameters_sha256": "64f3cc58bdba2122be796c0b87a91805e996b2b88808564a674c85a8e7cbf1cd",
+        "selected_calibration_seed": 7217
+      },
+      "lateral": {
+        "file_sha256": "1cc6e4aaa166bd8dc548b79cf975c04b6e09228c158ab752006dc002346a3e16",
+        "parameters_sha256": "9cb4643dc2db397e0abad4c42f39a18034c835c794fb01d789e42f5032eb4eb8",
+        "selected_calibration_seed": 7315
+      }
+    },
+    "source_files": [
+      "src/tasks/velocity/mdp/observations.py",
+      "src/tasks/stairs_cbf/actions.py",
+      "src/tasks/stairs_cbf/command.py",
+      "src/tasks/stairs_cbf/config.py",
+      "src/tasks/stairs_cbf/deployment_context.py",
+      "src/tasks/stairs_cbf/hard_cases.py",
+      "src/tasks/stairs_cbf/mdp.py",
+      "src/tasks/stairs_cbf/online.py",
+      "experiments/scripts/evaluate_online_stairs.py",
+      "experiments/scripts/online_refine_stairs.py",
+      "experiments/scripts/refine_specialist_v19.py",
+      "experiments/scripts/run_specialist_v19.sh",
+      "experiments/scripts/diagonal_audit_stats.py",
+      "experiments/scripts/audit_specialists_diagonal_v19.py",
+      "experiments/scripts/run_specialist_diagonal_audit_v19.sh",
+      "experiments/scripts/verify_diagonal_audit_v19.py"
+    ]
+  },
+  "specialist_modes": [
+    "lateral",
+    "contact_stability"
+  ],
+  "status": "frozen_after_nonformal_seed143_development_before_revision3_formal_adaptation",
+  "training": {
+    "actor_layer_learning_rate_multipliers": [
+      0.1,
+      0.25,
+      0.5,
+      1.0
+    ],
+    "actor_learning_rate": 5e-06,
+    "advantage_normalization": "separate normal/failure/success across both rollout batches, then apply weights",
+    "candidate_confirmation_paired_episodes": 128,
+    "candidate_fractions": [
+      0.5,
+      1.0,
+      1.5
+    ],
+    "candidate_screen_paired_episodes_per_fraction": 64,
+    "candidate_total_paired_episodes_per_round": 320,
+    "clip": 0.05,
+    "critic_learning_rate": 0.0001,
+    "exact_pair_sampling": true,
+    "failure_policy_weight": 1.0,
+    "hard_kl_ceiling": 0.01,
+    "legacy_first_layer_input_columns_frozen": 405,
+    "loss_combination": "arithmetic mean of two frozen-policy rollout losses",
+    "maximum_restart_marginal_count_difference": 1,
+    "maximum_rounds": 8,
+    "minimum_accepted_updates": 3,
+    "new_first_layer_input_columns_at_full_actor_lr": 5,
+    "ppo_epochs": 1,
+    "ppo_minibatches": 4,
+    "rejection_patience_after_minimum": 2,
+    "rollout_batches_per_round": 2,
+    "rollout_environments_per_batch": 64,
+    "rollout_steps_per_environment": 1024,
+    "start_mixture_per_batch": {
+      "failure": 12,
+      "normal": 40,
+      "success": 12
+    },
+    "success_policy_weight": 1.25,
+    "target_kl": 0.003
+  }
+}

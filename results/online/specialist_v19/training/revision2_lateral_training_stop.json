@@ -1,0 +1,210 @@
+{
+  "schema_version": 1,
+  "status": "formal_training_stopped_before_audit",
+  "source_commit": "16f669231c8eea1721037ff900ee459bdacd2825",
+  "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "deployment_context": {
+    "file_sha256": "1cc6e4aaa166bd8dc548b79cf975c04b6e09228c158ab752006dc002346a3e16",
+    "parameters_sha256": "9cb4643dc2db397e0abad4c42f39a18034c835c794fb01d789e42f5032eb4eb8",
+    "selected_calibration_seed": 7315
+  },
+  "adaptation_seed_order": [
+    43,
+    143,
+    243,
+    343,
+    443
+  ],
+  "completed_before_stop": {
+    "43": {
+      "protocol_completed": true,
+      "round_protocol": {
+        "accepted_updates": 5,
+        "actual_rounds": 8,
+        "maximum_rounds": 8,
+        "minimum_accepted_updates": 3,
+        "rejection_patience_after_minimum": 2,
+        "stop_reason": "maximum_rounds"
+      },
+      "initial_actor_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+      "final_actor_sha256": "b536cc8b78af698556bdbbab72ca3b011b456a0e9088a8d1ff6ed415c1f5542d",
+      "training_diagnostic_only_128_episodes": {
+        "target": {
+          "base_success_rate": 0.7109375,
+          "final_success_rate": 0.703125,
+          "success_delta": -0.0078125,
+          "base_fall_rate": 0.2890625,
+          "final_fall_rate": 0.296875,
+          "fall_delta": 0.0078125
+        },
+        "D0": {
+          "base_success_rate": 0.921875,
+          "final_success_rate": 0.9296875,
+          "success_delta": 0.0078125,
+          "base_fall_rate": 0.015625,
+          "final_fall_rate": 0.015625,
+          "fall_delta": 0.0
+        }
+      },
+      "external_artifact_sha256": {
+        "accepted_final.pt": "1290ee952063787ab262946f7dd55efbb28b58fdcf68b2c87ac3fba12ca5eedf",
+        "online_rounds.json": "e792b7f7889b24a79ccbf2c1ef4945b174c295e25f47346dbe23661d3ab144e8",
+        "specialist_summary.json": "c61c8c24e924400cd73ede6d3f40037a861702cb2cc541773285689076a8ffd2"
+      }
+    }
+  },
+  "protocol_failure": {
+    "specialist_mode": "lateral",
+    "adaptation_seed": 143,
+    "protocol_completed": false,
+    "formal_use_prohibited": true,
+    "round_protocol": {
+      "accepted_updates": 1,
+      "actual_rounds": 8,
+      "maximum_rounds": 8,
+      "minimum_accepted_updates": 3,
+      "rejection_patience_after_minimum": 2,
+      "stop_reason": "insufficient_accepted_updates_after_maximum_rounds"
+    },
+    "runner_terminal_error": "RuntimeError: v19 run ended without the required three accepted updates",
+    "initial_actor_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+    "final_actor_sha256": "b798b456e39166582fba8b5d9224507a19f2528f023c03f60f89a0520028945f",
+    "rounds": [
+      {
+        "round": 1,
+        "target_gate_accepted": false,
+        "policy_changed_at_round_end": false,
+        "accepted_update_count": 0,
+        "selected_candidate_fraction": null,
+        "confirmed_success_delta": -0.0234375,
+        "confirmed_fall_delta": 0.0234375,
+        "confirmed_mean_kl": 0.0006867307238280773,
+        "dual_rollout_actor_gradient_cosine_diagnostic_only": -0.20097365975379944,
+        "d0_check_passed": true
+      },
+      {
+        "round": 2,
+        "target_gate_accepted": false,
+        "policy_changed_at_round_end": false,
+        "accepted_update_count": 0,
+        "selected_candidate_fraction": null,
+        "confirmed_success_delta": -0.03125,
+        "confirmed_fall_delta": 0.03125,
+        "confirmed_mean_kl": 0.0007571824826300144,
+        "dual_rollout_actor_gradient_cosine_diagnostic_only": 0.13364462554454803,
+        "d0_check_passed": false
+      },
+      {
+        "round": 3,
+        "target_gate_accepted": false,
+        "policy_changed_at_round_end": false,
+        "accepted_update_count": 0,
+        "selected_candidate_fraction": null,
+        "confirmed_success_delta": -0.046875,
+        "confirmed_fall_delta": 0.046875,
+        "confirmed_mean_kl": 0.00007570382877020165,
+        "dual_rollout_actor_gradient_cosine_diagnostic_only": 0.16006812453269958,
+        "d0_check_passed": true
+      },
+      {
+        "round": 4,
+        "target_gate_accepted": false,
+        "policy_changed_at_round_end": false,
+        "accepted_update_count": 0,
+        "selected_candidate_fraction": null,
+        "confirmed_success_delta": -0.09375,
+        "confirmed_fall_delta": 0.09375,
+        "confirmed_mean_kl": 0.00008692737901583314,
+        "dual_rollout_actor_gradient_cosine_diagnostic_only": -0.026019755750894547,
+        "d0_check_passed": true
+      },
+      {
+        "round": 5,
+        "target_gate_accepted": false,
+        "policy_changed_at_round_end": false,
+        "accepted_update_count": 0,
+        "selected_candidate_fraction": null,
+        "confirmed_success_delta": -0.03125,
+        "confirmed_fall_delta": 0.03125,
+        "confirmed_mean_kl": 0.00010513063170947134,
+        "dual_rollout_actor_gradient_cosine_diagnostic_only": 0.08355432748794556,
+        "d0_check_passed": true
+      },
+      {
+        "round": 6,
+        "target_gate_accepted": false,
+        "policy_changed_at_round_end": false,
+        "accepted_update_count": 0,
+        "selected_candidate_fraction": null,
+        "confirmed_success_delta": -0.0078125,
+        "confirmed_fall_delta": 0.0078125,
+        "confirmed_mean_kl": 0.00008058581443037838,
+        "dual_rollout_actor_gradient_cosine_diagnostic_only": 0.012992937117815018,
+        "d0_check_passed": true
+      },
+      {
+        "round": 7,
+        "target_gate_accepted": true,
+        "policy_changed_at_round_end": true,
+        "accepted_update_count": 1,
+        "selected_candidate_fraction": 1.0,
+        "confirmed_success_delta": 0.0078125,
+        "confirmed_fall_delta": -0.0078125,
+        "confirmed_mean_kl": 0.00028598890639841557,
+        "dual_rollout_actor_gradient_cosine_diagnostic_only": -0.0681924819946289,
+        "d0_check_passed": true
+      },
+      {
+        "round": 8,
+        "target_gate_accepted": false,
+        "policy_changed_at_round_end": false,
+        "accepted_update_count": 1,
+        "selected_candidate_fraction": null,
+        "confirmed_success_delta": -0.015625,
+        "confirmed_fall_delta": 0.015625,
+        "confirmed_mean_kl": 0.00039788533467799425,
+        "dual_rollout_actor_gradient_cosine_diagnostic_only": 0.16418327391147614,
+        "d0_check_passed": true
+      }
+    ],
+    "training_diagnostic_only_128_episodes": {
+      "target": {
+        "base_success_rate": 0.734375,
+        "final_success_rate": 0.7421875,
+        "success_delta": 0.0078125,
+        "base_fall_rate": 0.265625,
+        "final_fall_rate": 0.2578125,
+        "fall_delta": -0.0078125
+      },
+      "D0": {
+        "base_success_rate": 0.9140625,
+        "final_success_rate": 0.890625,
+        "success_delta": -0.0234375,
+        "base_fall_rate": 0.0078125,
+        "final_fall_rate": 0.0234375,
+        "fall_delta": 0.015625
+      }
+    },
+    "external_artifact_sha256": {
+      "accepted_final.pt": "699faa682bdacf1e4cc8a3367cda83616265ddb014f936b4ba4b2584baa38984",
+      "online_rounds.json": "79f6bce44aab8309924f3f643733f231ede92b5fdc463e5bd2673ce5ea5ee28f",
+      "specialist_summary.json": "eae27df3086d72e8a04ef384f3c1542708a1c11683727fea309aea49a2f60a5b"
+    }
+  },
+  "not_started_after_stop": {
+    "lateral": [
+      243,
+      343,
+      443
+    ],
+    "contact_stability": [
+      43,
+      143,
+      243,
+      343,
+      443
+    ]
+  },
+  "formal_diagonal_audit_started": false,
+  "interpretation": "Revision-2 cannot support a formal specialist claim because one frozen adaptation seed failed the minimum accepted-update requirement. The 128-episode final evaluations are training diagnostics only and are not substituted for the unstarted 512-target/256-D0 paired audit."
+}

@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "protocol_id": "safe100-deployment-unit-local-matched-success-v21",
+  "event_id": "v21-final-revision0-L2-calibration-range-failure-001",
+  "stage": "replacement_base_policy_only_calibration",
+  "started_at_utc": "2026-08-08T16:29:37Z",
+  "stopped_at_utc": "2026-08-08T16:58:18Z",
+  "failed_context_id": "L2",
+  "prospective_protocol": {
+    "file": "results/online/specialist_v21/protocol_precalibration_final.json",
+    "git_commit": "da4c5a4b8655b743be951cec02eb77e2ea9f0414",
+    "sha256": "177152643b52e4bc366f415cb40a854c3f6317644f836ca61884b875be376c39"
+  },
+  "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "failure_class": "prospectively_frozen_L2_range_produced_no_qualifying_candidate_at_512_episodes",
+  "error_type": "RuntimeError",
+  "error_message": "no declared v21 L2 candidate passed every gate",
+  "selection_rule_completed_without_manual_intervention": true,
+  "total_base_policy_episodes_before_stop": 9216,
+  "completed_contexts": {
+    "L_dev": {
+      "selected_candidate_seed": 17110,
+      "success_rate": 0.796875,
+      "fall_count": 104,
+      "target_failure_fraction": 0.8557692307692307,
+      "second_failure_fraction": 0.14423076923076922,
+      "context_file": "results/online/specialist_v21/contexts/L_dev.json",
+      "context_file_sha256": "ace1f18593ba7311ee3a915cf796a236c32d0b28e1e1c3e2bb75aadb21b82249"
+    },
+    "C_dev": {
+      "selected_candidate_seed": 17209,
+      "success_rate": 0.7890625,
+      "fall_count": 108,
+      "target_failure_fraction": 0.9444444444444444,
+      "second_failure_fraction": 0.05555555555555555,
+      "context_file": "results/online/specialist_v21/contexts/C_dev.json",
+      "context_file_sha256": "7dfaa92d476483014d06945df9b90f904838e83eb8dbe2c610bbb1e63b17aa82"
+    },
+    "L1": {
+      "selected_candidate_seed": 17308,
+      "success_rate": 0.794921875,
+      "fall_count": 105,
+      "target_failure_fraction": 0.8761904761904762,
+      "second_failure_fraction": 0.12380952380952381,
+      "context_file": "results/online/specialist_v21/contexts/L1.json",
+      "context_file_sha256": "b4ada288cc4de1f540991561349a45e9ad01f339765cbb03b44f5a12fc952065"
+    }
+  },
+  "failed_context": {
+    "context_id": "L2",
+    "candidate_seeds_evaluated_in_frozen_order": [
+      17408,
+      17409,
+      17410,
+      17411,
+      17412,
+      17413,
+      17414,
+      17415,
+      17416,
+      17417,
+      17418,
+      17419
+    ],
+    "candidate_count": 12,
+    "episodes_per_candidate": 512,
+    "total_episodes": 6144,
+    "gate_counts": {
+      "success_rate_between_0p70_and_0p85": 7,
+      "fall_count_at_least_100": 0,
+      "lateral_failure_fraction_at_least_0p80": 5,
+      "second_failure_fraction_at_most_0p30": 11,
+      "all_gates": 0
+    },
+    "observed_ranges": {
+      "success_rate": [
+        0.833984375,
+        0.875
+      ],
+      "fall_count": [
+        64,
+        85
+      ],
+      "lateral_failure_fraction": [
+        0.6463414634146342,
+        0.8461538461538461
+      ]
+    },
+    "closest_fall_count_candidate": {
+      "candidate_seed": 17417,
+      "candidate_severity": 0.818181818182,
+      "success_rate": 0.833984375,
+      "fall_count": 85,
+      "target_failure_fraction": 0.8,
+      "second_failure_fraction": 0.2,
+      "qualifies": false
+    },
+    "committed_progress_file": "results/online/specialist_v21/calibration/L2/calibration_progress.json",
+    "committed_progress_sha256": "b75e80443f892ac22cf17abee2d96c26c4b33b28dc804bffa1f108b268009f81"
+  },
+  "contexts_not_attempted_after_fail_fast_stop": [
+    "L3",
+    "L4",
+    "L5",
+    "C1",
+    "C2",
+    "C3",
+    "C4",
+    "C5"
+  ],
+  "base_policy_calibration_outcomes_observed": true,
+  "adaptation_process_started": false,
+  "adapted_policy_outcomes_observed": false,
+  "development_beta_selection_started": false,
+  "formal_adaptation_or_audit_outcomes_observed": false,
+  "queue_completed_marker_observed": false,
+  "processes_running_after_stop": false,
+  "compact_evidence": {
+    "git_commit": "4a1239a33404dea6f61eab028656fd44e92ca732",
+    "file_count": 10,
+    "manifest_sha256": "18c574aaa95d07f35664b380e2c675490963c51bd31dee236bcd7c58cc8dbce4",
+    "manifest_definition": "SHA-256 of sorted sha256sum lines for relative calibration/ and contexts/ files"
+  },
+  "external_evidence": {
+    "artifact_root": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_final",
+    "artifact_file_count": 187,
+    "artifact_total_bytes": 78198704,
+    "artifact_manifest_sha256": "57d715d9c39947d98685e2646c6335aaf10866bcb72113ef43733b9cbcedb4c1",
+    "log_root": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v21_final",
+    "log_file_count": 5,
+    "log_total_bytes": 144656,
+    "log_manifest_sha256": "3f9617e56b29d5cd9ff10c26eb10401c78db5888e5b5e056ca1b04a08ca4b740",
+    "queue_log_sha256": "962b190236e84436f92e7562d729300eff114ea3312c9a62a0d2249ace3be4dc",
+    "failed_context_log_sha256": "6d2b217b52ce682ec489bb38da124e0956aa2e0d30597c8e0066d6e4f93fa1be",
+    "manifest_definition": "SHA-256 of sorted sha256sum lines rooted at the corresponding directory and using relative paths"
+  },
+  "interpretation": "The 512-episode result falsifies the pilot-3 inference that isolated yaw-command disturbance supplies enough L2 base-policy difficulty. The yaw-dominant family remained too easy across all 12 candidates; the pilot qualifier was a small-sample fluctuation in fall count.",
+  "disposition": "stopped_before_any_adaptation_and_requires_a_new_L2_failure_mechanism",
+  "remediation_constraints": {
+    "preserve_this_failed_formal_calibration": true,
+    "use_only_base_policy_evidence_to_replace_L2": true,
+    "do_not_tune_against_any_adapted_policy_outcome": true,
+    "use_entirely_new_candidate_and_evaluation_randomness": true,
+    "freeze_and_commit_every_new_boundary_before_execution": true
+  }
+}

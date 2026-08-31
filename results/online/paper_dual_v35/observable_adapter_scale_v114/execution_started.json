@@ -1,0 +1,15 @@
+{
+  "adapter_checkpoint_sha256": "3c855c5b5e81cb221187d10db227595abbf7e765d7273d2a2b92515b697cfcce",
+  "base_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "episodes_per_scale": 64,
+  "git_commit": "1b4cb8efcdf143934c45147be429a17a90bb3e41",
+  "independent_gate_policy": "run_only_if_selected_screen_rate_gte_0.75",
+  "method_id": "heldout-scaled-observable-cbf-adapter-v114",
+  "screen_scales": [
+    0.0,
+    0.5,
+    1.0,
+    1.5
+  ],
+  "screen_seed": 201353610
+}

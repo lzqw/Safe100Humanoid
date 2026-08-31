@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "version": "v95",
+  "source_commit": "10adeebdafabc04d349603d78e2348a460002b8b",
+  "method_id": "persistent-geometry-paired-dual-gae-v95",
+  "hardware": "local NVIDIA GeForce GTX 1660 SUPER",
+  "targeted_tests_passed": 9,
+  "training": {
+    "training_seeds": [201352880, 201352890, 201352900],
+    "num_envs": 16,
+    "rollout_steps": 512,
+    "rollout_batch_count": 6,
+    "transition_count": 49152,
+    "optimizer": "sgd",
+    "optimizer_updates": 1,
+    "gradient_aggregation": "paired-on-off-mean_then-coordinate-median",
+    "trainable_parameter_count": 5120,
+    "learning_rate": 0.01,
+    "elapsed_seconds": 139.64819939399604
+  },
+  "offline_gate": {
+    "passed": true,
+    "positive_batch_count": 6,
+    "batch_count": 6,
+    "minimum_surrogate_gain": 0.0001259632408618927,
+    "mean_filter_on_surrogate_gain": 0.00014078795599440733,
+    "mean_filter_off_surrogate_gain": 0.0002671068844695886,
+    "reference_forward_kl": 0.000049996592376070716,
+    "max_reference_kl": 0.00005,
+    "adapter_interpolation_scale": 0.69970703125,
+    "paired_seed_gradient_cosine_mean": 0.020150423049926758,
+    "paired_seed_gradient_cosine_min": -0.06864728033542633,
+    "legacy_first_layer_change_max_abs": 0.0
+  },
+  "untouched_filter_off_gate": {
+    "seed": 201352920,
+    "num_episodes": 64,
+    "success_count": 44,
+    "success_rate": 0.6875,
+    "fall_rate": 0.3125,
+    "mean_reached_riser": 8.15625,
+    "runtime_filter": false,
+    "all_finite": true,
+    "checkpoint_sha256": "e6b3c68400e03994b54b7470e5466893ef3c7a325810a879f52150a96e586b6a",
+    "actor_state_sha256": "a03712eeeaab97c5723402a3977f12ca1b1f02cf8e4bd799a3bfaec8871aa816"
+  },
+  "decision": "reject",
+  "reason": "The only untouched filter-off gate was 44/64=68.75%, below the fixed 75% target.",
+  "formal_256_episode_gate_run": false,
+  "additional_post_result_rollouts_run": false,
+  "global_best_changed": false,
+  "global_selected_version": "v79"
+}

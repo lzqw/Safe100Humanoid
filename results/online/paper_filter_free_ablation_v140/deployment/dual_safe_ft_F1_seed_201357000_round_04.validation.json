@@ -1,0 +1,118 @@
+{
+  "actor_state_sha256": "6a3fdea9f66ff1bd52e6c2c67148397e341aec1a6d3f5205daf37cd4ccac31ca",
+  "artifact_label": "results/online/paper_filter_free_ablation_v140/deployment/dual_safe_ft_F1_seed_201357000_round_04.onnx",
+  "artifact_role": "fixed_round_4_dual_filter_free_deployment_candidate",
+  "base_export_validation": {
+    "acceptance_tolerance": 1e-05,
+    "fixed_probe_count": 8,
+    "fixed_probe_seed": 139,
+    "maximum_absolute_output_error": 2.384185791015625e-07,
+    "onnx_checker_passed": true
+  },
+  "bridge_parity": {
+    "acceptance_tolerance": 1e-05,
+    "action_shape": [
+      1,
+      12
+    ],
+    "actor_observation_shape": [
+      1,
+      405
+    ],
+    "bridge_observation_sha256": "4a130a0c96860782f2a32d5161db3459ddd338aefef71c56762f20e7715e2b02",
+    "bridge_probe_count": 12,
+    "controlled_joint_indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "history_length": 5,
+    "maximum_actor_output_error": 2.384185791015625e-07,
+    "maximum_full_body_target_error": 1.7881393432617188e-07,
+    "maximum_lower_body_target_error": 1.7881393432617188e-07,
+    "passed": true,
+    "term_widths": [
+      [
+        "base_ang_vel",
+        3
+      ],
+      [
+        "projected_gravity",
+        3
+      ],
+      [
+        "command",
+        3
+      ],
+      [
+        "phase",
+        2
+      ],
+      [
+        "joint_pos_relative",
+        29
+      ],
+      [
+        "joint_vel_relative",
+        29
+      ],
+      [
+        "previous_raw_action",
+        12
+      ]
+    ]
+  },
+  "checkpoint_label": "results/online/paper_filter_free_ablation_v140/checkpoints/dual_safe_ft_F1_seed_201357000_round_04.pt",
+  "checkpoint_sha256": "80e7207d2e46d0de6e93b45cd1144fbb57a054de06a2d463bf41c15d8ecf2c6a",
+  "context": "F1",
+  "hardware_control_ready": false,
+  "latency": {
+    "device": "cpu",
+    "gait_period_ms": 600.0,
+    "measurement_scope": "five-frame observation assembly + deterministic actor + 12-to-29 position-target mapping; no robot transport and runtime CBF disabled",
+    "onnx_backend": {
+      "backend": "onnx.reference.ReferenceEvaluator",
+      "maximum_ms": 0.638104,
+      "mean_ms": 0.30556725999999995,
+      "measured_steps": 100,
+      "median_ms": 0.30099,
+      "note": "Portable correctness backend, not an optimized production runtime; latency is reported without being used as a deployment claim.",
+      "p95_ms": 0.31882320000000003,
+      "p95_within_policy_deadline": true,
+      "p99_ms": 0.32755387000000163,
+      "policy_deadline_ms": 20.0,
+      "warmup_steps": 20
+    },
+    "policy_period_ms": 20.0,
+    "pytorch_backend": {
+      "maximum_ms": 0.257909,
+      "mean_ms": 0.22183016,
+      "measured_steps": 100,
+      "median_ms": 0.2208435,
+      "p95_ms": 0.238232,
+      "p95_within_policy_deadline": true,
+      "p99_ms": 0.24641510000000005,
+      "policy_deadline_ms": 20.0,
+      "warmup_steps": 20
+    },
+    "torch_threads": 1
+  },
+  "onnx_opset": 18,
+  "onnx_sha256": "c4880c06707859f4eed4d2963ab29ff38f29cd4cb197fd3b812a7cf2652071f5",
+  "onnx_size_bytes": 1499237,
+  "round": 4,
+  "runtime_filter_enabled": false,
+  "schema_version": 1,
+  "selection_used": false,
+  "training_seed": 201357000,
+  "warning": "Offline bridge evidence only. Robot execution still requires reviewed state estimation, stair localization, command/joint limits, watchdog, operator takeover, emergency stop, and tethered validation."
+}

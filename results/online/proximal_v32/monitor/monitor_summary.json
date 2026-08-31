@@ -1,0 +1,51 @@
+{
+  "checkpoint_hashes_unchanged": true,
+  "complete": true,
+  "continuation_rows": 15,
+  "deterministic_policy_mean": true,
+  "episodes_per_condition": 128,
+  "fixed_rounds": [
+    8,
+    16,
+    24
+  ],
+  "mixed_rows": 9,
+  "protocol_id": "safe100-cbf-protected-continual-refinement-v32",
+  "read_only": true,
+  "results_csv_sha256": "ea945ea92ab1ef7c08af43b62f7e6f556f42f9c5df98ce112ec83da61742e244",
+  "runtime_CBF": "on",
+  "saturation_diagnostics": {
+    "F1": {
+      "LongConstant": {
+        "round16_to_round24": -0.03125,
+        "round8_to_round16": 0.0625
+      },
+      "LongDecay": {
+        "round16_to_round24": 0.0234375,
+        "round8_to_round16": 0.03125
+      }
+    },
+    "F2": {
+      "LongConstant": {
+        "round16_to_round24": -0.09375,
+        "round8_to_round16": 0.0234375
+      },
+      "LongDecay": {
+        "round16_to_round24": 0.0546875,
+        "round8_to_round16": -0.0703125
+      }
+    },
+    "F3": {
+      "LongConstant": {
+        "round16_to_round24": 0.0546875,
+        "round8_to_round16": -0.078125
+      },
+      "LongDecay": {
+        "round16_to_round24": -0.015625,
+        "round8_to_round16": -0.015625
+      }
+    }
+  },
+  "schema_version": 1,
+  "used_for_selection_stopping_or_training": false
+}

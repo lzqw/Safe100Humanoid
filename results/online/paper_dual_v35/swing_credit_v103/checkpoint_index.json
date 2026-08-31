@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "source_commit": "637703763f6abb2c9e5d22a7bbf3467ad631c6d3",
+  "global_selected": {
+    "version": "v79",
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt",
+    "sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317"
+  },
+  "v103_best_aligned": {
+    "selected": false,
+    "checkpoint_round": 2,
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/swing_credit_v103_6377037_s201353340_r2/round_02.pt",
+    "sha256": "07e1209f3f01c285438f78b904300ec948ea136f82eb74a10b4b1e4247af81ac",
+    "actor_sha256": "f71af07888e04d6b8fbe9c4045a8dc42b8014e56c73c7c9f64234aea9358ae63"
+  },
+  "v103_final_unaligned": {
+    "selected": false,
+    "checkpoint_round": 4,
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/swing_credit_v103_6377037_s201353340_r2/round_04.pt",
+    "sha256": "7ed23bdcbeadd9e233efeb7d47bcad44b2cd45ade9a14d2adc6724419d693e8c",
+    "actor_sha256": "566228bd7997f205e33e0b9f54aade4e468030da5f534ae2f76751c99c727fd9"
+  },
+  "github_binary_policy": "Rejected candidate binaries remain on 4080 and are not committed."
+}

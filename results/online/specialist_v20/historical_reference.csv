@@ -1,0 +1,7 @@
+version,specialist,status,target_success_delta_pp,source,directly_comparable_to_v20,note
+v17,lateral,fresh formal paired audit,1.7578125,results/online/specialist_v17/formal/audit/final_audit_compact.json,False,"context, algorithm, seed count, and audit randomness differ"
+v17,balance,fresh formal paired audit,0.78125,results/online/specialist_v17/formal/audit/final_audit_compact.json,False,"context, algorithm, seed count, and audit randomness differ"
+v18,lateral,fresh formal paired audit,3.059895833333333,results/online/specialist_v18/formal/diagonal_audit_summary.json,False,"context, algorithm, seed count, and audit randomness differ"
+v18,balance,fresh formal paired audit,1.1067708333333335,results/online/specialist_v18/formal/diagonal_audit_summary.json,False,"context, algorithm, seed count, and audit randomness differ"
+v19 R4,lateral,training completed; formal audit not started,,results/online/specialist_v19/training/revision4_training_stop.json,False,no formal v19-R4 performance result
+v19 R4,contact_stability,formal training stopped; formal audit not started,,results/online/specialist_v19/training/revision4_training_stop.json,False,no formal v19-R4 performance result

@@ -1,0 +1,66 @@
+{
+  "attempts": [
+    {
+      "base_policy_only": true,
+      "candidate_seed": 39908,
+      "candidate_severity": 0.0,
+      "context_family": "left_right_action_asymmetry",
+      "context_id": "C2",
+      "evaluation_seed_start": 78180000,
+      "evaluation_seeds": [
+        78180000,
+        78180001,
+        78180002,
+        78180003
+      ],
+      "failure_type_counts": {
+        "contact_stability": 113,
+        "lateral_heading_drift": 4,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "failure_type_fractions": {
+        "contact_stability": 0.9658119658119658,
+        "lateral_heading_drift": 0.03418803418803419,
+        "non_lateral_balance_or_phase": 0.0,
+        "non_lateral_high_cbf_demand": 0.0,
+        "other_non_lateral": 0.0
+      },
+      "fall_count": 117,
+      "fall_rate": 0.228515625,
+      "minimum_fall_count_gate": 100,
+      "num_episodes": 512,
+      "parameters_sha256": "d510ba5e88687c9bfbadefc90f07eeb63970366bc4e1df0a42e492e05c8fe2f0",
+      "qualifies": true,
+      "second_failure_fraction": 0.03418803418803419,
+      "success_rate": 0.771484375,
+      "target_failure_fraction": 0.9658119658119658,
+      "target_failure_type": "contact_stability"
+    }
+  ],
+  "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "base_policy_only": true,
+  "candidate_seeds": [
+    39908,
+    39909,
+    39910,
+    39911,
+    39912,
+    39913,
+    39914,
+    39915,
+    39916,
+    39917,
+    39918,
+    39919
+  ],
+  "context_id": "C2",
+  "exploratory": false,
+  "minimum_fall_count_gate": 100,
+  "mode": "contact_stability",
+  "policy_method": "Local Matched-Success Preservation v21",
+  "prospective_protocol_file_sha256": "af073b100c7446e2ffe34033ef24bff3905e770dd2cc77b3c89df9d3a83df23d",
+  "prospective_protocol_git_commit": "5dac6962a2a9b13053032477008c81cc9a82f269",
+  "protocol_id": "safe100-deployment-unit-local-matched-success-v21"
+}

@@ -1,0 +1,603 @@
+{
+  "all_available_aggregate_results_and_failures_published": true,
+  "complete": false,
+  "context_status": {
+    "F1": {
+      "audit": "complete",
+      "training": "complete"
+    },
+    "F2": {
+      "audit": "not_run",
+      "teacher_rounds_completed": 4,
+      "training": "incomplete"
+    },
+    "F3": {
+      "audit": "not_run",
+      "training": "failed_before_rollout"
+    }
+  },
+  "contexts": {
+    "F1": {
+      "D0": {
+        "base_on": {
+          "actor_deterministic_state_sha256": "5f5b8cf07464e89f7a47c6b296a36d8f957ed4cd74621224ff8a3e933d72490f",
+          "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+          "checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+          "condition": "F1_base_on",
+          "context": "D0",
+          "counterfactual_would_intervene_fraction": 0.05488531666774048,
+          "fall_count": 20,
+          "fall_rate": 0.078125,
+          "global_minimum_nominal_barrier_margin": -55.35540771484375,
+          "initial_state_signatures": [
+            "46213326bb2089e825a2fb29795acd5000b1547493b7e49c1a8992b78594d0a7"
+          ],
+          "intervention_steps_per_riser": 3.002202643171806,
+          "kick_episode_count": 256,
+          "kick_episode_rate": 1.0,
+          "mean_completion_time_s": 9.700625000000002,
+          "mean_correction_norm": 0.009016440596022746,
+          "mean_counterfactual_correction_norm": 0.009016440596022746,
+          "mean_episode_minimum_nominal_barrier_margin": -14.36665060557425,
+          "mean_reached_riser": 8.8671875,
+          "mean_return": 6.391019212082028,
+          "mean_success_completion_time_s": 9.884237288135594,
+          "nominal_barrier_violation_steps_per_riser": 3.001762114537445,
+          "num_episodes": 256,
+          "runtime_filter": true,
+          "seeds": [
+            176301000
+          ],
+          "success_count": 236,
+          "success_rate": 0.921875,
+          "swing_selection_mismatch_count": 0,
+          "teacher_reprojection_max_abs_error": 0.0,
+          "toe_riser_kick_events_per_riser": 0.9079295154185022,
+          "total_reached_risers": 2270,
+          "total_steps": 124168,
+          "unsafe_overlap_steps_per_riser": 0.9850220264317181
+        },
+        "control_on": {
+          "actor_deterministic_state_sha256": "d0cf46809ba37b8079ecbb3421611f95e10f09e94e0682b348c3f147ea749a38",
+          "actor_state_sha256": "55587429e4bf90d9f928fed3cf567215c00c444c7e9f7e59d05a13109cd80a84",
+          "checkpoint_sha256": "73a21d58f01b8267202870ff7a2d31630740b72bce3d7dc0de0ec1e418c13e2f",
+          "condition": "F1_control_on",
+          "context": "D0",
+          "counterfactual_would_intervene_fraction": 0.05537100354880005,
+          "fall_count": 28,
+          "fall_rate": 0.109375,
+          "global_minimum_nominal_barrier_margin": -64.5071029663086,
+          "initial_state_signatures": [
+            "46213326bb2089e825a2fb29795acd5000b1547493b7e49c1a8992b78594d0a7"
+          ],
+          "intervention_steps_per_riser": 3.0158870255957635,
+          "kick_episode_count": 256,
+          "kick_episode_rate": 1.0,
+          "mean_completion_time_s": 9.64234375,
+          "mean_correction_norm": 0.009200355304958264,
+          "mean_counterfactual_correction_norm": 0.009200355304958264,
+          "mean_episode_minimum_nominal_barrier_margin": -14.34828145056963,
+          "mean_reached_riser": 8.8515625,
+          "mean_return": 5.975769839249551,
+          "mean_success_completion_time_s": 9.818684210526316,
+          "nominal_barrier_violation_steps_per_riser": 3.0123565754633717,
+          "num_episodes": 256,
+          "runtime_filter": true,
+          "seeds": [
+            176301000
+          ],
+          "success_count": 228,
+          "success_rate": 0.890625,
+          "swing_selection_mismatch_count": 0,
+          "teacher_reprojection_max_abs_error": 0.0,
+          "toe_riser_kick_events_per_riser": 0.939541041482789,
+          "total_reached_risers": 2266,
+          "total_steps": 123422,
+          "unsafe_overlap_steps_per_riser": 1.0750220653133276
+        },
+        "teacher_on": {
+          "actor_deterministic_state_sha256": "ccbc12a20c69dfc31ac2b32ec56e7a0c59eb1b63202bd9c1884be3fe46c82402",
+          "actor_state_sha256": "31b2d122f7c7110b7b443d4f2d51deab627483f2b8ea04554056fb2d250c3a24",
+          "checkpoint_sha256": "8af2019f66f347b9bacc5067b8146fda8ec319ac82beac63fe75e932d713999d",
+          "condition": "F1_teacher_on",
+          "context": "D0",
+          "counterfactual_would_intervene_fraction": 0.054920801861235935,
+          "fall_count": 19,
+          "fall_rate": 0.07421875,
+          "global_minimum_nominal_barrier_margin": -51.42423629760742,
+          "initial_state_signatures": [
+            "46213326bb2089e825a2fb29795acd5000b1547493b7e49c1a8992b78594d0a7"
+          ],
+          "intervention_steps_per_riser": 3.0432671081677705,
+          "kick_episode_count": 256,
+          "kick_episode_rate": 1.0,
+          "mean_completion_time_s": 9.8053125,
+          "mean_correction_norm": 0.00880589919034118,
+          "mean_counterfactual_correction_norm": 0.00880589919034118,
+          "mean_episode_minimum_nominal_barrier_margin": -13.843451155349612,
+          "mean_reached_riser": 8.84765625,
+          "mean_return": 6.6399140898138285,
+          "mean_success_completion_time_s": 9.984725738396625,
+          "nominal_barrier_violation_steps_per_riser": 3.0415011037527595,
+          "num_episodes": 256,
+          "runtime_filter": true,
+          "seeds": [
+            176301000
+          ],
+          "success_count": 237,
+          "success_rate": 0.92578125,
+          "swing_selection_mismatch_count": 0,
+          "teacher_reprojection_max_abs_error": 0.0,
+          "toe_riser_kick_events_per_riser": 0.9514348785871964,
+          "total_reached_risers": 2265,
+          "total_steps": 125508,
+          "unsafe_overlap_steps_per_riser": 1.055187637969095
+        }
+      },
+      "context": "F1",
+      "control_final_checkpoint_sha256": "73a21d58f01b8267202870ff7a2d31630740b72bce3d7dc0de0ec1e418c13e2f",
+      "control_training_summary_sha256": "26d11e91c3d2a0ddb3644f3dc9cde010397cde23c097c75c5faa1ec80d9d2945",
+      "effects": {
+        "context": "F1",
+        "internalization_teacher_vs_control": {
+          "off_correction_teacher_minus_control": 0.0002978835071625399,
+          "off_kick_events_teacher_minus_control": -0.0033076175793769202,
+          "off_margin_teacher_minus_control": 0.21680181473493576,
+          "off_nominal_violation_teacher_minus_control": 0.07607771457915824,
+          "off_overlap_teacher_minus_control": 0.021417662071826937,
+          "off_success_teacher_minus_control": 0.025390625,
+          "off_would_intervene_teacher_minus_control": 0.0010426561357916864
+        },
+        "paired_success_95_CI": {
+          "D0_control_on_vs_base": {
+            "bootstrap_samples": 2000,
+            "bootstrap_seed": 178300006,
+            "field": "success",
+            "paired_bootstrap_95_ci": [
+              -0.08203125,
+              0.01953125
+            ],
+            "paired_count": 256,
+            "point_estimate": -0.03125,
+            "used_as_selection_or_stopping_gate": false
+          },
+          "D0_teacher_on_vs_base": {
+            "bootstrap_samples": 2000,
+            "bootstrap_seed": 178300005,
+            "field": "success",
+            "paired_bootstrap_95_ci": [
+              -0.04296875,
+              0.05078125
+            ],
+            "paired_count": 256,
+            "point_estimate": 0.00390625,
+            "used_as_selection_or_stopping_gate": false
+          },
+          "D0_teacher_on_vs_control": {
+            "bootstrap_samples": 2000,
+            "bootstrap_seed": 178300007,
+            "field": "success",
+            "paired_bootstrap_95_ci": [
+              -0.015625,
+              0.08203125
+            ],
+            "paired_count": 256,
+            "point_estimate": 0.03515625,
+            "used_as_selection_or_stopping_gate": false
+          },
+          "control_on_vs_base": {
+            "bootstrap_samples": 2000,
+            "bootstrap_seed": 178300001,
+            "field": "success",
+            "paired_bootstrap_95_ci": [
+              -0.06640625,
+              0.03125
+            ],
+            "paired_count": 512,
+            "point_estimate": -0.017578125,
+            "used_as_selection_or_stopping_gate": false
+          },
+          "teacher_off_vs_base": {
+            "bootstrap_samples": 2000,
+            "bootstrap_seed": 178300003,
+            "field": "success",
+            "paired_bootstrap_95_ci": [
+              -0.03125,
+              0.08203125
+            ],
+            "paired_count": 512,
+            "point_estimate": 0.025390625,
+            "used_as_selection_or_stopping_gate": false
+          },
+          "teacher_off_vs_control": {
+            "bootstrap_samples": 2000,
+            "bootstrap_seed": 178300004,
+            "field": "success",
+            "paired_bootstrap_95_ci": [
+              -0.029296875,
+              0.076171875
+            ],
+            "paired_count": 512,
+            "point_estimate": 0.025390625,
+            "used_as_selection_or_stopping_gate": false
+          },
+          "teacher_on_vs_base": {
+            "bootstrap_samples": 2000,
+            "bootstrap_seed": 178300000,
+            "field": "success",
+            "paired_bootstrap_95_ci": [
+              -0.097705078125,
+              0.0078125
+            ],
+            "paired_count": 512,
+            "point_estimate": -0.044921875,
+            "used_as_selection_or_stopping_gate": false
+          },
+          "teacher_on_vs_control": {
+            "bootstrap_samples": 2000,
+            "bootstrap_seed": 178300002,
+            "field": "success",
+            "paired_bootstrap_95_ci": [
+              -0.080078125,
+              0.02734375
+            ],
+            "paired_count": 512,
+            "point_estimate": -0.02734375,
+            "used_as_selection_or_stopping_gate": false
+          }
+        },
+        "repairs_and_regressions": {
+          "D0_control_on_vs_base": {
+            "regressions": 26,
+            "repairs": 18
+          },
+          "D0_teacher_on_vs_base": {
+            "regressions": 17,
+            "repairs": 18
+          },
+          "D0_teacher_on_vs_control": {
+            "regressions": 15,
+            "repairs": 24
+          },
+          "control_on_vs_base": {
+            "regressions": 86,
+            "repairs": 77
+          },
+          "teacher_off_vs_base": {
+            "regressions": 98,
+            "repairs": 111
+          },
+          "teacher_off_vs_control": {
+            "regressions": 94,
+            "repairs": 107
+          },
+          "teacher_on_vs_base": {
+            "regressions": 101,
+            "repairs": 78
+          },
+          "teacher_on_vs_control": {
+            "regressions": 108,
+            "repairs": 94
+          }
+        },
+        "success_deltas": {
+          "D0_control_on_vs_base": -0.03125,
+          "D0_teacher_on_vs_base": 0.00390625,
+          "D0_teacher_on_vs_control": 0.03515625,
+          "control_on_vs_base": -0.017578125,
+          "teacher_off_vs_base": 0.025390625,
+          "teacher_off_vs_control": 0.025390625,
+          "teacher_on_vs_base": -0.044921875,
+          "teacher_on_vs_control": -0.02734375
+        }
+      },
+      "selected_teacher_arm": "A2",
+      "target": {
+        "base_off": {
+          "actor_deterministic_state_sha256": "5f5b8cf07464e89f7a47c6b296a36d8f957ed4cd74621224ff8a3e933d72490f",
+          "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+          "checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+          "condition": "base_off",
+          "context": "F1",
+          "counterfactual_would_intervene_fraction": 0.12163005690801314,
+          "fall_count": 189,
+          "fall_rate": 0.369140625,
+          "global_minimum_nominal_barrier_margin": -176.17315673828125,
+          "initial_state_signatures": [
+            "9047c64457091839ff67f5cc5304e8f3b5ab3ffce56d0d355db6a1cb7435f9ee",
+            "1ae020da3c212188c3bf1c7fb86218d83d49430657fcab21bdede59ae0e3b018"
+          ],
+          "intervention_steps_per_riser": 0.0,
+          "kick_episode_count": 498,
+          "kick_episode_rate": 0.97265625,
+          "mean_completion_time_s": 8.5733203125,
+          "mean_correction_norm": 6.344833531377761e-08,
+          "mean_counterfactual_correction_norm": 0.028215931977678514,
+          "mean_episode_minimum_nominal_barrier_margin": -18.55291067995131,
+          "mean_reached_riser": 7.921875,
+          "mean_return": -5.6153570166788995,
+          "mean_success_completion_time_s": 9.631640866873067,
+          "nominal_barrier_violation_steps_per_riser": 6.568786982248521,
+          "num_episodes": 512,
+          "runtime_filter": false,
+          "seeds": [
+            175301000,
+            175301001
+          ],
+          "success_count": 323,
+          "success_rate": 0.630859375,
+          "swing_selection_mismatch_count": 0,
+          "teacher_reprojection_max_abs_error": 0.0,
+          "toe_riser_kick_events_per_riser": 0.7613412228796844,
+          "total_reached_risers": 4056,
+          "total_steps": 219477,
+          "unsafe_overlap_steps_per_riser": 0.9600591715976331
+        },
+        "base_on": {
+          "actor_deterministic_state_sha256": "5f5b8cf07464e89f7a47c6b296a36d8f957ed4cd74621224ff8a3e933d72490f",
+          "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+          "checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+          "condition": "base_on",
+          "context": "F1",
+          "counterfactual_would_intervene_fraction": 0.11816954035924909,
+          "fall_count": 117,
+          "fall_rate": 0.228515625,
+          "global_minimum_nominal_barrier_margin": -69.34147644042969,
+          "initial_state_signatures": [
+            "9047c64457091839ff67f5cc5304e8f3b5ab3ffce56d0d355db6a1cb7435f9ee",
+            "1ae020da3c212188c3bf1c7fb86218d83d49430657fcab21bdede59ae0e3b018"
+          ],
+          "intervention_steps_per_riser": 6.122929787730348,
+          "kick_episode_count": 510,
+          "kick_episode_rate": 0.99609375,
+          "mean_completion_time_s": 8.676953125,
+          "mean_correction_norm": 0.02915876354890206,
+          "mean_counterfactual_correction_norm": 0.02915876354890206,
+          "mean_episode_minimum_nominal_barrier_margin": -19.222267685458064,
+          "mean_reached_riser": 8.373046875,
+          "mean_return": -4.958989275619388,
+          "mean_success_completion_time_s": 9.279797468354431,
+          "nominal_barrier_violation_steps_per_riser": 6.116864940517845,
+          "num_episodes": 512,
+          "runtime_filter": true,
+          "seeds": [
+            175301000,
+            175301001
+          ],
+          "success_count": 395,
+          "success_rate": 0.771484375,
+          "swing_selection_mismatch_count": 0,
+          "teacher_reprojection_max_abs_error": 0.0,
+          "toe_riser_kick_events_per_riser": 0.7256822953114066,
+          "total_reached_risers": 4287,
+          "total_steps": 222130,
+          "unsafe_overlap_steps_per_riser": 0.821087007231164
+        },
+        "control_off": {
+          "actor_deterministic_state_sha256": "d0cf46809ba37b8079ecbb3421611f95e10f09e94e0682b348c3f147ea749a38",
+          "actor_state_sha256": "55587429e4bf90d9f928fed3cf567215c00c444c7e9f7e59d05a13109cd80a84",
+          "checkpoint_sha256": "73a21d58f01b8267202870ff7a2d31630740b72bce3d7dc0de0ec1e418c13e2f",
+          "condition": "control_off",
+          "context": "F1",
+          "counterfactual_would_intervene_fraction": 0.11801613523570327,
+          "fall_count": 189,
+          "fall_rate": 0.369140625,
+          "global_minimum_nominal_barrier_margin": -45.67779541015625,
+          "initial_state_signatures": [
+            "9047c64457091839ff67f5cc5304e8f3b5ab3ffce56d0d355db6a1cb7435f9ee",
+            "1ae020da3c212188c3bf1c7fb86218d83d49430657fcab21bdede59ae0e3b018"
+          ],
+          "intervention_steps_per_riser": 0.0,
+          "kick_episode_count": 498,
+          "kick_episode_rate": 0.97265625,
+          "mean_completion_time_s": 8.4297265625,
+          "mean_correction_norm": 6.354593172080088e-08,
+          "mean_counterfactual_correction_norm": 0.02588504019136268,
+          "mean_episode_minimum_nominal_barrier_margin": -17.891250874847174,
+          "mean_reached_riser": 7.93359375,
+          "mean_return": -4.963830768596381,
+          "mean_success_completion_time_s": 9.546687306501548,
+          "nominal_barrier_violation_steps_per_riser": 6.256770064007878,
+          "num_episodes": 512,
+          "runtime_filter": false,
+          "seeds": [
+            175301000,
+            175301001
+          ],
+          "success_count": 323,
+          "success_rate": 0.630859375,
+          "swing_selection_mismatch_count": 0,
+          "teacher_reprojection_max_abs_error": 0.0,
+          "toe_riser_kick_events_per_riser": 0.7127031019202363,
+          "total_reached_risers": 4062,
+          "total_steps": 215801,
+          "unsafe_overlap_steps_per_riser": 0.8382570162481536
+        },
+        "control_on": {
+          "actor_deterministic_state_sha256": "d0cf46809ba37b8079ecbb3421611f95e10f09e94e0682b348c3f147ea749a38",
+          "actor_state_sha256": "55587429e4bf90d9f928fed3cf567215c00c444c7e9f7e59d05a13109cd80a84",
+          "checkpoint_sha256": "73a21d58f01b8267202870ff7a2d31630740b72bce3d7dc0de0ec1e418c13e2f",
+          "condition": "control_on",
+          "context": "F1",
+          "counterfactual_would_intervene_fraction": 0.11716073735854957,
+          "fall_count": 126,
+          "fall_rate": 0.24609375,
+          "global_minimum_nominal_barrier_margin": -97.82183074951172,
+          "initial_state_signatures": [
+            "9047c64457091839ff67f5cc5304e8f3b5ab3ffce56d0d355db6a1cb7435f9ee",
+            "1ae020da3c212188c3bf1c7fb86218d83d49430657fcab21bdede59ae0e3b018"
+          ],
+          "intervention_steps_per_riser": 6.003770028275212,
+          "kick_episode_count": 506,
+          "kick_episode_rate": 0.98828125,
+          "mean_completion_time_s": 8.4952734375,
+          "mean_correction_norm": 0.028923683915396903,
+          "mean_counterfactual_correction_norm": 0.028923683915396903,
+          "mean_episode_minimum_nominal_barrier_margin": -19.34965244680643,
+          "mean_reached_riser": 8.2890625,
+          "mean_return": -4.8360035312362015,
+          "mean_success_completion_time_s": 9.188549222797926,
+          "nominal_barrier_violation_steps_per_riser": 5.99670122525919,
+          "num_episodes": 512,
+          "runtime_filter": true,
+          "seeds": [
+            175301000,
+            175301001
+          ],
+          "success_count": 386,
+          "success_rate": 0.75390625,
+          "swing_selection_mismatch_count": 0,
+          "teacher_reprojection_max_abs_error": 0.0,
+          "toe_riser_kick_events_per_riser": 0.7309142318567389,
+          "total_reached_risers": 4244,
+          "total_steps": 217479,
+          "unsafe_overlap_steps_per_riser": 0.8124410933081998
+        },
+        "teacher_off": {
+          "actor_deterministic_state_sha256": "ccbc12a20c69dfc31ac2b32ec56e7a0c59eb1b63202bd9c1884be3fe46c82402",
+          "actor_state_sha256": "31b2d122f7c7110b7b443d4f2d51deab627483f2b8ea04554056fb2d250c3a24",
+          "checkpoint_sha256": "8af2019f66f347b9bacc5067b8146fda8ec319ac82beac63fe75e932d713999d",
+          "condition": "teacher_off",
+          "context": "F1",
+          "counterfactual_would_intervene_fraction": 0.11905879137149496,
+          "fall_count": 176,
+          "fall_rate": 0.34375,
+          "global_minimum_nominal_barrier_margin": -45.21589279174805,
+          "initial_state_signatures": [
+            "9047c64457091839ff67f5cc5304e8f3b5ab3ffce56d0d355db6a1cb7435f9ee",
+            "1ae020da3c212188c3bf1c7fb86218d83d49430657fcab21bdede59ae0e3b018"
+          ],
+          "intervention_steps_per_riser": 0.0,
+          "kick_episode_count": 498,
+          "kick_episode_rate": 0.97265625,
+          "mean_completion_time_s": 8.5744140625,
+          "mean_correction_norm": 6.35720874239421e-08,
+          "mean_counterfactual_correction_norm": 0.02618292369852522,
+          "mean_episode_minimum_nominal_barrier_margin": -17.674449060112238,
+          "mean_reached_riser": 8.044921875,
+          "mean_return": -4.983621909748763,
+          "mean_success_completion_time_s": 9.554464285714285,
+          "nominal_barrier_violation_steps_per_riser": 6.332847778587036,
+          "num_episodes": 512,
+          "runtime_filter": false,
+          "seeds": [
+            175301000,
+            175301001
+          ],
+          "success_count": 336,
+          "success_rate": 0.65625,
+          "swing_selection_mismatch_count": 0,
+          "teacher_reprojection_max_abs_error": 0.0,
+          "toe_riser_kick_events_per_riser": 0.7093954843408594,
+          "total_reached_risers": 4119,
+          "total_steps": 219505,
+          "unsafe_overlap_steps_per_riser": 0.8596746783199806
+        },
+        "teacher_on": {
+          "actor_deterministic_state_sha256": "ccbc12a20c69dfc31ac2b32ec56e7a0c59eb1b63202bd9c1884be3fe46c82402",
+          "actor_state_sha256": "31b2d122f7c7110b7b443d4f2d51deab627483f2b8ea04554056fb2d250c3a24",
+          "checkpoint_sha256": "8af2019f66f347b9bacc5067b8146fda8ec319ac82beac63fe75e932d713999d",
+          "condition": "teacher_on",
+          "context": "F1",
+          "counterfactual_would_intervene_fraction": 0.12001613568815464,
+          "fall_count": 140,
+          "fall_rate": 0.2734375,
+          "global_minimum_nominal_barrier_margin": -133.95872497558594,
+          "initial_state_signatures": [
+            "9047c64457091839ff67f5cc5304e8f3b5ab3ffce56d0d355db6a1cb7435f9ee",
+            "1ae020da3c212188c3bf1c7fb86218d83d49430657fcab21bdede59ae0e3b018"
+          ],
+          "intervention_steps_per_riser": 6.205706065691681,
+          "kick_episode_count": 508,
+          "kick_episode_rate": 0.9921875,
+          "mean_completion_time_s": 8.4246484375,
+          "mean_correction_norm": 0.030376365654156936,
+          "mean_counterfactual_correction_norm": 0.030376365654156936,
+          "mean_episode_minimum_nominal_barrier_margin": -20.103853903710842,
+          "mean_reached_riser": 8.146484375,
+          "mean_return": -5.435226088855416,
+          "mean_success_completion_time_s": 9.19,
+          "nominal_barrier_violation_steps_per_riser": 6.199472548549508,
+          "num_episodes": 512,
+          "runtime_filter": true,
+          "seeds": [
+            175301000,
+            175301001
+          ],
+          "success_count": 372,
+          "success_rate": 0.7265625,
+          "swing_selection_mismatch_count": 0,
+          "teacher_reprojection_max_abs_error": 0.0,
+          "toe_riser_kick_events_per_riser": 0.7063054423399664,
+          "total_reached_risers": 4171,
+          "total_steps": 215671,
+          "unsafe_overlap_steps_per_riser": 0.781826900023975
+        }
+      },
+      "teacher_final_checkpoint_sha256": "8af2019f66f347b9bacc5067b8146fda8ec319ac82beac63fe75e932d713999d",
+      "teacher_training_summary_sha256": "a432640de164296a7553608394bc275670e91dc5c65f58f2931097401bc45390"
+    }
+  },
+  "final_audit_used_for_policy_selection_or_modification": false,
+  "paired_CI_used_as_gate": false,
+  "paper_value_assessment": null,
+  "paper_value_assessment_reason": "The predeclared three-context formal matrix is incomplete.",
+  "protocol_id": "safe100-cbf-teacher-overnight-v30",
+  "protocol_sha256": "25a33f90cc2c3e6cf59805fef302d79666687552bc3424ef9969f60bc4f3e965",
+  "result_driven_reruns": 0,
+  "schema_version": 1,
+  "selected_teacher": {
+    "A0_excluded": true,
+    "KL_used": false,
+    "arm": "A2",
+    "configuration": {
+      "name": "residual_eta_025_all_interventions",
+      "teacher_eta": 0.25,
+      "teacher_gate": "all_interventions",
+      "teacher_loss": "weighted_smooth_l1_per_action_mean",
+      "teacher_mode": "residual",
+      "teacher_weight": 1.0
+    },
+    "intermediate_checkpoint_used": false,
+    "protocol_id": "safe100-cbf-teacher-overnight-v30",
+    "rule_applied_in_order": [
+      "maximum round-8 target CBF-on success",
+      "maximum round-8 target CBF-off success",
+      "minimum round-8 target interventions per riser"
+    ],
+    "selected_metrics": {
+      "D0_base_on_success": 0.9609375,
+      "D0_on_gain_over_base": -0.0703125,
+      "D0_round8_on_success": 0.890625,
+      "arm": "A2",
+      "final_checkpoint_sha256": "77b5cfa634a5b6d8c31ef8ff75d0273f35965ad3925febd86091bf2707bd4ef4",
+      "moving_KL_round8": 0.0006594512378796935,
+      "target_base_off_success": 0.6328125,
+      "target_base_on_success": 0.76171875,
+      "target_off_gain_over_base": 0.02734375,
+      "target_on_gain_over_base": 0.02734375,
+      "target_regressions_vs_base_on": 41,
+      "target_repairs_vs_base_on": 48,
+      "target_round8_off_fall": 0.33984375,
+      "target_round8_off_kick_events_per_riser": 0.7041769041769042,
+      "target_round8_off_mean_correction_norm": 0.02575030840497372,
+      "target_round8_off_minimum_nominal_barrier_margin": -17.880392394959927,
+      "target_round8_off_nominal_violation_steps_per_riser": 6.343980343980344,
+      "target_round8_off_success": 0.66015625,
+      "target_round8_off_unsafe_overlap_steps_per_riser": 0.8093366093366093,
+      "target_round8_off_would_intervene_fraction": 0.11791854790897068,
+      "target_round8_on_completion_time_s": 8.7296875,
+      "target_round8_on_fall": 0.2109375,
+      "target_round8_on_intervention_steps_per_riser": 6.049074074074074,
+      "target_round8_on_mean_riser": 8.4375,
+      "target_round8_on_return": -4.781869665719569,
+      "target_round8_on_success": 0.7890625,
+      "teacher_eta": 0.25,
+      "teacher_gate": "all_interventions",
+      "teacher_mode": "residual",
+      "teacher_name": "residual_eta_025_all_interventions",
+      "teacher_weight": 1.0
+    }
+  },
+  "status": "formal_matrix_incomplete"
+}

@@ -1,0 +1,36 @@
+{
+  "base_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "formal_verifier": {
+    "check_count": 64,
+    "failed_checks": [],
+    "passed": true
+  },
+  "implementation_commit": "8b5faa6d0a8545f9e32ff5c3310436fee7da4651",
+  "kind": "synthetic_no_simulator_end_to_end_verifier_test",
+  "negative_control": {
+    "failed_checks": [
+      "final_execution_contract"
+    ],
+    "tampered_final_identity_schedule_rejected": true
+  },
+  "precalibration_protocol": {
+    "file": "results/online/proximal_v25/precalibration_protocol_revision7.json",
+    "revision": 7,
+    "sha256": "9786e15582989ab37a62561a9272fd5ae6eeafba26fad27bda8f931df7067167"
+  },
+  "schema_version": 1,
+  "simulator_episodes_run": 0,
+  "synthetic_fixture": {
+    "calibration_pairs": 512,
+    "final_conditions": [
+      "pi0_off",
+      "pi0_on",
+      "pi8_on",
+      "pi8_off"
+    ],
+    "final_pairs_per_condition": 512,
+    "training_rounds": 8
+  },
+  "synthetic_harness_sha256": "1c4bbe01ed4c728f8f56930bc3758c809006b3f74dc86732e5fcfa4cc5a90b39",
+  "tested_source_commit": "7f1155315f290e1aed5b7a1e8eeb988ef3e7df3c"
+}

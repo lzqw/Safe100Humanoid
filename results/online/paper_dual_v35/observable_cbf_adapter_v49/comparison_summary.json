@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "method_id": "deployable-cbf-geometry-residual-adapter-v49",
+  "status": "untouched_filter_off_confirmation_failed",
+  "source_commits": {
+    "geometry_adapter": "dbe8d14",
+    "paired_reset_fix": "ac0fcb8",
+    "rescued_only_scope": "cb9b7c9"
+  },
+  "paper_alignment": {
+    "paper": "CBF-RL: Safety Filtering Reinforcement Learning in Training with Control Barrier Functions",
+    "arxiv": "2510.14959v6",
+    "runtime_filter_during_training": true,
+    "bounded_safe_action_distance_space": "raw_action",
+    "deployment_filter": false,
+    "method_specific_change": "append current deployable CBF geometry and train only its zero-initialized actor input columns"
+  },
+  "actor_interface": {
+    "base_dimension": 405,
+    "added_dimension": 5,
+    "candidate_dimension": 410,
+    "added_fields": [
+      "normalized_horizontal_toe_riser_clearance",
+      "normalized_vertical_toe_riser_clearance",
+      "normalized_sloped_barrier",
+      "active_swing_foot_side",
+      "geometric_active"
+    ],
+    "deployable_sources": "foot forward kinematics, foot contact, mapped stair edges",
+    "future_or_filtered_action_fields": 0,
+    "base_policy_preservation_error": 0.0,
+    "inactive_geometry_exact_base_policy": true
+  },
+  "training": {
+    "context": "F2",
+    "training_seeds": [201350522, 201350532, 201350542],
+    "num_envs_per_seed": 8,
+    "training_transition_count": 10180,
+    "active_trust_transition_count": 4917,
+    "rescued_episode_count": 4,
+    "teacher_transition_count": 190,
+    "teacher_episode_scope": "rescued-only",
+    "teacher_correction_cosine_before": 0.0,
+    "teacher_correction_cosine_after": 0.8354787295742083,
+    "active_state_reference_forward_kl": 0.004647146802087225,
+    "elapsed_seconds": 89.09762816596776,
+    "device": "NVIDIA GeForce RTX 4080 SUPER"
+  },
+  "evaluation": {
+    "seed": 201350932,
+    "episodes_per_condition": 64,
+    "initial_state_signature": "d23be073266da086ee6f52aee9d6f5df6049703320bb6594c7bab8de36d91f35",
+    "base_filter_off": {
+      "success_count": 46,
+      "success_rate": 0.71875,
+      "fall_rate": 0.28125,
+      "mean_reached_riser": 8.171875
+    },
+    "all_shielded_success_teacher_filter_off": {
+      "success_count": 44,
+      "success_rate": 0.6875,
+      "decision": "rejected"
+    },
+    "rescued_only_filter_off": {
+      "success_count": 48,
+      "success_rate": 0.75,
+      "fall_rate": 0.25,
+      "mean_reached_riser": 8.421875,
+      "runtime_filter": false
+    },
+    "rescued_only_filter_on": {
+      "success_count": 51,
+      "success_rate": 0.796875,
+      "fall_rate": 0.203125,
+      "mean_reached_riser": 8.40625,
+      "runtime_filter": true
+    },
+    "filter_off_improvement_over_base_successes": 2,
+    "filter_on_minus_off_successes": 3,
+    "filter_on_minus_off_percentage_points": 4.6875,
+    "filter_off_75_percent_gate_passed": true,
+    "untouched_filter_off": {
+      "seed": 201350952,
+      "initial_state_signature": "c7e555f2ef599521d3fc42781404394893ad667f00f103bb3a14a1e1c2a87dc9",
+      "success_count": 45,
+      "success_rate": 0.703125,
+      "fall_rate": 0.296875,
+      "mean_reached_riser": 8.265625,
+      "runtime_filter": false,
+      "filter_on_not_run_after_failed_gate": true,
+      "decision": "failed_absolute_75_percent_gate"
+    }
+  },
+  "candidate": {
+    "file": "v49b_candidate.pt",
+    "checkpoint_sha256": "0cfe45c3324d8c4e11254ec8ba292781dc4cc125d4cd3662f688430caf5ced91",
+    "actor_state_sha256": "53f568f5f430ffae316574cdcaba0c174a5da28a750d579927169c216dce174f"
+  },
+  "limitations": [
+    "The 75% result did not transfer to untouched seed 201350952, where filter-off reached only 45/64.",
+    "GPU-parallel physics produced some outcome variability despite identical initial-state signatures; exact JSON and per-episode CSV evidence is retained.",
+    "This result establishes the first observability-corrected F2 threshold hit, not completion of all F1/F2/F3 paper-level replication requirements."
+  ]
+}

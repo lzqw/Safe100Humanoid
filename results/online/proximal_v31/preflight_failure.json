@@ -1,0 +1,6 @@
+{
+  "attempts": 1,
+  "error": "stored behavior log probability is inconsistent with a_policy: 0.000750000006519258",
+  "error_type": "RuntimeError",
+  "protocol_id": "safe100-cbf-teacher-formal-matrix-v31"
+}

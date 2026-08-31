@@ -1,0 +1,846 @@
+{
+  "adaptation_seeds": {
+    "C1": 21201,
+    "C2": 21202,
+    "C3": 21203,
+    "C4": 21204,
+    "C5": 21205,
+    "C_dev": 21002,
+    "L1": 21101,
+    "L2": 21102,
+    "L3": 21103,
+    "L4": 21104,
+    "L5": 21105,
+    "L_dev": 21001
+  },
+  "analysis_plan": {
+    "candidate_selection_diagnostics_excluded_from_monitor_curves": true,
+    "control_gate_reported_descriptively": true,
+    "cross_context_interval": "bootstrap of five deployment-context point estimates",
+    "cross_context_statistical_unit": "deployment_context",
+    "formal_gate_applied_to": "v21 minus common base independently per mode",
+    "monitor_curves": "pi0 through pi8 on never-accessed E_curve only",
+    "per_context_episode_interval": "paired episode bootstrap",
+    "selectivity_comparison": "paired differences of base-referenced repair rate, regression rate, and repair-minus-regression across contexts",
+    "v21_minus_control_reported": true
+  },
+  "calibration": {
+    "adapted_policy_evaluations_used": false,
+    "base_policy_only": true,
+    "candidate_seeds": {
+      "C1": [
+        9808,
+        9809,
+        9810,
+        9811,
+        9812,
+        9813,
+        9814,
+        9815,
+        9816,
+        9817,
+        9818,
+        9819
+      ],
+      "C2": [
+        9908,
+        9909,
+        9910,
+        9911,
+        9912,
+        9913,
+        9914,
+        9915,
+        9916,
+        9917,
+        9918,
+        9919
+      ],
+      "C3": [
+        10008,
+        10009,
+        10010,
+        10011,
+        10012,
+        10013,
+        10014,
+        10015,
+        10016,
+        10017,
+        10018,
+        10019
+      ],
+      "C4": [
+        10108,
+        10109,
+        10110,
+        10111,
+        10112,
+        10113,
+        10114,
+        10115,
+        10116,
+        10117,
+        10118,
+        10119
+      ],
+      "C5": [
+        10208,
+        10209,
+        10210,
+        10211,
+        10212,
+        10213,
+        10214,
+        10215,
+        10216,
+        10217,
+        10218,
+        10219
+      ],
+      "C_dev": [
+        9208,
+        9209,
+        9210,
+        9211,
+        9212,
+        9213,
+        9214,
+        9215,
+        9216,
+        9217,
+        9218,
+        9219
+      ],
+      "L1": [
+        9308,
+        9309,
+        9310,
+        9311,
+        9312,
+        9313,
+        9314,
+        9315,
+        9316,
+        9317,
+        9318,
+        9319
+      ],
+      "L2": [
+        9408,
+        9409,
+        9410,
+        9411,
+        9412,
+        9413,
+        9414,
+        9415,
+        9416,
+        9417,
+        9418,
+        9419
+      ],
+      "L3": [
+        9508,
+        9509,
+        9510,
+        9511,
+        9512,
+        9513,
+        9514,
+        9515,
+        9516,
+        9517,
+        9518,
+        9519
+      ],
+      "L4": [
+        9608,
+        9609,
+        9610,
+        9611,
+        9612,
+        9613,
+        9614,
+        9615,
+        9616,
+        9617,
+        9618,
+        9619
+      ],
+      "L5": [
+        9708,
+        9709,
+        9710,
+        9711,
+        9712,
+        9713,
+        9714,
+        9715,
+        9716,
+        9717,
+        9718,
+        9719
+      ],
+      "L_dev": [
+        9108,
+        9109,
+        9110,
+        9111,
+        9112,
+        9113,
+        9114,
+        9115,
+        9116,
+        9117,
+        9118,
+        9119
+      ]
+    },
+    "contact_stability_maximum_second_failure_fraction": 0.2,
+    "contact_stability_minimum_target_failure_fraction": 0.75,
+    "episodes_per_candidate": 512,
+    "eval_batch_size": 128,
+    "evaluation_seed_bases": {
+      "C1": 7170000,
+      "C2": 7180000,
+      "C3": 7190000,
+      "C4": 7200000,
+      "C5": 7210000,
+      "C_dev": 7110000,
+      "L1": 7120000,
+      "L2": 7130000,
+      "L3": 7140000,
+      "L4": 7150000,
+      "L5": 7160000,
+      "L_dev": 7100000
+    },
+    "first_qualifying_candidate_is_frozen": true,
+    "lateral_maximum_second_failure_fraction": 0.3,
+    "lateral_minimum_target_failure_fraction": 0.8,
+    "minimum_fall_count": 100,
+    "success_rate_bounds_inclusive": [
+      0.7,
+      0.85
+    ]
+  },
+  "context_matrix": {
+    "calibration_family_sweep": {
+      "adapted_policy_outcomes_used": false,
+      "candidate_indices_in_order": [
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "low_fixed_disturbance_pulses_in_L1_and_L4_are_excitation_carriers": true,
+      "normalized_action_bias_pattern_fixed_within_family": true,
+      "perturbation_direction_fixed_within_family": true,
+      "severity_increases_from_zero_to_one": true
+    },
+    "development_excluded_from_formal": [
+      "L_dev",
+      "C_dev"
+    ],
+    "formal": [
+      "L1",
+      "L2",
+      "L3",
+      "L4",
+      "L5",
+      "C1",
+      "C2",
+      "C3",
+      "C4",
+      "C5"
+    ],
+    "specifications": {
+      "C1": {
+        "candidate_seed_prefix": 98,
+        "direction": -1,
+        "family": "low_foot_friction",
+        "formal": true,
+        "mode": "contact_stability",
+        "ranges": {
+          "foot_friction": [
+            0.56,
+            0.25
+          ]
+        }
+      },
+      "C2": {
+        "candidate_seed_prefix": 99,
+        "direction": 1,
+        "family": "left_right_action_asymmetry",
+        "formal": true,
+        "mode": "contact_stability",
+        "ranges": {
+          "response_asymmetry_abs": [
+            0.025,
+            0.15
+          ]
+        }
+      },
+      "C3": {
+        "candidate_seed_prefix": 100,
+        "direction": -1,
+        "family": "action_gain_and_encoder_bias",
+        "formal": true,
+        "mode": "contact_stability",
+        "ranges": {
+          "action_gain": [
+            0.97,
+            0.8
+          ],
+          "encoder_bias_abs": [
+            0.006,
+            0.03
+          ]
+        }
+      },
+      "C4": {
+        "candidate_seed_prefix": 101,
+        "direction": 1,
+        "family": "friction_and_command_dynamics_mismatch",
+        "formal": true,
+        "mode": "contact_stability",
+        "ranges": {
+          "action_gain": [
+            0.99,
+            0.88
+          ],
+          "command_forward_scale": [
+            1.02,
+            1.16
+          ],
+          "command_low_pass_s": [
+            0.04,
+            0.18
+          ],
+          "foot_friction": [
+            0.58,
+            0.39
+          ]
+        }
+      },
+      "C5": {
+        "candidate_seed_prefix": 102,
+        "direction": -1,
+        "family": "moderate_mixed_contact_shift",
+        "formal": true,
+        "mode": "contact_stability",
+        "ranges": {
+          "action_bias_abs": [
+            0.0,
+            0.02
+          ],
+          "contact_delay_steps": [
+            1,
+            2
+          ],
+          "foot_friction": [
+            0.56,
+            0.4
+          ],
+          "phase_offset_abs": [
+            0.018,
+            0.068
+          ],
+          "response_asymmetry_abs": [
+            0.008,
+            0.034
+          ]
+        }
+      },
+      "C_dev": {
+        "candidate_seed_prefix": 92,
+        "direction": 1,
+        "family": "excluded_development_mixed_contact",
+        "formal": false,
+        "mode": "contact_stability",
+        "ranges": {
+          "action_bias_abs": [
+            0.0,
+            0.022
+          ],
+          "contact_delay_steps": [
+            1,
+            2
+          ],
+          "foot_friction": [
+            0.55,
+            0.36
+          ],
+          "phase_offset_abs": [
+            0.02,
+            0.075
+          ],
+          "response_asymmetry_abs": [
+            0.008,
+            0.038
+          ]
+        }
+      },
+      "L1": {
+        "candidate_seed_prefix": 93,
+        "direction": 1,
+        "family": "command_delay_and_low_pass",
+        "formal": true,
+        "mode": "lateral",
+        "ranges": {
+          "command_delay_s": [
+            0.14,
+            0.4
+          ],
+          "command_low_pass_s": [
+            0.12,
+            0.4
+          ],
+          "lateral_pulse_max": [
+            0.085,
+            0.085
+          ],
+          "lateral_pulse_min": [
+            0.035,
+            0.035
+          ],
+          "yaw_pulse_max": [
+            0.19,
+            0.19
+          ],
+          "yaw_pulse_min": [
+            0.08,
+            0.08
+          ]
+        }
+      },
+      "L2": {
+        "candidate_seed_prefix": 94,
+        "direction": -1,
+        "family": "yaw_bias_and_yaw_pulse",
+        "formal": true,
+        "mode": "lateral",
+        "ranges": {
+          "yaw_bias_abs": [
+            0.1,
+            0.28
+          ],
+          "yaw_pulse_max": [
+            0.2,
+            0.48
+          ],
+          "yaw_pulse_min": [
+            0.08,
+            0.2
+          ]
+        }
+      },
+      "L3": {
+        "candidate_seed_prefix": 95,
+        "direction": 1,
+        "family": "lateral_bias_and_lateral_pulse",
+        "formal": true,
+        "mode": "lateral",
+        "ranges": {
+          "lateral_bias_abs": [
+            0.05,
+            0.18
+          ],
+          "lateral_pulse_max": [
+            0.09,
+            0.23
+          ],
+          "lateral_pulse_min": [
+            0.035,
+            0.1
+          ]
+        }
+      },
+      "L4": {
+        "candidate_seed_prefix": 96,
+        "direction": -1,
+        "family": "weak_centerline_correction",
+        "formal": true,
+        "mode": "lateral",
+        "ranges": {
+          "centerline_heading_gain": [
+            1.05,
+            0.18
+          ],
+          "centerline_lateral_gain": [
+            0.62,
+            0.08
+          ],
+          "centerline_max_lateral_velocity": [
+            0.13,
+            0.045
+          ],
+          "centerline_max_yaw_velocity": [
+            0.34,
+            0.1
+          ],
+          "lateral_pulse_max": [
+            0.095,
+            0.095
+          ],
+          "lateral_pulse_min": [
+            0.04,
+            0.04
+          ],
+          "yaw_pulse_max": [
+            0.22,
+            0.22
+          ],
+          "yaw_pulse_min": [
+            0.09,
+            0.09
+          ]
+        }
+      },
+      "L5": {
+        "candidate_seed_prefix": 97,
+        "direction": 1,
+        "family": "moderate_mixed_lateral_shift",
+        "formal": true,
+        "mode": "lateral",
+        "ranges": {
+          "centerline_heading_gain": [
+            1.12,
+            0.4
+          ],
+          "centerline_lateral_gain": [
+            0.68,
+            0.24
+          ],
+          "command_delay_s": [
+            0.08,
+            0.24
+          ],
+          "command_low_pass_s": [
+            0.06,
+            0.22
+          ],
+          "lateral_bias_abs": [
+            0.035,
+            0.105
+          ],
+          "lateral_pulse_max": [
+            0.085,
+            0.19
+          ],
+          "yaw_bias_abs": [
+            0.07,
+            0.21
+          ],
+          "yaw_pulse_max": [
+            0.19,
+            0.42
+          ]
+        }
+      },
+      "L_dev": {
+        "candidate_seed_prefix": 91,
+        "direction": -1,
+        "family": "excluded_development_mixed_lateral",
+        "formal": false,
+        "mode": "lateral",
+        "ranges": {
+          "centerline_heading_gain": [
+            1.0,
+            0.35
+          ],
+          "centerline_lateral_gain": [
+            0.6,
+            0.2
+          ],
+          "command_delay_s": [
+            0.1,
+            0.3
+          ],
+          "command_low_pass_s": [
+            0.08,
+            0.28
+          ],
+          "lateral_bias_abs": [
+            0.04,
+            0.12
+          ],
+          "lateral_pulse_max": [
+            0.1,
+            0.2
+          ],
+          "yaw_bias_abs": [
+            0.08,
+            0.24
+          ],
+          "yaw_pulse_max": [
+            0.22,
+            0.44
+          ]
+        }
+      }
+    },
+    "specifications_sha256": "4b740a0e2293fde139cabccac669f16417e8bb7c3f0e09a590317cb4eca07ba5"
+  },
+  "development": {
+    "beta_grid": [
+      0.0,
+      1.0,
+      4.0,
+      16.0
+    ],
+    "beta_zero_is_v20_style_control": true,
+    "contexts": [
+      "L_dev",
+      "C_dev"
+    ],
+    "evaluation_seeds": {
+      "C_dev": 7910000,
+      "L_dev": 7900000
+    },
+    "excluded_from_formal_claims": true,
+    "formal_beta_frozen_after_development": true,
+    "paired_evaluation_episodes_per_policy_per_context": 512,
+    "selection_metric": "mean across L_dev/C_dev of repair_rate - regression_rate",
+    "tie_breaks": [
+      "higher worst-context score",
+      "lower mean regression rate",
+      "lower beta"
+    ]
+  },
+  "experiment_unit": "one fixed deployment context plus pi0 plus exactly one adaptation plus fresh paired evaluation",
+  "formal": {
+    "audit_seeds": {
+      "C1": 8150000,
+      "C2": 8160000,
+      "C3": 8170000,
+      "C4": 8180000,
+      "C5": 8190000,
+      "L1": 8100000,
+      "L2": 8110000,
+      "L3": 8120000,
+      "L4": 8130000,
+      "L5": 8140000
+    },
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 10100000,
+    "contexts": [
+      "L1",
+      "L2",
+      "L3",
+      "L4",
+      "L5",
+      "C1",
+      "C2",
+      "C3",
+      "C4",
+      "C5"
+    ],
+    "d0_paired_episodes_per_context": 256,
+    "eval_batch_size": 128,
+    "lcb95_positive_is_strong_evidence_not_validity_gate": true,
+    "per_mode_gate": {
+      "maximum_mean_fall_delta": 0.03,
+      "mean_success_delta_strictly_positive": true,
+      "minimum_mean_d0_success_delta": -0.05,
+      "minimum_positive_contexts_out_of_five": 4
+    },
+    "runs_per_context": {
+      "control_beta_zero": 1,
+      "v21_selected_beta": 1
+    },
+    "same_evaluation_randomness_for_base_control_v21": true,
+    "same_pi0_context_and_deployment_seed": true,
+    "statistical_unit": "deployment_context",
+    "target_paired_episodes_per_context": 1024,
+    "total_adaptation_runs": 20
+  },
+  "fresh_evidence_boundary": {
+    "base_only_calibration_outcomes_seen": false,
+    "development_adaptation_outcomes_seen": false,
+    "formal_adaptation_or_audit_outcomes_seen": false,
+    "this_protocol_must_be_committed_before_calibration": true
+  },
+  "mechanism_telemetry": {
+    "captured_inline_during_actual_formal_rollouts": true,
+    "compact_curve_construction": {
+      "mean_and_interquartile_band_across_traces": true,
+      "normalized_episode_phase_bins": 101,
+      "same_rollout_outcome_retained_per_trace": true,
+      "trace_level_interpolation_before_aggregation": true
+    },
+    "environment_id_per_evaluation_batch": 0,
+    "outcome_embedded_from_same_rollout": true,
+    "post_audit_replay_for_mechanism_curves": false
+  },
+  "monitor": {
+    "candidate_selection_diagnostics_used_for_curve": false,
+    "checkpoints": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "never_accessed_during_training": true,
+    "paired_conditions": 256,
+    "seeds": {
+      "C1": 9170000,
+      "C2": 9180000,
+      "C3": 9190000,
+      "C4": 9200000,
+      "C5": 9210000,
+      "C_dev": 9110000,
+      "L1": 9120000,
+      "L2": 9130000,
+      "L3": 9140000,
+      "L4": 9150000,
+      "L5": 9160000,
+      "L_dev": 9100000
+    }
+  },
+  "policy_method": "Local Matched-Success Preservation v21",
+  "protocol_id": "safe100-deployment-unit-local-matched-success-v21",
+  "protocol_revision": 0,
+  "randomness_preflight": {
+    "collision_records": [],
+    "collisions": [],
+    "historical_declared_seed_record_count": 1917,
+    "historical_declared_seed_records_sha256": "22e1725390571ac4d9ca51b3fcc74fd79e9869d6f75526ea2a0d4823baea69f1",
+    "historical_json_file_count": 59,
+    "historical_json_files_sha256": "4b1385a77ddd7432e7a0c9e6cb6dbfc193d6af845d13ef117a31cbcab99e861f",
+    "historical_unique_seed_count": 303,
+    "historical_versions_scanned": [
+      17,
+      18,
+      19,
+      20
+    ],
+    "passed": true,
+    "proposed_seed_count": 193,
+    "protocol_id": "safe100-deployment-unit-local-matched-success-v21",
+    "schema_version": 1
+  },
+  "retry_policy": {
+    "infrastructure_retry_only": true,
+    "infrastructure_retry_requires_identical_context_seed_commit_and_checkpoint": true,
+    "poor_algorithm_outcome_may_be_rerun": false,
+    "retry_provenance_required": true
+  },
+  "schema_version": 1,
+  "sealed_inputs": {
+    "base_policy_checkpoint_reference": "/home/carla/LZQW/SAFE100/humanoid/artifacts/retention_v13/arm_b_state_retention/accepted_final.pt",
+    "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+    "source_commit": "e365a438a52c1c2add9afdf2356d760fe530cb1c",
+    "source_file_sha256": {
+      "docs/DEPLOYMENT_V21_PROTOCOL.md": "050f9b524086450490afd28003aa7db489bdb1a429b420fd9d79a4300dd13113",
+      "experiments/scripts/aggregate_deployment_v21.py": "106a25e82e94ce64f4a1414233d854354fcf7bddce87a63ba87ad987465159cb",
+      "experiments/scripts/audit_deployment_v21.py": "88e40a8f57a0ff2bfe2230064d85f18061531a0b06665d74a29d03a304b2bd96",
+      "experiments/scripts/calibrate_deployment_contexts_v21.py": "138d013e63fef3ee6b03f92d04d84575b67b7ce1e64888fb1a77ee69885bed3c",
+      "experiments/scripts/evaluate_learning_curve_v21.py": "b94bddfd726e025c9a3d5a1d9e14d3df59249e3996e3bca8e230ed7f0ce533d6",
+      "experiments/scripts/evaluate_online_stairs.py": "8c1e474002768cbbd36bed0036572ca118652a6fc849829acd2ffa166d18c52b",
+      "experiments/scripts/freeze_specialist_v21_protocol.py": "b2e920c60864f8bdfb2e5235da311d515cd775517de675542de89a88eb874061",
+      "experiments/scripts/online_refine_stairs.py": "59e891a76ec7d59d209dc058e0b6b4d8b4f61a2d51cf9eeaf7574b647ed57aa0",
+      "experiments/scripts/plot_deployment_v21.py": "2e671ce53846b1d29a8a5bce55701f72a9b98c5de1c2ba6e3b4c6a5b64c945e7",
+      "experiments/scripts/refine_deployment_v21.py": "a110ccd63f2085321fcd2f6dea429e678e0b3b85a78dca19b890d8a3f3d2fa97",
+      "experiments/scripts/run_specialist_calibration_v21.sh": "ada76495f6410ada3f868828f71ecb1307b14d2b158f9a815a4412eb9c88c4d4",
+      "experiments/scripts/run_specialist_queue_v21.sh": "21e3dcf3eeef9516177b7153430d4ab5c3195c3b4ce7b884be63f02079005a37",
+      "experiments/scripts/run_specialist_v21.sh": "2795cd6f71db680d99d2f6e17f242b03c1f42fe2da2e56e4b8b60e51d4a334d6",
+      "experiments/scripts/select_development_beta_v21.py": "f836c0dbed2c34d845b03ac567722b90bb2ad0cabad551b6064a22b11ba8a639",
+      "experiments/scripts/specialist_v21_protocol.py": "de760f5c7763cbb096c60e6474fb5bb29c3b8ea4eea57b5035ab297e94c5f368",
+      "experiments/scripts/specialist_v21_tables.py": "49cddd9e0023583e1f94139911ba02be0c949343ed7678d3381777fb587b6da7",
+      "experiments/tests/test_specialist_v21.py": "b6ffd8bd5912e432b7f3e4e6685cdd2181ba7bc314163114a1cc73170befed7a",
+      "src/tasks/stairs_cbf/actions.py": "e04354c1bb9bfe4f57055a98dde22a1e13a30ff3a7b02af93633bd90001a5514",
+      "src/tasks/stairs_cbf/command.py": "af568a025f275fa018aeb97e8a1c341ee7bfa07d4b04be73b48caed7f794ab43",
+      "src/tasks/stairs_cbf/config.py": "22a57df095616e1f19f7cf6f18d7ba173ecef7901bf2a85da2a5faaa11c32f8a",
+      "src/tasks/stairs_cbf/deployment_context.py": "ad2438103d62f3ba4c9716a2e0a1f0bc57328d970b0f0c1c74756563b862c445",
+      "src/tasks/stairs_cbf/hard_cases.py": "b20cd15228dcdfcc6ad16955b5177ff4c3c714237b73c9a0e02eb316ab90f430",
+      "src/tasks/stairs_cbf/mdp.py": "631a9fefcf2026521c1c43ecf2dc1851124ce47921a1ddf4191ae7db31475754",
+      "src/tasks/stairs_cbf/online.py": "0b53dd2d58a2bc4745cb523b73853f5af5f172a6406c7d121415ad9ee18aa90a",
+      "src/tasks/velocity/mdp/observations.py": "5e759917b7d3132b4bd7c640eae14d472f01b175f222d6358330ae9a159becd1"
+    },
+    "source_files": [
+      "docs/DEPLOYMENT_V21_PROTOCOL.md",
+      "src/tasks/velocity/mdp/observations.py",
+      "src/tasks/stairs_cbf/actions.py",
+      "src/tasks/stairs_cbf/command.py",
+      "src/tasks/stairs_cbf/config.py",
+      "src/tasks/stairs_cbf/deployment_context.py",
+      "src/tasks/stairs_cbf/hard_cases.py",
+      "src/tasks/stairs_cbf/mdp.py",
+      "src/tasks/stairs_cbf/online.py",
+      "experiments/scripts/evaluate_online_stairs.py",
+      "experiments/scripts/online_refine_stairs.py",
+      "experiments/scripts/calibrate_deployment_contexts_v21.py",
+      "experiments/scripts/refine_deployment_v21.py",
+      "experiments/scripts/specialist_v21_protocol.py",
+      "experiments/scripts/specialist_v21_tables.py",
+      "experiments/scripts/select_development_beta_v21.py",
+      "experiments/scripts/evaluate_learning_curve_v21.py",
+      "experiments/scripts/audit_deployment_v21.py",
+      "experiments/scripts/aggregate_deployment_v21.py",
+      "experiments/scripts/plot_deployment_v21.py",
+      "experiments/scripts/freeze_specialist_v21_protocol.py",
+      "experiments/scripts/run_specialist_calibration_v21.sh",
+      "experiments/scripts/run_specialist_v21.sh",
+      "experiments/scripts/run_specialist_queue_v21.sh",
+      "experiments/tests/test_specialist_v21.py"
+    ]
+  },
+  "status": "prospectively_frozen_before_base_only_calibration_and_development",
+  "superseded_precalibration_boundary": {
+    "calibration_outcomes_observed": false,
+    "execution_amendment": {
+      "file": "results/online/specialist_v21/precalibration_execution_amendment.json",
+      "git_commit": "e365a438a52c1c2add9afdf2356d760fe530cb1c",
+      "sha256": "7bae7d03e8169b57edcbe37f60910bea3f8e1c275df0c0c235d684bcaba19377"
+    },
+    "reason": "pre_evaluation_json_round_trip_validation_defect",
+    "superseded_protocol": {
+      "file": "results/online/specialist_v21/protocol_precalibration.json",
+      "git_commit": "e365a438a52c1c2add9afdf2356d760fe530cb1c",
+      "sha256": "f2aeb83ded252c2dba245d1ab5331db54296386620c122480805bd874df1bd50"
+    }
+  },
+  "training": {
+    "accepted_update_count_is_validity_gate": false,
+    "broad_d0_or_global_retention_bank": false,
+    "candidate_d0_paired_episodes": 128,
+    "candidate_evaluation_episodes_per_round": 384,
+    "candidate_fractions": [
+      0.5,
+      1.0,
+      1.5
+    ],
+    "confirmation_blocks": 3,
+    "confirmation_maximum_mean_fall_delta": 0.03,
+    "confirmation_mean_success_delta_strictly_positive": true,
+    "confirmation_minimum_positive_blocks": 2,
+    "confirmation_paired_episodes_per_block": 64,
+    "critic_uses_all_transitions": true,
+    "d0_retention_must_pass": true,
+    "dual_rollouts_per_round": 2,
+    "fixed_round_budget": 8,
+    "matched_success_actor_advantage_excluded_only_when_beta_positive": true,
+    "normal_failure_success_start_slots": [
+      40,
+      12,
+      12
+    ],
+    "rollout_steps_per_environment": 1024,
+    "screening_paired_episodes_per_candidate": 64,
+    "zero_retained_updates_are_valid_and_final_equals_pi0": true
+  }
+}

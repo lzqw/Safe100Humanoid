@@ -1,0 +1,642 @@
+{
+  "actor_expansion": {
+    "expanded_actor_width": 415,
+    "inactive_geometry_exact_base_policy": true,
+    "legacy_first_layer_copy_max_abs_error": 0.0,
+    "new_feature_count": 10,
+    "new_first_layer_column_max_abs": 0.0,
+    "pi0_exact_preservation_proof": true,
+    "source_actor_width": 405
+  },
+  "antithetic_summary": {
+    "matched_initial_state_signatures": true,
+    "minus_success_count": 168,
+    "negative_difference_count": 73,
+    "pair_count": 256,
+    "plus_success_count": 162,
+    "positive_difference_count": 66,
+    "score_difference_mean": -0.04296875,
+    "score_difference_std": 3.5993311405181885,
+    "zero_difference_count": 117
+  },
+  "base_actor_sha256": "c08c387c0939a0774904cd8f3ccc3d459acc5134f26c5dd44ae411a9eb005188",
+  "base_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "base_critic_sha256": null,
+  "candidate_checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/calibrated_antithetic_v123_750281d_8x64_s201354400/candidate.pt",
+  "candidate_checkpoint_sha256": "0c4e6445106af2279d7f586a5311d17951f31faee01d4a712c28f35f19f8eaee",
+  "cbf": {
+    "acceleration_or_drift_model": false,
+    "actor_observation_changed": false,
+    "critic_observation_changed": false,
+    "current_CBF0_source_unchanged": true,
+    "mode": "current_velocity_cbf",
+    "parameters": {
+      "alpha": 10.0,
+      "barrier_slope": 0.8,
+      "lambda_s": 0.0,
+      "lambda_x": 0.0,
+      "metric": "euclidean",
+      "toe_margin": 0.08,
+      "top_clearance": 0.025
+    },
+    "plant_action_transform": "identity",
+    "runtime_filter": false
+  },
+  "context": "F2",
+  "critic_expansion": null,
+  "elapsed_seconds": 195.91699706099462,
+  "episode_credit": "paired-antithetic-calibrated",
+  "episode_failure_count": 182,
+  "episode_success_count": 330,
+  "exploration_std": 0.02,
+  "final_residual_sha256": "3969245f2017990638b97d74d267ac1f14def212f20f2eb2b32b5dc53601c1a2",
+  "gae_lambda": 0.95,
+  "gae_summary": null,
+  "gamma": 0.99,
+  "geometry_observation": {
+    "deployable": true,
+    "feature_count": 10,
+    "features_per_foot": [
+      "horizontal",
+      "vertical",
+      "barrier",
+      "contact",
+      "valid"
+    ],
+    "future_or_filtered_action_fields": 0,
+    "group": "cbf_geometry",
+    "source": "current bilateral foot FK + contact + mapped next-riser edges",
+    "timing": "persistent approach and swing, including pre-toe-off"
+  },
+  "git_commit": "750281da5116f40b990824744cb3d68b798c5dbc",
+  "independent_gate_policy": "run separately only if screen_rate_gte_0.75",
+  "independent_gate_run": false,
+  "initial_residual_sha256": "d6baab6e66929514c75f798a2c92fb1c32aa5b12ffa851ea06942c8580b6f167",
+  "joint_scale_search": {
+    "effective_scale_relative_to_unprojected_proposal": 0.00445556640625,
+    "grid": [
+      1.0,
+      0.5,
+      0.25,
+      0.125,
+      0.0625,
+      0.03125,
+      0.015625,
+      0.0078125
+    ],
+    "minimum_joint_surrogate_gain": 1e-06,
+    "records": [
+      {
+        "scale": 1.0,
+        "training": {
+          "clipped_surrogate": 0.0014632528182119131,
+          "importance_ratio_mean": 0.9997516870498657,
+          "reference_forward_kl": 0.00494633661583066,
+          "transition_count": 133518,
+          "unclipped_surrogate": 0.002627367153763771,
+          "weight_sum": 1.0
+        },
+        "validation": {
+          "clipped_surrogate": -0.0011114873923361301,
+          "importance_ratio_mean": 0.9994986057281494,
+          "reference_forward_kl": 0.004947954788804054,
+          "transition_count": 43954,
+          "unclipped_surrogate": 5.175173282623291e-05,
+          "weight_sum": 1.0
+        }
+      },
+      {
+        "scale": 0.5,
+        "training": {
+          "clipped_surrogate": 0.001290070591494441,
+          "importance_ratio_mean": 0.9998801946640015,
+          "reference_forward_kl": 0.0012366558657959104,
+          "transition_count": 133518,
+          "unclipped_surrogate": 0.0013148661237210035,
+          "weight_sum": 1.0
+        },
+        "validation": {
+          "clipped_surrogate": 6.523914635181427e-07,
+          "importance_ratio_mean": 0.9997671246528625,
+          "reference_forward_kl": 0.001237060991115868,
+          "transition_count": 43954,
+          "unclipped_surrogate": 1.7053447663784027e-05,
+          "weight_sum": 1.0
+        }
+      },
+      {
+        "scale": 0.25,
+        "training": {
+          "clipped_surrogate": 0.0006577594904229045,
+          "importance_ratio_mean": 0.9999410510063171,
+          "reference_forward_kl": 0.00030916841933503747,
+          "transition_count": 133518,
+          "unclipped_surrogate": 0.0006577594904229045,
+          "weight_sum": 1.0
+        },
+        "validation": {
+          "clipped_surrogate": 6.182119250297546e-06,
+          "importance_ratio_mean": 0.9998882412910461,
+          "reference_forward_kl": 0.0003092697588726878,
+          "transition_count": 43954,
+          "unclipped_surrogate": 6.182119250297546e-06,
+          "weight_sum": 1.0
+        }
+      },
+      {
+        "scale": 0.125,
+        "training": {
+          "clipped_surrogate": 0.00032895992626436055,
+          "importance_ratio_mean": 0.9999708533287048,
+          "reference_forward_kl": 7.729238859610632e-05,
+          "transition_count": 133518,
+          "unclipped_surrogate": 0.00032895992626436055,
+          "weight_sum": 1.0
+        },
+        "validation": {
+          "clipped_surrogate": 2.4908222258090973e-06,
+          "importance_ratio_mean": 0.9999452829360962,
+          "reference_forward_kl": 7.731772348051891e-05,
+          "transition_count": 43954,
+          "unclipped_surrogate": 2.4908222258090973e-06,
+          "weight_sum": 1.0
+        }
+      },
+      {
+        "scale": 0.0625,
+        "training": {
+          "clipped_surrogate": 0.00016449938993901014,
+          "importance_ratio_mean": 0.9999855160713196,
+          "reference_forward_kl": 1.9323115338920616e-05,
+          "transition_count": 133518,
+          "unclipped_surrogate": 0.00016449938993901014,
+          "weight_sum": 1.0
+        },
+        "validation": {
+          "clipped_surrogate": 1.1068768799304962e-06,
+          "importance_ratio_mean": 0.999972939491272,
+          "reference_forward_kl": 1.9329449060023762e-05,
+          "transition_count": 43954,
+          "unclipped_surrogate": 1.1068768799304962e-06,
+          "weight_sum": 1.0
+        }
+      },
+      {
+        "scale": 0.03125,
+        "training": {
+          "clipped_surrogate": 8.22539150249213e-05,
+          "importance_ratio_mean": 0.9999927282333374,
+          "reference_forward_kl": 4.830779744224856e-06,
+          "transition_count": 133518,
+          "unclipped_surrogate": 8.22539150249213e-05,
+          "weight_sum": 1.0
+        },
+        "validation": {
+          "clipped_surrogate": 5.061738193035126e-07,
+          "importance_ratio_mean": 0.9999865889549255,
+          "reference_forward_kl": 4.832363174500642e-06,
+          "transition_count": 43954,
+          "unclipped_surrogate": 5.061738193035126e-07,
+          "weight_sum": 1.0
+        }
+      },
+      {
+        "scale": 0.015625,
+        "training": {
+          "clipped_surrogate": 4.11305227316916e-05,
+          "importance_ratio_mean": 0.9999964237213135,
+          "reference_forward_kl": 1.2076950497430516e-06,
+          "transition_count": 133518,
+          "unclipped_surrogate": 4.11305227316916e-05,
+          "weight_sum": 1.0
+        },
+        "validation": {
+          "clipped_surrogate": 2.491287887096405e-07,
+          "importance_ratio_mean": 0.9999933242797852,
+          "reference_forward_kl": 1.2080909073119983e-06,
+          "transition_count": 43954,
+          "unclipped_surrogate": 2.491287887096405e-07,
+          "weight_sum": 1.0
+        }
+      },
+      {
+        "scale": 0.0078125,
+        "training": {
+          "clipped_surrogate": 2.0565028535202146e-05,
+          "importance_ratio_mean": 0.9999982118606567,
+          "reference_forward_kl": 3.019237624357629e-07,
+          "transition_count": 133518,
+          "unclipped_surrogate": 2.0565028535202146e-05,
+          "weight_sum": 1.0
+        },
+        "validation": {
+          "clipped_surrogate": 1.257285475730896e-07,
+          "importance_ratio_mean": 0.9999966621398926,
+          "reference_forward_kl": 3.020227268279996e-07,
+          "transition_count": 43954,
+          "unclipped_surrogate": 1.257285475730896e-07,
+          "weight_sum": 1.0
+        }
+      }
+    ],
+    "selected_scale_relative_to_train_kl_proposal": 0.25
+  },
+  "max_residual": 0.1,
+  "method_id": "heldout-calibrated-paired-antithetic-residual-ppo-v123",
+  "num_envs": 64,
+  "offline_gate_passed": true,
+  "optimization_seed": 201354493,
+  "optimizer": "sgd",
+  "optimizer_parameter_state_count": 0,
+  "optimizer_state_in_candidate": false,
+  "paper_dual_reward": {
+    "candidate": "raw_moderate",
+    "historical_default_preserved": false,
+    "paper_arxiv_id": "2510.14959v6",
+    "paper_demo_commit": "68955c8ba9e929d974b6677635370ee93eecc63a",
+    "reward_parameters": {
+      "correction_space": "raw_action",
+      "intervention_weight": 10.0,
+      "margin_weight": 1.0,
+      "sigma": 0.5
+    },
+    "runtime_filter_during_training": false
+  },
+  "rollout_summaries": [
+    {
+      "active_geometry_transition_count": 21968,
+      "exploration_sign": 1.0,
+      "fall_count": 32,
+      "initial_state_signature": "71191bd37715bf55eb8b47c614eb1665ce5d7570074330ab09cee4d7816867f8",
+      "mean_reached_riser": 7.125,
+      "seed": 201354400,
+      "success_count": 32
+    },
+    {
+      "active_geometry_transition_count": 23059,
+      "exploration_sign": -1.0,
+      "fall_count": 26,
+      "initial_state_signature": "71191bd37715bf55eb8b47c614eb1665ce5d7570074330ab09cee4d7816867f8",
+      "mean_reached_riser": 7.953125,
+      "seed": 201354400,
+      "success_count": 38
+    },
+    {
+      "active_geometry_transition_count": 21830,
+      "exploration_sign": 1.0,
+      "fall_count": 21,
+      "initial_state_signature": "45fede82bb8a11b5440713eef7e481ad43ba0072f466ff3f6a921d8a1394d2dc",
+      "mean_reached_riser": 8.140625,
+      "seed": 201354410,
+      "success_count": 43
+    },
+    {
+      "active_geometry_transition_count": 22726,
+      "exploration_sign": -1.0,
+      "fall_count": 20,
+      "initial_state_signature": "45fede82bb8a11b5440713eef7e481ad43ba0072f466ff3f6a921d8a1394d2dc",
+      "mean_reached_riser": 8.078125,
+      "seed": 201354410,
+      "success_count": 44
+    },
+    {
+      "active_geometry_transition_count": 22061,
+      "exploration_sign": 1.0,
+      "fall_count": 21,
+      "initial_state_signature": "b0f8f32087df1b871287acaa35385406dc81b4ba16610ad74c32f2cad1f0ef9b",
+      "mean_reached_riser": 7.96875,
+      "seed": 201354420,
+      "success_count": 43
+    },
+    {
+      "active_geometry_transition_count": 21874,
+      "exploration_sign": -1.0,
+      "fall_count": 26,
+      "initial_state_signature": "b0f8f32087df1b871287acaa35385406dc81b4ba16610ad74c32f2cad1f0ef9b",
+      "mean_reached_riser": 7.6875,
+      "seed": 201354420,
+      "success_count": 38
+    },
+    {
+      "active_geometry_transition_count": 22842,
+      "exploration_sign": 1.0,
+      "fall_count": 20,
+      "initial_state_signature": "3d9c621fef552d358d60e906131e2c11010d5f7a9e5f9a4e7bfe759698d45d36",
+      "mean_reached_riser": 8.15625,
+      "seed": 201354430,
+      "success_count": 44
+    },
+    {
+      "active_geometry_transition_count": 21112,
+      "exploration_sign": -1.0,
+      "fall_count": 16,
+      "initial_state_signature": "3d9c621fef552d358d60e906131e2c11010d5f7a9e5f9a4e7bfe759698d45d36",
+      "mean_reached_riser": 7.75,
+      "seed": 201354430,
+      "success_count": 48
+    }
+  ],
+  "schema_version": 1,
+  "screen": {
+    "all_finite": true,
+    "candidate_checkpoint_sha256": "0c4e6445106af2279d7f586a5311d17951f31faee01d4a712c28f35f19f8eaee",
+    "fall_count": 26,
+    "fall_rate": 0.40625,
+    "initial_state_signature": "ee6a6da4c52aa99aaccd59b4d85c6eabfa984c902aeb98daa0719d119d92bd54",
+    "mean_reached_riser": 7.828125,
+    "mean_residual_norm": 0.00040136351407629034,
+    "num_episodes": 64,
+    "passed_75_percent": false,
+    "residual_state_sha256": "3969245f2017990638b97d74d267ac1f14def212f20f2eb2b32b5dc53601c1a2",
+    "runtime_filter": false,
+    "seed": 201354480,
+    "success_count": 38,
+    "success_rate": 0.59375
+  },
+  "shift": {
+    "actor_observation_fields_added": 0,
+    "baseline_riser_height_m": 0.13,
+    "cbf_geometry_exact": true,
+    "clearance_barrier": "sloped_xz",
+    "clearance_barrier_slope": 0.8,
+    "command_changed": false,
+    "context": "F2",
+    "context_name": "hard_uniform_18_4cm",
+    "controller_changed": false,
+    "filter_alpha": 10.0,
+    "fixed_deployment_environment": {
+      "actor_observation_corruption_disabled": true,
+      "base_com_randomization_absent": true,
+      "curriculum_disabled": true,
+      "encoder_bias_absent": true,
+      "friction_randomization_absent": true,
+      "push_randomization_absent": true,
+      "registered_environment_variant": "fixed_deployment_play",
+      "reset_events_exact": true,
+      "retained_fresh_initial_state_events": [
+        "reset_base",
+        "reset_robot_joints"
+      ]
+    },
+    "friction_changed": false,
+    "num_risers": 9,
+    "plant_action_transform": "identity",
+    "recovery_distance_m": 0.15,
+    "riser_height_m": 0.184,
+    "riser_profile_m": null,
+    "runtime_filter": false,
+    "shift": "fixed_uniform_higher_riser",
+    "stair_riser_patch_slots": 9,
+    "stair_target_patch_slots": 10,
+    "terrain_geometry_changed": true,
+    "top_platform_patch_included": true
+  },
+  "success_bonus": 1.0,
+  "trainable_parameter_count": 28364,
+  "training": {
+    "after": {
+      "clipped_surrogate": 0.0006577594904229045,
+      "importance_ratio_mean": 0.9999410510063171,
+      "reference_forward_kl": 0.00030916841933503747,
+      "transition_count": 133518,
+      "unclipped_surrogate": 0.0006577594904229045,
+      "weight_sum": 1.0
+    },
+    "before": {
+      "clipped_surrogate": -1.6880221664905548e-09,
+      "importance_ratio_mean": 1.0,
+      "reference_forward_kl": 0.0,
+      "transition_count": 133518,
+      "unclipped_surrogate": -1.6880221664905548e-09,
+      "weight_sum": 1.0
+    },
+    "epochs": 1,
+    "heldout_scale_search": {
+      "effective_scale_relative_to_unprojected_proposal": 0.00445556640625,
+      "grid": [
+        1.0,
+        0.5,
+        0.25,
+        0.125,
+        0.0625,
+        0.03125,
+        0.015625,
+        0.0078125
+      ],
+      "minimum_joint_surrogate_gain": 1e-06,
+      "records": [
+        {
+          "scale": 1.0,
+          "training": {
+            "clipped_surrogate": 0.0014632528182119131,
+            "importance_ratio_mean": 0.9997516870498657,
+            "reference_forward_kl": 0.00494633661583066,
+            "transition_count": 133518,
+            "unclipped_surrogate": 0.002627367153763771,
+            "weight_sum": 1.0
+          },
+          "validation": {
+            "clipped_surrogate": -0.0011114873923361301,
+            "importance_ratio_mean": 0.9994986057281494,
+            "reference_forward_kl": 0.004947954788804054,
+            "transition_count": 43954,
+            "unclipped_surrogate": 5.175173282623291e-05,
+            "weight_sum": 1.0
+          }
+        },
+        {
+          "scale": 0.5,
+          "training": {
+            "clipped_surrogate": 0.001290070591494441,
+            "importance_ratio_mean": 0.9998801946640015,
+            "reference_forward_kl": 0.0012366558657959104,
+            "transition_count": 133518,
+            "unclipped_surrogate": 0.0013148661237210035,
+            "weight_sum": 1.0
+          },
+          "validation": {
+            "clipped_surrogate": 6.523914635181427e-07,
+            "importance_ratio_mean": 0.9997671246528625,
+            "reference_forward_kl": 0.001237060991115868,
+            "transition_count": 43954,
+            "unclipped_surrogate": 1.7053447663784027e-05,
+            "weight_sum": 1.0
+          }
+        },
+        {
+          "scale": 0.25,
+          "training": {
+            "clipped_surrogate": 0.0006577594904229045,
+            "importance_ratio_mean": 0.9999410510063171,
+            "reference_forward_kl": 0.00030916841933503747,
+            "transition_count": 133518,
+            "unclipped_surrogate": 0.0006577594904229045,
+            "weight_sum": 1.0
+          },
+          "validation": {
+            "clipped_surrogate": 6.182119250297546e-06,
+            "importance_ratio_mean": 0.9998882412910461,
+            "reference_forward_kl": 0.0003092697588726878,
+            "transition_count": 43954,
+            "unclipped_surrogate": 6.182119250297546e-06,
+            "weight_sum": 1.0
+          }
+        },
+        {
+          "scale": 0.125,
+          "training": {
+            "clipped_surrogate": 0.00032895992626436055,
+            "importance_ratio_mean": 0.9999708533287048,
+            "reference_forward_kl": 7.729238859610632e-05,
+            "transition_count": 133518,
+            "unclipped_surrogate": 0.00032895992626436055,
+            "weight_sum": 1.0
+          },
+          "validation": {
+            "clipped_surrogate": 2.4908222258090973e-06,
+            "importance_ratio_mean": 0.9999452829360962,
+            "reference_forward_kl": 7.731772348051891e-05,
+            "transition_count": 43954,
+            "unclipped_surrogate": 2.4908222258090973e-06,
+            "weight_sum": 1.0
+          }
+        },
+        {
+          "scale": 0.0625,
+          "training": {
+            "clipped_surrogate": 0.00016449938993901014,
+            "importance_ratio_mean": 0.9999855160713196,
+            "reference_forward_kl": 1.9323115338920616e-05,
+            "transition_count": 133518,
+            "unclipped_surrogate": 0.00016449938993901014,
+            "weight_sum": 1.0
+          },
+          "validation": {
+            "clipped_surrogate": 1.1068768799304962e-06,
+            "importance_ratio_mean": 0.999972939491272,
+            "reference_forward_kl": 1.9329449060023762e-05,
+            "transition_count": 43954,
+            "unclipped_surrogate": 1.1068768799304962e-06,
+            "weight_sum": 1.0
+          }
+        },
+        {
+          "scale": 0.03125,
+          "training": {
+            "clipped_surrogate": 8.22539150249213e-05,
+            "importance_ratio_mean": 0.9999927282333374,
+            "reference_forward_kl": 4.830779744224856e-06,
+            "transition_count": 133518,
+            "unclipped_surrogate": 8.22539150249213e-05,
+            "weight_sum": 1.0
+          },
+          "validation": {
+            "clipped_surrogate": 5.061738193035126e-07,
+            "importance_ratio_mean": 0.9999865889549255,
+            "reference_forward_kl": 4.832363174500642e-06,
+            "transition_count": 43954,
+            "unclipped_surrogate": 5.061738193035126e-07,
+            "weight_sum": 1.0
+          }
+        },
+        {
+          "scale": 0.015625,
+          "training": {
+            "clipped_surrogate": 4.11305227316916e-05,
+            "importance_ratio_mean": 0.9999964237213135,
+            "reference_forward_kl": 1.2076950497430516e-06,
+            "transition_count": 133518,
+            "unclipped_surrogate": 4.11305227316916e-05,
+            "weight_sum": 1.0
+          },
+          "validation": {
+            "clipped_surrogate": 2.491287887096405e-07,
+            "importance_ratio_mean": 0.9999933242797852,
+            "reference_forward_kl": 1.2080909073119983e-06,
+            "transition_count": 43954,
+            "unclipped_surrogate": 2.491287887096405e-07,
+            "weight_sum": 1.0
+          }
+        },
+        {
+          "scale": 0.0078125,
+          "training": {
+            "clipped_surrogate": 2.0565028535202146e-05,
+            "importance_ratio_mean": 0.9999982118606567,
+            "reference_forward_kl": 3.019237624357629e-07,
+            "transition_count": 133518,
+            "unclipped_surrogate": 2.0565028535202146e-05,
+            "weight_sum": 1.0
+          },
+          "validation": {
+            "clipped_surrogate": 1.257285475730896e-07,
+            "importance_ratio_mean": 0.9999966621398926,
+            "reference_forward_kl": 3.020227268279996e-07,
+            "transition_count": 43954,
+            "unclipped_surrogate": 1.257285475730896e-07,
+            "weight_sum": 1.0
+          }
+        }
+      ],
+      "selected_scale_relative_to_train_kl_proposal": 0.25
+    },
+    "maximum_gradient_norm_pre_clip": 3.843200922012329,
+    "optimizer_updates": 1,
+    "train_kl_projected_after": {
+      "clipped_surrogate": 0.0014632528182119131,
+      "importance_ratio_mean": 0.9997516870498657,
+      "reference_forward_kl": 0.00494633661583066,
+      "transition_count": 133518,
+      "unclipped_surrogate": 0.002627367153763771,
+      "weight_sum": 1.0
+    },
+    "trust_region": {
+      "max_reference_kl": 0.005,
+      "parameter_interpolation_scale": 0.017822265625,
+      "projection_iterations": 12
+    },
+    "unprojected_after": {
+      "clipped_surrogate": -0.3715459406375885,
+      "importance_ratio_mean": 0.3980691432952881,
+      "reference_forward_kl": 12.763116836547852,
+      "transition_count": 133518,
+      "unclipped_surrogate": 0.00028733257204294205,
+      "weight_sum": 1.0
+    }
+  },
+  "training_advantage_mean": 0.07572213560342789,
+  "training_advantage_std": 0.9588292837142944,
+  "training_runtime_filter": false,
+  "training_seed_count": 3,
+  "training_seeds": [
+    201354400,
+    201354410,
+    201354420,
+    201354430
+  ],
+  "training_transition_count": 133518,
+  "transactional_rollback": false,
+  "validation": {
+    "after": {
+      "clipped_surrogate": 6.182119250297546e-06,
+      "importance_ratio_mean": 0.9998882412910461,
+      "reference_forward_kl": 0.0003092697588726878,
+      "transition_count": 43954,
+      "unclipped_surrogate": 6.182119250297546e-06,
+      "weight_sum": 1.0
+    },
+    "before": {
+      "clipped_surrogate": -4.656612873077393e-10,
+      "importance_ratio_mean": 1.0,
+      "reference_forward_kl": 0.0,
+      "transition_count": 43954,
+      "unclipped_surrogate": -4.656612873077393e-10,
+      "weight_sum": 1.0
+    }
+  },
+  "validation_advantage_mean": 0.09839928895235062,
+  "validation_advantage_std": 0.9219369292259216,
+  "validation_last_seed": true,
+  "validation_seed": 201354430,
+  "validation_transition_count": 43954
+}

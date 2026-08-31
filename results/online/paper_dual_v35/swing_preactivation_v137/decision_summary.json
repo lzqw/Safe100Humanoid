@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "experiment": "paper_dual_v35",
+  "version": "v137",
+  "method_id": "paper-cbf-dual-swing-preactivation-v137",
+  "status": "rejected_screen_below_gate",
+  "source_git_commit": "eb0c738cf8440dcb930230a94d18e8bed9581005",
+  "target": {
+    "context": "F2",
+    "riser_height_m": 0.184,
+    "runtime_filter_at_deployment": false,
+    "success_threshold": 0.75,
+    "screen_threshold_count": 48,
+    "screen_episode_count": 64
+  },
+  "algorithm_change": {
+    "name": "scheduled_swing_cbf_toe_off_preactivation",
+    "selection": "physical_airborne_foot_else_scheduled_toe_off_foot",
+    "physical_airborne_foot_has_priority": true,
+    "preactivation_requires_both_feet_in_contact": true,
+    "gait_period_s": 0.6,
+    "stance_fraction": 0.56,
+    "actor_observation_changed": false,
+    "cbf_geometry_changed": false,
+    "reward_changed": false
+  },
+  "training": {
+    "seed": 201355800,
+    "num_envs": 128,
+    "rollout_steps": 1024,
+    "rounds": 8,
+    "transition_count": 1048576,
+    "elapsed_seconds": 226.43812435190193,
+    "runtime_filter_fraction": 1.0,
+    "training_action_std": 0.05,
+    "continuous_without_rollback": true,
+    "target_forward_kl": 0.0006,
+    "mean_cbf_reward_active_fraction": 0.3495473861694336,
+    "mean_cbf_intervention_fraction": 0.1264028549194336,
+    "selected_filter_on": {
+      "rollout_round": 1,
+      "checkpoint_round": 0,
+      "success_count": 193,
+      "episode_count": 268,
+      "success_rate": 0.7201492537313433,
+      "mean_reached_riser": 8.212686567164178,
+      "is_unupdated_base_actor": true
+    },
+    "selection_additional_evaluation_count": 0
+  },
+  "screen": {
+    "seed": 201355880,
+    "policy": "deterministic_mean",
+    "runtime_filter": false,
+    "success_count": 43,
+    "episode_count": 64,
+    "success_rate": 0.671875,
+    "fall_count": 21,
+    "fall_rate": 0.328125,
+    "mean_reached_riser": 7.96875,
+    "mean_return": -3.9535733200609684,
+    "mean_success_completion_time_s": 8.710232558139536,
+    "initial_state_signature": "b9b4b421b73cc5ce69e1b49298b9407f2675b2193b2aa95d79af20c8704229fa"
+  },
+  "gate": {
+    "screen_passed": false,
+    "independent_gate_run": false,
+    "additional_validation_run": false,
+    "reason": "43/64 is below the predeclared 48/64 threshold"
+  },
+  "decision": {
+    "accepted": false,
+    "replaces_v132": false,
+    "replaces_v79": false,
+    "formal_best_remains": "v79 aligned filter-off 139/193 = 72.02%",
+    "development_screen_best_remains": "v132 50/64 = 78.125%",
+    "interpretation": "Toe-off preactivation increased CBF coverage, but every PPO-updated actor reduced aligned training success and the selected unchanged base actor scored only 43/64 in the sole filter-off screen."
+  }
+}

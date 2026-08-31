@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "protocol_id": "safe100-deployment-unit-local-matched-success-v21",
+  "event_id": "v21-base-policy-L2-strong-persistent-yaw-pilot-8",
+  "stage": "base_policy_only_context_range_feasibility_pilot",
+  "formal_context_selection": false,
+  "started_at_utc": "2026-08-08T18:10:28Z",
+  "completed_at_utc": "2026-08-08T18:19:24Z",
+  "prospective_protocol": {
+    "file": "results/online/specialist_v21/protocol_range_pilot_8.json",
+    "git_commit": "3526effef2aa4595a9ea93cc567736409491359d",
+    "sha256": "df5e8ef38353912257727908175cb29c71da7a3ddecb9142834c6a9b248825a2"
+  },
+  "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "episodes_per_candidate": 256,
+  "candidates_per_context": 12,
+  "context_count": 1,
+  "total_base_policy_episodes": 3072,
+  "gates": {
+    "success_rate_min": 0.7,
+    "success_rate_max": 0.85,
+    "minimum_fall_count": 50,
+    "lateral_target_failure_fraction_min": 0.8,
+    "lateral_second_failure_fraction_max": 0.3
+  },
+  "qualifying_contexts": {},
+  "contexts_without_qualifier": [
+    "L2"
+  ],
+  "contexts_requiring_mechanism_redesign": [
+    "L2"
+  ],
+  "closest_candidate": {
+    "candidate_seed": 27417,
+    "success_rate": 0.79296875,
+    "fall_count": 53,
+    "target_failure_fraction": 0.7924528301886793,
+    "second_failure_fraction": 0.20754716981132076,
+    "target_purity_margin_to_gate": -0.007547169811320745
+  },
+  "pooled_outcomes": {
+    "total_falls": 588,
+    "lateral_heading_failures": 425,
+    "contact_stability_failures": 163,
+    "lateral_failure_fraction": 0.7227891156462585
+  },
+  "interpretation": "Strong pulse-free persistent yaw produced enough failures but did not produce a robust target-purity intersection. Candidate 27417 missed the 0.80 purity gate by 0.00755, and pooled purity fell to 0.7228. Together with pilots 5 through 7, this closes the tested yaw-command-magnitude axis. The next pilot must change mechanism to heading-feedback authority loss under fixed modest yaw excitation while preserving lateral centering.",
+  "base_policy_outcomes_observed": true,
+  "adaptation_process_started": false,
+  "adapted_policy_outcomes_observed": false,
+  "formal_adaptation_or_audit_outcomes_observed": false,
+  "execution": {
+    "queue_completed_marker_observed": true,
+    "tmux_session_running_after_completion": false,
+    "v21_calibration_or_adaptation_process_running_after_completion": false,
+    "process_audit_at_utc": "2026-08-08T18:20:20Z"
+  },
+  "committed_evidence": {
+    "progress_commit": "4e37e27de7b83bfd8d088140fbe0258067a03a7b",
+    "progress_file_count": 1,
+    "progress_file_sha256": "f17b10a476bddde5cfc28785af29639b6ef89b6cf6d29465299b7fe4bf69862c",
+    "progress_manifest_sha256": "d8e4843c8a586a622f79573b4466e1e195c5d4a28cefacc7f1a28b710a60169a",
+    "manifest_definition": "SHA-256 of the relative ./L2/calibration_progress.json sha256sum line"
+  },
+  "external_evidence": {
+    "artifact_root": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_range_pilot_8",
+    "artifact_file_count": 73,
+    "artifact_total_bytes": 49506219,
+    "artifact_manifest_sha256": "ea3a28ebe6859fec709125734a18b6b889c5c19765ae81312f22b868b34b68b4",
+    "log_root": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v21_range_pilot_8",
+    "log_file_count": 2,
+    "log_total_bytes": 80401,
+    "log_manifest_sha256": "fc2174fe4229adf373adbaa1cfb131586af0f7b85ba1c88544591e80d0f58f91",
+    "queue_log_sha256": "2feb067dc9698bc9d8b4734226ed65da2085744324e9a42a5ac70ad8db714ab4",
+    "context_log_sha256": "12cf9c0e829989037a3d1dc807eeca3129a0a4783cfecb8d53469d75a28f777e",
+    "manifest_definition": "SHA-256 of sorted sha256sum lines rooted at the corresponding directory and using relative paths"
+  },
+  "disposition": "close_yaw_command_magnitude_axis_and_redesign_L2_mechanism",
+  "formal_calibration_ready": false,
+  "next_boundary": {
+    "pending_contexts": [
+      "L2"
+    ],
+    "confirmation_episodes_per_candidate": 256,
+    "primary_axis": "heading_feedback_authority_loss_under_fixed_modest_yaw_excitation",
+    "preserve_lateral_centering": true,
+    "do_not_extend_yaw_command_magnitude": true,
+    "next_test_remains_base_policy_only_and_non_formal": true,
+    "new_candidate_and_evaluation_randomness_required": true,
+    "next_protocol_must_bind_this_negative_result": true,
+    "next_protocol_must_be_committed_before_execution": true,
+    "adaptation_outcomes_must_remain_absent": true
+  }
+}

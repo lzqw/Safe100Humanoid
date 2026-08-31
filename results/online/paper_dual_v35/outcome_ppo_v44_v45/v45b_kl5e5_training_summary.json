@@ -1,0 +1,219 @@
+{
+  "actor_learning_rate": 0.0001,
+  "base_checkpoint_sha256": "3ec45cd196447901cf815d0fa1ff400af1b519ed2bb85c2fc179458ce3e81d3f",
+  "candidate_actor_sha256": "f5176b6feb119468ab7051fe0995dcc47555404175a57fa21a8c5560f33fbc91",
+  "candidate_checkpoint_sha256": "9e582d4b59be9c2c76e22ee86ff55c06c7c33e2db4ecfd2db593d0ea87def1d3",
+  "candidate_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/pilot/F2/outcome_ppo_v45b_sgd_trimmed_kl5e5/candidate.pt",
+  "clip_ratio": 0.2,
+  "context": "F2",
+  "elapsed_seconds": 9.18043771898374,
+  "git_commit": "64dda2beeb6e9443099f65c34e37237aa822b302",
+  "gradient_aggregation": "coordinate-trimmed",
+  "initial_actor_sha256": "3964c0ef24707addbaa0dacfd4fd627882bd8b45a2c9799142710fa45bc29499",
+  "max_reference_kl": 5e-05,
+  "method_id": "episode-balanced-filter-free-outcome-ppo-sgd-v45",
+  "moving_kl_beta": 0.5,
+  "offline_gate_passed": true,
+  "optimization_seed": 201350442,
+  "optimizer": "sgd",
+  "schema_version": 1,
+  "seed_summaries": [
+    {
+      "episode_count": 32,
+      "failure_count": 9,
+      "seed_id": 0,
+      "success_count": 23,
+      "training_seed": 201350342,
+      "transition_count": 13601
+    },
+    {
+      "episode_count": 32,
+      "failure_count": 6,
+      "seed_id": 1,
+      "success_count": 26,
+      "training_seed": 201350352,
+      "transition_count": 13663
+    },
+    {
+      "episode_count": 32,
+      "failure_count": 9,
+      "seed_id": 2,
+      "success_count": 23,
+      "training_seed": 201350362,
+      "transition_count": 13523
+    },
+    {
+      "episode_count": 32,
+      "failure_count": 10,
+      "seed_id": 3,
+      "success_count": 22,
+      "training_seed": 201350392,
+      "transition_count": 13028
+    },
+    {
+      "episode_count": 32,
+      "failure_count": 8,
+      "seed_id": 4,
+      "success_count": 24,
+      "training_seed": 201350402,
+      "transition_count": 13186
+    },
+    {
+      "episode_count": 32,
+      "failure_count": 14,
+      "seed_id": 5,
+      "success_count": 18,
+      "training_seed": 201350412,
+      "transition_count": 13043
+    }
+  ],
+  "source_dataset_sha256s": [
+    "7540dcd99cd67d90dc5c9b511fe7050469eb6e02696fbbc67841d74a89fd6ac7",
+    "ba86487a7716d63bcb33eebd8b6bdee4ece295905ca8a0b279b131ea5786d4a2"
+  ],
+  "source_datasets": [
+    "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/pilot/F2/filter_free_elite_self_imitation_v41_3x32/elite_dataset.pt",
+    "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/pilot/F2/filter_free_elite_additional_v43_3x32/elite_dataset.pt"
+  ],
+  "source_training_seeds": [
+    201350342,
+    201350352,
+    201350362,
+    201350392,
+    201350402,
+    201350412
+  ],
+  "training": {
+    "actor_update_scope": "last-layer",
+    "after": {
+      "clipped_outcome_surrogate_gain": 0.0003116315541168054,
+      "episode_balanced_failure_log_ratio": -0.0006003247059804077,
+      "episode_balanced_success_log_ratio": 2.4821228216735703e-05,
+      "median_seed_surrogate_gain": 0.00032318849116563797,
+      "minimum_seed_surrogate_gain": 0.00016967859119176865,
+      "outcome_surrogate_gain": 0.0003116315541168054,
+      "per_seed_clipped_surrogate_gain": [
+        0.00035524554550647736,
+        0.00032318849116563797,
+        0.0001972634345293045,
+        0.0003808615729212761,
+        0.0004435516893863678,
+        0.00016967859119176865
+      ],
+      "per_seed_surrogate_gain": [
+        0.00035524554550647736,
+        0.00032318849116563797,
+        0.0001972634345293045,
+        0.0003808615729212761,
+        0.0004435516893863678,
+        0.00016967859119176865
+      ],
+      "positive_seed_count": 6,
+      "transition_clip_fraction": 0.0
+    },
+    "aggregate_gradient_norm_pre_clip": 5.375015735626221,
+    "before": {
+      "clipped_outcome_surrogate_gain": 0.0,
+      "episode_balanced_failure_log_ratio": 0.0,
+      "episode_balanced_success_log_ratio": 0.0,
+      "median_seed_surrogate_gain": 0.0,
+      "minimum_seed_surrogate_gain": 0.0,
+      "outcome_surrogate_gain": 0.0,
+      "per_seed_clipped_surrogate_gain": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "per_seed_surrogate_gain": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "positive_seed_count": 0,
+      "transition_clip_fraction": 0.0
+    },
+    "dataset_transition_count": 80044,
+    "elite_after": {
+      "elite_smooth_l1": 0.02121485828008279,
+      "elite_target_distance": 0.16958476426688368,
+      "reference_elite_target_distance": 0.16958509658897558
+    },
+    "elite_before": {
+      "elite_smooth_l1": 0.021214940609878143,
+      "elite_target_distance": 0.16958509658897558,
+      "reference_elite_target_distance": 0.16958509658897558
+    },
+    "elite_transition_count": 60976,
+    "gradient_aggregation": "coordinate-trimmed",
+    "optimizer": "sgd",
+    "optimizer_updates": 1,
+    "pairwise_gradient_cosine_mean": -0.0032224259339272976,
+    "pairwise_gradient_cosine_min": -0.1447502225637436,
+    "per_seed_gradient_norm": [
+      12.997437477111816,
+      12.312211990356445,
+      11.36738109588623,
+      12.007925987243652,
+      13.814309120178223,
+      11.322141647338867
+    ],
+    "per_seed_policy_loss_before": [
+      -9.313225746154785e-09,
+      -5.587935447692871e-09,
+      -7.450580596923828e-09,
+      -8.381903171539307e-09,
+      -1.7695128917694092e-08,
+      2.561137080192566e-08
+    ],
+    "trainable_parameter_count": 1548,
+    "trust_region": {
+      "after": {
+        "reference_forward_kl": 4.988051081554422e-05,
+        "reference_mean_shift": 0.0004649549509702037
+      },
+      "before": {
+        "reference_forward_kl": 0.0,
+        "reference_mean_shift": 0.0
+      },
+      "max_reference_kl": 5e-05,
+      "parameter_interpolation_scale": 0.120849609375,
+      "projection_iterations": 12,
+      "unprojected_after": {
+        "reference_forward_kl": 0.003415614612265378,
+        "reference_mean_shift": 0.003847290804632647
+      }
+    },
+    "unprojected_after": {
+      "clipped_outcome_surrogate_gain": 0.00177593397287031,
+      "episode_balanced_failure_log_ratio": -0.007980197668075562,
+      "episode_balanced_success_log_ratio": -0.00279777534704256,
+      "median_seed_surrogate_gain": 0.0027036136016249657,
+      "minimum_seed_surrogate_gain": 0.0013458761386573315,
+      "outcome_surrogate_gain": 0.00252873954984049,
+      "per_seed_clipped_surrogate_gain": [
+        0.0021820813417434692,
+        0.0019585019908845425,
+        0.0008985940366983414,
+        0.0023174379020929337,
+        0.0025794487446546555,
+        0.0007195398211479187
+      ],
+      "per_seed_surrogate_gain": [
+        0.0029048826545476913,
+        0.0027036136016249657,
+        0.0015742219984531403,
+        0.003082314506173134,
+        0.0035615283995866776,
+        0.0013458761386573315
+      ],
+      "positive_seed_count": 6,
+      "transition_clip_fraction": 0.028734196192094347
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "schema_version": "paper_dual_v35.v123.checkpoints.v1",
+  "input": {
+    "path_4080": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt",
+    "sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317"
+  },
+  "screen_rejected_candidate": {
+    "path_4080": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/calibrated_antithetic_v123_750281d_8x64_s201354400/candidate.pt",
+    "checkpoint_sha256": "0c4e6445106af2279d7f586a5311d17951f31faee01d4a712c28f35f19f8eaee",
+    "residual_state_sha256": "3969245f2017990638b97d74d267ac1f14def212f20f2eb2b32b5dc53601c1a2",
+    "uploaded": false,
+    "reason": "offline joint surrogate gate passed, but unseen deterministic screen was 38/64"
+  }
+}

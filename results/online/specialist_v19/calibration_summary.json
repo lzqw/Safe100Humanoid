@@ -1,0 +1,38 @@
+{
+  "adapted_policy_evaluations_used": false,
+  "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "base_policy_only": true,
+  "protocol_commit": "16f669231c8eea1721037ff900ee459bdacd2825",
+  "protocol_revision": 2,
+  "specialists": {
+    "contact_stability": {
+      "attempted_candidate_seeds": [7217],
+      "calibration_log_sha256": "bbd837971d1aaed4c960f2f820fa5fbef167eff3f8a97612f0eb6ff8e7ab1ea6",
+      "calibration_progress_sha256": "5da91edc4e5bf32358147257916f3cd2f6a3ed32b84e14eb8bed2a208614716a",
+      "calibration_summary_sha256": "4271ee0edf5a54701ace1997e3fd2a2b484ac8b8dece9a53797f8412a59a1891",
+      "context_file": "contexts/contact_stability.json",
+      "context_file_sha256": "db2d128134056e8aaa2b4cbeb3d61d8304110d5ef8abd886d153c1c268fc6bec",
+      "fall_count": 113,
+      "parameters_sha256": "64f3cc58bdba2122be796c0b87a91805e996b2b88808564a674c85a8e7cbf1cd",
+      "second_failure_fraction": 0.017699115044247787,
+      "selected_candidate_seed": 7217,
+      "success_rate": 0.779296875,
+      "target_failure_fraction": 0.9823008849557522
+    },
+    "lateral": {
+      "attempted_candidate_seeds": [7312, 7313, 7314, 7315],
+      "calibration_log_sha256": "1bab826645a947d73fffa845f499aab6fba2faeda338bb5ab18bea29831e40c8",
+      "calibration_progress_sha256": "707a3263c19d0605ec5da02242ac24834d76d3a8e2ef5b1242d340fd42fe78f9",
+      "calibration_summary_sha256": "d64e5b74439a8027583dea6188479ac8df703c1c97e4c2e2c42f11d352e3cf31",
+      "context_file": "contexts/lateral.json",
+      "context_file_sha256": "1cc6e4aaa166bd8dc548b79cf975c04b6e09228c158ab752006dc002346a3e16",
+      "fall_count": 152,
+      "parameters_sha256": "9cb4643dc2db397e0abad4c42f39a18034c835c794fb01d789e42f5032eb4eb8",
+      "second_failure_fraction": 0.09210526315789473,
+      "selected_candidate_seed": 7315,
+      "success_rate": 0.703125,
+      "target_failure_fraction": 0.9078947368421053
+    }
+  },
+  "status": "both first-qualifying contexts frozen before adaptation"
+}

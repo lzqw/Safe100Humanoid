@@ -1,0 +1,418 @@
+{
+  "adapted_policy_evaluations_used": false,
+  "attempts": [
+    {
+      "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+      "adapted_policy_evaluations_used": false,
+      "alignment_coverage": 0.9726027397260274,
+      "base_policy_only": true,
+      "candidate_index": 0,
+      "clearance_barrier_slope": 0.8,
+      "conditions": {
+        "alignment_coverage_at_least_80pct": true,
+        "off_success_in_40_to_65pct": false,
+        "on_success_in_80_to_95pct": true,
+        "shield_rescue_rate_at_least_60pct": true
+      },
+      "evaluation_seeds": [
+        147260000,
+        147260001
+      ],
+      "off_failure_count": 73,
+      "off_initial_state_signatures": [
+        "86171391b2c74d3a0322c6874a7ed64861dffa809d44bea5cc0462a52ac665bc",
+        "6ea3fcad313de0afca090b54d610cfc727d7e30321e6ca55d655f89d754e0941"
+      ],
+      "off_success_count": 183,
+      "off_success_rate": 0.71484375,
+      "off_toe_riser_failure_count": 71,
+      "on_initial_state_signatures": [
+        "86171391b2c74d3a0322c6874a7ed64861dffa809d44bea5cc0462a52ac665bc",
+        "6ea3fcad313de0afca090b54d610cfc727d7e30321e6ca55d655f89d754e0941"
+      ],
+      "on_success_count": 206,
+      "on_success_rate": 0.8046875,
+      "paired_count": 256,
+      "qualifies": false,
+      "rescued_count": 53,
+      "riser_height_m": 0.17,
+      "shield_rescue_rate": 0.726027397260274
+    },
+    {
+      "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+      "adapted_policy_evaluations_used": false,
+      "alignment_coverage": 0.9841269841269841,
+      "base_policy_only": true,
+      "candidate_index": 1,
+      "clearance_barrier_slope": 0.8,
+      "conditions": {
+        "alignment_coverage_at_least_80pct": true,
+        "off_success_in_40_to_65pct": false,
+        "on_success_in_80_to_95pct": true,
+        "shield_rescue_rate_at_least_60pct": true
+      },
+      "evaluation_seeds": [
+        147260100,
+        147260101
+      ],
+      "off_failure_count": 63,
+      "off_initial_state_signatures": [
+        "d35e95df34e5b0da275869d4d53e7e13cde3672fd228f08e74d2f8676f3debd4",
+        "ee926e885b9ff18384dcf2d724e9f389a74647af1d80156da3677ce681cd725b"
+      ],
+      "off_success_count": 193,
+      "off_success_rate": 0.75390625,
+      "off_toe_riser_failure_count": 62,
+      "on_initial_state_signatures": [
+        "d35e95df34e5b0da275869d4d53e7e13cde3672fd228f08e74d2f8676f3debd4",
+        "ee926e885b9ff18384dcf2d724e9f389a74647af1d80156da3677ce681cd725b"
+      ],
+      "on_success_count": 206,
+      "on_success_rate": 0.8046875,
+      "paired_count": 256,
+      "qualifies": false,
+      "rescued_count": 52,
+      "riser_height_m": 0.172,
+      "shield_rescue_rate": 0.8253968253968254
+    },
+    {
+      "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+      "adapted_policy_evaluations_used": false,
+      "alignment_coverage": 0.9324324324324325,
+      "base_policy_only": true,
+      "candidate_index": 2,
+      "clearance_barrier_slope": 0.8,
+      "conditions": {
+        "alignment_coverage_at_least_80pct": true,
+        "off_success_in_40_to_65pct": false,
+        "on_success_in_80_to_95pct": false,
+        "shield_rescue_rate_at_least_60pct": true
+      },
+      "evaluation_seeds": [
+        147260200,
+        147260201
+      ],
+      "off_failure_count": 74,
+      "off_initial_state_signatures": [
+        "37d7175cb682068bb5ec230eed8ade44a79f70bbbf01ed46d27f189c102519da",
+        "d208c7ecf2fe69de69e4549542b4b03eeac333717be42a4f8771663fcc976982"
+      ],
+      "off_success_count": 182,
+      "off_success_rate": 0.7109375,
+      "off_toe_riser_failure_count": 69,
+      "on_initial_state_signatures": [
+        "37d7175cb682068bb5ec230eed8ade44a79f70bbbf01ed46d27f189c102519da",
+        "d208c7ecf2fe69de69e4549542b4b03eeac333717be42a4f8771663fcc976982"
+      ],
+      "on_success_count": 191,
+      "on_success_rate": 0.74609375,
+      "paired_count": 256,
+      "qualifies": false,
+      "rescued_count": 52,
+      "riser_height_m": 0.174,
+      "shield_rescue_rate": 0.7027027027027027
+    },
+    {
+      "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+      "adapted_policy_evaluations_used": false,
+      "alignment_coverage": 0.9120879120879121,
+      "base_policy_only": true,
+      "candidate_index": 3,
+      "clearance_barrier_slope": 0.8,
+      "conditions": {
+        "alignment_coverage_at_least_80pct": true,
+        "off_success_in_40_to_65pct": true,
+        "on_success_in_80_to_95pct": false,
+        "shield_rescue_rate_at_least_60pct": true
+      },
+      "evaluation_seeds": [
+        147260300,
+        147260301
+      ],
+      "off_failure_count": 91,
+      "off_initial_state_signatures": [
+        "f555b8bc6e362a06be9fb416cc68b342a4733d10aa2c1f21b4c82ced8c84a429",
+        "cfa6c5af6f4fdf2197fffe20c97604fd1f6544bfbae04e01277de6026cd8c24d"
+      ],
+      "off_success_count": 165,
+      "off_success_rate": 0.64453125,
+      "off_toe_riser_failure_count": 83,
+      "on_initial_state_signatures": [
+        "f555b8bc6e362a06be9fb416cc68b342a4733d10aa2c1f21b4c82ced8c84a429",
+        "cfa6c5af6f4fdf2197fffe20c97604fd1f6544bfbae04e01277de6026cd8c24d"
+      ],
+      "on_success_count": 197,
+      "on_success_rate": 0.76953125,
+      "paired_count": 256,
+      "qualifies": false,
+      "rescued_count": 68,
+      "riser_height_m": 0.176,
+      "shield_rescue_rate": 0.7472527472527473
+    },
+    {
+      "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+      "adapted_policy_evaluations_used": false,
+      "alignment_coverage": 0.9387755102040817,
+      "base_policy_only": true,
+      "candidate_index": 4,
+      "clearance_barrier_slope": 0.8,
+      "conditions": {
+        "alignment_coverage_at_least_80pct": true,
+        "off_success_in_40_to_65pct": true,
+        "on_success_in_80_to_95pct": false,
+        "shield_rescue_rate_at_least_60pct": true
+      },
+      "evaluation_seeds": [
+        147260400,
+        147260401
+      ],
+      "off_failure_count": 98,
+      "off_initial_state_signatures": [
+        "4ba64d5203672cb9ca235d9db283bbfb5f85a2d35846650d8a8467f1f49e9230",
+        "2f06ab2449416d61e65ebb6824c562f26b21ccf612aa729fdfd09c3e20439dda"
+      ],
+      "off_success_count": 158,
+      "off_success_rate": 0.6171875,
+      "off_toe_riser_failure_count": 92,
+      "on_initial_state_signatures": [
+        "4ba64d5203672cb9ca235d9db283bbfb5f85a2d35846650d8a8467f1f49e9230",
+        "2f06ab2449416d61e65ebb6824c562f26b21ccf612aa729fdfd09c3e20439dda"
+      ],
+      "on_success_count": 189,
+      "on_success_rate": 0.73828125,
+      "paired_count": 256,
+      "qualifies": false,
+      "rescued_count": 68,
+      "riser_height_m": 0.178,
+      "shield_rescue_rate": 0.6938775510204082
+    },
+    {
+      "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+      "adapted_policy_evaluations_used": false,
+      "alignment_coverage": 0.9313725490196079,
+      "base_policy_only": true,
+      "candidate_index": 5,
+      "clearance_barrier_slope": 0.8,
+      "conditions": {
+        "alignment_coverage_at_least_80pct": true,
+        "off_success_in_40_to_65pct": true,
+        "on_success_in_80_to_95pct": false,
+        "shield_rescue_rate_at_least_60pct": true
+      },
+      "evaluation_seeds": [
+        147260500,
+        147260501
+      ],
+      "off_failure_count": 102,
+      "off_initial_state_signatures": [
+        "066bda5e6ff7db87e2a4d7e7f7d00fb540d06b1f9209f736fd1806e67dc3ff96",
+        "3291664deb19ba5edcbe4da54c9e548254f1d99b808d465297e038129352f8ff"
+      ],
+      "off_success_count": 154,
+      "off_success_rate": 0.6015625,
+      "off_toe_riser_failure_count": 95,
+      "on_initial_state_signatures": [
+        "066bda5e6ff7db87e2a4d7e7f7d00fb540d06b1f9209f736fd1806e67dc3ff96",
+        "3291664deb19ba5edcbe4da54c9e548254f1d99b808d465297e038129352f8ff"
+      ],
+      "on_success_count": 194,
+      "on_success_rate": 0.7578125,
+      "paired_count": 256,
+      "qualifies": false,
+      "rescued_count": 70,
+      "riser_height_m": 0.18,
+      "shield_rescue_rate": 0.6862745098039216
+    },
+    {
+      "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+      "adapted_policy_evaluations_used": false,
+      "alignment_coverage": 0.9238095238095239,
+      "base_policy_only": true,
+      "candidate_index": 6,
+      "clearance_barrier_slope": 0.8,
+      "conditions": {
+        "alignment_coverage_at_least_80pct": true,
+        "off_success_in_40_to_65pct": true,
+        "on_success_in_80_to_95pct": false,
+        "shield_rescue_rate_at_least_60pct": true
+      },
+      "evaluation_seeds": [
+        147260600,
+        147260601
+      ],
+      "off_failure_count": 105,
+      "off_initial_state_signatures": [
+        "3828fdc4e70a426d4339edb111ca3205185e96087a0ec954f74bad4799515e1c",
+        "e3142f4aceb54b1dd420aebfdc01508973c348765e9a6b1bf0b3933e5eaf5c7c"
+      ],
+      "off_success_count": 151,
+      "off_success_rate": 0.58984375,
+      "off_toe_riser_failure_count": 97,
+      "on_initial_state_signatures": [
+        "3828fdc4e70a426d4339edb111ca3205185e96087a0ec954f74bad4799515e1c",
+        "e3142f4aceb54b1dd420aebfdc01508973c348765e9a6b1bf0b3933e5eaf5c7c"
+      ],
+      "on_success_count": 182,
+      "on_success_rate": 0.7109375,
+      "paired_count": 256,
+      "qualifies": false,
+      "rescued_count": 68,
+      "riser_height_m": 0.182,
+      "shield_rescue_rate": 0.6476190476190476
+    },
+    {
+      "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+      "adapted_policy_evaluations_used": false,
+      "alignment_coverage": 0.9,
+      "base_policy_only": true,
+      "candidate_index": 7,
+      "clearance_barrier_slope": 0.8,
+      "conditions": {
+        "alignment_coverage_at_least_80pct": true,
+        "off_success_in_40_to_65pct": true,
+        "on_success_in_80_to_95pct": false,
+        "shield_rescue_rate_at_least_60pct": true
+      },
+      "evaluation_seeds": [
+        147260700,
+        147260701
+      ],
+      "off_failure_count": 100,
+      "off_initial_state_signatures": [
+        "7021741498b404f68a8a3dfc6fc7c999ebd0be0a3a6f22bc5e56b6d946913130",
+        "69c305c4ef39424181ff74fe051516128d4e7574ade9543365002990f5129741"
+      ],
+      "off_success_count": 156,
+      "off_success_rate": 0.609375,
+      "off_toe_riser_failure_count": 90,
+      "on_initial_state_signatures": [
+        "7021741498b404f68a8a3dfc6fc7c999ebd0be0a3a6f22bc5e56b6d946913130",
+        "69c305c4ef39424181ff74fe051516128d4e7574ade9543365002990f5129741"
+      ],
+      "on_success_count": 181,
+      "on_success_rate": 0.70703125,
+      "paired_count": 256,
+      "qualifies": false,
+      "rescued_count": 69,
+      "riser_height_m": 0.184,
+      "shield_rescue_rate": 0.69
+    },
+    {
+      "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+      "adapted_policy_evaluations_used": false,
+      "alignment_coverage": 0.9174311926605505,
+      "base_policy_only": true,
+      "candidate_index": 8,
+      "clearance_barrier_slope": 0.8,
+      "conditions": {
+        "alignment_coverage_at_least_80pct": true,
+        "off_success_in_40_to_65pct": true,
+        "on_success_in_80_to_95pct": false,
+        "shield_rescue_rate_at_least_60pct": true
+      },
+      "evaluation_seeds": [
+        147260800,
+        147260801
+      ],
+      "off_failure_count": 109,
+      "off_initial_state_signatures": [
+        "0b09583df4a0db4bc2bd7c188d097732dc1863e54c51d55e666b3cccc71b4c81",
+        "daecdf3f1fbc21a3e47a3e244ca68bd1d3863cfef6cb92cdab9b437f83f7bc7e"
+      ],
+      "off_success_count": 147,
+      "off_success_rate": 0.57421875,
+      "off_toe_riser_failure_count": 100,
+      "on_initial_state_signatures": [
+        "0b09583df4a0db4bc2bd7c188d097732dc1863e54c51d55e666b3cccc71b4c81",
+        "daecdf3f1fbc21a3e47a3e244ca68bd1d3863cfef6cb92cdab9b437f83f7bc7e"
+      ],
+      "on_success_count": 182,
+      "on_success_rate": 0.7109375,
+      "paired_count": 256,
+      "qualifies": false,
+      "rescued_count": 73,
+      "riser_height_m": 0.186,
+      "shield_rescue_rate": 0.6697247706422018
+    },
+    {
+      "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+      "adapted_policy_evaluations_used": false,
+      "alignment_coverage": 0.9142857142857143,
+      "base_policy_only": true,
+      "candidate_index": 9,
+      "clearance_barrier_slope": 0.8,
+      "conditions": {
+        "alignment_coverage_at_least_80pct": true,
+        "off_success_in_40_to_65pct": true,
+        "on_success_in_80_to_95pct": false,
+        "shield_rescue_rate_at_least_60pct": true
+      },
+      "evaluation_seeds": [
+        147260900,
+        147260901
+      ],
+      "off_failure_count": 105,
+      "off_initial_state_signatures": [
+        "10d88611a00c288a7dc75d9b996f1504dc8eb2fe21bf2cf70f668795acdeb13e",
+        "43a228aba3c20b55dc6c7473ca7681f280433a627354aa4204a12b29e2ab7d98"
+      ],
+      "off_success_count": 151,
+      "off_success_rate": 0.58984375,
+      "off_toe_riser_failure_count": 96,
+      "on_initial_state_signatures": [
+        "10d88611a00c288a7dc75d9b996f1504dc8eb2fe21bf2cf70f668795acdeb13e",
+        "43a228aba3c20b55dc6c7473ca7681f280433a627354aa4204a12b29e2ab7d98"
+      ],
+      "on_success_count": 173,
+      "on_success_rate": 0.67578125,
+      "paired_count": 256,
+      "qualifies": false,
+      "rescued_count": 65,
+      "riser_height_m": 0.188,
+      "shield_rescue_rate": 0.6190476190476191
+    },
+    {
+      "actor_state_sha256": "19432232a4acfebb2a838eb3c9449393a47cfd3154e93f68171dcf4d1aaf47b1",
+      "adapted_policy_evaluations_used": false,
+      "alignment_coverage": 0.9291338582677166,
+      "base_policy_only": true,
+      "candidate_index": 10,
+      "clearance_barrier_slope": 0.8,
+      "conditions": {
+        "alignment_coverage_at_least_80pct": true,
+        "off_success_in_40_to_65pct": true,
+        "on_success_in_80_to_95pct": false,
+        "shield_rescue_rate_at_least_60pct": false
+      },
+      "evaluation_seeds": [
+        147261000,
+        147261001
+      ],
+      "off_failure_count": 127,
+      "off_initial_state_signatures": [
+        "fa4dc2e3e47f3bb178629bc8434aa8866de6cf6ebd31e6eaaffa3bb64e551b91",
+        "a7814a6d57142cdca3497c6139223cd2bb91fe92cadef19d784c9debad71d937"
+      ],
+      "off_success_count": 129,
+      "off_success_rate": 0.50390625,
+      "off_toe_riser_failure_count": 118,
+      "on_initial_state_signatures": [
+        "fa4dc2e3e47f3bb178629bc8434aa8866de6cf6ebd31e6eaaffa3bb64e551b91",
+        "a7814a6d57142cdca3497c6139223cd2bb91fe92cadef19d784c9debad71d937"
+      ],
+      "on_success_count": 139,
+      "on_success_rate": 0.54296875,
+      "paired_count": 256,
+      "qualifies": false,
+      "rescued_count": 72,
+      "riser_height_m": 0.19,
+      "shield_rescue_rate": 0.5669291338582677
+    }
+  ],
+  "base_policy_only": true,
+  "candidate_count_evaluated": 11,
+  "precalibration_protocol_sha256": "dff2610f8758bbfb6cae0417a38b7cebb4973c48d54628c51761872f38cb5cc2",
+  "protocol_id": "safe100-success-gated-cbf-teacher-v26",
+  "schema_version": 1,
+  "status": "no_candidate_qualified"
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": "paper_dual_v35.v127.checkpoints.v1",
+  "input": {
+    "path_4080": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt",
+    "sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317"
+  },
+  "selected": {
+    "path_4080": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/state_value_occupancy_v127_49cd14e_128x1024_s201354800/round_00.pt",
+    "checkpoint_sha256": "97c8e08b5924de7f620e56fd0ceb4259220f42a7c0824acf799a6832a5352f15",
+    "actor_state_sha256": "b0a717cef34d128e4175226b86780e5210cc5287558d78cb5a44e095e37fb600",
+    "actor_unchanged_from_v79": true,
+    "uploaded": false,
+    "reason": "No new accepted actor; results, exact path, and hashes are uploaded instead of a duplicate binary."
+  },
+  "evaluated_rejected_proposals": [
+    {
+      "path_4080": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/state_value_occupancy_v127_49cd14e_128x1024_s201354800/round_01.pt",
+      "checkpoint_sha256": "69945e02515bc4316d67d511c0f33ac77bcd55a9a0caf6de0120e3e3b87cee76",
+      "actor_state_sha256": "164d6c802124a7d40ed3596e9182610d047267b6668d635eb4bce5af7ed38162",
+      "filter_off_success_count": 80,
+      "filter_off_episode_count": 128,
+      "accepted": false
+    },
+    {
+      "path_4080": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/state_value_occupancy_v127_49cd14e_128x1024_s201354800/round_03.pt",
+      "checkpoint_sha256": "3513eeb0e2696cd4772a57b2fd06023dc42cfb1d771fb90e44b6b15891293866",
+      "actor_state_sha256": "0745457dd0d10b2099ce44130e3e1ca212ff1fb0526a9491b441dd8a66bf6bcb",
+      "filter_off_success_count": 79,
+      "filter_off_episode_count": 134,
+      "accepted": false
+    }
+  ],
+  "final_rollback": {
+    "path_4080": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/state_value_occupancy_v127_49cd14e_128x1024_s201354800/round_04.pt",
+    "checkpoint_sha256": "52f6461899323aa2ebaad65fd95ef8f4bcfbd324925324d93866550e4e4c4bb0",
+    "actor_state_sha256": "b0a717cef34d128e4175226b86780e5210cc5287558d78cb5a44e095e37fb600"
+  }
+}

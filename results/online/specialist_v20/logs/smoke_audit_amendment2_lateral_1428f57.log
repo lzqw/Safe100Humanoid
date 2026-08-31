@@ -1,0 +1,230 @@
+Setting seed: 7500100
+Warp 1.12.0 initialized:
+   CUDA Toolkit 12.9, Driver 12.4
+   Devices:
+     "cpu"      : "x86_64"
+     "cuda:0"   : "NVIDIA GeForce RTX 4080 SUPER" (16 GiB, sm_89, mempool enabled)
+   Kernel cache:
+     /home/carla/.cache/warp/1.12.0
+Terrain generation took 0.0002 seconds.
+Warp DeprecationWarning: The symbol `warp.context.runtime` will soon be removed from the public API. It can still be accessed from `warp._src.context.runtime` but might be changed or removed without notice.
+Module mujoco_warp._src.smooth 12773d5 load on device 'cuda:0' took 0.37 ms  (cached)
+Module mujoco_warp._src.collision_driver 4d8b905 load on device 'cuda:0' took 0.14 ms  (cached)
+Module _nxn_broadphase__locals__kernel_551438e6 551438e load on device 'cuda:0' took 0.14 ms  (cached)
+Module _primitive_narrowphase__locals__primitive_narrowphase_80a8a49b 80a8a49 load on device 'cuda:0' took 0.22 ms  (cached)
+Module mujoco_warp._src.constraint abf7b17 load on device 'cuda:0' took 0.25 ms  (cached)
+Module _actuator_velocity__locals__actuator_velocity_912d2485 3577bae load on device 'cuda:0' took 0.16 ms  (cached)
+Module mujoco_warp._src.passive f6d4bb4 load on device 'cuda:0' took 0.17 ms  (cached)
+Module mujoco_warp._src.sensor a122b42 load on device 'cuda:0' took 0.26 ms  (cached)
+Module mujoco_warp._src.forward 6f039ed load on device 'cuda:0' took 0.18 ms  (cached)
+Module mujoco_warp._src.support 343d1ae load on device 'cuda:0' took 0.13 ms  (cached)
+Module mujoco_warp._src.solver f11a68d load on device 'cuda:0' took 0.21 ms  (cached)
+Module solve_init_jaref__locals__kernel_e167d4c9 e167d4c load on device 'cuda:0' took 0.14 ms  (cached)
+Module mul_m_sparse__locals___mul_m_sparse_3795f265 3795f26 load on device 'cuda:0' took 0.16 ms  (cached)
+Module update_constraint_gauss_cost__locals__kernel_6726cad8 6726cad load on device 'cuda:0' took 0.13 ms  (cached)
+Module update_gradient_JTDAJ_sparse_tiled__locals__kernel_a2c616cf 19b6aaf load on device 'cuda:0' took 12.83 ms  (cached)
+Module update_gradient_cholesky_blocked__locals__kernel_bb004999 fbd28cb load on device 'cuda:0' took 73.36 ms  (cached)
+Module linesearch_jv_fused__locals__kernel_b9e40014 b9e4001 load on device 'cuda:0' took 0.18 ms  (cached)
+Module linesearch_prepare_gauss__locals__kernel_00cb1ae5 00cb1ae load on device 'cuda:0' took 0.15 ms  (cached)
+Module _contact_sort__locals__contact_sort_458d762c 9ba336c load on device 'cuda:0' took 0.18 ms  (cached)
+Module mujoco_warp._src.derivative ed5cf13 load on device 'cuda:0' took 0.16 ms  (cached)
+Module reset_data__locals__reset_xfrc_applied_f86f0829 f86f082 load on device 'cuda:0' took 0.17 ms  (cached)
+Module reset_data__locals__reset_qM_1511185b 1511185 load on device 'cuda:0' took 0.14 ms  (cached)
+Module reset_data__locals__reset_mocap_11135362 1113536 load on device 'cuda:0' took 0.12 ms  (cached)
+Module reset_data__locals__reset_contact_76c1c25e 76c1c25 load on device 'cuda:0' took 0.12 ms  (cached)
+Module reset_data__locals__reset_nworld_d108b6ac d108b6a load on device 'cuda:0' took 0.12 ms  (cached)
+Module mujoco_warp._src.render_util f631443 load on device 'cuda:0' took 0.20 ms  (cached)
+Module mujoco_warp._src.bvh 4527052 load on device 'cuda:0' took 0.19 ms  (cached)
+Module mujoco_warp._src.ray 134c263 load on device 'cuda:0' took 0.22 ms  (cached)
+
++----------------------------------+
+|         Base Environment         |
++------------------------+---------+
+| Property               | Value   |
++------------------------+---------+
+| Number of environments | 1       |
+| Environment device     | cuda:0  |
+| Environment seed       | 7500100 |
+| Physics step-size      | 0.005   |
+| Environment step-size  | 0.02    |
++------------------------+---------+
+
+[INFO] <EventManager> contains 2 active terms.
++-------------------------------------+
+| Active Event Terms in Mode: 'reset' |
++--------+----------------------------+
+| Index  | Name                       |
++--------+----------------------------+
+|   0    | reset_base                 |
+|   1    | reset_robot_joints         |
++--------+----------------------------+
++---------------------------------------+
+| Active Event Terms in Mode: 'startup' |
++------------+--------------------------+
+|   Index    | Name                     |
++------------+--------------------------+
+|     0      | encoder_bias             |
++------------+--------------------------+
+
+[INFO] <CommandManager> contains 1 active terms.
++-----------------------------------------+
+|           Active Command Terms          |
++-------+-------+-------------------------+
+| Index | Name  |           Type          |
++-------+-------+-------------------------+
+|   0   | twist | JoystickVelocityCommand |
++-------+-------+-------------------------+
+
+[INFO] <ActionManager> contains 1 active terms.
++---------------------------------+
+| Active Action Terms (shape: 12) |
++-------+-----------+-------------+
+| Index | Name      |   Dimension |
++-------+-----------+-------------+
+|   0   | joint_pos |          12 |
++-------+-----------+-------------+
+
+[INFO] <ObservationManager> contains 4 groups.
++------------------------------------------------------------+
+| Active Observation Terms in Group: 'actor' (shape: (405,)) |
++--------+------------------------+--------------------------+
+| Index  | Name                   |          Shape           |
++--------+------------------------+--------------------------+
+|   0    | base_ang_vel           |     (15,)  ← 5×(3,)      |
+|   1    | projected_gravity      |     (15,)  ← 5×(3,)      |
+|   2    | command                |     (15,)  ← 5×(3,)      |
+|   3    | phase                  |     (10,)  ← 5×(2,)      |
+|   4    | joint_pos              |    (145,)  ← 5×(29,)     |
+|   5    | joint_vel              |    (145,)  ← 5×(29,)     |
+|   6    | actions                |     (60,)  ← 5×(12,)     |
++--------+------------------------+--------------------------+
++-------------------------------------------------------------+
+| Active Observation Terms in Group: 'critic' (shape: (283,)) |
++--------+-------------------------+--------------------------+
+| Index  | Name                    |          Shape           |
++--------+-------------------------+--------------------------+
+|   0    | base_ang_vel            |      (3,)  ← 1×(3,)      |
+|   1    | projected_gravity       |      (3,)  ← 1×(3,)      |
+|   2    | command                 |      (3,)  ← 1×(3,)      |
+|   3    | phase                   |      (2,)  ← 1×(2,)      |
+|   4    | joint_pos               |     (29,)  ← 1×(29,)     |
+|   5    | joint_vel               |     (29,)  ← 1×(29,)     |
+|   6    | actions                 |     (12,)  ← 1×(12,)     |
+|   7    | height_scan             |    (187,)  ← 1×(187,)    |
+|   8    | base_lin_vel            |      (3,)  ← 1×(3,)      |
+|   9    | foot_height             |      (2,)  ← 1×(2,)      |
+|   10   | foot_air_time           |      (2,)  ← 1×(2,)      |
+|   11   | foot_contact            |      (2,)  ← 1×(2,)      |
+|   12   | foot_contact_forces     |      (6,)  ← 1×(6,)      |
++--------+-------------------------+--------------------------+
++------------------------------------------------------------------------+
+| Active Observation Terms in Group: 'online_privileged' (shape: (150,)) |
++----------+----------------------------+--------------------------------+
+|  Index   | Name                       |             Shape              |
++----------+----------------------------+--------------------------------+
+|    0     | deployment_state           |       (150,)  ← 1×(150,)       |
++----------+----------------------------+--------------------------------+
++-----------------------------------------------------------------------+
+| Active Observation Terms in Group: 'deployable_failure' (shape: (5,)) |
++---------------+-------------------------------------+-----------------+
+|     Index     | Name                                |      Shape      |
++---------------+-------------------------------------+-----------------+
+|       0       | failure_state                       |       (5,)      |
++---------------+-------------------------------------+-----------------+
+
+[INFO] <TerminationManager> contains 3 active terms.
++--------------------------------+
+|    Active Termination Terms    |
++-------+-------------+----------+
+| Index | Name        | Time Out |
++-------+-------------+----------+
+|   0   | time_out    |   True   |
+|   1   | fell_over   |  False   |
+|   2   | reached_top |  False   |
++-------+-------------+----------+
+
+[INFO] <RewardManager> contains 25 active terms.
++----------------------------------------------+
+|             Active Reward Terms              |
++-------+---------------------------+----------+
+| Index | Name                      |   Weight |
++-------+---------------------------+----------+
+|   0   | track_linear_velocity     |      1.0 |
+|   1   | track_angular_velocity    |      1.0 |
+|   2   | body_orientation_l2       |     -1.0 |
+|   3   | pose                      |      1.0 |
+|   4   | body_ang_vel              |    -0.05 |
+|   5   | angular_momentum          |   -0.025 |
+|   6   | is_terminated             |      0.0 |
+|   7   | joint_acc_l2              | -2.5e-07 |
+|   8   | joint_pos_limits          |    -10.0 |
+|   9   | action_rate_l2            |    -0.05 |
+|   10  | foot_gait                 |      0.5 |
+|   11  | foot_clearance            |     -1.0 |
+|   12  | foot_slip                 |    -0.25 |
+|   13  | soft_landing              |   -0.001 |
+|   14  | stand_still               |     -1.0 |
+|   15  | self_collisions           |     -1.0 |
+|   16  | stair_progress            |     0.25 |
+|   17  | riser_crossing            |      0.5 |
+|   18  | top_completion            |      5.0 |
+|   19  | dont_wait                 |     -1.0 |
+|   20  | swing_foot_force          |   -0.001 |
+|   21  | online_safety_telemetry   |      1.0 |
+|   22  | cbf_dual                  |      1.0 |
+|   23  | fall_termination          |   -200.0 |
+|   24  | specialist_failure_signal |      1.0 |
++-------+---------------------------+----------+
+
+[INFO] <NullCurriculumManager> (inactive)
+[INFO] <MetricsManager> contains 1 active terms.
++-------------------------+
+|   Active Metrics Terms  |
++-------+-----------------+
+| Index | Name            |
++-------+-----------------+
+|   0   | mean_action_acc |
++-------+-----------------+
+
+--------------------------------------------------------------------------------
+Resolved observation sets: 
+	 actor :  ('actor', 'deployable_failure')
+	 critic :  ('actor', 'critic', 'online_privileged', 'deployable_failure')
+--------------------------------------------------------------------------------
+Actor Model: MLPModel(
+  (obs_normalizer): EmpiricalNormalization()
+  (distribution): GaussianDistribution()
+  (mlp): MLP(
+    (0): Linear(in_features=410, out_features=512, bias=True)
+    (1): ELU(alpha=1.0)
+    (2): Linear(in_features=512, out_features=256, bias=True)
+    (3): ELU(alpha=1.0)
+    (4): Linear(in_features=256, out_features=128, bias=True)
+    (5): ELU(alpha=1.0)
+    (6): Linear(in_features=128, out_features=12, bias=True)
+  )
+)
+Critic Model: MLPModel(
+  (obs_normalizer): EmpiricalNormalization()
+  (mlp): MLP(
+    (0): Linear(in_features=843, out_features=512, bias=True)
+    (1): ELU(alpha=1.0)
+    (2): Linear(in_features=512, out_features=256, bias=True)
+    (3): ELU(alpha=1.0)
+    (4): Linear(in_features=256, out_features=128, bias=True)
+    (5): ELU(alpha=1.0)
+    (6): Linear(in_features=128, out_features=1, bias=True)
+  )
+)
+Traceback (most recent call last):
+  File "/home/carla/LZQW/SAFE100/humanoid/worktrees/v20_audit_amendment/experiments/scripts/audit_specialist_diagonal_v20.py", line 1090, in <module>
+    main()
+  File "/home/carla/LZQW/SAFE100/humanoid/worktrees/v20_audit_amendment/experiments/scripts/audit_specialist_diagonal_v20.py", line 957, in main
+    "target_success": hierarchical_paired_scene_interval_v19(
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/carla/LZQW/SAFE100/humanoid/worktrees/v20_audit_amendment/experiments/scripts/diagonal_audit_stats.py", line 91, in hierarchical_paired_scene_interval_v19
+    return _hierarchical_paired_scene_interval(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/carla/LZQW/SAFE100/humanoid/worktrees/v20_audit_amendment/experiments/scripts/diagonal_audit_stats.py", line 18, in _hierarchical_paired_scene_interval
+    raise ValueError(
+ValueError: scene bootstrap requires exactly 5 adaptation seeds

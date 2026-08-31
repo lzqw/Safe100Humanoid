@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "experiment": "paper_dual_v35",
+  "status": "exploratory_pilot_no_winner",
+  "paper": {
+    "arxiv_id": "2510.14959v6",
+    "navigation_demo_commit": "68955c8ba9e929d974b6677635370ee93eecc63a"
+  },
+  "protocol": {
+    "hardware": "NVIDIA GeForce RTX 4080",
+    "context": "F1_uniform_18cm_9_risers",
+    "training_seed": 201350101,
+    "evaluation_seed": 201350901,
+    "num_envs": 64,
+    "rounds": 8,
+    "rollout_steps_per_round": 1024,
+    "evaluation_episodes_per_condition": 64,
+    "evaluation_policy": "deterministic_mean",
+    "runtime_filter_during_training": true,
+    "base_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8"
+  },
+  "runs": [
+    {
+      "run": "raw_moderate",
+      "candidate": "raw_moderate",
+      "teacher_arm": "A0",
+      "source_git_commit": "e532d606c78a42839bf78221a37d6a020aac878a",
+      "reward_parameters": {
+        "correction_space": "raw_action",
+        "sigma": 0.5,
+        "margin_weight": 1.0,
+        "intervention_weight": 10.0
+      },
+      "training_elapsed_seconds": 231.32814161805436,
+      "final_rollout_success_rate": 0.7251908396946565,
+      "final_checkpoint_sha256": "d21d47c43e09a7e04c7fc8ec460c0691f164fb0d87df7ef41a6bd563901ce969",
+      "final_actor_sha256": "48d80437c717bea38ee3b320a2bfaf607da2ba457cc060e9713f88bd16643155",
+      "evaluation": {
+        "filter_on": {"success_count": 46, "num_episodes": 64, "success_rate": 0.71875, "fall_rate": 0.28125},
+        "filter_off": {"success_count": 42, "num_episodes": 64, "success_rate": 0.65625, "fall_rate": 0.34375},
+        "off_minus_on_pp": -6.25
+      }
+    },
+    {
+      "run": "raw_demo",
+      "candidate": "raw_demo",
+      "teacher_arm": "A0",
+      "source_git_commit": "e532d606c78a42839bf78221a37d6a020aac878a",
+      "reward_parameters": {
+        "correction_space": "raw_action",
+        "sigma": 0.5,
+        "margin_weight": 10.0,
+        "intervention_weight": 100.0
+      },
+      "training_elapsed_seconds": 206.74723677302245,
+      "final_rollout_success_rate": 0.6940298507462687,
+      "final_checkpoint_sha256": "2018f7bb82c2b4403433863e4380801927b1a1c7482365910fd44f9117e79439",
+      "final_actor_sha256": "4361b9b9d61e8df544ed410b08ea214eee6f243618f6daad0fb88e459cd32b61",
+      "evaluation": {
+        "filter_on": {"success_count": 49, "num_episodes": 64, "success_rate": 0.765625, "fall_rate": 0.234375},
+        "filter_off": {"success_count": 37, "num_episodes": 64, "success_rate": 0.578125, "fall_rate": 0.421875},
+        "off_minus_on_pp": -18.75
+      }
+    },
+    {
+      "run": "raw_moderate_A1",
+      "candidate": "raw_moderate",
+      "teacher_arm": "A1",
+      "source_git_commit": "c767e7b9df913dedea93c3715e0f8c422301f218",
+      "reward_parameters": {
+        "correction_space": "raw_action",
+        "sigma": 0.5,
+        "margin_weight": 1.0,
+        "intervention_weight": 10.0
+      },
+      "training_elapsed_seconds": 217.5307977939956,
+      "final_rollout_success_rate": 0.7019867549668874,
+      "final_checkpoint_sha256": "7a3449108285e56b44287f9989de1b71da565c86124bae2079306cdb61d187e7",
+      "final_actor_sha256": "633d77fd1072a18c6e5164923d72c3a3d49abff0604be03b5f6c6ad8c6e1c8e6",
+      "evaluation": {
+        "filter_on": {"success_count": 43, "num_episodes": 64, "success_rate": 0.671875, "fall_rate": 0.328125},
+        "filter_off": {"success_count": 49, "num_episodes": 64, "success_rate": 0.765625, "fall_rate": 0.234375},
+        "off_minus_on_pp": 9.375
+      }
+    }
+  ],
+  "interpretation": {
+    "highest_filter_on_run": "raw_demo",
+    "highest_filter_off_run": "raw_moderate_A1",
+    "winner_selected": false,
+    "reason": "No candidate simultaneously retains high filter-on task success and high filter-off safety internalization.",
+    "next_experiment": "A2 residual teacher followed by A1 full-action teacher using the raw_moderate reward."
+  }
+}
+

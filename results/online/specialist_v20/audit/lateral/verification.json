@@ -1,0 +1,181 @@
+{
+  "audit_implementation": {
+    "amendment_path": "results/online/specialist_v20/audit_amendment.json",
+    "amendment_sha256": "5700b77302093ce708a9be2aa264e36267f7220d05e5037ca4eff109c85377dc",
+    "git_commit": "1428f57ff58ad8bb76da8e6c2fd1f5a22d8bd21c",
+    "source_checks": {
+      "experiments/scripts/audit_specialist_diagonal_v20.py": true,
+      "experiments/scripts/audit_specialists_diagonal_v19.py": true,
+      "experiments/scripts/collect_mechanism_telemetry_v20.py": true,
+      "experiments/scripts/diagonal_audit_stats.py": true,
+      "experiments/scripts/evaluate_online_stairs.py": true,
+      "experiments/scripts/online_refine_stairs.py": true,
+      "experiments/scripts/run_specialist_diagonal_audit_v20.sh": true,
+      "experiments/scripts/run_specialist_queue_v20.sh": true,
+      "experiments/scripts/specialist_v20_protocol.py": true,
+      "experiments/scripts/verify_specialist_audit_v20.py": true,
+      "src/tasks/stairs_cbf/actions.py": true,
+      "src/tasks/stairs_cbf/command.py": true,
+      "src/tasks/stairs_cbf/config.py": true,
+      "src/tasks/stairs_cbf/deployment_context.py": true,
+      "src/tasks/stairs_cbf/mdp.py": true,
+      "src/tasks/stairs_cbf/online.py": true,
+      "src/tasks/velocity/mdp/observations.py": true
+    }
+  },
+  "independent_claim": {
+    "claim_passed": false,
+    "d0_success_mean_lcb95_ucb95": [
+      -0.01484375,
+      -0.0375,
+      0.007832031249999715
+    ],
+    "gate": {
+      "criteria": {
+        "at_least_four_of_five_seed_gains_positive": false,
+        "d0_success_drop_at_most_5pp": true,
+        "diagonal_fall_increase_at_most_3pp": true,
+        "mean_diagonal_success_gain_positive": true
+      },
+      "passed": false,
+      "positive_adaptation_seed_count": 2,
+      "thresholds": {
+        "maximum_diagonal_fall_increase": 0.03,
+        "mean_diagonal_success_delta_strictly_above": 0.0,
+        "minimum_d0_success_delta": -0.05,
+        "minimum_positive_adaptation_seed_count": 4
+      }
+    },
+    "per_adaptation_seed_success_delta": [
+      0.0234375,
+      0.03515625,
+      -0.025390625,
+      -0.013671875,
+      -0.005859375
+    ],
+    "strong_evidence_lcb95_positive": false,
+    "target_fall_mean_lcb95_ucb95": [
+      -0.003125,
+      -0.03359375,
+      0.026171875
+    ],
+    "target_success_mean_lcb95_ucb95": [
+      0.002734375,
+      -0.026953125,
+      0.032421875
+    ]
+  },
+  "no_joint_claim": true,
+  "paired_csv": {
+    "group_count": 10,
+    "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/paired_episode_metrics.csv",
+    "row_count": 3840,
+    "sha256": "170eb8ce10aeea0924880661ee3d0405472cb35f16225e0d06ab62381d4ef45e"
+  },
+  "protocol": {
+    "git_commit": "1ded5b84f1c4b8605fd285ef3138c0363db20ee4",
+    "path": "results/online/specialist_v20/protocol.json",
+    "sha256": "74242b1131499f7163ef1985d25a94ca06b0758f6a3d5f2dea9f56ac200c28da"
+  },
+  "protocol_commit_source_checks": {
+    "experiments/scripts/evaluate_online_stairs.py": true,
+    "experiments/scripts/online_refine_stairs.py": true,
+    "experiments/scripts/refine_specialist_v20.py": true,
+    "experiments/scripts/specialist_v20_protocol.py": true,
+    "experiments/scripts/specialist_v20_tables.py": true,
+    "src/tasks/stairs_cbf/actions.py": true,
+    "src/tasks/stairs_cbf/command.py": true,
+    "src/tasks/stairs_cbf/config.py": true,
+    "src/tasks/stairs_cbf/deployment_context.py": true,
+    "src/tasks/stairs_cbf/hard_cases.py": true,
+    "src/tasks/stairs_cbf/mdp.py": true,
+    "src/tasks/stairs_cbf/online.py": true,
+    "src/tasks/velocity/mdp/observations.py": true
+  },
+  "repairs_regressions": {
+    "failure_to_failure": 248,
+    "failure_to_success": 426,
+    "net_success_change": 7,
+    "per_adaptation_seed": {
+      "173": {
+        "failure_to_failure": 58,
+        "failure_to_success": 100,
+        "net_success_change": 18,
+        "regressions": 82,
+        "repairs": 100,
+        "success_to_failure": 82,
+        "success_to_success": 272
+      },
+      "273": {
+        "failure_to_failure": 45,
+        "failure_to_success": 80,
+        "net_success_change": -13,
+        "regressions": 93,
+        "repairs": 80,
+        "success_to_failure": 93,
+        "success_to_success": 294
+      },
+      "373": {
+        "failure_to_failure": 52,
+        "failure_to_success": 72,
+        "net_success_change": -7,
+        "regressions": 79,
+        "repairs": 72,
+        "success_to_failure": 79,
+        "success_to_success": 309
+      },
+      "473": {
+        "failure_to_failure": 44,
+        "failure_to_success": 84,
+        "net_success_change": -3,
+        "regressions": 87,
+        "repairs": 84,
+        "success_to_failure": 87,
+        "success_to_success": 297
+      },
+      "73": {
+        "failure_to_failure": 49,
+        "failure_to_success": 90,
+        "net_success_change": 12,
+        "regressions": 78,
+        "repairs": 90,
+        "success_to_failure": 78,
+        "success_to_success": 295
+      }
+    },
+    "regressions": 419,
+    "repairs": 426,
+    "success_to_failure": 419,
+    "success_to_success": 1467
+  },
+  "specialist_mode": "lateral",
+  "summary": {
+    "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/lateral/final_audit_summary.json",
+    "sha256": "9dff606fad5f68b052c3e4b7372bfc4b179ff9616b942f3a4e54e1e9ed15a39d"
+  },
+  "top_level_conditions": {
+    "adaptation_seeds": true,
+    "audit_amendment_boundary": true,
+    "audit_amendment_hash": true,
+    "audit_amendment_status": true,
+    "audit_seed": true,
+    "audit_source_hashes": true,
+    "bootstrap_seed": true,
+    "brief_loader_semantics": true,
+    "cbf_independence_gate_absent": true,
+    "clean_formal_worktree": true,
+    "filter_free_absent": true,
+    "five_independent_runs": true,
+    "formal_protocol": true,
+    "joint_claim_absent": true,
+    "macro_absent": true,
+    "off_diagonal_absent": true,
+    "paired_csv_hash": true,
+    "paired_csv_rows": true,
+    "protocol_hash": true,
+    "protocol_id": true,
+    "runtime_cbf": true
+  },
+  "verified": true,
+  "verifier": "independent v20 one-specialist paired-CSV reconstruction v1"
+}

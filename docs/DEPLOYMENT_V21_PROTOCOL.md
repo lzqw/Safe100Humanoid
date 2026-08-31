@@ -1,0 +1,297 @@
+# v21: One-Deployment Local Matched-Success Preservation
+
+## 当前证据状态 / Current evidence status
+
+This document records the prospective v21 design. The first corrected,
+prospectively frozen `L_dev` base-only sweep completed all 12 candidates and
+stopped because none satisfied the calibration gates. A subsequent non-formal
+base-only range pilot completed all 12 families: `C_dev`, `L1`, `L3`, `C1`,
+`C2`, `C4`, and `C5` produced qualifiers, while `L_dev`, `L2`, `L4`, `L5`, and
+`C3` did not. Pilot 2 then found qualifiers for all five failed families, but
+the only `L2` qualifier sat exactly on two gates and was not treated as robust.
+Pilot 3 isolated `L2` and found one qualifier with strict margin on every
+scaled gate. The replacement 512-episode calibration then froze `L_dev`,
+`C_dev`, and `L1`, but cleanly stopped at `L2`: all 12 candidates remained too
+easy and none reached 100 falls. Pilot 4 then tested a deterministic bilateral
+hip-yaw actuator zero offset. It produced a sharp difficulty cliff but no
+qualifier: the matched-success point had only 53.57% lateral purity, while the
+closest mechanism point was already below 70% success and still below 80%
+purity. Pilot 5 returned to command-side yaw and found three adjacent high-end
+near misses: one was a single fall short, one was 0.69 percentage points short
+on purity, and one was three falls short. Pilot 6 doubled the sample size and
+varied only persistent yaw bias; two mechanism-pure candidates missed the
+scaled fall gate by two and three falls. Pilot 7 added a fixed low-amplitude
+yaw-pulse carrier; candidates that reached the fall-count gate lost lateral
+purity, and pooled purity fell below the pulse-free pilot. Pilot 8 then tested
+strong pulse-free yaw bias from 0.65 to 0.95. None of its 12 candidates
+qualified; the closest missed target purity by 0.75 percentage points and the
+pooled purity was only 72.28%. This closes the tested command-magnitude axis.
+Pilot 9 fixed a modest 0.34 yaw bias and varied only heading yaw authority from
+0.32 down to 0.04. Three candidates exceeded 80% purity but had only 36--41
+falls; candidates with at least 50 falls had at most 75.47% purity. Its pooled
+purity was 72.91%, so the authority-loss axis is also closed. No adaptation,
+monitor, or audit was started. Pilot 10 restored nominal feedback, removed raw
+yaw bias, and varied only a bounded visual heading-reference bias from 0.35 to
+0.75 radians. It reached at most 45 falls and 76.92% purity, with pooled purity
+of 71.33%, so that mechanism is rejected. Pilot 11 then held command, feedback,
+action, encoder, rise, and tread terms nominal while narrowing only the physical
+stair half-width from 1.00 to 0.45 m. Three contiguous candidates at 1.00,
+0.95, and 0.90 m passed every scaled gate; the full sweep had 95.17% pooled
+target purity. The next 512-episode replacement calibration confirmed the new
+`L2` mechanism and froze ten contexts, but stopped at `C4`. Its coarse grid
+jumped from 91 falls at severity 0.363636 to 358/512 successes at severity
+0.454545, exactly one success below the lower gate; every stronger point was
+over-difficult. No adaptation started. A non-formal, base-policy-only Pilot 12
+then finely scanned the same `C4` mechanism over the original severity
+interval 0.38--0.45 with entirely fresh randomness. Pilot 12
+completed all 12 candidates and produced ten qualifiers, including nine
+consecutive qualifiers from `38110` through `38118`; 721 of 735 falls were the
+target contact-stability failure. The light-side miss had only 49 falls, while
+the hard endpoint fell below 70% success. The next boundary is replacement-v2:
+a prospectively frozen 512-episode calibration using the strict-margin
+`38112`--`38118` interior, entirely new candidate/evaluation randomness, and
+isolated output paths. No adaptation, monitor, or formal audit has started.
+
+本文记录 v21 的前瞻性实验设计。第一轮修正并预先冻结的 `L_dev` base-only sweep
+完成了全部 12 个候选，但因没有候选满足校准门槛而停止。随后一轮非正式 base-only
+范围 pilot 完成了全部 12 个 family：`C_dev`、`L1`、`L3`、`C1`、`C2`、`C4`、
+`C5` 找到了合格候选，`L_dev`、`L2`、`L4`、`L5`、`C3` 未找到。随后 pilot 2
+为这 5 个 family 都找到了合格点，但 `L2` 的唯一合格点恰好压在两条门槛上，因此
+不视为稳健。pilot 3 隔离 `L2` 后找到了一个在每条 scaled gate 上都有严格余量的
+合格点。随后 replacement 512-episode 校准冻结了 `L_dev`、`C_dev` 和 `L1`，但在
+`L2` clean fail-fast：12 个候选仍然都太容易，没有一个达到 100 次跌倒。没有启动
+任何 adaptation、monitor 或 audit。pilot 4 随后测试了确定性的双侧 hip-yaw
+actuator 零偏移；它产生了明显的难度 cliff，但没有合格点：matched-success 点只有
+53.57% lateral purity，最接近目标机制的点成功率已低于 70%，purity 也仍低于 80%。
+pilot 5 回到 command-side yaw 后，在高端找到三个相邻近失配点：一个只差 1 次跌倒，
+一个 purity 只差 0.69 个百分点，另一个差 3 次跌倒。pilot 6 将样本数加倍并只改变
+持续 yaw bias；两个机制纯的候选分别比 scaled fall gate 少 2 次和 3 次跌倒。pilot 7
+加入固定低幅 yaw-pulse carrier 后，达到 fall-count 门槛的候选失去了 lateral purity，
+合并 purity 也低于无 pulse 的 pilot。pilot 8 随后测试了 0.65--0.95 的强无 pulse
+yaw bias，但 12 个候选仍无一合格；最接近者的目标 purity 差 0.75 个百分点，池化
+purity 仅 72.28%，因此 command-magnitude 轴到此停止。没有启动 adaptation、monitor
+或 audit。pilot 9 固定温和的 0.34 yaw bias，只把 heading yaw authority 从 0.32
+降到 0.04。三个候选的 purity 超过 80%，但只有 36--41 次跌倒；达到至少 50 次跌倒
+的候选最高 purity 仅 75.47%，池化 purity 为 72.91%，因此 authority-loss 轴也停止。
+pilot 10 恢复正常反馈、移除 raw yaw bias，只把有界的视觉 heading-reference bias
+从 0.35 扫到 0.75 radians，但最多只有 45 次跌倒与 76.92% purity，池化 purity 为
+71.33%，因此该机制也被否决。pilot 11 随后保持 command、feedback、action、encoder、
+rise 和 tread 为 nominal，只把物理 stair half-width 从 1.00 缩小到 0.45 m。
+1.00、0.95、0.90 m 三个连续候选通过全部 scaled gate，整条 sweep 的目标池化 purity
+为 95.17%。随后 512-episode replacement calibration 验证了新 `L2` 机制并冻结 10 个
+context，但在 `C4` 停止：粗网格从 severity 0.363636 的 91 次跌倒跳到 severity
+0.454545 的 358/512 次成功，距离成功率下限恰好少 1 次成功；更强的点全部过难。
+没有启动 adaptation。随后，非正式、仅基础策略的 Pilot 12 保留相同 `C4` 机制，
+在原始 severity 0.38--0.45 内细扫，并使用全新随机数。Pilot 12 已完成全部
+12 个候选并得到 10 个合格点，其中 `38110` 至 `38118` 连续 9 个合格；735 次跌倒中
+721 次属于目标 contact-stability 失效。轻端未通过点只有 49 次跌倒，重端成功率低于
+70%。下一边界是 replacement-v2：在 `38112`--`38118` 严格余量内区间上进行前瞻冻结
+的 512-episode 校准，使用全新的候选与评估随机性，并写入隔离目录。仍未启动任何
+adaptation、monitor 或正式 audit。
+
+## 开发选择执行修订 / Development-selection execution amendment
+
+All eight frozen development training runs completed under commit `4142ede`.
+The first beta-selection invocation then stopped during read-only runner
+construction, before evaluating any actor or writing any selection metric. The
+loader enabled the already frozen brief-PPO mode but omitted the invariant
+values (`clip=0.05`, target KL `0.003`, one epoch, four minibatches, fixed
+schedule, and the frozen fall-redistribution settings) that the online class
+validates at construction. This is an execution defect, not an observed beta
+outcome.
+
+The committed amendment
+`development/development_selection_execution_amendment.json` permits only a
+shared evaluation-loader configuration fix, its regression tests, this
+disclosure, and the formal-freeze binding needed to carry the fix forward.
+Training artifacts, contexts, seeds, 512 paired episodes, beta grid, RR-RG
+score, tie breaks, formal gates, and all formal-context blindness remain
+unchanged. Development training is not rerun. The selection retry records the
+original training-protocol commit separately from its evaluation-implementation
+commit, and formal revision 2 must bind both before any formal adaptation.
+
+开发阶段 8 个冻结训练均已在提交 `4142ede` 下完成。首次 beta 选择在只读 runner
+构造阶段即停止，尚未评估任何 actor，也没有写出任何选择指标。原因是 loader 启用了
+已冻结的 brief-PPO 模式，却漏设在线算法在构造时强制校验的参数（`clip=0.05`、目标
+KL `0.003`、单 epoch、4 个 minibatch、固定 schedule 和已冻结的跌倒惩罚回传设置）。
+这是执行缺陷，不是观察到 beta 结果后的调整。修订只允许补齐共享的评估 loader
+配置、回归测试、本披露和正式冻结绑定；训练产物、context、seed、512 个配对 episode、
+beta 网格、RR-RG 公式与 tie-break、正式门槛均不改变，也不重跑开发训练。
+
+## 实验单位 / Experimental unit
+
+One formal unit is exactly:
+
+```text
+one frozen deployment context
++ the common frozen base policy pi0
++ one pre-seeded online adaptation
++ one fresh paired evaluation
+```
+
+Each context has one deployment seed and one adaptation. A poor algorithmic
+outcome is never rerun. Only a documented infrastructure failure may be retried
+with the identical context, seed, commit, and checkpoint.
+
+正式统计单位是 deployment context，不再是同一场景中的 adaptation seed。
+
+## Context matrix
+
+The two development contexts `L_dev` and `C_dev` are excluded from every formal
+claim. The ten formal contexts are:
+
+| Mode | Context | Primary frozen deployment shift |
+| --- | --- | --- |
+| Lateral | L1 | command delay + low-pass |
+| Lateral | L2 | narrow physical stair lateral clearance |
+| Lateral | L3 | lateral bias + lateral pulse |
+| Lateral | L4 | weak centerline correction |
+| Lateral | L5 | moderate mixed lateral shift |
+| Contact | C1 | low foot friction |
+| Contact | C2 | left-right action asymmetry |
+| Contact | C3 | action gain + encoder bias |
+| Contact | C4 | friction + command/dynamics mismatch |
+| Contact | C5 | moderate mixed contact shift |
+
+Each family freezes an ordered 12-candidate severity sweep. Perturbation
+direction and normalized bias pattern stay fixed within a family. Calibration
+uses only `pi0` and freezes the first candidate satisfying all predeclared
+success, fall-count, and failure-purity gates.
+
+The failed first `L_dev` sweep showed that command smoothing and weaker
+centering could make nominally stronger candidates easier. Pilot 1 then showed
+that the shared geometry/actuator carrier could dilute lateral purity in
+`L_dev`, `L2`, and `L4`; `L5` was mechanism-pure but uniformly too hard; and
+`C3` crossed a sharp action-gain/encoder-bias difficulty cliff. Pilot 2 holds
+command dynamics and low-amplitude actuator terms fixed in the first three
+families so their named lateral mechanism drives severity, lightens the whole
+`L5` carrier, and finely brackets the observed `C3` cliff. Pilot 2 confirmed
+those four revisions but left `L2` on a two-gate boundary. Pilot 3 therefore
+removes the remaining geometry/action/encoder carrier from `L2` and strengthens
+only its yaw-dominant command disturbance. Its one 128-episode qualifier did
+not replicate at 512 episodes: the formal range produced only 64–85 falls.
+Pilot 4 therefore tested a plant-side alternative: the same hidden zero offset
+on both hip-yaw actuator channels. The sweep created enough failures but did
+not isolate heading drift, so that family is rejected rather than narrowed.
+Pilot 5 returned to the higher-purity command-side yaw mechanism and found a
+narrow high-end near-qualifying cluster, but 128 episodes did not establish a
+strict qualifier. Pilot 6 doubled the sample size and removed pulse
+confounding. It produced two mechanism-pure candidates only two or three falls
+short of the scaled gate. Pilot 7 retained persistent yaw bias as the only
+swept axis and added one fixed yaw-only pulse carrier. The carrier supplied
+failures but diluted purity, so it is rejected. Pilot 8 disabled every pulse
+and extended the clean persistent-bias axis to 0.65--0.95, but stronger commands
+increased failure volume without a robust purity intersection. Pilot 9 changed
+mechanism instead of extending magnitude: it fixed yaw bias at 0.34, preserved
+nominal lateral feedback, and swept only the heading correction saturation
+limit from 0.32 down to 0.04. Mechanism-pure candidates remained too easy,
+while difficult candidates lost purity. Pilot 10 therefore restored all
+feedback gains and limits, set raw yaw bias to zero, and swept only a bounded
+visual heading-reference bias from 0.35 to 0.75 radians. The true heading error
+used by diagnostics and failure classification remained unchanged, but the
+sweep reached neither the fall-count nor purity gate. Pilot 11 then held all
+command, feedback, action, encoder, rise, and tread terms nominal and narrowed
+only the physical stair half-width from 1.00 to 0.45 m. The same frozen width
+drove tread geometry, root/foot edge-clearance telemetry, and the
+geometry-derived classifier threshold. Candidates at 1.00, 0.95, and 0.90 m
+all qualified, followed by a mechanism-pure over-difficult transition at
+0.85 m. This was base-policy range evidence, not formal selection. The
+replacement calibration preserved this mechanism, narrowed `L2` to
+1.00--0.89 m, and replaced every candidate and evaluation seed. `L2` then
+qualified immediately at 512 episodes with 75.59% success, 125 falls, and
+84.80% target purity. Nine other contexts also froze, but `C4` exposed a coarse
+difficulty cliff: severity 0.363636 had 91 falls, while severity 0.454545 was
+one success below the lower gate and the stronger half of the sweep was far too
+difficult. Pilot 12 therefore keeps the same mechanism and finely brackets only
+the original severity interval 0.38--0.45. It completed with ten qualifiers and
+a 98.10% pooled target-failure fraction. Replacement-v2 uses the stricter
+contiguous interior represented by `38112` through `38118`: friction
+0.456745--0.447964, forward scale 1.092982--1.099855, command low-pass
+0.076764--0.082109 s, and action gain 0.915127--0.909018. Candidate prefixes
+`391`--`402` and the 78--81 million evaluation/analysis seed namespaces are
+new, and replacement-v2 outputs are isolated from the preserved failed run.
+Pilot outcomes remain base-policy-only range evidence rather than formal
+selection.
+
+## Algorithm
+
+At round `k`, the frozen behavior policy is `pi_ref = pi_k`. The actor objective
+for v21 is:
+
+```text
+L_actor = PPO(normal + failure precursor)
+          + beta * KL(pi_ref || pi_theta) on matched-success states
+```
+
+Matched-success Actor advantages and entropy terms are excluded when
+`beta > 0`; their only direct Actor term is the local preservation KL. The
+critic continues to use every transition. No broad D0/global retention bank
+and no new network are introduced.
+
+The same-context control uses `beta = 0`, which restores the v20-style Actor
+objective: PPO over normal, failure, and matched-success transitions.
+
+## Frozen development and candidate selection
+
+- Development grid: `beta in {0, 1, 4, 16}` on `L_dev` and `C_dev` only.
+- Selection score: mean context-level `RR - RG`, with prospective tie-breaks.
+- One selected beta is frozen for all ten formal contexts.
+- Each of eight fixed rounds screens three fractions with `3 x 64` paired
+  episodes, then tests the selected fraction in three independent `64`-episode
+  confirmation blocks.
+- Acceptance requires positive mean success delta, at least two positive
+  blocks, mean fall delta at most 3 percentage points, finite KL below 0.01,
+  and D0 retention.
+- Zero retained updates is a valid result and leaves `pi_final = pi0`.
+
+## Formal evaluation and claims
+
+For every formal context, base, control, and v21 receive identical fresh test
+conditions:
+
+- 1,024 paired target episodes per policy;
+- 256 paired D0 episodes per policy;
+- per-context paired 95% intervals;
+- repair rate, regression rate, and `RR - RG`;
+- direct control-minus-base, v21-minus-base, and v21-minus-control comparisons.
+
+For each mode, the formal v21 gate requires:
+
+- mean target success delta strictly above zero;
+- at least four of five deployment contexts positive;
+- mean target fall delta at most 3 percentage points;
+- mean D0 success delta at least -5 percentage points.
+
+The cross-context 95% interval bootstraps the five deployment-context point
+estimates. A positive lower bound is reported as strong evidence, not as a
+protocol-validity condition.
+
+## Unbiased curves and mechanism evidence
+
+Every adaptation saves `pi0,...,pi8`. Only after training ends are all nine
+checkpoints evaluated on the frozen, previously unseen 256-condition
+`E_curve`; candidate-selection diagnostics never enter this curve.
+
+Formal target evaluation captures mechanism telemetry inline from the actual
+base/control/v21 rollouts and embeds each trace's exact same-rollout outcome.
+No post-audit replay is used. Published compact curves normalize each trace to
+101 episode-phase bins before aggregation, while trace-level tables retain the
+outcome binding.
+
+## Evidence boundaries
+
+The failed revision-0 sweep and each base-only range pilot are immutable Git
+evidence, but neither is a formal context-selection boundary. After range
+feasibility is established, the replacement experiment has three immutable Git
+boundaries with candidate, evaluation, adaptation, monitor, and bootstrap
+randomness not used or proposed by a pilot:
+
+1. revision 0: source, ranges, randomness, base checkpoint, and analysis plan,
+   committed before base-only calibration;
+2. revision 1: all 12 calibrated contexts, committed before development;
+3. revision 2: development selection and one beta, committed before any formal
+   adaptation.
+
+Raw checkpoints and simulator rows remain external and are hash-manifested.
+GitHub receives code, committed protocols, calibrated contexts, compact tables,
+figures, manifests, and bilingual result reports.

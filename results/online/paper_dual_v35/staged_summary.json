@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "experiment": "paper_dual_v35",
+  "run": "raw_moderate_A2x4_A1x4",
+  "status": "current_best_cross_context_pilot_not_formal",
+  "source_git_commit": "b21eceecc10ec651a4d3c45fe9675a89f00c1410",
+  "protocol": {
+    "hardware": "NVIDIA GeForce RTX 4080 SUPER",
+    "base_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+    "reward": {
+      "correction_space": "raw_action",
+      "sigma": 0.5,
+      "margin_weight": 1.0,
+      "intervention_weight": 10.0
+    },
+    "teacher_arms_by_round": ["A2", "A2", "A2", "A2", "A1", "A1", "A1", "A1"],
+    "num_envs": 64,
+    "rollout_steps_per_round": 1024,
+    "evaluation_episodes_per_condition": 64,
+    "evaluation_policy": "deterministic_mean",
+    "runtime_filter_during_training": true
+  },
+  "contexts": [
+    {
+      "context": "F1",
+      "training_seed": 201350101,
+      "evaluation_seed": 201350901,
+      "training_elapsed_seconds": 211.64546498598065,
+      "final_checkpoint_sha256": "771e09f9bcd91e6e3d447903d419a1c0690156a8c73264a165727fa3c57ad453",
+      "final_actor_sha256": "c0ae58711190dda454564b41090488168ea2b3703d20bfc35f0c4abde61e053d",
+      "filter_on": {"success_count": 50, "num_episodes": 64, "success_rate": 0.78125, "fall_rate": 0.21875},
+      "filter_off": {"success_count": 49, "num_episodes": 64, "success_rate": 0.765625, "fall_rate": 0.234375},
+      "off_minus_on_pp": -1.5625,
+      "both_at_least_75_percent": true,
+      "final_moving_forward_kl": 0.6729173064231873
+    },
+    {
+      "context": "F2",
+      "training_seed": 201350102,
+      "evaluation_seed": 201350902,
+      "training_elapsed_seconds": 231.03808470303193,
+      "final_checkpoint_sha256": "c992e0404db99a2760044c09e09cc48a8f0df389098255ff96fcc7d45c3b53b4",
+      "final_actor_sha256": "5450e93021c12cad8ff3dea8e1cbc9b287251ce772f34b3cbed8d0ae79abcc75",
+      "filter_on": {"success_count": 45, "num_episodes": 64, "success_rate": 0.703125, "fall_rate": 0.296875},
+      "filter_off": {"success_count": 44, "num_episodes": 64, "success_rate": 0.6875, "fall_rate": 0.3125},
+      "off_minus_on_pp": -1.5625,
+      "both_at_least_75_percent": false,
+      "final_moving_forward_kl": 0.7107006907463074
+    },
+    {
+      "context": "F3",
+      "training_seed": 201350103,
+      "evaluation_seed": 201350903,
+      "training_elapsed_seconds": 232.0203212320339,
+      "final_checkpoint_sha256": "43c960b06662d53a469575c7d8c0fa50a82331c4182d92e3cba649e32fb202b5",
+      "final_actor_sha256": "0ed583e887c54e009755802b350a06ccc25d992eca6352bcc5993d54bf991c6f",
+      "filter_on": {"success_count": 42, "num_episodes": 64, "success_rate": 0.65625, "fall_rate": 0.34375},
+      "filter_off": {"success_count": 38, "num_episodes": 64, "success_rate": 0.59375, "fall_rate": 0.40625},
+      "off_minus_on_pp": -6.25,
+      "both_at_least_75_percent": false,
+      "final_moving_forward_kl": 0.6900118589401245
+    }
+  ],
+  "aggregate": {
+    "training_elapsed_seconds": 674.7038709210465,
+    "filter_on_success_count": 137,
+    "filter_on_num_episodes": 192,
+    "filter_on_success_rate": 0.7135416666666666,
+    "filter_off_success_count": 131,
+    "filter_off_num_episodes": 192,
+    "filter_off_success_rate": 0.6822916666666666,
+    "off_minus_on_pp": -3.125,
+    "near_parity_abs_gap_at_most_5pp": true,
+    "all_contexts_both_at_least_75_percent": false
+  },
+  "interpretation": {
+    "internalization_effect_observed": true,
+    "paper_level_reproduction_claimed": false,
+    "reason_incomplete": "F2/F3 absolute success is below 75%, evaluation is one 64-episode seed per condition, and the A1 stage produces excessive policy KL.",
+    "next_algorithm_change": "Replace or soften the high-curvature A1 Gaussian-NLL stage and add stair-height curriculum before any larger evaluation."
+  }
+}
+

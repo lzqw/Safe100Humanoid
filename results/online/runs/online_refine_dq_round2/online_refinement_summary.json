@@ -1,0 +1,826 @@
+{
+  "base_checkpoint": "<SERVER_REPO>/results/models/cbf/model_1500.pt",
+  "baseline_eval": {
+    "D0": {
+      "correction_mean": 0.0004361195222327696,
+      "correction_mean_std": 0.0,
+      "fall_rate": 0.03125,
+      "fall_rate_std": 0.0,
+      "intervention_per_riser": 0.4322916832752526,
+      "intervention_per_riser_std": 0.0,
+      "mean_reached_riser": 6.0,
+      "mean_reached_riser_std": 0.0,
+      "num_episodes": 32,
+      "repeats": 1,
+      "replicates": [
+        {
+          "conditional_failure_hazard": {
+            "1": 0.0,
+            "2": 0.0,
+            "3": 0.0,
+            "4": 0.0,
+            "5": 0.0,
+            "6": 0.0
+          },
+          "correction_mean": 0.0004361195222327696,
+          "fall_rate": 0.03125,
+          "intervention_per_riser": 0.4322916832752526,
+          "mean_reached_riser": 6.0,
+          "minimum_cbf_h": -0.1494370400905609,
+          "num_envs": 32,
+          "num_episodes": 32,
+          "num_risers": 6,
+          "runtime_filter": true,
+          "seed": 42,
+          "success_rate": 0.96875,
+          "survival_curve": {
+            "1": 1.0,
+            "2": 1.0,
+            "3": 1.0,
+            "4": 1.0,
+            "5": 1.0,
+            "6": 1.0
+          },
+          "task": "Unitree-G1-Stairs-Online-D0",
+          "timeout_rate": 0.0
+        }
+      ],
+      "seeds": [
+        42
+      ],
+      "success_rate": 0.96875,
+      "success_rate_std": 0.0,
+      "task": "Unitree-G1-Stairs-Online-D0",
+      "timeout_rate": 0.0,
+      "timeout_rate_std": 0.0
+    },
+    "DQ": {
+      "correction_mean": 0.0033623012854564482,
+      "correction_mean_std": 0.0,
+      "fall_rate": 0.59375,
+      "fall_rate_std": 0.0,
+      "intervention_per_riser": 1.028645848389715,
+      "intervention_per_riser_std": 0.0,
+      "mean_reached_riser": 8.625,
+      "mean_reached_riser_std": 0.0,
+      "num_episodes": 32,
+      "repeats": 1,
+      "replicates": [
+        {
+          "conditional_failure_hazard": {
+            "1": 0.0,
+            "2": 0.0,
+            "3": 0.0,
+            "4": 0.0,
+            "5": 0.0,
+            "6": 0.0,
+            "7": 0.0625,
+            "8": 0.0,
+            "9": 0.2
+          },
+          "correction_mean": 0.0033623012854564482,
+          "fall_rate": 0.59375,
+          "intervention_per_riser": 1.028645848389715,
+          "mean_reached_riser": 8.625,
+          "minimum_cbf_h": -0.14946168661117554,
+          "num_envs": 32,
+          "num_episodes": 32,
+          "num_risers": 9,
+          "runtime_filter": true,
+          "seed": 42,
+          "success_rate": 0.40625,
+          "survival_curve": {
+            "1": 1.0,
+            "2": 1.0,
+            "3": 1.0,
+            "4": 1.0,
+            "5": 1.0,
+            "6": 1.0,
+            "7": 0.9375,
+            "8": 0.9375,
+            "9": 0.75
+          },
+          "task": "Unitree-G1-Stairs-Online-DQ",
+          "timeout_rate": 0.0
+        }
+      ],
+      "seeds": [
+        42
+      ],
+      "success_rate": 0.40625,
+      "success_rate_std": 0.0,
+      "task": "Unitree-G1-Stairs-Online-DQ",
+      "timeout_rate": 0.0,
+      "timeout_rate_std": 0.0
+    },
+    "DQN": {
+      "correction_mean": 0.0020957650538004913,
+      "correction_mean_std": 0.0,
+      "fall_rate": 0.59375,
+      "fall_rate_std": 0.0,
+      "intervention_per_riser": 1.0004960380028933,
+      "intervention_per_riser_std": 0.0,
+      "mean_reached_riser": 8.75,
+      "mean_reached_riser_std": 0.0,
+      "num_episodes": 32,
+      "repeats": 1,
+      "replicates": [
+        {
+          "conditional_failure_hazard": {
+            "1": 0.0,
+            "2": 0.0,
+            "3": 0.0,
+            "4": 0.0,
+            "5": 0.0,
+            "6": 0.0,
+            "7": 0.0,
+            "8": 0.03125,
+            "9": 0.1935483870967742
+          },
+          "correction_mean": 0.0020957650538004913,
+          "fall_rate": 0.59375,
+          "intervention_per_riser": 1.0004960380028933,
+          "mean_reached_riser": 8.75,
+          "minimum_cbf_h": -0.1496855616569519,
+          "num_envs": 32,
+          "num_episodes": 32,
+          "num_risers": 9,
+          "runtime_filter": true,
+          "seed": 42,
+          "success_rate": 0.40625,
+          "survival_curve": {
+            "1": 1.0,
+            "2": 1.0,
+            "3": 1.0,
+            "4": 1.0,
+            "5": 1.0,
+            "6": 1.0,
+            "7": 1.0,
+            "8": 0.96875,
+            "9": 0.78125
+          },
+          "task": "Unitree-G1-Stairs-Online-DQN",
+          "timeout_rate": 0.0
+        }
+      ],
+      "seeds": [
+        42
+      ],
+      "success_rate": 0.40625,
+      "success_rate_std": 0.0,
+      "task": "Unitree-G1-Stairs-Online-DQN",
+      "timeout_rate": 0.0,
+      "timeout_rate_std": 0.0
+    }
+  },
+  "critic_burn_in": [
+    {
+      "action_saturation_fraction": 0.3121846616268158,
+      "action_std_mean": 0.2071375846862793,
+      "actor_learning_rate": 5e-06,
+      "cbf_correction_mean": 0.006972284987568855,
+      "cbf_intervention_fraction": 0.0354817733168602,
+      "clip_fraction": 0.0,
+      "entropy": -2.000462055206299,
+      "explained_variance_before_update": 0.7303081750869751,
+      "fall_event_count": 29.0,
+      "fall_event_fraction": 0.0011800130596384406,
+      "mean_kl": 0.0,
+      "pre_intervention_cost_max": 4.46312952041626,
+      "pre_intervention_cost_mean": 0.13725852966308594,
+      "return_value_correlation_before_update": 0.8795411586761475,
+      "safe_bc_effective_learning_rate": 0.0,
+      "safe_bc_gradient_norm": 0.0,
+      "safe_bc_loss": 0.0,
+      "safe_bc_weight": 0.0,
+      "surrogate": 7.132439350243658e-08,
+      "value": 1.3597003072500229
+    },
+    {
+      "action_saturation_fraction": 0.3138800859451294,
+      "action_std_mean": 0.2071375846862793,
+      "actor_learning_rate": 5e-06,
+      "cbf_correction_mean": 0.010157057084143162,
+      "cbf_intervention_fraction": 0.0470377616584301,
+      "clip_fraction": 0.0,
+      "entropy": -2.000462055206299,
+      "explained_variance_before_update": 0.7001556158065796,
+      "fall_event_count": 46.0,
+      "fall_event_fraction": 0.0018717448692768812,
+      "mean_kl": 0.0,
+      "pre_intervention_cost_max": 4.46312952041626,
+      "pre_intervention_cost_mean": 0.18472209572792053,
+      "return_value_correlation_before_update": 0.8547802567481995,
+      "safe_bc_effective_learning_rate": 0.0,
+      "safe_bc_gradient_norm": 0.0,
+      "safe_bc_loss": 0.0,
+      "safe_bc_weight": 0.0,
+      "surrogate": 1.3737007975578308e-08,
+      "value": 2.0758475363254547
+    },
+    {
+      "action_saturation_fraction": 0.3119371235370636,
+      "action_std_mean": 0.2071375846862793,
+      "actor_learning_rate": 5e-06,
+      "cbf_correction_mean": 0.013381421566009521,
+      "cbf_intervention_fraction": 0.048095703125,
+      "clip_fraction": 0.0,
+      "entropy": -2.000462055206299,
+      "explained_variance_before_update": 0.6849019527435303,
+      "fall_event_count": 52.0,
+      "fall_event_fraction": 0.0021158854942768812,
+      "mean_kl": 0.0,
+      "pre_intervention_cost_max": 4.46312952041626,
+      "pre_intervention_cost_mean": 0.1924782693386078,
+      "return_value_correlation_before_update": 0.8482947945594788,
+      "safe_bc_effective_learning_rate": 0.0,
+      "safe_bc_gradient_norm": 0.0,
+      "safe_bc_loss": 0.0,
+      "safe_bc_weight": 0.0,
+      "surrogate": -3.67872416973114e-08,
+      "value": 2.6252030730247498
+    },
+    {
+      "action_saturation_fraction": 0.3147040605545044,
+      "action_std_mean": 0.2071375846862793,
+      "actor_learning_rate": 5e-06,
+      "cbf_correction_mean": 0.0072126612067222595,
+      "cbf_intervention_fraction": 0.0373942069709301,
+      "clip_fraction": 0.0,
+      "entropy": -2.000462055206299,
+      "explained_variance_before_update": 0.8073482513427734,
+      "fall_event_count": 46.0,
+      "fall_event_fraction": 0.0018717448692768812,
+      "mean_kl": 0.0,
+      "pre_intervention_cost_max": 4.46312952041626,
+      "pre_intervention_cost_mean": 0.14570873975753784,
+      "return_value_correlation_before_update": 0.9087806344032288,
+      "safe_bc_effective_learning_rate": 0.0,
+      "safe_bc_gradient_norm": 0.0,
+      "safe_bc_loss": 0.0,
+      "safe_bc_weight": 0.0,
+      "surrogate": -2.4971086531877518e-08,
+      "value": 1.1967701762914658
+    }
+  ],
+  "final_checkpoint": "<SERVER_RUN_ROOT>/artifacts/online_refine_dq_round2/accepted_final.pt",
+  "final_eval": {
+    "D0": {
+      "correction_mean": 0.0008108246593239166,
+      "correction_mean_std": 0.0,
+      "fall_rate": 0.03125,
+      "fall_rate_std": 0.0,
+      "intervention_per_riser": 0.5260416883975267,
+      "intervention_per_riser_std": 0.0,
+      "mean_reached_riser": 5.875,
+      "mean_reached_riser_std": 0.0,
+      "num_episodes": 32,
+      "repeats": 1,
+      "replicates": [
+        {
+          "conditional_failure_hazard": {
+            "1": 0.0,
+            "2": 0.0,
+            "3": 0.03125,
+            "4": 0.0,
+            "5": 0.0,
+            "6": 0.0
+          },
+          "correction_mean": 0.0008108246593239166,
+          "fall_rate": 0.03125,
+          "intervention_per_riser": 0.5260416883975267,
+          "mean_reached_riser": 5.875,
+          "minimum_cbf_h": -0.14397484064102173,
+          "num_envs": 32,
+          "num_episodes": 32,
+          "num_risers": 6,
+          "runtime_filter": true,
+          "seed": 42,
+          "success_rate": 0.96875,
+          "survival_curve": {
+            "1": 1.0,
+            "2": 1.0,
+            "3": 0.96875,
+            "4": 0.96875,
+            "5": 0.96875,
+            "6": 0.96875
+          },
+          "task": "Unitree-G1-Stairs-Online-D0",
+          "timeout_rate": 0.0
+        }
+      ],
+      "seeds": [
+        42
+      ],
+      "success_rate": 0.96875,
+      "success_rate_std": 0.0,
+      "task": "Unitree-G1-Stairs-Online-D0",
+      "timeout_rate": 0.0,
+      "timeout_rate_std": 0.0
+    },
+    "DQ": {
+      "correction_mean": 0.002738369973536603,
+      "correction_mean_std": 0.0,
+      "fall_rate": 0.71875,
+      "fall_rate_std": 0.0,
+      "intervention_per_riser": 1.0241815657354891,
+      "intervention_per_riser_std": 0.0,
+      "mean_reached_riser": 8.28125,
+      "mean_reached_riser_std": 0.0,
+      "num_episodes": 32,
+      "repeats": 1,
+      "replicates": [
+        {
+          "conditional_failure_hazard": {
+            "1": 0.0,
+            "2": 0.0,
+            "3": 0.0,
+            "4": 0.0,
+            "5": 0.0625,
+            "6": 0.0,
+            "7": 0.0,
+            "8": 0.16666666666666666,
+            "9": 0.12
+          },
+          "correction_mean": 0.002738369973536603,
+          "fall_rate": 0.71875,
+          "intervention_per_riser": 1.0241815657354891,
+          "mean_reached_riser": 8.28125,
+          "minimum_cbf_h": -0.14594124257564545,
+          "num_envs": 32,
+          "num_episodes": 32,
+          "num_risers": 9,
+          "runtime_filter": true,
+          "seed": 42,
+          "success_rate": 0.28125,
+          "survival_curve": {
+            "1": 1.0,
+            "2": 1.0,
+            "3": 1.0,
+            "4": 1.0,
+            "5": 0.9375,
+            "6": 0.9375,
+            "7": 0.9375,
+            "8": 0.78125,
+            "9": 0.6875
+          },
+          "task": "Unitree-G1-Stairs-Online-DQ",
+          "timeout_rate": 0.0
+        }
+      ],
+      "seeds": [
+        42
+      ],
+      "success_rate": 0.28125,
+      "success_rate_std": 0.0,
+      "task": "Unitree-G1-Stairs-Online-DQ",
+      "timeout_rate": 0.0,
+      "timeout_rate_std": 0.0
+    },
+    "DQN": {
+      "correction_mean": 0.00265294510709424,
+      "correction_mean_std": 0.0,
+      "fall_rate": 0.40625,
+      "fall_rate_std": 0.0,
+      "intervention_per_riser": 1.2309647945221514,
+      "intervention_per_riser_std": 0.0,
+      "mean_reached_riser": 8.34375,
+      "mean_reached_riser_std": 0.0,
+      "num_episodes": 32,
+      "repeats": 1,
+      "replicates": [
+        {
+          "conditional_failure_hazard": {
+            "1": 0.0,
+            "2": 0.0,
+            "3": 0.03125,
+            "4": 0.03225806451612903,
+            "5": 0.03333333333333333,
+            "6": 0.0,
+            "7": 0.0,
+            "8": 0.034482758620689655,
+            "9": 0.03571428571428571
+          },
+          "correction_mean": 0.00265294510709424,
+          "fall_rate": 0.40625,
+          "intervention_per_riser": 1.2309647945221514,
+          "mean_reached_riser": 8.34375,
+          "minimum_cbf_h": -0.14811038970947266,
+          "num_envs": 32,
+          "num_episodes": 32,
+          "num_risers": 9,
+          "runtime_filter": true,
+          "seed": 42,
+          "success_rate": 0.59375,
+          "survival_curve": {
+            "1": 1.0,
+            "2": 1.0,
+            "3": 0.96875,
+            "4": 0.9375,
+            "5": 0.90625,
+            "6": 0.90625,
+            "7": 0.90625,
+            "8": 0.875,
+            "9": 0.84375
+          },
+          "task": "Unitree-G1-Stairs-Online-DQN",
+          "timeout_rate": 0.0
+        }
+      ],
+      "seeds": [
+        42
+      ],
+      "success_rate": 0.59375,
+      "success_rate_std": 0.0,
+      "task": "Unitree-G1-Stairs-Online-DQN",
+      "timeout_rate": 0.0,
+      "timeout_rate_std": 0.0
+    }
+  },
+  "neighbor_domain": "DQN",
+  "rounds": [
+    {
+      "accepted": true,
+      "candidate_checkpoint": "<SERVER_RUN_ROOT>/artifacts/online_refine_dq_round2/candidate_round_001.pt",
+      "candidate_eval": {
+        "D0": {
+          "correction_mean": 0.0008762067702935417,
+          "correction_mean_std": 0.0,
+          "fall_rate": 0.03125,
+          "fall_rate_std": 0.0,
+          "intervention_per_riser": 0.5937500083819032,
+          "intervention_per_riser_std": 0.0,
+          "mean_reached_riser": 5.875,
+          "mean_reached_riser_std": 0.0,
+          "num_episodes": 32,
+          "repeats": 1,
+          "replicates": [
+            {
+              "conditional_failure_hazard": {
+                "1": 0.0,
+                "2": 0.0,
+                "3": 0.03125,
+                "4": 0.0,
+                "5": 0.0,
+                "6": 0.0
+              },
+              "correction_mean": 0.0008762067702935417,
+              "fall_rate": 0.03125,
+              "intervention_per_riser": 0.5937500083819032,
+              "mean_reached_riser": 5.875,
+              "minimum_cbf_h": -0.14751869440078735,
+              "num_envs": 32,
+              "num_episodes": 32,
+              "num_risers": 6,
+              "runtime_filter": true,
+              "seed": 42,
+              "success_rate": 0.96875,
+              "survival_curve": {
+                "1": 1.0,
+                "2": 1.0,
+                "3": 0.96875,
+                "4": 0.96875,
+                "5": 0.96875,
+                "6": 0.96875
+              },
+              "task": "Unitree-G1-Stairs-Online-D0",
+              "timeout_rate": 0.0
+            }
+          ],
+          "seeds": [
+            42
+          ],
+          "success_rate": 0.96875,
+          "success_rate_std": 0.0,
+          "task": "Unitree-G1-Stairs-Online-D0",
+          "timeout_rate": 0.0,
+          "timeout_rate_std": 0.0
+        },
+        "DQ": {
+          "correction_mean": 0.0021276025731695736,
+          "correction_mean_std": 0.0,
+          "fall_rate": 0.59375,
+          "fall_rate_std": 0.0,
+          "intervention_per_riser": 0.8327753059566021,
+          "intervention_per_riser_std": 0.0,
+          "mean_reached_riser": 8.5625,
+          "mean_reached_riser_std": 0.0,
+          "num_episodes": 32,
+          "repeats": 1,
+          "replicates": [
+            {
+              "conditional_failure_hazard": {
+                "1": 0.0,
+                "2": 0.0,
+                "3": 0.0,
+                "4": 0.0,
+                "5": 0.03125,
+                "6": 0.0,
+                "7": 0.03225806451612903,
+                "8": 0.06666666666666667,
+                "9": 0.07142857142857142
+              },
+              "correction_mean": 0.0021276025731695736,
+              "fall_rate": 0.59375,
+              "intervention_per_riser": 0.8327753059566021,
+              "mean_reached_riser": 8.5625,
+              "minimum_cbf_h": -0.14625847339630127,
+              "num_envs": 32,
+              "num_episodes": 32,
+              "num_risers": 9,
+              "runtime_filter": true,
+              "seed": 42,
+              "success_rate": 0.40625,
+              "survival_curve": {
+                "1": 1.0,
+                "2": 1.0,
+                "3": 1.0,
+                "4": 1.0,
+                "5": 0.96875,
+                "6": 0.96875,
+                "7": 0.9375,
+                "8": 0.875,
+                "9": 0.8125
+              },
+              "task": "Unitree-G1-Stairs-Online-DQ",
+              "timeout_rate": 0.0
+            }
+          ],
+          "seeds": [
+            42
+          ],
+          "success_rate": 0.40625,
+          "success_rate_std": 0.0,
+          "task": "Unitree-G1-Stairs-Online-DQ",
+          "timeout_rate": 0.0,
+          "timeout_rate_std": 0.0
+        },
+        "DQN": {
+          "correction_mean": 0.002732737304321886,
+          "correction_mean_std": 0.0,
+          "fall_rate": 0.46875,
+          "fall_rate_std": 0.0,
+          "intervention_per_riser": 1.3363715319428593,
+          "intervention_per_riser_std": 0.0,
+          "mean_reached_riser": 8.34375,
+          "mean_reached_riser_std": 0.0,
+          "num_episodes": 32,
+          "repeats": 1,
+          "replicates": [
+            {
+              "conditional_failure_hazard": {
+                "1": 0.0,
+                "2": 0.0,
+                "3": 0.03125,
+                "4": 0.0,
+                "5": 0.06451612903225806,
+                "6": 0.0,
+                "7": 0.0,
+                "8": 0.0,
+                "9": 0.13793103448275862
+              },
+              "correction_mean": 0.002732737304321886,
+              "fall_rate": 0.46875,
+              "intervention_per_riser": 1.3363715319428593,
+              "mean_reached_riser": 8.34375,
+              "minimum_cbf_h": -0.14925932884216309,
+              "num_envs": 32,
+              "num_episodes": 32,
+              "num_risers": 9,
+              "runtime_filter": true,
+              "seed": 42,
+              "success_rate": 0.53125,
+              "survival_curve": {
+                "1": 1.0,
+                "2": 1.0,
+                "3": 0.96875,
+                "4": 0.96875,
+                "5": 0.90625,
+                "6": 0.90625,
+                "7": 0.90625,
+                "8": 0.90625,
+                "9": 0.78125
+              },
+              "task": "Unitree-G1-Stairs-Online-DQN",
+              "timeout_rate": 0.0
+            }
+          ],
+          "seeds": [
+            42
+          ],
+          "success_rate": 0.53125,
+          "success_rate_std": 0.0,
+          "task": "Unitree-G1-Stairs-Online-DQN",
+          "timeout_rate": 0.0,
+          "timeout_rate_std": 0.0
+        }
+      },
+      "old_eval": {
+        "D0": {
+          "correction_mean": 0.0002601036244403998,
+          "correction_mean_std": 0.0,
+          "fall_rate": 0.0,
+          "fall_rate_std": 0.0,
+          "intervention_per_riser": 0.3281250079162419,
+          "intervention_per_riser_std": 0.0,
+          "mean_reached_riser": 6.0,
+          "mean_reached_riser_std": 0.0,
+          "num_episodes": 32,
+          "repeats": 1,
+          "replicates": [
+            {
+              "conditional_failure_hazard": {
+                "1": 0.0,
+                "2": 0.0,
+                "3": 0.0,
+                "4": 0.0,
+                "5": 0.0,
+                "6": 0.0
+              },
+              "correction_mean": 0.0002601036244403998,
+              "fall_rate": 0.0,
+              "intervention_per_riser": 0.3281250079162419,
+              "mean_reached_riser": 6.0,
+              "minimum_cbf_h": -0.1489325761795044,
+              "num_envs": 32,
+              "num_episodes": 32,
+              "num_risers": 6,
+              "runtime_filter": true,
+              "seed": 42,
+              "success_rate": 1.0,
+              "survival_curve": {
+                "1": 1.0,
+                "2": 1.0,
+                "3": 1.0,
+                "4": 1.0,
+                "5": 1.0,
+                "6": 1.0
+              },
+              "task": "Unitree-G1-Stairs-Online-D0",
+              "timeout_rate": 0.0
+            }
+          ],
+          "seeds": [
+            42
+          ],
+          "success_rate": 1.0,
+          "success_rate_std": 0.0,
+          "task": "Unitree-G1-Stairs-Online-D0",
+          "timeout_rate": 0.0,
+          "timeout_rate_std": 0.0
+        },
+        "DQ": {
+          "correction_mean": 0.003257926043205739,
+          "correction_mean_std": 0.0,
+          "fall_rate": 0.625,
+          "fall_rate_std": 0.0,
+          "intervention_per_riser": 1.1295883099082857,
+          "intervention_per_riser_std": 0.0,
+          "mean_reached_riser": 8.25,
+          "mean_reached_riser_std": 0.0,
+          "num_episodes": 32,
+          "repeats": 1,
+          "replicates": [
+            {
+              "conditional_failure_hazard": {
+                "1": 0.0,
+                "2": 0.0,
+                "3": 0.0,
+                "4": 0.03125,
+                "5": 0.0,
+                "6": 0.03225806451612903,
+                "7": 0.03333333333333333,
+                "8": 0.034482758620689655,
+                "9": 0.32142857142857145
+              },
+              "correction_mean": 0.003257926043205739,
+              "fall_rate": 0.625,
+              "intervention_per_riser": 1.1295883099082857,
+              "mean_reached_riser": 8.25,
+              "minimum_cbf_h": -0.14927968382835388,
+              "num_envs": 32,
+              "num_episodes": 32,
+              "num_risers": 9,
+              "runtime_filter": true,
+              "seed": 42,
+              "success_rate": 0.375,
+              "survival_curve": {
+                "1": 1.0,
+                "2": 1.0,
+                "3": 1.0,
+                "4": 0.96875,
+                "5": 0.96875,
+                "6": 0.9375,
+                "7": 0.90625,
+                "8": 0.875,
+                "9": 0.59375
+              },
+              "task": "Unitree-G1-Stairs-Online-DQ",
+              "timeout_rate": 0.0
+            }
+          ],
+          "seeds": [
+            42
+          ],
+          "success_rate": 0.375,
+          "success_rate_std": 0.0,
+          "task": "Unitree-G1-Stairs-Online-DQ",
+          "timeout_rate": 0.0,
+          "timeout_rate_std": 0.0
+        },
+        "DQN": {
+          "correction_mean": 0.002972942725739225,
+          "correction_mean_std": 0.0,
+          "fall_rate": 0.5625,
+          "fall_rate_std": 0.0,
+          "intervention_per_riser": 1.0259672824759036,
+          "intervention_per_riser_std": 0.0,
+          "mean_reached_riser": 8.21875,
+          "mean_reached_riser_std": 0.0,
+          "num_episodes": 32,
+          "repeats": 1,
+          "replicates": [
+            {
+              "conditional_failure_hazard": {
+                "1": 0.0,
+                "2": 0.0,
+                "3": 0.0,
+                "4": 0.0,
+                "5": 0.03125,
+                "6": 0.03225806451612903,
+                "7": 0.06666666666666667,
+                "8": 0.17857142857142858,
+                "9": 0.0
+              },
+              "correction_mean": 0.002972942725739225,
+              "fall_rate": 0.5625,
+              "intervention_per_riser": 1.0259672824759036,
+              "mean_reached_riser": 8.21875,
+              "minimum_cbf_h": -0.14993882179260254,
+              "num_envs": 32,
+              "num_episodes": 32,
+              "num_risers": 9,
+              "runtime_filter": true,
+              "seed": 42,
+              "success_rate": 0.4375,
+              "survival_curve": {
+                "1": 1.0,
+                "2": 1.0,
+                "3": 1.0,
+                "4": 1.0,
+                "5": 0.96875,
+                "6": 0.9375,
+                "7": 0.875,
+                "8": 0.71875,
+                "9": 0.71875
+              },
+              "task": "Unitree-G1-Stairs-Online-DQN",
+              "timeout_rate": 0.0
+            }
+          ],
+          "seeds": [
+            42
+          ],
+          "success_rate": 0.4375,
+          "success_rate_std": 0.0,
+          "task": "Unitree-G1-Stairs-Online-DQN",
+          "timeout_rate": 0.0,
+          "timeout_rate_std": 0.0
+        }
+      },
+      "rejection_reasons": [],
+      "round": 1,
+      "total_kl_from_base": 0.0006265099509619176,
+      "update_metrics": {
+        "action_saturation_fraction": 0.3150160014629364,
+        "action_std_mean": 0.2071375846862793,
+        "actor_learning_rate": 5e-06,
+        "cbf_correction_mean": 0.007384762167930603,
+        "cbf_intervention_fraction": 0.0382080078125,
+        "clip_fraction": 0.0769856795668602,
+        "entropy": -2.000462055206299,
+        "explained_variance_before_update": 0.8572131395339966,
+        "fall_event_count": 40.0,
+        "fall_event_fraction": 0.0016276042442768812,
+        "mean_kl": 0.000398546049837023,
+        "pre_intervention_cost_max": 4.46312952041626,
+        "pre_intervention_cost_mean": 0.14661309123039246,
+        "return_value_correlation_before_update": 0.9399468302726746,
+        "safe_bc_effective_learning_rate": 0.0,
+        "safe_bc_gradient_norm": 0.0,
+        "safe_bc_loss": 0.0,
+        "safe_bc_weight": 0.0,
+        "surrogate": -0.00034355540992692113,
+        "value": 0.8960258141160011
+      }
+    }
+  ],
+  "seed": 42,
+  "task": "Unitree-G1-Stairs-Online-DQ",
+  "train_domain": "DQ",
+  "warm_start": {
+    "expanded_critic_width": 799,
+    "optimizer_reset": true,
+    "resume_online_checkpoint": "<SERVER_RUN_ROOT>/artifacts/online_refine_dq_fall_reward_v1/accepted/accepted_round_001_public.pt"
+  }
+}

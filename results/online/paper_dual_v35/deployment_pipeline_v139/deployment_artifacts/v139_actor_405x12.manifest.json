@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "artifact_role": "frozen_v139_real_robot_initialization_candidate",
+  "checkpoint_label": "results/online/paper_dual_v35/clearance_mixed_v139/checkpoints/selected_round_01.pt",
+  "checkpoint_sha256": "323f1e00b58d379b8746c0191a44272f2e1df134139050417c56e733cc484728",
+  "actor_state_sha256": "4a4926d9227c31fb239ceead6c39bed61304d1f2c7e3a47aea510e060cee2acd",
+  "artifact_label": "results/online/paper_dual_v35/deployment_pipeline_v139/deployment_artifacts/v139_actor_405x12.onnx",
+  "onnx_sha256": "d3f75cbb7699ddcc824d16a34a46b48e03d5345676d544366ba89db414a89d6b",
+  "onnx_size_bytes": 1499237,
+  "inference": {
+    "input_name": "obs",
+    "input_shape": [
+      1,
+      405
+    ],
+    "output_name": "actions",
+    "output_shape": [
+      1,
+      12
+    ],
+    "deterministic_policy_mean": true,
+    "hidden_dims": [
+      512,
+      256,
+      128
+    ],
+    "activation": "elu",
+    "observation_normalization_embedded": true,
+    "onnx_opset": 18
+  },
+  "validation": {
+    "onnx_checker_passed": true,
+    "fixed_probe_count": 8,
+    "fixed_probe_seed": 139,
+    "maximum_absolute_output_error": 4.76837158203125e-07,
+    "acceptance_tolerance": 1e-05
+  },
+  "hardware_control_ready": false,
+  "warning": "This ONNX file is only the nominal actor. Real execution still requires the exact five-frame observation contract, 12-to-29 joint mapping, hardware state estimation, fixed-stair localization, runtime CBF, command/joint limits, watchdog, operator takeover, and emergency stop."
+}

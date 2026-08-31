@@ -1,0 +1,18 @@
+{
+  "actor_observation_interface": "405D proprioception + 10D deployable CBF geometry",
+  "base_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "git_commit": "b7f586532e146621079bb39cd530f105456637eb",
+  "method_id": "paired-terminal-outcome-contrast-trajectory-adapter-v111",
+  "rollout_conditions": [
+    "filter_off",
+    "filter_on"
+  ],
+  "teacher_episode_scope": "discordant-pairs",
+  "teacher_target": "paired-outcome-contrast",
+  "training_seeds": [
+    201353400,
+    201353410,
+    201353420,
+    201353430
+  ]
+}

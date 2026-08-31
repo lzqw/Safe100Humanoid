@@ -1,0 +1,35 @@
+{
+  "schema_version": "paper_dual_v35.v83.decision.v1",
+  "candidate": "new-seed-pooled-continuation-v83",
+  "decision": "stop_same_configuration_below_gate",
+  "reason": "The accepted actor pooled to 520/779 (66.75%) across two aligned filter-off rollouts; the isolated 69.27% peak did not reproduce and remained below 75%.",
+  "training_source_commit": "d74dbc9",
+  "input_checkpoint_sha256": "b483e95ab345b7936d7b0f8b360e758a01ccd96d77d1ac08f3a915714001c16a",
+  "training": {
+    "seed": 201352626,
+    "num_envs": 256,
+    "rounds": 4,
+    "rollout_steps_per_round": 1024,
+    "elapsed_seconds": 149.14576211303938,
+    "actor_gradient_accumulation_microbatches": 4,
+    "actor_optimizer_updates_per_round": 1,
+    "transactional_rollback_count": 1,
+    "cuda_out_of_memory": false
+  },
+  "aligned_filter_off_rollouts": [
+    {"round": 1, "success_count": 247, "episode_count": 396, "success_rate": 0.6237373737373737, "actor_role": "base"},
+    {"round": 2, "success_count": 266, "episode_count": 384, "success_rate": 0.6927083333333334, "actor_role": "accepted_proposal"},
+    {"round": 3, "success_count": 252, "episode_count": 389, "success_rate": 0.6478149100257069, "actor_role": "rejected_proposal"},
+    {"round": 4, "success_count": 254, "episode_count": 395, "success_rate": 0.6430379746835443, "actor_role": "accepted_actor_retry"}
+  ],
+  "selected_actor_pooled_evidence": {
+    "success_count": 520,
+    "episode_count": 779,
+    "success_rate": 0.6675224646983312
+  },
+  "selected_checkpoint_sha256": "09330d3a5a7ae2baa2d84437f0633f0038128674d6761d1d495d57bb593aae56",
+  "selected_actor_sha256": "219878640bc9de3f659e062dcb3c1389293603c47ef6a9d95e30f0cc0c60a99a",
+  "deployment_gate_run": false,
+  "global_best_changed": false,
+  "next_hypothesis": "Increase the unit-balanced Eq. (27) margin coefficient to an intermediate value between 0.1 and 1.0 instead of repeating the same continuation."
+}

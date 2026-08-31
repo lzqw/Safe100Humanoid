@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "binary_uploaded_to_github": false,
+  "input": {
+    "label": "v79_round_03",
+    "checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317"
+  },
+  "v97": {
+    "selected": false,
+    "candidate_checkpoint_sha256": "d18c20fe8dc09fb3d4650fa02e15500ce3b305967ab61cb47edc4403cd6d9a6b",
+    "residual_state_sha256": "662c575d5e75dbd8332e7d51610972c07bbe9f52c67b72b02b64e983f5bbf353",
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/learned_residual_v97_3631e4e_4x128/candidate.pt"
+  },
+  "v98": {
+    "selected": false,
+    "deployment_residual_scale": 0.05,
+    "candidate_checkpoint_sha256": "707839aedb7a4b4d6dfe96895e7aded686efbbf7456e592ecfd45a5d7455bcf5",
+    "residual_state_sha256": "662c575d5e75dbd8332e7d51610972c07bbe9f52c67b72b02b64e983f5bbf353",
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/learned_residual_scale_v98_ec51df1_4x64/candidate.pt"
+  },
+  "v99_raw": {
+    "selected": false,
+    "candidate_checkpoint_sha256": "8c8b052e8ea6ead93db6f8dcec18eee428cc80994af000f4e524dc51db8b4cb3",
+    "residual_state_sha256": "8379a05bcc4b3f5753a9fd2446ba99334edf08215791bbfe7cb0a9b538d7d895",
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/successful_residual_v99_e71728f_4x128/candidate.pt"
+  },
+  "v99_calibrated": {
+    "selected": false,
+    "deployment_residual_scale": 0.0,
+    "candidate_checkpoint_sha256": "aa463c5bc10a8076a76539e04bf91d7bea2b7f058324357a13bd7fdb5b984737",
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/successful_residual_scale_v99_e71728f_4x64/candidate.pt"
+  }
+}

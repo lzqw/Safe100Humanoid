@@ -1,0 +1,24 @@
+{
+  "schema_version": "paper_dual_v35.v104.checkpoints.v1",
+  "source_commit": "a09ffe4a6e9d118337021af8b9230179e95c6ba1",
+  "base": {
+    "role": "v79_historical_best",
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt",
+    "sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317"
+  },
+  "best_aligned_v104": {
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/persistent_paper_dual_v104_a09ffe4_s201353360/round_05.pt",
+    "sha256": "20d9ae29cd82c5ab59c57409d6fc6a0451660a61ddb3d074aba0b117edcfcf20",
+    "actor_sha256": "ef1a7e3008f568eef6b02f88983febce6903dc38c928f68632de80566cd10ada",
+    "aligned_filter_off_success_rate": 0.66,
+    "accepted": false,
+    "uploaded_to_git": false
+  },
+  "final_unaligned_v104": {
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/persistent_paper_dual_v104_a09ffe4_s201353360/round_08.pt",
+    "sha256": "309ca5830b35f511048e357dda197e287a342f1e49a111dd932582b870757290",
+    "actor_sha256": "7e9daa560d1feed34c29736c102a9966a21ff8ebe038b78c29cc8b6e7b27c55d",
+    "aligned": false,
+    "uploaded_to_git": false
+  }
+}

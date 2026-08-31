@@ -1,0 +1,56 @@
+{
+  "schema_version": "paper_dual_v35.v92.decision.v1",
+  "candidate": "full-batch-sgd-deployable-cbf-geometry-residual-adapter-v92",
+  "decision": "rejected_one_episode_below_absolute_filter_off_gate",
+  "reason": "The direction-preserving SGD adapter passed its offline gate, but the only untouched deterministic filter-off evaluation reached 47/64=73.44%, one episode below the predeclared 75% threshold.",
+  "source_commit": "5914b46decd3d1d93ffaa6bd049cc382ed7efe32",
+  "targeted_tests_passed": 6,
+  "hardware": "NVIDIA GeForce GTX 1660 SUPER",
+  "input_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "training": {
+    "training_seeds": [201352700, 201352710, 201352720, 201352730],
+    "num_envs_per_seed": 64,
+    "paired_initial_episode_count": 256,
+    "filter_off_success_count": 182,
+    "filter_on_success_count": 191,
+    "matched_rescue_episode_count": 54,
+    "matched_harmed_episode_count": 45,
+    "training_transition_count": 101556,
+    "teacher_transition_count": 2001,
+    "teacher_eta": 0.25,
+    "optimizer": "sgd",
+    "optimizer_updates": 1,
+    "trainable_parameter_count": 2560,
+    "elapsed_seconds": 228.67155244603055
+  },
+  "offline_gate": {
+    "passed": true,
+    "teacher_correction_cosine_before": 0.0,
+    "teacher_correction_cosine_after": 0.5911936939171839,
+    "teacher_weighted_distance_before": 0.1368226806102348,
+    "teacher_weighted_distance_after": 0.13647908219846208,
+    "active_state_forward_kl": 4.9966162169401465e-05,
+    "legacy_actor_weight_change_max_abs": 0.0,
+    "adapter_interpolation_scale": 0.47021484375
+  },
+  "untouched_filter_off_gate": {
+    "seed": 201352750,
+    "episode_count": 64,
+    "success_count": 47,
+    "success_rate": 0.734375,
+    "threshold": 0.75,
+    "episodes_short_of_threshold": 1,
+    "filter_on_run": false,
+    "additional_seed_run": false
+  },
+  "checkpoint": {
+    "expanded_base_sha256": "536d0a1db57a3a7067cd2ca24378717a53f21d0b2fba70a2cea40a941e8ce099",
+    "candidate_actor_sha256": "fc97811259ce869412371a77462183cb3663d1d84679b4d8e318c44574af27aa",
+    "candidate_checkpoint_sha256": "3c855c5b5e81cb221187d10db227595abbf7e765d7273d2a2b92515b697cfcce",
+    "uploaded": false,
+    "reason": "absolute deployment gate failed"
+  },
+  "formal_256_env_gate_run": false,
+  "global_best_changed": false,
+  "next_hypothesis": "Replace one global linear geometry adapter with swing-side and barrier-phase conditional residual heads so opposing rescued corrections are not averaged into one weak direction, while preserving the same one-step SGD and KL gate."
+}

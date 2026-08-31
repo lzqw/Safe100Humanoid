@@ -1,0 +1,14 @@
+{
+  "base_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "gate_threshold": 0.6,
+  "git_commit": "cef3b929d0970e84776894ef95f9b259ec138295",
+  "method_id": "causal-discordant-treatment-gated-cbf-residual-v115",
+  "num_envs": 64,
+  "screen_seed": 201353680,
+  "training_seeds": [
+    201353630,
+    201353640,
+    201353650
+  ],
+  "validation_seed": 201353660
+}

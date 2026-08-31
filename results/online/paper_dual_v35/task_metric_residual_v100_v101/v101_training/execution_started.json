@@ -1,0 +1,14 @@
+{
+  "base_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "gate_envs": 64,
+  "gate_seed": 201353270,
+  "git_commit": "586d58ccd8674deecad1f28c6cb2ff5d9abd93c0",
+  "method_id": "task-metric-successful-filtered-learned-cbf-residual-dagger-v101",
+  "num_envs": 128,
+  "training_seeds": [
+    201353220,
+    201353230,
+    201353240,
+    201353250
+  ]
+}

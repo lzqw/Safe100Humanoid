@@ -1,0 +1,14 @@
+{
+  "schema_version": "paper_dual_v35.v119.checkpoints.v1",
+  "input": {
+    "path_4080": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt",
+    "sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317"
+  },
+  "rolled_back_candidate": {
+    "path_4080": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/heldout_residual_v119_2d49d99_4x64_s201354000/candidate.pt",
+    "checkpoint_sha256": "052d19c05b2ec2edee1dc4feaacdd2d42fc18ed47dfdb7378685cff6a4e27c16",
+    "residual_state_sha256": "da250c507b93b53ec62fb684313f4e0d71624e361cded6ec98de02bacd45a17a",
+    "uploaded": false,
+    "reason": "held-out surrogate rejected proposal; checkpoint contains exact zero residual fallback"
+  }
+}

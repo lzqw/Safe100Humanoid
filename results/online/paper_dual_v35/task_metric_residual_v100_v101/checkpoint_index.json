@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "source_commit": "586d58ccd8674deecad1f28c6cb2ff5d9abd93c0",
+  "global_selected": {
+    "version": "v79",
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt",
+    "sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317"
+  },
+  "v101_raw_candidate": {
+    "selected": false,
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/task_metric_successful_residual_v101_586d58c_4x128/candidate.pt",
+    "sha256": "40c4f8cda03d11c3f1f65911936e08eebc25981bd5754ac5bd0d504afa6d4b48",
+    "residual_state_sha256": "e23d95e2a5acf0dd9fcf78e263f617923f5b02940a5eeb99e04629b6ae34b7ce"
+  },
+  "v101_scaled_candidate": {
+    "selected": false,
+    "residual_scale": 0.05,
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/task_metric_successful_residual_scale_v101_586d58c_4x64/candidate.pt",
+    "sha256": "c53e1d6f6cdb839add4f7f84f2099084671dc00860badea93997de574e4fecb1"
+  },
+  "github_binary_policy": "Rejected candidate binaries are retained on 4080 and are not committed to GitHub."
+}

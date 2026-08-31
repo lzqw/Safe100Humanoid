@@ -1,0 +1,218 @@
+{
+  "attempts": [
+    {
+      "base_policy_only": true,
+      "candidate_seed": 39808,
+      "candidate_severity": 0.0,
+      "context_family": "low_foot_friction",
+      "context_id": "C1",
+      "evaluation_seed_start": 78170000,
+      "evaluation_seeds": [
+        78170000,
+        78170001,
+        78170002,
+        78170003
+      ],
+      "failure_type_counts": {
+        "contact_stability": 61,
+        "lateral_heading_drift": 1,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "failure_type_fractions": {
+        "contact_stability": 0.9838709677419355,
+        "lateral_heading_drift": 0.016129032258064516,
+        "non_lateral_balance_or_phase": 0.0,
+        "non_lateral_high_cbf_demand": 0.0,
+        "other_non_lateral": 0.0
+      },
+      "fall_count": 62,
+      "fall_rate": 0.12109375,
+      "minimum_fall_count_gate": 100,
+      "num_episodes": 512,
+      "parameters_sha256": "dceb8f25eac7a990a5d831e2eb94f280a00112f54b4c2afe689b8742909e0c65",
+      "qualifies": false,
+      "second_failure_fraction": 0.016129032258064516,
+      "success_rate": 0.87890625,
+      "target_failure_fraction": 0.9838709677419355,
+      "target_failure_type": "contact_stability"
+    },
+    {
+      "base_policy_only": true,
+      "candidate_seed": 39809,
+      "candidate_severity": 0.090909090909,
+      "context_family": "low_foot_friction",
+      "context_id": "C1",
+      "evaluation_seed_start": 78170100,
+      "evaluation_seeds": [
+        78170100,
+        78170101,
+        78170102,
+        78170103
+      ],
+      "failure_type_counts": {
+        "contact_stability": 72,
+        "lateral_heading_drift": 2,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "failure_type_fractions": {
+        "contact_stability": 0.972972972972973,
+        "lateral_heading_drift": 0.02702702702702703,
+        "non_lateral_balance_or_phase": 0.0,
+        "non_lateral_high_cbf_demand": 0.0,
+        "other_non_lateral": 0.0
+      },
+      "fall_count": 74,
+      "fall_rate": 0.14453125,
+      "minimum_fall_count_gate": 100,
+      "num_episodes": 512,
+      "parameters_sha256": "61607a16dd0a36501df63501ce41277e42290dbbfe66f8edca1e03cbe8288a2d",
+      "qualifies": false,
+      "second_failure_fraction": 0.02702702702702703,
+      "success_rate": 0.85546875,
+      "target_failure_fraction": 0.972972972972973,
+      "target_failure_type": "contact_stability"
+    },
+    {
+      "base_policy_only": true,
+      "candidate_seed": 39810,
+      "candidate_severity": 0.181818181818,
+      "context_family": "low_foot_friction",
+      "context_id": "C1",
+      "evaluation_seed_start": 78170200,
+      "evaluation_seeds": [
+        78170200,
+        78170201,
+        78170202,
+        78170203
+      ],
+      "failure_type_counts": {
+        "contact_stability": 81,
+        "lateral_heading_drift": 9,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "failure_type_fractions": {
+        "contact_stability": 0.9,
+        "lateral_heading_drift": 0.1,
+        "non_lateral_balance_or_phase": 0.0,
+        "non_lateral_high_cbf_demand": 0.0,
+        "other_non_lateral": 0.0
+      },
+      "fall_count": 90,
+      "fall_rate": 0.17578125,
+      "minimum_fall_count_gate": 100,
+      "num_episodes": 512,
+      "parameters_sha256": "e9899b34f59bfa2c7292db4973dab4992988d41ddf38e2a4612d1e785d6ea073",
+      "qualifies": false,
+      "second_failure_fraction": 0.1,
+      "success_rate": 0.82421875,
+      "target_failure_fraction": 0.9,
+      "target_failure_type": "contact_stability"
+    },
+    {
+      "base_policy_only": true,
+      "candidate_seed": 39811,
+      "candidate_severity": 0.272727272727,
+      "context_family": "low_foot_friction",
+      "context_id": "C1",
+      "evaluation_seed_start": 78170300,
+      "evaluation_seeds": [
+        78170300,
+        78170301,
+        78170302,
+        78170303
+      ],
+      "failure_type_counts": {
+        "contact_stability": 84,
+        "lateral_heading_drift": 2,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "failure_type_fractions": {
+        "contact_stability": 0.9767441860465116,
+        "lateral_heading_drift": 0.023255813953488372,
+        "non_lateral_balance_or_phase": 0.0,
+        "non_lateral_high_cbf_demand": 0.0,
+        "other_non_lateral": 0.0
+      },
+      "fall_count": 86,
+      "fall_rate": 0.16796875,
+      "minimum_fall_count_gate": 100,
+      "num_episodes": 512,
+      "parameters_sha256": "c4d2d2c7cfbe4e308600182349d0efa366ad0af42819a1562a677802ccf6d901",
+      "qualifies": false,
+      "second_failure_fraction": 0.023255813953488372,
+      "success_rate": 0.83203125,
+      "target_failure_fraction": 0.9767441860465116,
+      "target_failure_type": "contact_stability"
+    },
+    {
+      "base_policy_only": true,
+      "candidate_seed": 39812,
+      "candidate_severity": 0.363636363636,
+      "context_family": "low_foot_friction",
+      "context_id": "C1",
+      "evaluation_seed_start": 78170400,
+      "evaluation_seeds": [
+        78170400,
+        78170401,
+        78170402,
+        78170403
+      ],
+      "failure_type_counts": {
+        "contact_stability": 102,
+        "lateral_heading_drift": 1,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "failure_type_fractions": {
+        "contact_stability": 0.9902912621359223,
+        "lateral_heading_drift": 0.009708737864077669,
+        "non_lateral_balance_or_phase": 0.0,
+        "non_lateral_high_cbf_demand": 0.0,
+        "other_non_lateral": 0.0
+      },
+      "fall_count": 103,
+      "fall_rate": 0.201171875,
+      "minimum_fall_count_gate": 100,
+      "num_episodes": 512,
+      "parameters_sha256": "daee0d16e9534265f6736d6086e20cf49799156f10133f8175e68427aff090ee",
+      "qualifies": true,
+      "second_failure_fraction": 0.009708737864077669,
+      "success_rate": 0.798828125,
+      "target_failure_fraction": 0.9902912621359223,
+      "target_failure_type": "contact_stability"
+    }
+  ],
+  "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "base_policy_only": true,
+  "candidate_seeds": [
+    39808,
+    39809,
+    39810,
+    39811,
+    39812,
+    39813,
+    39814,
+    39815,
+    39816,
+    39817,
+    39818,
+    39819
+  ],
+  "context_id": "C1",
+  "exploratory": false,
+  "minimum_fall_count_gate": 100,
+  "mode": "contact_stability",
+  "policy_method": "Local Matched-Success Preservation v21",
+  "prospective_protocol_file_sha256": "af073b100c7446e2ffe34033ef24bff3905e770dd2cc77b3c89df9d3a83df23d",
+  "prospective_protocol_git_commit": "5dac6962a2a9b13053032477008c81cc9a82f269",
+  "protocol_id": "safe100-deployment-unit-local-matched-success-v21"
+}

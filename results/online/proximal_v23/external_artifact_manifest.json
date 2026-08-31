@@ -1,0 +1,43 @@
+{
+  "artifact_store_root": "/home/carla/LZQW/SAFE100/humanoid",
+  "contact_artifacts_exist": false,
+  "development_gate_passed": false,
+  "experiment_root": "artifacts/proximal_v23/lateral",
+  "file_count": 61,
+  "final_policy": {
+    "actor_sha256": "a08a2ac986735dfe7bc1fedf54b8c33782a9d45e2162c1eb8382e692136aa5e7",
+    "checkpoint_bytes": 13166637,
+    "checkpoint_path": "artifacts/proximal_v23/lateral/training/final_round_08.pt",
+    "checkpoint_sha256": "d71cff3df1f576670e4de291b4e6e684f928a05503c245baadf3589b6a6a2004",
+    "fixed_round": 8,
+    "performance_selected": false
+  },
+  "inventory": {
+    "file": "external_artifact_inventory.sha256",
+    "sha256": "b77a12325d11cbffd98360c8a147de3fe002d32451322d11e1d7f099d2a590fc"
+  },
+  "key_logs": [
+    {
+      "bytes": 75247,
+      "path": "artifacts/proximal_v23/lateral/formal_train.log",
+      "sha256": "ec78f08945a045d36fa68a56835def33059c4bd9853591a6af830c70a193b70e"
+    },
+    {
+      "bytes": 60617,
+      "path": "artifacts/proximal_v23/lateral/formal_audit.log",
+      "sha256": "932ebc271a6cb52f1ebddfdc7343fed8cdb4cc1e9abf58b2eb3bd5edec0db7f9"
+    },
+    {
+      "bytes": 463,
+      "path": "artifacts/proximal_v23/lateral/formal_plot.log",
+      "sha256": "4c4d87ba0a2f4d39e07d90870bf5fd25068e45bbfa22acc8f50a19f6fa205c30"
+    }
+  ],
+  "retained_base_checkpoint": {
+    "bytes": 22281406,
+    "path": "artifacts/retention_v13/arm_b_state_retention/accepted_final.pt",
+    "sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8"
+  },
+  "schema_version": 1,
+  "total_bytes": 254687686
+}

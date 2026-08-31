@@ -1,0 +1,46 @@
+{
+  "schema_version": "paper_dual_v35.v78.decision.v1",
+  "candidate": "eq27-unit-balanced-fully-filtered-v78",
+  "decision": "rejected_at_training_gate",
+  "reason": "The second proposal improved the adjacent accepted-base retry from 68.40% to 70.29% filter-on, but remained below the 75% gate.",
+  "source_commit": "a7b2d9e0da02b2ba30bd3e24e80531bfd17d39b5",
+  "telemetry_scale_fix_commit": "824d6e9",
+  "training": {
+    "seed": 201352623,
+    "num_envs": 128,
+    "rounds": 4,
+    "rollout_steps_per_round": 1024,
+    "elapsed_seconds": 134.8651569710346,
+    "margin_weight": 0.1,
+    "proximity_weight": 1.0,
+    "reward_manager_dt_scale": 0.02,
+    "transactional_rollback_count": 1
+  },
+  "aligned_filter_on_rollouts": [
+    {"round": 1, "success_count": 183, "episode_count": 274, "success_rate": 0.6678832116788321, "rollback": false},
+    {"round": 2, "success_count": 184, "episode_count": 277, "success_rate": 0.6642599277978339, "rollback": true},
+    {"round": 3, "success_count": 184, "episode_count": 269, "success_rate": 0.6840148698884758, "rollback": false},
+    {"round": 4, "success_count": 194, "episode_count": 276, "success_rate": 0.7028985507246377, "rollback": false}
+  ],
+  "selected_checkpoint": {
+    "round": 3,
+    "sha256": "b6f7b03deb24faa9b83759e759f920ca4350f4c9c1b5c5bcbc39420a12ec1f85",
+    "actor_sha256": "d0eb24d33775ceaf0cebfe98b3ed0421c2aa33e84fd6ef84de4fd3d985f9ef13",
+    "filter_on_success_rate": 0.7028985507246377,
+    "uploaded": false
+  },
+  "reward_manager_scaled_decomposition": {
+    "nominal_reward_mean_per_transition_by_round": [0.01945473019064906, 0.01947139174494396, 0.02086310226035721, 0.020871276479438164],
+    "margin_reward_mean_per_transition_by_round": [-0.0015295487357431625, -0.0014521573780166364, -0.0013448824735536392, -0.0013979275417511873],
+    "proximity_reward_mean_per_transition_by_round": [-0.0016299830080333778, -0.001615462285499234, -0.0015802187281224178, -0.0015763470675483405],
+    "dual_reward_mean_per_transition_by_round": [-0.003159531744746289, -0.0030676196644071753, -0.002925101201519738, -0.002974274619573407]
+  },
+  "deployment_filter_off_gate": {
+    "planned_episode_count": 128,
+    "success_threshold": 0.75,
+    "run": false,
+    "reason": "filtered_training_gate_failed"
+  },
+  "current_best_changed": false,
+  "next_hypothesis": "Run a controlled comparison against v72 using the identical base, seed, 25/75 mixed execution and actor LR, changing only to the unit-balanced Eq. (27) reward."
+}

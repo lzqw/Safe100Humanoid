@@ -1,0 +1,211 @@
+{
+  "actor_expansion": {
+    "expanded_actor_width": 415,
+    "inactive_geometry_exact_base_policy": true,
+    "legacy_first_layer_copy_max_abs_error": 0.0,
+    "new_feature_count": 10,
+    "new_first_layer_column_max_abs": 0.0,
+    "pi0_exact_preservation_proof": true,
+    "source_actor_width": 405
+  },
+  "base_actor_sha256": "c08c387c0939a0774904cd8f3ccc3d459acc5134f26c5dd44ae411a9eb005188",
+  "base_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "candidate_checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/filter_off_full_batch_v118_f2e3b11_4x64_s201353900/candidate.pt",
+  "candidate_checkpoint_sha256": "6b327c65743c70cd70cbcd44a2bb042d189e2c6a3dead463536bfa73a8ad4039",
+  "cbf": {
+    "acceleration_or_drift_model": false,
+    "actor_observation_changed": false,
+    "critic_observation_changed": false,
+    "current_CBF0_source_unchanged": true,
+    "mode": "current_velocity_cbf",
+    "parameters": {
+      "alpha": 10.0,
+      "barrier_slope": 0.8,
+      "lambda_s": 0.0,
+      "lambda_x": 0.0,
+      "metric": "euclidean",
+      "toe_margin": 0.08,
+      "top_clearance": 0.025
+    },
+    "plant_action_transform": "identity",
+    "runtime_filter": false
+  },
+  "context": "F2",
+  "elapsed_seconds": 135.97775172896218,
+  "episode_failure_count": 87,
+  "episode_success_count": 169,
+  "exploration_std": 0.02,
+  "final_residual_sha256": "62d5bec074158d8927ee35e886a6daf48f888e3b82efc9ca247240a8add8e4b2",
+  "geometry_observation": {
+    "deployable": true,
+    "feature_count": 10,
+    "features_per_foot": [
+      "horizontal",
+      "vertical",
+      "barrier",
+      "contact",
+      "valid"
+    ],
+    "future_or_filtered_action_fields": 0,
+    "group": "cbf_geometry",
+    "source": "current bilateral foot FK + contact + mapped next-riser edges",
+    "timing": "persistent approach and swing, including pre-toe-off"
+  },
+  "git_commit": "f2e3b11c28ae24151fdca2710ff0c551970e98be",
+  "independent_gate_policy": "run separately only if screen_rate_gte_0.75",
+  "independent_gate_run": false,
+  "initial_residual_sha256": "fdd57a8c24a55b2b9d476a7e1ccf00263cf934afb3baf8bd36164c24dfce064b",
+  "max_residual": 0.1,
+  "method_id": "filter-off-episodic-full-batch-residual-ppo-v118",
+  "num_envs": 64,
+  "offline_gate_passed": true,
+  "optimization_seed": 201353993,
+  "optimizer": "sgd",
+  "optimizer_parameter_state_count": 0,
+  "optimizer_state_in_candidate": false,
+  "paper_dual_reward": {
+    "candidate": "raw_moderate",
+    "historical_default_preserved": false,
+    "paper_arxiv_id": "2510.14959v6",
+    "paper_demo_commit": "68955c8ba9e929d974b6677635370ee93eecc63a",
+    "reward_parameters": {
+      "correction_space": "raw_action",
+      "intervention_weight": 10.0,
+      "margin_weight": 1.0,
+      "sigma": 0.5
+    },
+    "runtime_filter_during_training": false
+  },
+  "rollout_summaries": [
+    {
+      "active_geometry_transition_count": 21857,
+      "fall_count": 28,
+      "initial_state_signature": "764432a3ab13d895df7d55a357e4202bde39f7efaa3086da9eb3ef7a4523a401",
+      "mean_reached_riser": 7.59375,
+      "seed": 201353900,
+      "success_count": 37
+    },
+    {
+      "active_geometry_transition_count": 22814,
+      "fall_count": 18,
+      "initial_state_signature": "fe3ce3cb178f5af8a278b3d5ae1b55174692f96a908b7fa8243e5ba9487e8a21",
+      "mean_reached_riser": 8.234375,
+      "seed": 201353910,
+      "success_count": 46
+    },
+    {
+      "active_geometry_transition_count": 22234,
+      "fall_count": 20,
+      "initial_state_signature": "691da7c5561172e55feaa000371955d0218bbea203d299ea9637f1df8e78c42e",
+      "mean_reached_riser": 8.0625,
+      "seed": 201353920,
+      "success_count": 43
+    },
+    {
+      "active_geometry_transition_count": 21666,
+      "fall_count": 21,
+      "initial_state_signature": "63e3d421965eb03cff22ebaa521121a96cab244f465b84e57916222d9ae6bed0",
+      "mean_reached_riser": 7.859375,
+      "seed": 201353930,
+      "success_count": 43
+    }
+  ],
+  "schema_version": 1,
+  "screen": {
+    "all_finite": true,
+    "candidate_checkpoint_sha256": "6b327c65743c70cd70cbcd44a2bb042d189e2c6a3dead463536bfa73a8ad4039",
+    "fall_count": 24,
+    "fall_rate": 0.375,
+    "initial_state_signature": "127bb5e0d407dea6923055942c2bb2f35e3c2a64173551bff12ef154161f4160",
+    "mean_reached_riser": 7.921875,
+    "mean_residual_norm": 0.0016290852956650117,
+    "num_episodes": 64,
+    "passed_75_percent": false,
+    "residual_state_sha256": "62d5bec074158d8927ee35e886a6daf48f888e3b82efc9ca247240a8add8e4b2",
+    "runtime_filter": false,
+    "seed": 201353980,
+    "success_count": 40,
+    "success_rate": 0.625
+  },
+  "shift": {
+    "actor_observation_fields_added": 0,
+    "baseline_riser_height_m": 0.13,
+    "cbf_geometry_exact": true,
+    "clearance_barrier": "sloped_xz",
+    "clearance_barrier_slope": 0.8,
+    "command_changed": false,
+    "context": "F2",
+    "context_name": "hard_uniform_18_4cm",
+    "controller_changed": false,
+    "filter_alpha": 10.0,
+    "fixed_deployment_environment": {
+      "actor_observation_corruption_disabled": true,
+      "base_com_randomization_absent": true,
+      "curriculum_disabled": true,
+      "encoder_bias_absent": true,
+      "friction_randomization_absent": true,
+      "push_randomization_absent": true,
+      "registered_environment_variant": "fixed_deployment_play",
+      "reset_events_exact": true,
+      "retained_fresh_initial_state_events": [
+        "reset_base",
+        "reset_robot_joints"
+      ]
+    },
+    "friction_changed": false,
+    "num_risers": 9,
+    "plant_action_transform": "identity",
+    "recovery_distance_m": 0.15,
+    "riser_height_m": 0.184,
+    "riser_profile_m": null,
+    "runtime_filter": false,
+    "shift": "fixed_uniform_higher_riser",
+    "stair_riser_patch_slots": 9,
+    "stair_target_patch_slots": 10,
+    "terrain_geometry_changed": true,
+    "top_platform_patch_included": true
+  },
+  "trainable_parameter_count": 28364,
+  "training": {
+    "after": {
+      "clipped_surrogate": 0.0011788313277065754,
+      "importance_ratio_mean": 0.9993708729743958,
+      "reference_forward_kl": 0.004852909594774246,
+      "transition_count": 88571,
+      "unclipped_surrogate": 0.0025587226264178753,
+      "weight_sum": 1.0
+    },
+    "before": {
+      "clipped_surrogate": 8.381903171539307e-09,
+      "importance_ratio_mean": 1.0,
+      "reference_forward_kl": 0.0,
+      "transition_count": 88571,
+      "unclipped_surrogate": 8.381903171539307e-09,
+      "weight_sum": 1.0
+    },
+    "epochs": 1,
+    "maximum_gradient_norm_pre_clip": 4.578927993774414,
+    "optimizer_updates": 1,
+    "trust_region": {
+      "max_reference_kl": 0.005,
+      "parameter_interpolation_scale": 0.012451171875,
+      "projection_iterations": 12
+    },
+    "unprojected_after": {
+      "clipped_surrogate": -0.44685494899749756,
+      "importance_ratio_mean": 0.11005643010139465,
+      "reference_forward_kl": 21.202171325683594,
+      "transition_count": 88571,
+      "unclipped_surrogate": -0.0029630716890096664,
+      "weight_sum": 1.0
+    }
+  },
+  "training_runtime_filter": false,
+  "training_seeds": [
+    201353900,
+    201353910,
+    201353920,
+    201353930
+  ],
+  "training_transition_count": 88571
+}

@@ -1,0 +1,7 @@
+{
+  "protocol_id": "safe100-cbf-teacher-overnight-v30",
+  "complete": false,
+  "status": "not_run",
+  "reason": "The predeclared F1 checkpoint monitor may run only after all formal training completes; that precondition was not met.",
+  "F1_checkpoint_curve_available": false
+}

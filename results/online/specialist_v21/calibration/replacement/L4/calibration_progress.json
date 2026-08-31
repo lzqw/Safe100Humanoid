@@ -1,0 +1,66 @@
+{
+  "attempts": [
+    {
+      "base_policy_only": true,
+      "candidate_seed": 35608,
+      "candidate_severity": 0.0,
+      "context_family": "weak_centerline_correction",
+      "context_id": "L4",
+      "evaluation_seed_start": 70150000,
+      "evaluation_seeds": [
+        70150000,
+        70150001,
+        70150002,
+        70150003
+      ],
+      "failure_type_counts": {
+        "contact_stability": 18,
+        "lateral_heading_drift": 90,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "failure_type_fractions": {
+        "contact_stability": 0.16666666666666666,
+        "lateral_heading_drift": 0.8333333333333334,
+        "non_lateral_balance_or_phase": 0.0,
+        "non_lateral_high_cbf_demand": 0.0,
+        "other_non_lateral": 0.0
+      },
+      "fall_count": 108,
+      "fall_rate": 0.2109375,
+      "minimum_fall_count_gate": 100,
+      "num_episodes": 512,
+      "parameters_sha256": "43e3a477a6a4dc48858f4521dbb7a475879716fc42697602f9abcc618162c4ec",
+      "qualifies": true,
+      "second_failure_fraction": 0.16666666666666666,
+      "success_rate": 0.7890625,
+      "target_failure_fraction": 0.8333333333333334,
+      "target_failure_type": "lateral_heading_drift"
+    }
+  ],
+  "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "base_policy_only": true,
+  "candidate_seeds": [
+    35608,
+    35609,
+    35610,
+    35611,
+    35612,
+    35613,
+    35614,
+    35615,
+    35616,
+    35617,
+    35618,
+    35619
+  ],
+  "context_id": "L4",
+  "exploratory": false,
+  "minimum_fall_count_gate": 100,
+  "mode": "lateral",
+  "policy_method": "Local Matched-Success Preservation v21",
+  "prospective_protocol_file_sha256": "b4426ae823538eb56978fd673cb3d357f85fbe616b60a877efb133e1c278211b",
+  "prospective_protocol_git_commit": "5eee8c9f20660f91bdac32f485d84471de630d9c",
+  "protocol_id": "safe100-deployment-unit-local-matched-success-v21"
+}

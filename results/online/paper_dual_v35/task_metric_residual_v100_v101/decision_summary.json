@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "experiment": "task_metric_residual_v100_v101",
+  "source_commit": "586d58ccd8674deecad1f28c6cb2ff5d9abd93c0",
+  "context": "F2_hard_uniform_18_4cm",
+  "target_filter_off_success_rate": 0.75,
+  "v100_filter_on_same_seed": {
+    "seed": 201353200,
+    "episodes_per_filter": 64,
+    "current_euclidean": {
+      "success_count": 44,
+      "success_rate": 0.6875,
+      "mean_reached_riser": 8.0,
+      "toe_force_peak": 1561.1459,
+      "mean_correction_norm": 1.2626
+    },
+    "task_metric_c012": {
+      "success_count": 46,
+      "success_rate": 0.71875,
+      "mean_reached_riser": 8.125,
+      "toe_force_peak": 1225.3458,
+      "mean_correction_norm": 1.4687
+    },
+    "selected_teacher": "task_metric_c012"
+  },
+  "v101_training": {
+    "method": "task-metric-successful-filtered-learned-cbf-residual-dagger-v101",
+    "runtime_filter": true,
+    "successful_episodes_only": true,
+    "num_envs_per_round": 128,
+    "seeds": [201353220, 201353230, 201353240, 201353250],
+    "success_counts": [82, 84, 86, 76],
+    "teacher_transition_count": 9070,
+    "final_teacher_distance": 0.0866129949836773,
+    "elapsed_seconds": 68.65275120397564,
+    "raw_candidate_sha256": "40c4f8cda03d11c3f1f65911936e08eebc25981bd5754ac5bd0d504afa6d4b48",
+    "residual_state_sha256": "e23d95e2a5acf0dd9fcf78e263f617923f5b02940a5eeb99e04629b6ae34b7ce"
+  },
+  "v101_filter_off_scale_screen": {
+    "seed": 201353280,
+    "episodes_per_scale": 64,
+    "results": [
+      {"scale": 0.0, "success_count": 45, "success_rate": 0.703125},
+      {"scale": 0.025, "success_count": 48, "success_rate": 0.75},
+      {"scale": 0.05, "success_count": 49, "success_rate": 0.765625},
+      {"scale": 0.1, "success_count": 44, "success_rate": 0.6875}
+    ],
+    "selected_scale": 0.05
+  },
+  "v101_untouched_filter_off_gate": {
+    "seed": 201353300,
+    "episodes": 64,
+    "runtime_filter": false,
+    "residual_scale": 0.05,
+    "success_count": 40,
+    "success_rate": 0.625,
+    "passed_75_percent": false,
+    "candidate_checkpoint_sha256": "c53e1d6f6cdb839add4f7f84f2099084671dc00860badea93997de574e4fecb1"
+  },
+  "decision": {
+    "v101": "rejected",
+    "reason": "The scale-screen gain did not generalize to the untouched gate.",
+    "global_selected_version": "v79",
+    "global_selected_aligned_success": "139/193",
+    "global_selected_aligned_success_rate": 0.7202
+  }
+}

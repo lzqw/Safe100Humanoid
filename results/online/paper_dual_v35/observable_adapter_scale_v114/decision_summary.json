@@ -1,0 +1,25 @@
+{
+  "schema_version": "paper_dual_v35.v114.decision.v1",
+  "method_id": "heldout-scaled-observable-cbf-adapter-v114",
+  "decision": "rejected_all_predeclared_scales_below_screen_gate",
+  "reason": "The best of four predeclared filter-off groups was the unchanged v79 actor at 46/64=71.875%; no v92 adapter scale reached 75%.",
+  "source_commit": "1b4cb8e87276ceeb6cc356be5b992cc623514672",
+  "targeted_tests_passed": 1,
+  "hardware": "NVIDIA GeForce RTX 4080 SUPER",
+  "input_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "source_adapter_checkpoint_sha256": "3c855c5b5e81cb221187d10db227595abbf7e765d7273d2a2b92515b697cfcce",
+  "screen": {
+    "seed": 201353610,
+    "episode_count_per_scale": 64,
+    "runtime_filter": false,
+    "scales": [0.0, 0.5, 1.0, 1.5],
+    "success_counts": [46, 39, 41, 45],
+    "selected_scale": 0.0,
+    "selected_success_count": 46,
+    "selected_success_rate": 0.71875,
+    "independent_gate_run": false
+  },
+  "elapsed_seconds": 39.592576287919655,
+  "global_best_changed": false,
+  "next_hypothesis": "Use causal temporal context or an episode-level policy objective; do not continue scalar calibration of the v92 direction."
+}

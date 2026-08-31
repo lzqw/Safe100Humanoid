@@ -1,0 +1,9 @@
+{
+  "allowed_reason": "nonfinite_routing_transform_or_optimizer_corruption",
+  "arm": "A2",
+  "context": "F2",
+  "error": "stored behavior log probability is inconsistent with a_policy: 0.0005512237548828125",
+  "error_type": "RuntimeError",
+  "phase": "formal",
+  "protocol_id": "safe100-cbf-teacher-overnight-v30"
+}

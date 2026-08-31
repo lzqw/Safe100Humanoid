@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "method_id": "multi-seed-matched-rescue-shielded-distillation-v38",
+  "source_git_commit": "1b96a5a",
+  "decision": "rejected_filter_off_gate",
+  "training": {
+    "seeds": [201350282, 201350292, 201350302],
+    "num_envs_per_seed": 32,
+    "total_initial_episodes": 96,
+    "filter_on_success_count": 75,
+    "filter_off_success_count": 69,
+    "filter_rescued_episode_count": 23,
+    "filter_harmed_episode_count": 17,
+    "teacher_transition_count": 860,
+    "off_success_trust_observation_count": 30797,
+    "trust_reference_forward_kl": 0.0002497175833186217,
+    "parameter_interpolation_scale": 0.209716796875,
+    "elapsed_seconds": 97.56818677706178
+  },
+  "gate": {
+    "seed": 201350912,
+    "initial_state_signature": "f56bacd97c200ede74cf055e7817d16374b14f3f6f66d8f4eaf81106d8e9f1fd",
+    "baseline_filter_off_success_count": 43,
+    "candidate_filter_off_success_count": 38,
+    "candidate_minus_baseline_success_count": -5,
+    "candidate_filter_off_success_rate": 0.59375,
+    "filter_on_run": false
+  },
+  "candidate_actor_sha256": "66037e94355eb272403e04c83df9014ed520f9893cd3f6226c9716bc2c08c2ee",
+  "candidate_checkpoint_sha256": "9e635b7df66c570efa1e4f32996cc55de322189e7f6788ff9915f76e0d0054b2"
+}

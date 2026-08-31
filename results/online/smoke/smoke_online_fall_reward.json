@@ -1,0 +1,42 @@
+{
+  "actor_obs_dim": 405,
+  "credit": {
+    "cbf_correction_mean": 0.015430673956871033,
+    "cbf_intervention_fraction": 0.0568033866584301,
+    "fall_event_count": 9.0,
+    "fall_event_fraction": 0.00146484375,
+    "pre_intervention_cost_max": 4.46312952041626,
+    "pre_intervention_cost_mean": 0.2246326208114624
+  },
+  "critic_obs_dim": 799,
+  "finite": true,
+  "loss": {
+    "action_saturation_fraction": 0.3127712607383728,
+    "action_std_mean": 0.20713762938976288,
+    "actor_learning_rate": 1e-05,
+    "cbf_correction_mean": 0.015430673956871033,
+    "cbf_intervention_fraction": 0.0568033866584301,
+    "clip_fraction": 0.0833333358168602,
+    "entropy": -2.000462055206299,
+    "explained_variance_before_update": 0.27899259328842163,
+    "fall_event_count": 9.0,
+    "fall_event_fraction": 0.00146484375,
+    "mean_kl": 0.00038448930718004704,
+    "pre_intervention_cost_max": 4.46312952041626,
+    "pre_intervention_cost_mean": 0.2246326208114624,
+    "return_value_correlation_before_update": 0.5316530466079712,
+    "safe_bc_loss": 0.0,
+    "safe_bc_weight": 0.0,
+    "surrogate": 1.7384689243726825e-08,
+    "value": 4.517121315002441
+  },
+  "num_envs": 8,
+  "steps": 768,
+  "task": "Unitree-G1-Stairs-Online-DQ",
+  "warm_start": {
+    "expanded_critic_width": 799,
+    "legacy_critic_offset": 405,
+    "legacy_critic_width": 283,
+    "source_iteration": 1500
+  }
+}

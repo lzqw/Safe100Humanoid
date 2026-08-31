@@ -1,0 +1,13 @@
+{
+  "schema_version": "paper_dual_v35.v108.std002_failure.v1",
+  "training_action_std": 0.02,
+  "actor_learning_rate": 0.00002,
+  "completed_rollouts": 2,
+  "first_proposal_rolled_back": true,
+  "failure_stage": "third rollout pre-update behavior consistency proof",
+  "behavior_log_prob_max_abs_error": 0.0010242462158203125,
+  "frozen_tolerance": 0.001,
+  "behavior_distribution_remained_aligned": true,
+  "oom": false,
+  "candidate_selected": false
+}

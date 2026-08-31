@@ -1,0 +1,154 @@
+{
+  "actor_observation_expansion": {
+    "legacy_first_layer_input_column_change_max_abs": 0.0,
+    "new_first_layer_column_max_abs_after_adaptation": 5.751739809056744e-05,
+    "new_first_layer_column_rms_after_adaptation": 2.1039930288679898e-05
+  },
+  "artifacts": {
+    "accepted_final": {
+      "bytes": 66836209,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_r4_dev/lateral_seed153_78744c3/accepted_final.pt",
+      "sha256": "8357507192e37082e5b8fe293a80ceb6595d39e2f17326205b70d3ecbeae6564"
+    },
+    "log": {
+      "bytes": 8098361,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v19_r4_dev/lateral_seed153_78744c3.log",
+      "sha256": "094f1bd3e174ffaec2edba42f9fcd9cf5dacb841a682362579b33b26b5dbd6d4"
+    },
+    "online_rounds": {
+      "bytes": 7544474,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_r4_dev/lateral_seed153_78744c3/online_rounds.json",
+      "sha256": "291cc2f574562209f650417fa7b2f589deee2a39cd0c533665aacb6203e0b5be"
+    },
+    "specialist_summary": {
+      "bytes": 8086290,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_r4_dev/lateral_seed153_78744c3/specialist_summary.json",
+      "sha256": "01a47a0d667301eaae8336a86e1fbb5c1b41d90bfc1d88a899a05a7aa9bde4d3"
+    }
+  },
+  "development_adaptation_seed": 153,
+  "development_source_commit": "78744c38416467e938865ae287ab99daf28be3a3",
+  "final_actor_sha256": "008001f4161fb7ced74e59acf4a99f9b4cefb2b371fdcc7ed6b3265016285780",
+  "formal_evidence_boundary": {
+    "development_seed_may_enter_future_formal_claim": false,
+    "formal_protocol": false,
+    "formal_result_claimed": false,
+    "reason": "Seed 153 and its revision-3 bank failure were observed before this development rerun.",
+    "revision_4_protocol_frozen": false
+  },
+  "full_sized_development_run": {
+    "development_run": true,
+    "formal_protocol": false,
+    "protocol_completed": true,
+    "round_protocol": {
+      "accepted_updates": 3,
+      "actual_rounds": 6,
+      "maximum_rounds": 8,
+      "minimum_accepted_updates": 3,
+      "rejection_patience_after_minimum": 2,
+      "stop_reason": "minimum_updates_reached_then_two_consecutive_rejections"
+    },
+    "smoke_run": false
+  },
+  "initial_actor_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+  "joint_feasibility": {
+    "discovery_preflight": {
+      "centerline_sign": {
+        "-1": 6,
+        "1": 6
+      },
+      "error_growth_bin": {
+        "high": 6,
+        "low": 6
+      },
+      "exact_match_passed": true,
+      "heading_sign": {
+        "-1": 6,
+        "1": 6
+      },
+      "maximum_marginal_imbalance": 0,
+      "passed": true,
+      "riser_stage": {
+        "early": 4,
+        "late": 4,
+        "mid": 4
+      },
+      "support_foot": {
+        "0": 6,
+        "1": 6
+      }
+    },
+    "discovery_rollouts": 1,
+    "final_preflight": {
+      "centerline_sign": {
+        "-1": 6,
+        "1": 6
+      },
+      "error_growth_bin": {
+        "high": 6,
+        "low": 6
+      },
+      "exact_match_passed": true,
+      "heading_sign": {
+        "-1": 6,
+        "1": 6
+      },
+      "maximum_marginal_imbalance": 0,
+      "passed": true,
+      "riser_stage": {
+        "early": 4,
+        "late": 4,
+        "mid": 4
+      },
+      "support_foot": {
+        "0": 6,
+        "1": 6
+      }
+    }
+  },
+  "method_change": {
+    "adaptation_bank_updates": "commit only when the next 12 exact pairs retain all jointly balanced marginals; otherwise restore the pre-rollout failure, success-pool, and matched-success banks",
+    "discovery_gate": "continue discovery until the exact joint quota solver proves a feasible 12-pair allocation",
+    "final_gate": "prove joint feasibility again immediately before the final checkpoint",
+    "revision_3_failure_addressed": "individual category coverage no longer permits a jointly infeasible bank to enter PPO"
+  },
+  "replay_audit": {
+    "all_exact_match_passed": true,
+    "audit_count": 12,
+    "maximum_marginal_imbalance": 0,
+    "pair_count_per_audit": 12
+  },
+  "status": "development_preflight_passed_no_formal_claim",
+  "training_diagnostic_only": {
+    "D0": {
+      "baseline_fall_rate": 0.015625,
+      "baseline_success_rate": 0.9140625,
+      "fall_delta": 0.0078125,
+      "final_fall_rate": 0.0234375,
+      "final_success_rate": 0.890625,
+      "success_delta": -0.0234375
+    },
+    "target": {
+      "baseline_fall_rate": 0.2109375,
+      "baseline_success_rate": 0.7890625,
+      "fall_delta": -0.015625,
+      "final_fall_rate": 0.1953125,
+      "final_success_rate": 0.8046875,
+      "success_delta": 0.015625
+    }
+  },
+  "transaction_audit": {
+    "all_attempted": true,
+    "all_usable_preflights_passed": true,
+    "committed_updates": 12,
+    "full_sized_transaction_count": 12,
+    "rolled_back_updates": 0,
+    "rollback_path_regression_tested": true
+  },
+  "validation": {
+    "fatal_ruff_subset_passed": true,
+    "full_gpu_test_suite": "90 passed in 9.60s",
+    "python_compilation_passed": true,
+    "regression_fixture": "heading-positive matched strata only at mid-stage is rejected and transactionally restored to a feasible snapshot"
+  }
+}

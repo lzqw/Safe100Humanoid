@@ -5,19 +5,180 @@ from __future__ import annotations
 import torch
 
 
+def contact_or_scheduled_swing_foot(
+  contact: torch.Tensor,
+  air_time: torch.Tensor | None,
+  episode_steps: torch.Tensor,
+  *,
+  step_dt: float,
+  period: float = 0.6,
+  stance_fraction: float = 0.56,
+) -> tuple[torch.Tensor, torch.Tensor]:
+  """Select the physical swing foot, with gait-phase toe-off preactivation.
+
+  An already-airborne foot always wins.  The gait clock is consulted only
+  while both feet still report contact, allowing the next swing foot's CBF to
+  shape the toe-off command instead of becoming active one control step late.
+  The second return value marks selections introduced by this preactivation.
+  """
+  if contact.ndim != 2 or contact.shape[1] != 2 or contact.dtype != torch.bool:
+    raise ValueError("foot contact must be boolean with shape [N, 2]")
+  if episode_steps.ndim != 1 or episode_steps.shape[0] != contact.shape[0]:
+    raise ValueError("episode steps must have shape [N]")
+  if air_time is not None and air_time.shape != contact.shape:
+    raise ValueError("foot air time must have shape [N, 2]")
+  if step_dt <= 0.0 or period <= 0.0:
+    raise ValueError("gait timing values must be positive")
+  if not 0.5 < stance_fraction < 1.0:
+    raise ValueError("stance fraction must lie in (0.5, 1)")
+
+  in_air = ~contact
+  scores = (
+    in_air.float()
+    if air_time is None
+    else torch.where(in_air, air_time, torch.full_like(air_time, -1.0))
+  )
+  physical_index = scores.argmax(dim=1)
+  has_physical_swing = in_air.any(dim=1)
+
+  phase = (
+    episode_steps.to(dtype=torch.float32) * float(step_dt) / float(period)
+  ).unsqueeze(1)
+  offsets = torch.tensor(
+    (0.0, 0.5), device=contact.device, dtype=phase.dtype
+  ).view(1, 2)
+  scheduled_swing = ((phase + offsets) % 1.0) >= float(stance_fraction)
+  scheduled_index = scheduled_swing.float().argmax(dim=1)
+  has_scheduled_swing = scheduled_swing.any(dim=1)
+  preactivated = ~has_physical_swing & has_scheduled_swing
+  selected = torch.where(
+    has_physical_swing,
+    physical_index,
+    torch.where(
+      preactivated,
+      scheduled_index,
+      torch.full_like(scheduled_index, -1),
+    ),
+  )
+  return selected, preactivated
+
+
+def conditional_deployable_cbf_geometry(
+  geometry: torch.Tensor,
+) -> torch.Tensor:
+  """Split 5-D toe geometry by swing side and barrier phase.
+
+  The four mutually exclusive blocks are left/unsafe, left/safe,
+  right/unsafe, and right/safe. Each block contains horizontal clearance,
+  vertical clearance, sloped barrier, and its binary mask.
+  """
+  if geometry.ndim < 2 or geometry.shape[-1] != 5:
+    raise ValueError("conditional CBF geometry requires a final width of five")
+  active = geometry[..., 4] > 0.5
+  left = geometry[..., 3] < 0.0
+  right = geometry[..., 3] > 0.0
+  unsafe = geometry[..., 2] < 0.0
+  coordinates = geometry[..., :3]
+  blocks: list[torch.Tensor] = []
+  for selected in (
+    active & left & unsafe,
+    active & left & ~unsafe,
+    active & right & unsafe,
+    active & right & ~unsafe,
+  ):
+    mask = selected.to(geometry.dtype).unsqueeze(-1)
+    blocks.append(torch.cat((coordinates * mask, mask), dim=-1))
+  return torch.cat(blocks, dim=-1)
+
+
+def persistent_next_riser_geometry(
+  root_x: torch.Tensor,
+  foot_xz: torch.Tensor,
+  contact: torch.Tensor,
+  edge_x: torch.Tensor,
+  edge_top_z: torch.Tensor,
+  *,
+  toe_margin: float,
+  top_clearance: float,
+  barrier_slope: float,
+  lookahead_distance: float,
+  horizontal_scale: float,
+  vertical_scale: float,
+) -> torch.Tensor:
+  """Return per-foot next-riser geometry before and throughout swing.
+
+  Each foot contributes normalized horizontal clearance, vertical clearance,
+  sloped barrier, contact state, and a lookahead-valid flag. Unlike the narrow
+  runtime-CBF activation window, the signal starts while both feet are still
+  planted so the policy can plan lift before toe-off.
+  """
+  if root_x.ndim != 1 or foot_xz.shape != (len(root_x), 2, 2):
+    raise ValueError("persistent geometry requires root [N] and feet [N,2,2]")
+  if contact.shape != (len(root_x), 2) or contact.dtype != torch.bool:
+    raise ValueError("persistent geometry contact must be boolean [N,2]")
+  if edge_x.ndim != 2 or edge_x.shape != edge_top_z.shape:
+    raise ValueError("persistent geometry edges must share shape [N,R]")
+  if edge_x.shape[0] != len(root_x) or edge_x.shape[1] < 1:
+    raise ValueError("persistent geometry requires at least one riser per env")
+  if min(lookahead_distance, horizontal_scale, vertical_scale) <= 0.0:
+    raise ValueError("persistent geometry scales and lookahead must be positive")
+
+  root_distance = edge_x - root_x.unsqueeze(1)
+  ahead = root_distance >= 0.0
+  masked = torch.where(ahead, root_distance, torch.full_like(root_distance, torch.inf))
+  index = masked.argmin(dim=1)
+  selected_distance = masked.gather(1, index.unsqueeze(1)).squeeze(1)
+  valid = torch.isfinite(selected_distance) & (
+    selected_distance <= float(lookahead_distance)
+  )
+  selected_x = edge_x.gather(1, index.unsqueeze(1)).squeeze(1)
+  selected_z = edge_top_z.gather(1, index.unsqueeze(1)).squeeze(1)
+  horizontal = selected_x.unsqueeze(1) - foot_xz[..., 0] - float(toe_margin)
+  vertical = foot_xz[..., 1] - selected_z.unsqueeze(1) - float(top_clearance)
+  barrier = (
+    vertical + float(barrier_slope) * horizontal
+    if barrier_slope > 0.0
+    else horizontal
+  )
+  valid_float = valid.to(foot_xz.dtype).unsqueeze(1).expand(-1, 2)
+  features = torch.stack(
+    (
+      (horizontal / float(horizontal_scale)).clamp(-1.5, 1.5),
+      (vertical / float(vertical_scale)).clamp(-1.5, 1.5),
+      (barrier / float(vertical_scale)).clamp(-2.0, 2.0),
+      contact.to(foot_xz.dtype),
+      valid_float,
+    ),
+    dim=-1,
+  )
+  return (features * valid_float.unsqueeze(-1)).reshape(len(root_x), 10)
+
+
 def dual_cbf_reward(
   nominal_margin: torch.Tensor,
   intervention_norm: torch.Tensor,
   active: torch.Tensor,
   sigma: float,
+  *,
+  margin_weight: float = 1.0,
+  intervention_weight: float = 1.0,
 ) -> torch.Tensor:
-  """Bounded CBF-RL reward from paper Eq. (23)."""
+  """CBF-RL reward from paper Eq. (23), with explicit term weights.
+
+  The paper writes a single outer weight, while its public navigation demo
+  scales the negative-margin and filter-imitation terms independently. The
+  unit defaults preserve the historical Safe100Humanoid reward exactly.
+  """
   if sigma <= 0.0:
     raise ValueError(f"sigma must be positive, got {sigma}")
-  violation_reward = torch.minimum(
+  if margin_weight < 0.0 or intervention_weight < 0.0:
+    raise ValueError("CBF-RL reward weights must be non-negative")
+  violation_reward = float(margin_weight) * torch.minimum(
     nominal_margin, torch.zeros_like(nominal_margin)
   )
-  imitation_reward = torch.exp(-intervention_norm.square() / sigma**2) - 1.0
+  imitation_reward = float(intervention_weight) * (
+    torch.exp(-intervention_norm.square() / sigma**2) - 1.0
+  )
   return torch.where(active, violation_reward + imitation_reward, 0.0)
 
 
@@ -56,6 +217,92 @@ def stair_barrier(
 ) -> torch.Tensor:
   """Signed distance to a stair riser; positive is on the safe side."""
   return edge_x - (foot_x + toe_margin)
+
+
+def next_riser_clearance_reference(
+  root_x: torch.Tensor,
+  origin_z: torch.Tensor,
+  edge_x: torch.Tensor,
+  edge_top_z: torch.Tensor,
+  *,
+  default_height: float,
+  height_above_tread: float,
+  lookahead_distance: float,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+  """Return the paper-style foot-clearance reference for the stair ahead.
+
+  The reference follows the first riser in front of the robot instead of the
+  short-lived CBF activation flag.  Once the robot passes the final riser, the
+  top-platform height remains the reference.  This keeps the target stable for
+  the entire swing rather than dropping it back to the flat-ground height as
+  soon as the toe clears the riser.
+  """
+  if root_x.ndim != 1 or origin_z.shape != root_x.shape:
+    raise ValueError("root_x and origin_z must share shape [N]")
+  if edge_x.ndim != 2 or edge_x.shape != edge_top_z.shape:
+    raise ValueError("riser edges and heights must share shape [N, R]")
+  if edge_x.shape[0] != root_x.shape[0] or edge_x.shape[1] < 1:
+    raise ValueError("riser metadata must contain at least one edge per env")
+  if default_height <= 0.0 or height_above_tread <= 0.0:
+    raise ValueError("clearance heights must be positive")
+  if lookahead_distance <= 0.0:
+    raise ValueError("clearance lookahead distance must be positive")
+
+  distance = edge_x - root_x.unsqueeze(1)
+  ahead = distance >= 0.0
+  masked_distance = torch.where(
+    ahead, distance, torch.full_like(distance, torch.inf)
+  )
+  index = masked_distance.argmin(dim=1)
+  selected_distance = masked_distance.gather(1, index.unsqueeze(1)).squeeze(1)
+  selected_top = edge_top_z.gather(1, index.unsqueeze(1)).squeeze(1)
+  within_lookahead = torch.isfinite(selected_distance) & (
+    selected_distance <= float(lookahead_distance)
+  )
+  beyond_final_riser = root_x > edge_x[:, -1]
+  selected_top = torch.where(
+    beyond_final_riser, edge_top_z[:, -1], selected_top
+  )
+  active = within_lookahead | beyond_final_riser
+  flat_reference = origin_z + float(default_height)
+  stair_reference = selected_top + float(height_above_tread)
+  reference = torch.where(active, stair_reference, flat_reference)
+  index = torch.where(
+    beyond_final_riser,
+    torch.full_like(index, edge_x.shape[1] - 1),
+    index,
+  )
+  return reference, active, index
+
+
+def sloped_toe_clearance_constraint(
+  horizontal_margin: torch.Tensor,
+  foot_z: torch.Tensor,
+  edge_top_z: torch.Tensor,
+  jac_x: torch.Tensor,
+  jac_z: torch.Tensor,
+  *,
+  top_clearance: float,
+  slope: float,
+) -> tuple[torch.Tensor, torch.Tensor]:
+  """Return a task-compatible toe/riser barrier and its joint-space normal.
+
+  The safe boundary is a ramp in the x-z plane.  Far from the riser, the toe
+  may remain low; at the riser plane it must clear ``edge_top_z`` plus the
+  fixed margin.  Its derivative couples vertical lift and forward motion:
+
+  ``h_dot = (J_z - slope * J_x) q_dot``.
+  """
+  if horizontal_margin.shape != foot_z.shape or foot_z.shape != edge_top_z.shape:
+    raise ValueError("sloped-clearance margins must share shape [N]")
+  if jac_x.shape != jac_z.shape or jac_x.shape[:-1] != foot_z.shape:
+    raise ValueError("sloped-clearance Jacobians must share shape [N, A]")
+  if not 0.0 < float(slope) <= 2.0:
+    raise ValueError("sloped-clearance slope must lie in (0, 2]")
+  vertical_margin = foot_z - edge_top_z - float(top_clearance)
+  barrier = vertical_margin + float(slope) * horizontal_margin
+  normal = jac_z - float(slope) * jac_x
+  return barrier, normal
 
 
 def next_riser(

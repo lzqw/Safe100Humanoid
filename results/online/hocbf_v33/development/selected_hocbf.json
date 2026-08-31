@@ -1,0 +1,47 @@
+{
+  "additional_parameter_search": false,
+  "candidate": "w08_x00_s00",
+  "drift_clip_m_per_s2": 20.0,
+  "drift_ema_previous": 0.8,
+  "elapsed_seconds": 3336.325915387948,
+  "final_seeds": {
+    "D0": "207_3xx_xxx",
+    "bootstrap": "208_3xx_xxx",
+    "frozen_policy": "204_3xx_xxx",
+    "target": "206_3xx_xxx",
+    "training": "205_3xx_xxx"
+  },
+  "lambda_s": 0.0,
+  "lambda_x": 0.0,
+  "omega": 8.0,
+  "per_context_parameters_forbidden": true,
+  "primary_tie_pool": [
+    "w08_x00_s00"
+  ],
+  "protocol_id": "safe100-task-consistent-acceleration-hocbf-v33",
+  "schema_version": 1,
+  "secondary_tie_pool": [
+    "w08_x00_s00"
+  ],
+  "selection_metrics": {
+    "A1_mean_interference": 0.2734375,
+    "A2_mean_on_success": 0.5963541666666666,
+    "candidate": "w08_x00_s00",
+    "lambda_s": 0.0,
+    "lambda_x": 0.0,
+    "mean_correction_jerk": 1938.3661900339778,
+    "mean_intervention_events_per_riser": 2.068840560828862,
+    "mean_unsafe_overlap_steps_per_riser": 0.8058476854020596,
+    "omega": 8.0,
+    "rank": 1
+  },
+  "selection_order": [
+    "A2 three-context mean HOCBF-on success (0.5 pp tie tolerance)",
+    "A1 paired interference (lower)",
+    "qddot correction jerk (lower)",
+    "intervention events per riser (lower)"
+  ],
+  "source_commit": "ab23421d510f12cc0af9b7c73e4274735096d7c9",
+  "status": "globally_selected_and_frozen",
+  "zeta": 1.0
+}

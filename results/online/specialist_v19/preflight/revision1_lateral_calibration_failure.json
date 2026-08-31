@@ -1,0 +1,158 @@
+{
+  "adaptation_started": false,
+  "artifact_hashes": {
+    "gpu_calibration_log_sha256": "0b3ffe08366da6412f9351762a0df551da88938695becf7189bf3faaefb1f3bf",
+    "gpu_calibration_progress_sha256": "f1e4bf7c85f12a82f16187b12f8f0c9a4250fefc1ed6f854fd405f0e7ac95a1c"
+  },
+  "base_policy_only": true,
+  "attempts": [
+    {
+      "candidate_seed": 7106,
+      "evaluation_seeds": [4700000, 4700001, 4700002, 4700003],
+      "fall_count": 117,
+      "failure_type_counts": {
+        "contact_stability": 69,
+        "lateral_heading_drift": 48,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "mean_reached_riser": 10.642578125,
+      "num_episodes": 512,
+      "parameters_sha256": "7b7e1b54197ccfa438eae0a0ae8033791f43fb7fc5aea57f695e02ba8b6871ce",
+      "qualifies": false,
+      "second_failure_fraction": 0.41025641025641024,
+      "success_rate": 0.771484375,
+      "target_failure_fraction": 0.41025641025641024
+    },
+    {
+      "candidate_seed": 7107,
+      "evaluation_seeds": [4700100, 4700101, 4700102, 4700103],
+      "fall_count": 69,
+      "failure_type_counts": {
+        "contact_stability": 48,
+        "lateral_heading_drift": 21,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "mean_reached_riser": 10.669921875,
+      "num_episodes": 512,
+      "parameters_sha256": "f2ba8c575f79cc6bb081bc18556ac8c21c4ecda14fef5d247e1cbad3ec5c703c",
+      "qualifies": false,
+      "second_failure_fraction": 0.30434782608695654,
+      "success_rate": 0.865234375,
+      "target_failure_fraction": 0.30434782608695654
+    },
+    {
+      "candidate_seed": 7108,
+      "evaluation_seeds": [4700200, 4700201, 4700202, 4700203],
+      "fall_count": 75,
+      "failure_type_counts": {
+        "contact_stability": 47,
+        "lateral_heading_drift": 28,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "mean_reached_riser": 10.671875,
+      "num_episodes": 512,
+      "parameters_sha256": "e94aa5b1453683dda8caba7a6d2f115a496b7ce8c59cefe9825d96783e652b53",
+      "qualifies": false,
+      "second_failure_fraction": 0.37333333333333335,
+      "success_rate": 0.853515625,
+      "target_failure_fraction": 0.37333333333333335
+    },
+    {
+      "candidate_seed": 7109,
+      "evaluation_seeds": [4700300, 4700301, 4700302, 4700303],
+      "fall_count": 91,
+      "failure_type_counts": {
+        "contact_stability": 56,
+        "lateral_heading_drift": 35,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "mean_reached_riser": 10.693359375,
+      "num_episodes": 512,
+      "parameters_sha256": "9dc921e7e4ee7870265218daf034a84fa7b88c6303c9c7666dfe7d1ffd826bdc",
+      "qualifies": false,
+      "second_failure_fraction": 0.38461538461538464,
+      "success_rate": 0.822265625,
+      "target_failure_fraction": 0.38461538461538464
+    },
+    {
+      "candidate_seed": 7110,
+      "evaluation_seeds": [4700400, 4700401, 4700402, 4700403],
+      "fall_count": 118,
+      "failure_type_counts": {
+        "contact_stability": 79,
+        "lateral_heading_drift": 39,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "mean_reached_riser": 10.66015625,
+      "num_episodes": 512,
+      "parameters_sha256": "14e32253e38734fd2358b8098b343f9b8c504c5e96a7b2ad28a38efbb0f56d9b",
+      "qualifies": false,
+      "second_failure_fraction": 0.3305084745762712,
+      "success_rate": 0.76953125,
+      "target_failure_fraction": 0.3305084745762712
+    },
+    {
+      "candidate_seed": 7111,
+      "evaluation_seeds": [4700500, 4700501, 4700502, 4700503],
+      "fall_count": 75,
+      "failure_type_counts": {
+        "contact_stability": 62,
+        "lateral_heading_drift": 13,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "mean_reached_riser": 10.732421875,
+      "num_episodes": 512,
+      "parameters_sha256": "7fca558d1521ae0f6eb89478b357c2c2b1126cfa0201ce250edb2f02900ba589",
+      "qualifies": false,
+      "second_failure_fraction": 0.17333333333333334,
+      "success_rate": 0.853515625,
+      "target_failure_fraction": 0.17333333333333334
+    }
+  ],
+  "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "classification_overlap_diagnostic": {
+    "description": "Counts among falls reconstructed from all 24 raw episode CSV blocks; this post-stop diagnostic motivated revision 2 and is not a relabelled calibration result.",
+    "raw_episode_count": 3072,
+    "seed7106": {"both": 70, "contact_first": 52, "contact_only": 12, "lateral_first_or_tie": 18, "lateral_only": 30, "neither": 5},
+    "seed7107": {"both": 30, "contact_first": 23, "contact_only": 20, "lateral_first_or_tie": 7, "lateral_only": 14, "neither": 5},
+    "seed7108": {"both": 37, "contact_first": 26, "contact_only": 16, "lateral_first_or_tie": 11, "lateral_only": 17, "neither": 5},
+    "seed7109": {"both": 56, "contact_first": 39, "contact_only": 14, "lateral_first_or_tie": 17, "lateral_only": 18, "neither": 3},
+    "seed7110": {"both": 81, "contact_first": 61, "contact_only": 14, "lateral_first_or_tie": 20, "lateral_only": 19, "neither": 4},
+    "seed7111": {"both": 44, "contact_first": 38, "contact_only": 21, "lateral_first_or_tie": 6, "lateral_only": 7, "neither": 3}
+  },
+  "formal_audit_started": false,
+  "gate": {
+    "maximum_second_failure_fraction": 0.3,
+    "minimum_fall_count": 100,
+    "minimum_target_failure_fraction": 0.8,
+    "success_rate_bounds_inclusive": [0.7, 0.85]
+  },
+  "protocol_revision": 1,
+  "protocol_revision_commit": "45aca13add2f03a09e5783f4624bf3a681c740e3",
+  "result": "no declared lateral context qualified; calibration stopped before context selection or adaptation",
+  "selected_candidate_seed": null,
+  "warm_start": {
+    "expanded_actor_width": 410,
+    "expanded_critic_width": 843,
+    "legacy_tensor_copy_max_abs_error": 0.0,
+    "new_first_layer_column_max_abs": 0.0,
+    "new_normalizer_identity_max_abs_error": 0.0,
+    "optimizer_reset": true,
+    "pi0_exact_preservation_proof": true,
+    "source_actor_width": 405,
+    "source_critic_width": 838,
+    "zero_initialized_actor_columns": 5
+  }
+}

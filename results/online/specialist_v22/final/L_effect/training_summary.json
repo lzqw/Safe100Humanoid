@@ -1,0 +1,768 @@
+{
+  "accepted_rounds": [
+    3,
+    4,
+    7
+  ],
+  "adaptation_seed": 32210001,
+  "bank_discovery": {
+    "failure_bank_raw_marginals": {
+      "centerline_sign": {
+        "1": 256
+      },
+      "error_growth_bin": {
+        "high": 154,
+        "low": 102
+      },
+      "heading_sign": {
+        "-1": 256
+      },
+      "riser_stage": {
+        "early": 12,
+        "late": 138,
+        "mid": 106
+      },
+      "support_foot": {
+        "0": 119,
+        "1": 137
+      }
+    },
+    "failure_bank_size": 256,
+    "joint_preflight": {
+      "diagnostic_direction_marginal_counts": {
+        "centerline_sign": {
+          "1": 12
+        },
+        "heading_sign": {
+          "-1": 12
+        }
+      },
+      "exact_match_passed": true,
+      "maximum_marginal_imbalance": 0,
+      "pair_count": 12,
+      "passed": true,
+      "primary_marginal_counts": {
+        "error_growth_bin": {
+          "high": 6,
+          "low": 6
+        },
+        "riser_stage": {
+          "early": 4,
+          "late": 4,
+          "mid": 4
+        },
+        "support_foot": {
+          "0": 6,
+          "1": 6
+        }
+      }
+    },
+    "parameters_restored_after_each_rollout": true,
+    "restart_balance_profile": "lateral_stage_support_growth",
+    "rollout_count": 1,
+    "rollout_seeds": [
+      32710001
+    ],
+    "success_bank_size": 224,
+    "success_pool_size": 608
+  },
+  "baseline_candidate_gate": {
+    "D0": {
+      "actor_state_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+      "fall_rate": 0.0,
+      "num_episodes": 128,
+      "success_rate": 0.921875,
+      "timeout_rate": 0.078125
+    },
+    "DQHMED": {
+      "actor_state_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+      "fall_rate": 0.3203125,
+      "num_episodes": 128,
+      "success_rate": 0.6796875,
+      "timeout_rate": 0.0
+    }
+  },
+  "boundary": {
+    "base_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+    "context_file_sha256": "650a97519168382bf4f7fc45580fa179cb3c51a1f18195f4850c5667d6f0d6a7",
+    "context_parameters_sha256": "f3d4470ec01c7f55982d93b4be53dcafb13c0d2d82f4c03f34835f84c99cf4ae",
+    "initial_actor_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+    "protocol_commit": "399908adcd61bcaa00fe669fa018b02768dbc3f9",
+    "protocol_sha256": "cff26e1e8768e79256af1fdf7ee8d04d267e164b1b2a5d09637ce0cfc7309dee"
+  },
+  "context_id": "L_effect",
+  "evidence_role": "compact effect-first lateral revision-2 training and validation result",
+  "external_artifacts": {
+    "bank_discovery_sha256": "eb37ff80d0331510485e8a9d28b789205fc565793f47e4163a1e82df8e80d7a1",
+    "baseline_candidate_gate_sha256": "945cca6756dd7f6e7fe3baf87e789757a6e9ef2fbe46a3923ceef2650fbc9911",
+    "best_checkpoint_sha256": "e3676de9e5507db596360de25f0968a05553d8a937d9007431462cf0f9e179e2",
+    "full_specialist_summary_bytes": 10657466,
+    "full_specialist_summary_sha256": "18de5fe732de0b94a491037ccb8ab06aebed3d830f60361951b4ddf8a42f992d",
+    "last_round_checkpoint_sha256": "9d2b4f4eefa389f3d14efd3bf6a9ccdea0e4f8cc2085d56a4806847caf22c8f5",
+    "online_rounds_sha256": "37b918cde64374361bc9ec920a0e4da768df23957662d190d4f364db9b9126fb"
+  },
+  "per_round": [
+    {
+      "accepted_after_target_and_d0": false,
+      "accepted_update_count": 0,
+      "best_so_far_round_after_round": 0,
+      "confirmation": {
+        "candidate_fall_rate": 0.390625,
+        "candidate_success_rate": 0.609375,
+        "fall_delta": 0.0546875,
+        "old_fall_rate": 0.3359375,
+        "old_success_rate": 0.6640625,
+        "passed": false,
+        "reasons": [
+          "confirmation success delta is not strictly positive",
+          "confirmation fall increase exceeds 3 percentage points"
+        ],
+        "seed": 32240001,
+        "success_delta": -0.0546875
+      },
+      "d0": {
+        "baseline_success_rate": 0.921875,
+        "candidate_success_rate": 0.890625,
+        "passed": true,
+        "reasons": [],
+        "success_delta": -0.03125
+      },
+      "d0_rollback": false,
+      "rollout_seeds": [
+        33210011,
+        33210012
+      ],
+      "round": 1,
+      "round_end_actor_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+      "screening": [
+        {
+          "eligible": true,
+          "fall_delta": -0.078125,
+          "fraction": 0.5,
+          "success_delta": 0.078125
+        },
+        {
+          "eligible": true,
+          "fall_delta": -0.046875,
+          "fraction": 1.0,
+          "success_delta": 0.046875
+        },
+        {
+          "eligible": true,
+          "fall_delta": 0.0,
+          "fraction": 1.5,
+          "success_delta": 0.0
+        }
+      ],
+      "selected_fraction": 0.5,
+      "update_diagnostics": {
+        "dual_rollout_actor_gradient_cosine": 0.05131465196609497,
+        "maximum_preupdate_minibatch_kl": 0.00042921691783703864,
+        "mean_kl": 0.00028255992219783366,
+        "ppo_minibatches_completed": 4,
+        "target_kl_early_stopped": false
+      },
+      "validation": null
+    },
+    {
+      "accepted_after_target_and_d0": false,
+      "accepted_update_count": 0,
+      "best_so_far_round_after_round": 0,
+      "confirmation": {
+        "candidate_fall_rate": 0.3359375,
+        "candidate_success_rate": 0.6640625,
+        "fall_delta": 0.015625,
+        "old_fall_rate": 0.3203125,
+        "old_success_rate": 0.6796875,
+        "passed": false,
+        "reasons": [
+          "confirmation success delta is not strictly positive"
+        ],
+        "seed": 32260001,
+        "success_delta": -0.015625
+      },
+      "d0": {
+        "baseline_success_rate": 0.921875,
+        "candidate_success_rate": 0.9140625,
+        "passed": true,
+        "reasons": [],
+        "success_delta": -0.0078125
+      },
+      "d0_rollback": false,
+      "rollout_seeds": [
+        33210021,
+        33210022
+      ],
+      "round": 2,
+      "round_end_actor_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+      "screening": [
+        {
+          "eligible": true,
+          "fall_delta": -0.15625,
+          "fraction": 0.5,
+          "success_delta": 0.15625
+        },
+        {
+          "eligible": true,
+          "fall_delta": -0.1875,
+          "fraction": 1.0,
+          "success_delta": 0.1875
+        },
+        {
+          "eligible": true,
+          "fall_delta": -0.015625,
+          "fraction": 1.5,
+          "success_delta": 0.015625
+        }
+      ],
+      "selected_fraction": 1.0,
+      "update_diagnostics": {
+        "dual_rollout_actor_gradient_cosine": 0.32373061776161194,
+        "maximum_preupdate_minibatch_kl": 0.0003948971861973405,
+        "mean_kl": 0.0002829846926033497,
+        "ppo_minibatches_completed": 4,
+        "target_kl_early_stopped": false
+      },
+      "validation": null
+    },
+    {
+      "accepted_after_target_and_d0": true,
+      "accepted_update_count": 1,
+      "best_so_far_round_after_round": 3,
+      "confirmation": {
+        "candidate_fall_rate": 0.2421875,
+        "candidate_success_rate": 0.7578125,
+        "fall_delta": -0.09375,
+        "old_fall_rate": 0.3359375,
+        "old_success_rate": 0.6640625,
+        "passed": true,
+        "reasons": [],
+        "seed": 32280001,
+        "success_delta": 0.09375
+      },
+      "d0": {
+        "baseline_success_rate": 0.921875,
+        "candidate_success_rate": 0.9609375,
+        "passed": true,
+        "reasons": [],
+        "success_delta": 0.0390625
+      },
+      "d0_rollback": false,
+      "rollout_seeds": [
+        33210031,
+        33210032
+      ],
+      "round": 3,
+      "round_end_actor_sha256": "7a0d8da787656318b44ae1596cae781580920c4c2039521b9a85f3a5b645716b",
+      "screening": [
+        {
+          "eligible": true,
+          "fall_delta": 0.046875,
+          "fraction": 0.5,
+          "success_delta": -0.046875
+        },
+        {
+          "eligible": true,
+          "fall_delta": -0.046875,
+          "fraction": 1.0,
+          "success_delta": 0.046875
+        },
+        {
+          "eligible": true,
+          "fall_delta": 0.0,
+          "fraction": 1.5,
+          "success_delta": 0.0
+        }
+      ],
+      "selected_fraction": 1.0,
+      "update_diagnostics": {
+        "dual_rollout_actor_gradient_cosine": -0.168382465839386,
+        "maximum_preupdate_minibatch_kl": 0.00038344229687936604,
+        "mean_kl": 0.0003440814034547657,
+        "ppo_minibatches_completed": 4,
+        "target_kl_early_stopped": false
+      },
+      "validation": {
+        "accepted_checkpoint": true,
+        "actor_sha256": "7a0d8da787656318b44ae1596cae781580920c4c2039521b9a85f3a5b645716b",
+        "best_so_far_after_evaluation": true,
+        "context_id": "L_effect",
+        "d0_safe": true,
+        "fall_constraint_passed": true,
+        "fall_delta_from_pi0": -0.04296875,
+        "fall_rate": 0.3125,
+        "round": 3,
+        "success_delta_from_pi0": 0.04296875,
+        "success_rate": 0.6875
+      }
+    },
+    {
+      "accepted_after_target_and_d0": true,
+      "accepted_update_count": 2,
+      "best_so_far_round_after_round": 3,
+      "confirmation": {
+        "candidate_fall_rate": 0.28125,
+        "candidate_success_rate": 0.71875,
+        "fall_delta": -0.125,
+        "old_fall_rate": 0.40625,
+        "old_success_rate": 0.59375,
+        "passed": true,
+        "reasons": [],
+        "seed": 32300001,
+        "success_delta": 0.125
+      },
+      "d0": {
+        "baseline_success_rate": 0.921875,
+        "candidate_success_rate": 0.90625,
+        "passed": true,
+        "reasons": [],
+        "success_delta": -0.015625
+      },
+      "d0_rollback": false,
+      "rollout_seeds": [
+        33210041,
+        33210042
+      ],
+      "round": 4,
+      "round_end_actor_sha256": "2421b92ff7015af07b9a877b0b886f43254cb161a5b6c2a44250c69055f982c1",
+      "screening": [
+        {
+          "eligible": true,
+          "fall_delta": -0.03125,
+          "fraction": 0.5,
+          "success_delta": 0.03125
+        },
+        {
+          "eligible": true,
+          "fall_delta": -0.140625,
+          "fraction": 1.0,
+          "success_delta": 0.140625
+        },
+        {
+          "eligible": true,
+          "fall_delta": 0.046875,
+          "fraction": 1.5,
+          "success_delta": -0.046875
+        }
+      ],
+      "selected_fraction": 1.0,
+      "update_diagnostics": {
+        "dual_rollout_actor_gradient_cosine": 0.001988162286579609,
+        "maximum_preupdate_minibatch_kl": 0.0003867489576805383,
+        "mean_kl": 0.00030857764068059623,
+        "ppo_minibatches_completed": 4,
+        "target_kl_early_stopped": false
+      },
+      "validation": {
+        "accepted_checkpoint": true,
+        "actor_sha256": "2421b92ff7015af07b9a877b0b886f43254cb161a5b6c2a44250c69055f982c1",
+        "best_so_far_after_evaluation": false,
+        "context_id": "L_effect",
+        "d0_safe": true,
+        "fall_constraint_passed": true,
+        "fall_delta_from_pi0": -0.00390625,
+        "fall_rate": 0.3515625,
+        "round": 4,
+        "success_delta_from_pi0": 0.00390625,
+        "success_rate": 0.6484375
+      }
+    },
+    {
+      "accepted_after_target_and_d0": false,
+      "accepted_update_count": 2,
+      "best_so_far_round_after_round": 3,
+      "confirmation": {
+        "candidate_fall_rate": 0.3359375,
+        "candidate_success_rate": 0.6640625,
+        "fall_delta": 0.0390625,
+        "old_fall_rate": 0.296875,
+        "old_success_rate": 0.6953125,
+        "passed": false,
+        "reasons": [
+          "confirmation success delta is not strictly positive",
+          "confirmation fall increase exceeds 3 percentage points"
+        ],
+        "seed": 32320001,
+        "success_delta": -0.03125
+      },
+      "d0": {
+        "baseline_success_rate": 0.921875,
+        "candidate_success_rate": 0.953125,
+        "passed": true,
+        "reasons": [],
+        "success_delta": 0.03125
+      },
+      "d0_rollback": false,
+      "rollout_seeds": [
+        33210051,
+        33210052
+      ],
+      "round": 5,
+      "round_end_actor_sha256": "2421b92ff7015af07b9a877b0b886f43254cb161a5b6c2a44250c69055f982c1",
+      "screening": [
+        {
+          "eligible": true,
+          "fall_delta": 0.015625,
+          "fraction": 0.5,
+          "success_delta": -0.015625
+        },
+        {
+          "eligible": true,
+          "fall_delta": -0.015625,
+          "fraction": 1.0,
+          "success_delta": 0.015625
+        },
+        {
+          "eligible": true,
+          "fall_delta": -0.046875,
+          "fraction": 1.5,
+          "success_delta": 0.046875
+        }
+      ],
+      "selected_fraction": 1.5,
+      "update_diagnostics": {
+        "dual_rollout_actor_gradient_cosine": -0.019059382379055023,
+        "maximum_preupdate_minibatch_kl": 0.0004517816996667534,
+        "mean_kl": 0.00030508002964779735,
+        "ppo_minibatches_completed": 4,
+        "target_kl_early_stopped": false
+      },
+      "validation": null
+    },
+    {
+      "accepted_after_target_and_d0": false,
+      "accepted_update_count": 2,
+      "best_so_far_round_after_round": 3,
+      "confirmation": {
+        "candidate_fall_rate": 0.3515625,
+        "candidate_success_rate": 0.6484375,
+        "fall_delta": 0.0,
+        "old_fall_rate": 0.3515625,
+        "old_success_rate": 0.6484375,
+        "passed": false,
+        "reasons": [
+          "confirmation success delta is not strictly positive"
+        ],
+        "seed": 32340001,
+        "success_delta": 0.0
+      },
+      "d0": {
+        "baseline_success_rate": 0.921875,
+        "candidate_success_rate": 0.9296875,
+        "passed": true,
+        "reasons": [],
+        "success_delta": 0.0078125
+      },
+      "d0_rollback": false,
+      "rollout_seeds": [
+        33210061,
+        33210062
+      ],
+      "round": 6,
+      "round_end_actor_sha256": "2421b92ff7015af07b9a877b0b886f43254cb161a5b6c2a44250c69055f982c1",
+      "screening": [
+        {
+          "eligible": true,
+          "fall_delta": -0.125,
+          "fraction": 0.5,
+          "success_delta": 0.125
+        },
+        {
+          "eligible": true,
+          "fall_delta": -0.125,
+          "fraction": 1.0,
+          "success_delta": 0.125
+        },
+        {
+          "eligible": true,
+          "fall_delta": -0.015625,
+          "fraction": 1.5,
+          "success_delta": 0.015625
+        }
+      ],
+      "selected_fraction": 0.5,
+      "update_diagnostics": {
+        "dual_rollout_actor_gradient_cosine": 0.1601448804140091,
+        "maximum_preupdate_minibatch_kl": 0.0004469921695999801,
+        "mean_kl": 0.0003687088028527796,
+        "ppo_minibatches_completed": 4,
+        "target_kl_early_stopped": false
+      },
+      "validation": null
+    },
+    {
+      "accepted_after_target_and_d0": true,
+      "accepted_update_count": 3,
+      "best_so_far_round_after_round": 3,
+      "confirmation": {
+        "candidate_fall_rate": 0.3359375,
+        "candidate_success_rate": 0.6640625,
+        "fall_delta": -0.015625,
+        "old_fall_rate": 0.3515625,
+        "old_success_rate": 0.6484375,
+        "passed": true,
+        "reasons": [],
+        "seed": 32360001,
+        "success_delta": 0.015625
+      },
+      "d0": {
+        "baseline_success_rate": 0.921875,
+        "candidate_success_rate": 0.9765625,
+        "passed": true,
+        "reasons": [],
+        "success_delta": 0.0546875
+      },
+      "d0_rollback": false,
+      "rollout_seeds": [
+        33210071,
+        33210072
+      ],
+      "round": 7,
+      "round_end_actor_sha256": "0ed667c3a8129cee3294cd63f1522f734956c9728d210661b5c57763c8e6f228",
+      "screening": [
+        {
+          "eligible": true,
+          "fall_delta": -0.078125,
+          "fraction": 0.5,
+          "success_delta": 0.078125
+        },
+        {
+          "eligible": true,
+          "fall_delta": 0.03125,
+          "fraction": 1.0,
+          "success_delta": -0.03125
+        },
+        {
+          "eligible": true,
+          "fall_delta": -0.046875,
+          "fraction": 1.5,
+          "success_delta": 0.046875
+        }
+      ],
+      "selected_fraction": 0.5,
+      "update_diagnostics": {
+        "dual_rollout_actor_gradient_cosine": -0.20521068572998047,
+        "maximum_preupdate_minibatch_kl": 0.0004677835095208138,
+        "mean_kl": 0.0003549501998350024,
+        "ppo_minibatches_completed": 4,
+        "target_kl_early_stopped": false
+      },
+      "validation": {
+        "accepted_checkpoint": true,
+        "actor_sha256": "0ed667c3a8129cee3294cd63f1522f734956c9728d210661b5c57763c8e6f228",
+        "best_so_far_after_evaluation": false,
+        "context_id": "L_effect",
+        "d0_safe": true,
+        "fall_constraint_passed": true,
+        "fall_delta_from_pi0": -0.015625,
+        "fall_rate": 0.33984375,
+        "round": 7,
+        "success_delta_from_pi0": 0.015625,
+        "success_rate": 0.66015625
+      }
+    },
+    {
+      "accepted_after_target_and_d0": false,
+      "accepted_update_count": 3,
+      "best_so_far_round_after_round": 3,
+      "confirmation": {
+        "candidate_fall_rate": 0.359375,
+        "candidate_success_rate": 0.640625,
+        "fall_delta": 0.0546875,
+        "old_fall_rate": 0.3046875,
+        "old_success_rate": 0.6953125,
+        "passed": false,
+        "reasons": [
+          "confirmation success delta is not strictly positive",
+          "confirmation fall increase exceeds 3 percentage points"
+        ],
+        "seed": 32380001,
+        "success_delta": -0.0546875
+      },
+      "d0": {
+        "baseline_success_rate": 0.921875,
+        "candidate_success_rate": 0.953125,
+        "passed": true,
+        "reasons": [],
+        "success_delta": 0.03125
+      },
+      "d0_rollback": false,
+      "rollout_seeds": [
+        33210081,
+        33210082
+      ],
+      "round": 8,
+      "round_end_actor_sha256": "0ed667c3a8129cee3294cd63f1522f734956c9728d210661b5c57763c8e6f228",
+      "screening": [
+        {
+          "eligible": true,
+          "fall_delta": 0.078125,
+          "fraction": 0.5,
+          "success_delta": -0.078125
+        },
+        {
+          "eligible": true,
+          "fall_delta": -0.03125,
+          "fraction": 1.0,
+          "success_delta": 0.03125
+        },
+        {
+          "eligible": true,
+          "fall_delta": 0.0,
+          "fraction": 1.5,
+          "success_delta": 0.0
+        }
+      ],
+      "selected_fraction": 1.0,
+      "update_diagnostics": {
+        "dual_rollout_actor_gradient_cosine": 0.011428451165556908,
+        "maximum_preupdate_minibatch_kl": 0.00046225794358178973,
+        "mean_kl": 0.0003189357230439782,
+        "ppo_minibatches_completed": 4,
+        "target_kl_early_stopped": false
+      },
+      "validation": null
+    }
+  ],
+  "protocol_checks": {
+    "base_checkpoint": true,
+    "beta_zero": true,
+    "context_file": true,
+    "context_id": true,
+    "context_mode": true,
+    "context_parameters": true,
+    "context_schema": true,
+    "declared_seed": true,
+    "protocol_id": true,
+    "restart_balance_profile": true,
+    "revision": true,
+    "runtime_seed": true,
+    "selected_seed": true,
+    "single_branch": true,
+    "status": true
+  },
+  "protocol_id": "safe100-effect-first-development-v22",
+  "round_protocol": {
+    "accepted_updates": 3,
+    "actual_rounds": 8,
+    "early_termination_enabled": false,
+    "fixed_round_budget": 8
+  },
+  "schema_version": 1,
+  "specialist_mode": "lateral",
+  "training_integrity": {
+    "all_exact_pair_match": true,
+    "bank_transaction_commit_count": 16,
+    "collector_count": 16,
+    "d0_rollback_count": 0,
+    "final_test_accessed_during_training": false,
+    "legacy_actor_input_column_change_max_abs": 0.0,
+    "matched_success_preservation_beta": 0.0,
+    "maximum_marginal_imbalance": 0,
+    "maximum_preupdate_minibatch_kl": 0.0004677835095208138,
+    "new_actor_input_column_max_abs": 4.5637549192178994e-05,
+    "pair_counts": [
+      12
+    ],
+    "primary_marginal_counts": {
+      "error_growth_bin": {
+        "high": 6,
+        "low": 6
+      },
+      "riser_stage": {
+        "early": 4,
+        "late": 4,
+        "mid": 4
+      },
+      "support_foot": {
+        "0": 6,
+        "1": 6
+      }
+    },
+    "restart_balance_profiles": [
+      "lateral_stage_support_growth"
+    ],
+    "target_kl_early_stop_count": 0
+  },
+  "validation_monitor": {
+    "best_checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v22/training/L_effect_revision2/best_so_far.pt",
+    "best_checkpoint_sha256": "e3676de9e5507db596360de25f0968a05553d8a937d9007431462cf0f9e179e2",
+    "best_so_far": {
+      "accepted_checkpoint": true,
+      "actor_sha256": "7a0d8da787656318b44ae1596cae781580920c4c2039521b9a85f3a5b645716b",
+      "best_so_far_after_evaluation": true,
+      "context_id": "L_effect",
+      "d0_safe": true,
+      "fall_constraint_passed": true,
+      "fall_delta_from_pi0": -0.04296875,
+      "fall_rate": 0.3125,
+      "round": 3,
+      "success_delta_from_pi0": 0.04296875,
+      "success_rate": 0.6875
+    },
+    "excluded_from_ppo_replay_and_candidate_gates": true,
+    "maximum_fall_increase_from_pi0": 0.02,
+    "paired_conditions": 256,
+    "rows": [
+      {
+        "accepted_checkpoint": true,
+        "actor_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+        "best_so_far_after_evaluation": false,
+        "context_id": "L_effect",
+        "d0_safe": true,
+        "fall_constraint_passed": true,
+        "fall_delta_from_pi0": 0.0,
+        "fall_rate": 0.35546875,
+        "round": 0,
+        "success_delta_from_pi0": 0.0,
+        "success_rate": 0.64453125
+      },
+      {
+        "accepted_checkpoint": true,
+        "actor_sha256": "7a0d8da787656318b44ae1596cae781580920c4c2039521b9a85f3a5b645716b",
+        "best_so_far_after_evaluation": true,
+        "context_id": "L_effect",
+        "d0_safe": true,
+        "fall_constraint_passed": true,
+        "fall_delta_from_pi0": -0.04296875,
+        "fall_rate": 0.3125,
+        "round": 3,
+        "success_delta_from_pi0": 0.04296875,
+        "success_rate": 0.6875
+      },
+      {
+        "accepted_checkpoint": true,
+        "actor_sha256": "2421b92ff7015af07b9a877b0b886f43254cb161a5b6c2a44250c69055f982c1",
+        "best_so_far_after_evaluation": false,
+        "context_id": "L_effect",
+        "d0_safe": true,
+        "fall_constraint_passed": true,
+        "fall_delta_from_pi0": -0.00390625,
+        "fall_rate": 0.3515625,
+        "round": 4,
+        "success_delta_from_pi0": 0.00390625,
+        "success_rate": 0.6484375
+      },
+      {
+        "accepted_checkpoint": true,
+        "actor_sha256": "0ed667c3a8129cee3294cd63f1522f734956c9728d210661b5c57763c8e6f228",
+        "best_so_far_after_evaluation": false,
+        "context_id": "L_effect",
+        "d0_safe": true,
+        "fall_constraint_passed": true,
+        "fall_delta_from_pi0": -0.015625,
+        "fall_rate": 0.33984375,
+        "round": 7,
+        "success_delta_from_pi0": 0.015625,
+        "success_rate": 0.66015625
+      }
+    ],
+    "same_conditions_for_all_accepted_checkpoints": true,
+    "seed": 104000000,
+    "selection_primary": "highest target success rate",
+    "tie_breaks": [
+      "lower fall rate",
+      "earlier round"
+    ]
+  }
+}

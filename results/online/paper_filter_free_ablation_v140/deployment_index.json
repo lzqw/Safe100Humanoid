@@ -1,0 +1,44 @@
+[
+  {
+    "actor_sha256": "6a3fdea9f66ff1bd52e6c2c67148397e341aec1a6d3f5205daf37cd4ccac31ca",
+    "bridge_parity_passed": true,
+    "checkpoint": "results/online/paper_filter_free_ablation_v140/checkpoints/dual_safe_ft_F1_seed_201357000_round_04.pt",
+    "checkpoint_sha256": "80e7207d2e46d0de6e93b45cd1144fbb57a054de06a2d463bf41c15d8ecf2c6a",
+    "context": "F1",
+    "onnx": "results/online/paper_filter_free_ablation_v140/deployment/dual_safe_ft_F1_seed_201357000_round_04.onnx",
+    "onnx_reference_p95_ms": 0.31882320000000003,
+    "onnx_sha256": "c4880c06707859f4eed4d2963ab29ff38f29cd4cb197fd3b812a7cf2652071f5",
+    "pytorch_bridge_deadline_passed": true,
+    "pytorch_bridge_p95_ms": 0.238232,
+    "training_seed": 201357000,
+    "validation_report": "results/online/paper_filter_free_ablation_v140/deployment/dual_safe_ft_F1_seed_201357000_round_04.validation.json"
+  },
+  {
+    "actor_sha256": "135cb40ad9534a4100f664b7951ce47e86d7db140033f94024ae564e1f213bc2",
+    "bridge_parity_passed": true,
+    "checkpoint": "results/online/paper_filter_free_ablation_v140/checkpoints/dual_safe_ft_F2_seed_201357000_round_04.pt",
+    "checkpoint_sha256": "d442976471fe96bd290008c5afae030007ab4e010abd6ff097aa3d4b47b7db36",
+    "context": "F2",
+    "onnx": "results/online/paper_filter_free_ablation_v140/deployment/dual_safe_ft_F2_seed_201357000_round_04.onnx",
+    "onnx_reference_p95_ms": 0.30294184999999996,
+    "onnx_sha256": "3e089f5515e895a9a0a9d93c5050819f72b613e8de9ce2ca6c943e9e1af36640",
+    "pytorch_bridge_deadline_passed": true,
+    "pytorch_bridge_p95_ms": 0.22348965,
+    "training_seed": 201357000,
+    "validation_report": "results/online/paper_filter_free_ablation_v140/deployment/dual_safe_ft_F2_seed_201357000_round_04.validation.json"
+  },
+  {
+    "actor_sha256": "b8f589331aa767749bd6a934cdf14da9f2e52fd41087ac642562406d3f01c204",
+    "bridge_parity_passed": true,
+    "checkpoint": "results/online/paper_filter_free_ablation_v140/checkpoints/dual_safe_ft_F3_seed_201357000_round_04.pt",
+    "checkpoint_sha256": "3c5b4b63430054ecf535ab252cdd6578fe588485c51e0497c9018e3ab783ce35",
+    "context": "F3",
+    "onnx": "results/online/paper_filter_free_ablation_v140/deployment/dual_safe_ft_F3_seed_201357000_round_04.onnx",
+    "onnx_reference_p95_ms": 0.31216754999999996,
+    "onnx_sha256": "fc298fbcee1e6036b7e46dcae13c5050b6ce50156270c6ea8a4365bf474a7110",
+    "pytorch_bridge_deadline_passed": true,
+    "pytorch_bridge_p95_ms": 0.235427,
+    "training_seed": 201357000,
+    "validation_report": "results/online/paper_filter_free_ablation_v140/deployment/dual_safe_ft_F3_seed_201357000_round_04.validation.json"
+  }
+]

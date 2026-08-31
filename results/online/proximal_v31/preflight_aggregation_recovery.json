@@ -1,0 +1,28 @@
+{
+  "checks": {
+    "A1_A2_teacher_loss_finite": true,
+    "actor_and_critic_update": true,
+    "all_contexts_construct_reset_step": true,
+    "all_methods_update": true,
+    "distribution_parameter_tolerance_remains_strict": true,
+    "exactly_three_cases": true,
+    "implemented_log_prob_atol_is_1e_3": true,
+    "legal_7_5e_4_reduction_error_continues": true,
+    "no_nan_or_inf": true,
+    "patch_counts_F1_F2_F3": true,
+    "raw_action_storage": true,
+    "real_1_2e_3_log_prob_error_rejected": true,
+    "safe_action_execution": true
+  },
+  "failure": "The frozen aggregator resolved src.tasks.stairs_cbf.online from the installed third-party mirror (5e-4) instead of the frozen repository (1e-3).",
+  "failure_sha256": "ba97ab9ee0d92c860bd94df276632493c8a60d01b515ffc2e0c5c6ac1ece61c0",
+  "failure_stage": "post-case CPU aggregation",
+  "frozen_repository_log_prob_atol": 0.001,
+  "orchestrator_exit_code": 1,
+  "protocol_id": "safe100-cbf-teacher-formal-matrix-v31",
+  "recovery": "Re-aggregate the three already-complete case summaries and repeat only the pure tolerance assertion with PYTHONPATH fixed to the frozen repository; no environment was constructed and no rollout/update was rerun.",
+  "schema_version": 1,
+  "simulator_cases_rerun": false,
+  "simulator_preflight_attempts": 1,
+  "source_or_protocol_changed": false
+}

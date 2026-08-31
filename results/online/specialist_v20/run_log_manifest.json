@@ -1,0 +1,162 @@
+{
+  "evidence_role": "hash index for all v20 execution logs; compact logs are included, large repetitive training/queue logs remain external",
+  "records": [
+    {
+      "bytes": 26123,
+      "included_in_git": true,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v20/audit_contact_stability_amendment2.log",
+      "sha256": "86aec635588e887668881c01600657ffe6c9e6e46bf6893aea9756bd1f685319"
+    },
+    {
+      "bytes": 13570,
+      "included_in_git": true,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v20/audit_lateral.log",
+      "sha256": "14402677150e3be574947c8682a40ae4a8fb6eac1da80ee0d0e475a1574a8a03"
+    },
+    {
+      "bytes": 26044,
+      "included_in_git": true,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v20/audit_lateral_retry1_amendment2.log",
+      "sha256": "fe0720c268b10d97b2308d42a010f312264fd17be52cf7445884b8f5355ac7a5"
+    },
+    {
+      "bytes": 141755,
+      "included_in_git": true,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v20/build_evidence_package_b575cf34.log",
+      "sha256": "af36dc88d8e73c5b33ddceb471ef33a1701e64bc211cd858297d632b73a49211"
+    },
+    {
+      "bytes": 16464,
+      "included_in_git": true,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v20/calibration_contact_stability.log",
+      "sha256": "ba6df453c5ffafd74762709ade3bd0278714a879bea9541984baac236cc4f8d2"
+    },
+    {
+      "bytes": 29707,
+      "included_in_git": true,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v20/calibration_lateral.log",
+      "sha256": "ef2ef592665eacc0a33bffb7275d0e86562a4b22a9fb2d59960660bee3efcb5d"
+    },
+    {
+      "bytes": 26832,
+      "included_in_git": true,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v20/plot_evidence_b575cf34.log",
+      "sha256": "2806a54a362344a5dc9e31515898a4deeda82376198d271296eada5f6c1c3a51"
+    },
+    {
+      "bytes": 27888,
+      "included_in_git": true,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v20/plot_evidence_repro_check_b575cf34.log",
+      "sha256": "07d2d0c6ee0c381dca243f340bf07e46f6b79021e1c5b7f3f7f222297fc4de3c"
+    },
+    {
+      "bytes": 38689388,
+      "included_in_git": false,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v20/queue_contact_stability_v20.log",
+      "sha256": "e25c233aed99fa90d9348ccf2484f9d8a94f22a0f9b6b2531a896e5d8bbd5a74"
+    },
+    {
+      "bytes": 54521055,
+      "included_in_git": false,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v20/queue_lateral.log",
+      "sha256": "0b2fea5c7301a61df1eacc2507ad4c6daaaba1c58b7d35c8081b4865a0dbb631"
+    },
+    {
+      "bytes": 12667,
+      "included_in_git": true,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v20/smoke_audit_amendment2_fiveseed_1428f57.log",
+      "sha256": "8dac2ee68da9508585ce4e403b16d5a56dbbb6206d9e386d6ef025d4823d32b2"
+    },
+    {
+      "bytes": 18578,
+      "included_in_git": true,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v20/smoke_audit_amendment2_fiveseed_1428f57_resume1000.log",
+      "sha256": "4bf1857b66dd040b0c272af22d00affc2e39a1c8221c967ecc1191a6442ac5e5"
+    },
+    {
+      "bytes": 12609,
+      "included_in_git": true,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v20/smoke_audit_amendment2_lateral_1428f57.log",
+      "sha256": "d401aca6de9766ccedac3dde4bac49293895290918497b071502073f9ef0e356"
+    },
+    {
+      "bytes": 13319,
+      "included_in_git": true,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v20/smoke_audit_amendment_lateral_731836c.log",
+      "sha256": "789f1a2db6da413b73c5f121a6a17f27274bcec1050720df02545af793932cff"
+    },
+    {
+      "bytes": 28897,
+      "included_in_git": true,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v20/telemetry_contact_stability_replay_disclosed.log",
+      "sha256": "625a2b209a4215fbf8fe74c1f9462bc5d2eba20aa96e213ab2bf08cd254437a1"
+    },
+    {
+      "bytes": 28318,
+      "included_in_git": true,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v20/telemetry_lateral_replay_disclosed.log",
+      "sha256": "0fde60467cca73a90caefc472677b9ecb1ebf73c4129fd1f744628cd07ca5836"
+    },
+    {
+      "bytes": 7012252,
+      "included_in_git": false,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v20/train_contact_stability_seed173.log",
+      "sha256": "3d37d26a91357bca0eb815ff0b9b8d41d22de4536453f856af8b0ee855d57380"
+    },
+    {
+      "bytes": 8028812,
+      "included_in_git": false,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v20/train_contact_stability_seed273.log",
+      "sha256": "9e95f7e93905b58e181db7d85ec6da62b584a6048dba563ac25220667c361375"
+    },
+    {
+      "bytes": 7308464,
+      "included_in_git": false,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v20/train_contact_stability_seed373.log",
+      "sha256": "fc02324c3f544da7be52a5cceaac893075560eb11ad604a44172264e3d18a7f6"
+    },
+    {
+      "bytes": 8247860,
+      "included_in_git": false,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v20/train_contact_stability_seed473.log",
+      "sha256": "752c828e1d570d54cfe8d0022bcf5b59880a275ae7e62b329a227917c3d18202"
+    },
+    {
+      "bytes": 8064870,
+      "included_in_git": false,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v20/train_contact_stability_seed73.log",
+      "sha256": "9703fb004efdbfde8aaabef83e5ce50faf9768e3cc9496d0c4ebebd774e97f15"
+    },
+    {
+      "bytes": 10734482,
+      "included_in_git": false,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v20/train_lateral_seed173.log",
+      "sha256": "a04e920b07abbb8131ce7827c3a3dcf3c150d6f981910655dcd3b85c110f9019"
+    },
+    {
+      "bytes": 11103945,
+      "included_in_git": false,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v20/train_lateral_seed273.log",
+      "sha256": "61c0cc7db103e8c7b58dbab32453c1fd540b593fecbcbc8ae9c5ac364c4fe536"
+    },
+    {
+      "bytes": 10965620,
+      "included_in_git": false,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v20/train_lateral_seed373.log",
+      "sha256": "3d74314db09cb6b415fb0fb64c95c5db87597658714bf98e99fa47be372bacc7"
+    },
+    {
+      "bytes": 10746755,
+      "included_in_git": false,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v20/train_lateral_seed473.log",
+      "sha256": "c55724af835bd4df3afdd25c0200be99a62447668c2ccf4ccbe97f521c23b812"
+    },
+    {
+      "bytes": 10955859,
+      "included_in_git": false,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v20/train_lateral_seed73.log",
+      "sha256": "559f0ada94f5dee1dba23d406e6e5d69e0c1dbb7ef8f8ad36b7a4c522a713fc7"
+    }
+  ],
+  "schema_version": 1
+}

@@ -1,0 +1,3 @@
+version,scene,base_success_rate,final_success_rate,success_delta,fall_delta,repairs,regressions,development_gate_passed
+v23,pure lateral,0.693359375,0.689453125,-0.00390625,0.00390625,93,95,False
+v24,pure low foot friction,0.72265625,0.71484375,-0.0078125,0.0078125,95,99,False

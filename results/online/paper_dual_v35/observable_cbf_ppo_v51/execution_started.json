@@ -1,0 +1,15 @@
+{
+  "base_checkpoint_sha256": "3ec45cd196447901cf815d0fa1ff400af1b519ed2bb85c2fc179458ce3e81d3f",
+  "git_commit": "0043d83982f4041c4a601bd99092dbae2da5db7c",
+  "method_id": "observable-cbf-geometry-paired-dual-gae-v51",
+  "optimization_seed": 5199,
+  "rollout_conditions": [
+    "filter_on",
+    "filter_off"
+  ],
+  "training_seeds": [
+    5101,
+    5102,
+    5103
+  ]
+}

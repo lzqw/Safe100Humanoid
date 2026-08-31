@@ -1,0 +1,31 @@
+{
+  "arms": [
+    "frozen",
+    "nominal_ft",
+    "reward_only_ft",
+    "filter_only_ft",
+    "dual_safe_ft"
+  ],
+  "base_checkpoint_sha256": "323f1e00b58d379b8746c0191a44272f2e1df134139050417c56e733cc484728",
+  "checkpoint_rounds": [
+    0,
+    1,
+    2,
+    4
+  ],
+  "checkpoint_spec_count": 111,
+  "contexts": [
+    "F1",
+    "F2",
+    "F3"
+  ],
+  "episodes_per_filter_condition": 512,
+  "evaluation_job_count": 222,
+  "evaluation_seed": 201357900,
+  "experiment": "paper_filter_free_paired_evaluation_matrix",
+  "git_commit": "7d84d19c5f274cb21ea1405e7064e3db4b588ded",
+  "schema_version": 1,
+  "shared_round_0_evaluation": true,
+  "started_unix": 1787994329.4384832,
+  "training_git_commit": "8deaeff4293aa747bb4599f180b0a6304942a3e3"
+}

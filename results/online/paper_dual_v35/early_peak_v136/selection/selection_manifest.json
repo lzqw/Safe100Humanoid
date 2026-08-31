@@ -1,0 +1,113 @@
+{
+  "candidate_count": 8,
+  "candidates": [
+    {
+      "actor_sha256": "c197a3470f346cb46d4e99b0de6339c168ccd0c6d84c7fc3fb45238b56545c79",
+      "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/scaled_continuation_v132_194917e_128x1024x8_s201355300/round_00.pt",
+      "checkpoint_round": 0,
+      "checkpoint_sha256": "54d130d05c0daac3805a3c879311f6c3384ce5f54a27533c21c21c94a096f00d",
+      "episode_count": 270,
+      "mean_reached_riser": 7.940740740740741,
+      "rollout_round": 1,
+      "success_count": 189
+    },
+    {
+      "actor_sha256": "5f7eac8586e168c003dc703f1572a45014027f89d4e1cd5d5031a5870b6c7cbd",
+      "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/scaled_continuation_v132_194917e_128x1024x8_s201355300/round_01.pt",
+      "checkpoint_round": 1,
+      "checkpoint_sha256": "79a11beca8d5a85445d7e7a57f30fc81f45601491c1833306d97924653151cbe",
+      "episode_count": 264,
+      "mean_reached_riser": 8.155303030303031,
+      "rollout_round": 2,
+      "success_count": 194
+    },
+    {
+      "actor_sha256": "8aab583c50c640e95fb1c9a2fe4e0337988eba13bb4fb26805a1a2def85d1638",
+      "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/scaled_continuation_v132_194917e_128x1024x8_s201355300/round_02.pt",
+      "checkpoint_round": 2,
+      "checkpoint_sha256": "01ec7ea71492555db3ed50608c6b3b9b6216cd129f1435cad8579c9562157a46",
+      "episode_count": 267,
+      "mean_reached_riser": 8.119850187265918,
+      "rollout_round": 3,
+      "success_count": 193
+    },
+    {
+      "actor_sha256": "bde679ca6a2f63b02fb26d0afb0fd3c38736619b6a33246eff7ad69656166f71",
+      "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/scaled_continuation_v132_194917e_128x1024x8_s201355300/round_03.pt",
+      "checkpoint_round": 3,
+      "checkpoint_sha256": "f0c18b0965668fb8eab5e3fab6e8f2edc6555c35f9cb65df4b419c4c3df34b91",
+      "episode_count": 269,
+      "mean_reached_riser": 8.022304832713754,
+      "rollout_round": 4,
+      "success_count": 198
+    },
+    {
+      "actor_sha256": "07479da4cfa0d6d113ada4df9af9b666fc2925efe4c4e85b7bb4614e34a9a838",
+      "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/scaled_continuation_v132_194917e_128x1024x8_s201355300/round_04.pt",
+      "checkpoint_round": 4,
+      "checkpoint_sha256": "b69fb8d7c88d072a1e328adf7eea0b317cdd4ff9726c60c4047535ffa1428c04",
+      "episode_count": 273,
+      "mean_reached_riser": 7.91941391941392,
+      "rollout_round": 5,
+      "success_count": 189
+    },
+    {
+      "actor_sha256": "7c5ce04149afb6d4912d9ecdfdaa057cde2cb4b46e1973600fa6d4528e090a2b",
+      "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/scaled_continuation_v132_194917e_128x1024x8_s201355300/round_05.pt",
+      "checkpoint_round": 5,
+      "checkpoint_sha256": "5db53e0c7d7c6cf92f1e72c9418f81a1933a451a00432de99d15f260ab9529d0",
+      "episode_count": 271,
+      "mean_reached_riser": 8.107011070110701,
+      "rollout_round": 6,
+      "success_count": 198
+    },
+    {
+      "actor_sha256": "38113e1ff6dd8bc2cb2dc67fa7ffd6a3080202f06af289b6b294ac69549d22be",
+      "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/scaled_continuation_v132_194917e_128x1024x8_s201355300/round_06.pt",
+      "checkpoint_round": 6,
+      "checkpoint_sha256": "3c1c9fae4abaeda786fc4377bfeebd6b45892ac53dbb0cf985f4707c219953fc",
+      "episode_count": 267,
+      "mean_reached_riser": 8.097378277153558,
+      "rollout_round": 7,
+      "success_count": 192
+    },
+    {
+      "actor_sha256": "ae031e720b6c8e18fd855da10bbd0e3bc80160357ef93c3055c7cfefef126093",
+      "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/scaled_continuation_v132_194917e_128x1024x8_s201355300/round_07.pt",
+      "checkpoint_round": 7,
+      "checkpoint_sha256": "a7fdd4d07dc79f1f001b09ff3638bcc5de000c3804f369dcf13ed61ebd18bde3",
+      "episode_count": 269,
+      "mean_reached_riser": 8.029739776951672,
+      "rollout_round": 8,
+      "success_count": 198
+    }
+  ],
+  "decision": {
+    "actor_sha256": "bde679ca6a2f63b02fb26d0afb0fd3c38736619b6a33246eff7ad69656166f71",
+    "additional_evaluation_count": 0,
+    "checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/scaled_continuation_v132_194917e_128x1024x8_s201355300/round_03.pt",
+    "checkpoint_round": 3,
+    "checkpoint_sha256": "f0c18b0965668fb8eab5e3fab6e8f2edc6555c35f9cb65df4b419c4c3df34b91",
+    "episode_count": 269,
+    "exact_peak_tie_count": 2,
+    "exact_peak_tied_rollout_rounds": [
+      4,
+      8
+    ],
+    "exact_rate_denominator": 269,
+    "exact_rate_numerator": 198,
+    "mean_reached_riser": 8.022304832713754,
+    "method_id": "paper-cbf-dual-earliest-exact-peak-v136",
+    "rollout_round": 4,
+    "selection_tie_break": "earliest_rollout_minimum_update_count",
+    "success_count": 198,
+    "success_rate": 0.7360594795539034
+  },
+  "git_commit": "4a53f1d8ae807960e909a3f8c741b02ef42e553f",
+  "method_id": "paper-cbf-dual-earliest-exact-peak-v136",
+  "schema_version": 1,
+  "selected_checkpoint_sha256_verified": true,
+  "selection_additional_evaluation_count": 0,
+  "source_round_metrics": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/scaled_continuation_v132_194917e_128x1024x8_s201355300/round_metrics.json",
+  "source_round_metrics_sha256": "7c0aa01acfaed0cc32f22a245384b20220234ada511c8a83b9d7300e7414ec9c"
+}

@@ -1,0 +1,217 @@
+{
+  "actor_learning_rate": 5e-06,
+  "base_checkpoint_sha256": "3ec45cd196447901cf815d0fa1ff400af1b519ed2bb85c2fc179458ce3e81d3f",
+  "candidate_actor_sha256": "3b29cf9a59cb492a9e50a7e0d9735e08fc471f5bf567f3fae443dc20731e022c",
+  "candidate_checkpoint_sha256": "f0d02336f738518b8653a22b184262f2a5dc6595bae3319997ea16a75bbf380d",
+  "candidate_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/pilot/F2/outcome_ppo_v44_mean_6x32/candidate.pt",
+  "clip_ratio": 0.2,
+  "context": "F2",
+  "elapsed_seconds": 9.818473848048598,
+  "git_commit": "62eedddaa26da5f906f175336cb5a786d7e9bf75",
+  "gradient_aggregation": "mean",
+  "initial_actor_sha256": "3964c0ef24707addbaa0dacfd4fd627882bd8b45a2c9799142710fa45bc29499",
+  "max_reference_kl": 0.0001,
+  "method_id": "episode-balanced-filter-free-outcome-ppo-v44",
+  "moving_kl_beta": 0.5,
+  "offline_gate_passed": true,
+  "optimization_seed": 201350442,
+  "schema_version": 1,
+  "seed_summaries": [
+    {
+      "episode_count": 32,
+      "failure_count": 9,
+      "seed_id": 0,
+      "success_count": 23,
+      "training_seed": 201350342,
+      "transition_count": 13601
+    },
+    {
+      "episode_count": 32,
+      "failure_count": 6,
+      "seed_id": 1,
+      "success_count": 26,
+      "training_seed": 201350352,
+      "transition_count": 13663
+    },
+    {
+      "episode_count": 32,
+      "failure_count": 9,
+      "seed_id": 2,
+      "success_count": 23,
+      "training_seed": 201350362,
+      "transition_count": 13523
+    },
+    {
+      "episode_count": 32,
+      "failure_count": 10,
+      "seed_id": 3,
+      "success_count": 22,
+      "training_seed": 201350392,
+      "transition_count": 13028
+    },
+    {
+      "episode_count": 32,
+      "failure_count": 8,
+      "seed_id": 4,
+      "success_count": 24,
+      "training_seed": 201350402,
+      "transition_count": 13186
+    },
+    {
+      "episode_count": 32,
+      "failure_count": 14,
+      "seed_id": 5,
+      "success_count": 18,
+      "training_seed": 201350412,
+      "transition_count": 13043
+    }
+  ],
+  "source_dataset_sha256s": [
+    "7540dcd99cd67d90dc5c9b511fe7050469eb6e02696fbbc67841d74a89fd6ac7",
+    "ba86487a7716d63bcb33eebd8b6bdee4ece295905ca8a0b279b131ea5786d4a2"
+  ],
+  "source_datasets": [
+    "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/pilot/F2/filter_free_elite_self_imitation_v41_3x32/elite_dataset.pt",
+    "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/pilot/F2/filter_free_elite_additional_v43_3x32/elite_dataset.pt"
+  ],
+  "source_training_seeds": [
+    201350342,
+    201350352,
+    201350362,
+    201350392,
+    201350402,
+    201350412
+  ],
+  "training": {
+    "actor_update_scope": "last-layer",
+    "after": {
+      "clipped_outcome_surrogate_gain": 0.0004780935899664958,
+      "episode_balanced_failure_log_ratio": -0.0009580071685680499,
+      "episode_balanced_success_log_ratio": 6.398585883891678e-07,
+      "median_seed_surrogate_gain": 0.0004957658238708973,
+      "minimum_seed_surrogate_gain": 0.0001555299386382103,
+      "outcome_surrogate_gain": 0.0004780935899664958,
+      "per_seed_clipped_surrogate_gain": [
+        0.0005621816962957382,
+        0.0004957658238708973,
+        0.0004424974322319031,
+        0.0005798125639557838,
+        0.0006327740848064423,
+        0.0001555299386382103
+      ],
+      "per_seed_surrogate_gain": [
+        0.0005621816962957382,
+        0.0004957658238708973,
+        0.0004424974322319031,
+        0.0005798125639557838,
+        0.0006327740848064423,
+        0.0001555299386382103
+      ],
+      "positive_seed_count": 6,
+      "transition_clip_fraction": 0.0
+    },
+    "aggregate_gradient_norm_pre_clip": 5.044025421142578,
+    "before": {
+      "clipped_outcome_surrogate_gain": 0.0,
+      "episode_balanced_failure_log_ratio": 0.0,
+      "episode_balanced_success_log_ratio": 0.0,
+      "median_seed_surrogate_gain": 0.0,
+      "minimum_seed_surrogate_gain": 0.0,
+      "outcome_surrogate_gain": 0.0,
+      "per_seed_clipped_surrogate_gain": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "per_seed_surrogate_gain": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "positive_seed_count": 0,
+      "transition_clip_fraction": 0.0
+    },
+    "dataset_transition_count": 80044,
+    "elite_after": {
+      "elite_smooth_l1": 0.021214918088049626,
+      "elite_target_distance": 0.1695850205152437,
+      "reference_elite_target_distance": 0.16958509658897558
+    },
+    "elite_before": {
+      "elite_smooth_l1": 0.021214940609878143,
+      "elite_target_distance": 0.16958509658897558,
+      "reference_elite_target_distance": 0.16958509658897558
+    },
+    "elite_transition_count": 60976,
+    "gradient_aggregation": "mean",
+    "optimizer_updates": 1,
+    "pairwise_gradient_cosine_mean": -0.0032224259339272976,
+    "pairwise_gradient_cosine_min": -0.1447502225637436,
+    "per_seed_gradient_norm": [
+      12.997437477111816,
+      12.312211990356445,
+      11.36738109588623,
+      12.007925987243652,
+      13.814309120178223,
+      11.322141647338867
+    ],
+    "per_seed_policy_loss_before": [
+      -9.313225746154785e-09,
+      -5.587935447692871e-09,
+      -7.450580596923828e-09,
+      -8.381903171539307e-09,
+      -1.7695128917694092e-08,
+      2.561137080192566e-08
+    ],
+    "trainable_parameter_count": 1548,
+    "trust_region": {
+      "after": {
+        "reference_forward_kl": 9.996069614857809e-05,
+        "reference_mean_shift": 0.0006738371365574679
+      },
+      "before": {
+        "reference_forward_kl": 0.0,
+        "reference_mean_shift": 0.0
+      },
+      "max_reference_kl": 0.0001,
+      "parameter_interpolation_scale": 0.65185546875,
+      "projection_iterations": 12,
+      "unprojected_after": {
+        "reference_forward_kl": 0.00023527646623542538,
+        "reference_mean_shift": 0.0010337738802298263
+      }
+    },
+    "unprojected_after": {
+      "clipped_outcome_surrogate_gain": 0.0007323579241832098,
+      "episode_balanced_failure_log_ratio": -0.001551457738969475,
+      "episode_balanced_success_log_ratio": -8.098633712429189e-05,
+      "median_seed_surrogate_gain": 0.0007628584280610085,
+      "minimum_seed_surrogate_gain": 0.0002375887706875801,
+      "outcome_surrogate_gain": 0.0007323579241832098,
+      "per_seed_clipped_surrogate_gain": [
+        0.0008619669824838638,
+        0.0007628584280610085,
+        0.0006765741854906082,
+        0.0008867969736456871,
+        0.0009683622047305107,
+        0.0002375887706875801
+      ],
+      "per_seed_surrogate_gain": [
+        0.0008619669824838638,
+        0.0007628584280610085,
+        0.0006765741854906082,
+        0.0008867969736456871,
+        0.0009683622047305107,
+        0.0002375887706875801
+      ],
+      "positive_seed_count": 6,
+      "transition_clip_fraction": 0.0
+    }
+  }
+}

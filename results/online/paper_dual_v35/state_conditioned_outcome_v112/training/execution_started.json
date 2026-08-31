@@ -1,0 +1,19 @@
+{
+  "actor_observation_interface": "405D proprioception + 10D deployable CBF geometry",
+  "adapter_update_scope": "full-first-layer",
+  "base_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "git_commit": "829420faa5ed30b7ae926e0e8fc4e7a4a8dcac97",
+  "method_id": "state-conditioned-paired-outcome-contrast-adapter-v112",
+  "rollout_conditions": [
+    "filter_off",
+    "filter_on"
+  ],
+  "teacher_episode_scope": "discordant-pairs",
+  "teacher_target": "state-conditioned-outcome-contrast",
+  "training_seeds": [
+    201353400,
+    201353410,
+    201353420,
+    201353430
+  ]
+}

@@ -1,0 +1,206 @@
+{
+  "adaptation_seeds": [
+    73,
+    173,
+    273,
+    373,
+    473
+  ],
+  "calibration": {
+    "adapted_policy_evaluations_used": false,
+    "base_policy_only": true,
+    "contact_stability_candidate_seeds": [
+      8212,
+      8213,
+      8214,
+      8215,
+      8216,
+      8217,
+      8218,
+      8219
+    ],
+    "contact_stability_evaluation_seed_base": 4810000,
+    "contact_stability_maximum_second_failure_fraction": 0.2,
+    "contact_stability_minimum_target_failure_fraction": 0.75,
+    "episodes_per_candidate": 512,
+    "eval_batch_size": 128,
+    "first_qualifying_candidate_is_frozen": true,
+    "fresh_contexts_required": true,
+    "lateral_candidate_seeds": [
+      8312,
+      8313,
+      8314,
+      8315,
+      8316,
+      8317,
+      8318,
+      8319
+    ],
+    "lateral_evaluation_seed_base": 4820000,
+    "lateral_maximum_second_failure_fraction": 0.3,
+    "lateral_minimum_target_failure_fraction": 0.8,
+    "minimum_fall_count": 100,
+    "success_rate_bounds_inclusive": [
+      0.7,
+      0.85
+    ]
+  },
+  "created_date": "2026-08-07",
+  "evaluation": {
+    "audit_seed": 5500000,
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 6500000,
+    "cbf_independence_gate": false,
+    "d0_paired_episodes_per_adaptation_seed": 256,
+    "eval_batch_size": 128,
+    "filter_free_evaluation": false,
+    "macro_average_computed": false,
+    "off_diagonal_evaluation": false,
+    "paired_baseline_and_final_randomness": true,
+    "runtime_cbf": true,
+    "specialists_audited_independently": true,
+    "target_paired_episodes_per_adaptation_seed": 512
+  },
+  "fresh_evidence_boundary": {
+    "calibration_candidates_declared_before_base_only_results": true,
+    "formal_adaptation_must_follow_a_second_commit_sealing_selected_contexts": true,
+    "historical_v17_v18_v19_evidence_may_not_be_relabelled": true,
+    "no_v20_adaptation_or_audit_outcomes_seen": true
+  },
+  "independent_specialist_acceptance": {
+    "confidence_interval_is_a_gate": false,
+    "joint_two_specialist_claim_defined": false,
+    "lcb95_positive_is_strong_evidence_only": true,
+    "maximum_diagonal_fall_increase": 0.03,
+    "mean_diagonal_success_delta_strictly_above": 0.0,
+    "minimum_d0_success_delta": -0.05,
+    "minimum_positive_adaptation_seed_count": 4
+  },
+  "method_invariants": {
+    "actor_count": 1,
+    "actor_observation_width": 410,
+    "candidate_rollback": true,
+    "critic_count": 1,
+    "critic_observation_width": 843,
+    "deployable_failure_feature_count": 5,
+    "exact_failure_success_restart_pairs": true,
+    "legacy_actor_input_columns_frozen_during_adaptation": true,
+    "learning_core": "v19 Revision-4 Observable Failure-Conditioned Brief PPO",
+    "new_actor_input_columns_use_full_actor_learning_rate": true,
+    "privileged_critic": true,
+    "raw_policy_action_stored_for_ppo": true,
+    "required_restart_marginals_jointly_balanced": true,
+    "runtime_cbf": true,
+    "scalar_reward": true,
+    "transactional_replay_bank_updates": true
+  },
+  "policy_method": "Fixed-Budget Observable Failure-Conditioned Brief PPO v20",
+  "prospective_amendments": [
+    {
+      "adaptation_or_calibration_outcomes_observed_before_amendment": false,
+      "amends_git_commit": "a65cc0d9e8f9d67b3fb41dfb3a5d53eee3ece210",
+      "field": "experiments/scripts/calibrate_specialist_contexts_v20.py",
+      "reason": "the first lateral calibration invocation stopped during runner construction, before candidate generation/evaluation, because the calibration wrapper omitted the already-frozen Revision-4 full-rate five-column adapter flags; align initialization with the unchanged v19-R4 core and preserve retry logs",
+      "replacement": "set actor_new_feature_count=5, actor_new_feature_learning_rate_multiplier=1.0, freeze_legacy_actor_input_columns=true, std_scale_from_base=0.35, and entropy_coef=0.0"
+    },
+    {
+      "adaptation_or_calibration_outcomes_observed_before_amendment": false,
+      "amends_git_commit": "6c75cdce5dbef03cf99a1544df9ea2f37f389c62",
+      "field": "calibration.contact_stability_candidate_seeds",
+      "reason": "the frozen v19 context generator accepts candidate IDs ending only in 00 through 19; replace the invalid 8220 through 8224 suffixes before any fresh calibration",
+      "replacement": [
+        8212,
+        8213,
+        8214,
+        8215,
+        8216,
+        8217,
+        8218,
+        8219
+      ]
+    }
+  ],
+  "protocol_id": "safe100-fixed-budget-observable-failure-conditioned-v20",
+  "protocol_revision": 0,
+  "randomness_preflight": {
+    "collisions": {
+      "adaptation": [],
+      "audit_or_bootstrap": [],
+      "calibration": []
+    },
+    "file": "results/online/specialist_v20/fresh_randomness_preflight.json",
+    "passed": true,
+    "sha256": "3de9c81286640e37f1daa1c259602f702dafa3a7107e27f9c9d1b396035eed37"
+  },
+  "sealed_inputs": {
+    "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+    "source_commit": "the git commit containing this pre-calibration protocol",
+    "source_files": [
+      "src/tasks/velocity/mdp/observations.py",
+      "src/tasks/stairs_cbf/actions.py",
+      "src/tasks/stairs_cbf/command.py",
+      "src/tasks/stairs_cbf/config.py",
+      "src/tasks/stairs_cbf/deployment_context.py",
+      "src/tasks/stairs_cbf/hard_cases.py",
+      "src/tasks/stairs_cbf/mdp.py",
+      "src/tasks/stairs_cbf/online.py",
+      "experiments/scripts/evaluate_online_stairs.py",
+      "experiments/scripts/online_refine_stairs.py",
+      "experiments/scripts/audit_specialists_diagonal_v19.py",
+      "experiments/scripts/diagonal_audit_stats.py",
+      "experiments/scripts/calibrate_specialist_contexts_v20.py",
+      "experiments/scripts/run_specialist_calibration_v20.sh",
+      "experiments/scripts/refine_specialist_v20.py",
+      "experiments/scripts/run_specialist_v20.sh",
+      "experiments/scripts/run_specialist_queue_v20.sh",
+      "experiments/scripts/specialist_v20_protocol.py",
+      "experiments/scripts/specialist_v20_tables.py",
+      "experiments/scripts/audit_specialist_diagonal_v20.py",
+      "experiments/scripts/run_specialist_diagonal_audit_v20.sh",
+      "experiments/scripts/verify_specialist_audit_v20.py",
+      "experiments/scripts/collect_mechanism_telemetry_v20.py",
+      "experiments/scripts/build_specialist_v20_evidence.py",
+      "experiments/scripts/plot_specialist_v20.py",
+      "experiments/tests/test_specialist_v20.py"
+    ]
+  },
+  "specialist_modes": [
+    "lateral",
+    "contact_stability"
+  ],
+  "status": "prospectively_frozen_before_fresh_base_policy_only_calibration",
+  "training": {
+    "accepted_update_count_is_validity_gate": false,
+    "actor_learning_rate": 5e-06,
+    "advantage_normalization": "separate normal/failure/success across both rollout batches",
+    "candidate_confirmation_paired_episodes": 128,
+    "candidate_fractions": [
+      0.5,
+      1.0,
+      1.5
+    ],
+    "candidate_screen_paired_episodes_per_fraction": 64,
+    "clip": 0.05,
+    "critic_learning_rate": 0.0001,
+    "early_termination_enabled": false,
+    "exact_pair_sampling": true,
+    "failure_policy_weight": 1.0,
+    "fixed_round_budget": 8,
+    "hard_kl_ceiling": 0.01,
+    "minimum_accepted_updates": null,
+    "ppo_epochs": 1,
+    "ppo_minibatches": 4,
+    "rejection_patience": null,
+    "rollout_batches_per_round": 2,
+    "rollout_environments_per_batch": 64,
+    "rollout_steps_per_environment": 1024,
+    "start_mixture_per_batch": {
+      "failure": 12,
+      "normal": 40,
+      "success": 12
+    },
+    "success_policy_weight": 1.25,
+    "target_kl": 0.003,
+    "zero_to_eight_retained_updates_are_valid": true
+  }
+}

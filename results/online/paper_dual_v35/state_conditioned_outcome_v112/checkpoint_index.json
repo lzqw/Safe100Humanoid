@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "decision": "rejected_below_75_percent_filter_off_screen",
+  "binary_uploaded_to_github": false,
+  "source_commit": "829420faa5ed30b7ae926e0e8fc4e7a4a8dcac97",
+  "input": {
+    "label": "v79_round_03",
+    "checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt"
+  },
+  "base_expanded": {
+    "actor_observation_dim": 415,
+    "checkpoint_sha256": "bdcfcc9c834ea97b57d14566cbf75bfbff9634a3a3023aebc6d03aafce159ce6",
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/state_conditioned_outcome_v112_829420f_4x32_s201353400/base_expanded.pt"
+  },
+  "candidate": {
+    "actor_observation_interface": "deployable-cbf-persistent-geometry-415",
+    "actor_state_sha256": "084e91614a968b8778dc0930b08cb6315e37426ab40075721d986d82d0a076e3",
+    "actor_deterministic_state_sha256": "b03c1d9abacb1063745b1338e815c3ac617a1b536e718e054668846f7e8ae32b",
+    "checkpoint_sha256": "5d57dc1443704f706fcd95e5e52731f5a5883b5f245085c8637b11d083422aa9",
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/state_conditioned_outcome_v112_829420f_4x32_s201353400/candidate.pt",
+    "selected": false
+  }
+}

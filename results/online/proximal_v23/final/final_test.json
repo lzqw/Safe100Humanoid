@@ -1,0 +1,1378 @@
+{
+  "D0": {
+    "fall": {
+      "baseline_mean": 0.0078125,
+      "bootstrap_samples": 2000,
+      "bootstrap_seed": 127000011,
+      "confidence_interval_is_gate": false,
+      "delta": 0.01953125,
+      "final_mean": 0.02734375,
+      "paired_bootstrap_ci95": [
+        0.0,
+        0.04296875
+      ]
+    },
+    "intervention_per_riser": {
+      "baseline_mean": 0.5295573038747534,
+      "bootstrap_samples": 2000,
+      "bootstrap_seed": 127000013,
+      "confidence_interval_is_gate": false,
+      "delta": -0.08945312548894435,
+      "final_mean": 0.44010417838580906,
+      "paired_bootstrap_ci95": [
+        -0.25328450990491547,
+        0.057307947402296035
+      ]
+    },
+    "paired_conditions": 256,
+    "repairs_regressions": {
+      "base_failure_count": 19,
+      "base_success_count": 237,
+      "net_success_change": 5,
+      "paired_conditions": 256,
+      "regression_count": 11,
+      "regression_rate_given_base_success": 0.046413502109704644,
+      "repair_count": 16,
+      "repair_rate_given_base_failure": 0.8421052631578947
+    },
+    "return": {
+      "baseline_mean": 8.41410860576434,
+      "bootstrap_samples": 2000,
+      "bootstrap_seed": 127000012,
+      "confidence_interval_is_gate": false,
+      "delta": -0.18562229600502178,
+      "final_mean": 8.228486309759319,
+      "paired_bootstrap_ci95": [
+        -0.7412075796164572,
+        0.3358454979112138
+      ]
+    },
+    "success": {
+      "baseline_mean": 0.92578125,
+      "bootstrap_samples": 2000,
+      "bootstrap_seed": 127000010,
+      "confidence_interval_is_gate": false,
+      "delta": 0.01953125,
+      "final_mean": 0.9453125,
+      "paired_bootstrap_ci95": [
+        -0.01953125,
+        0.05859375
+      ]
+    }
+  },
+  "checkpoint": {
+    "actor_sha256": "a08a2ac986735dfe7bc1fedf54b8c33782a9d45e2162c1eb8382e692136aa5e7",
+    "fixed_round": 8,
+    "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/proximal_v23/lateral/training/final_round_08.pt",
+    "performance_selected": false,
+    "sha256": "d71cff3df1f576670e4de291b4e6e684f928a05503c245baadf3589b6a6a2004"
+  },
+  "contact_context_rule": "eligible only if the lateral development gate passes",
+  "contact_context_run": false,
+  "development_gate": {
+    "conditions": {
+      "d0_success_delta_at_least_minus_five_pp": true,
+      "target_fall_delta_at_most_one_pp": true,
+      "target_success_delta_at_least_three_pp": false
+    },
+    "confidence_intervals_are_gates": false,
+    "d0_success_delta": 0.01953125,
+    "passed": false,
+    "target_fall_delta": 0.00390625,
+    "target_success_delta": -0.00390625
+  },
+  "paired_evaluation": {
+    "D0_episodes": 256,
+    "D0_seed_start": 126000000,
+    "base_and_final_initial_conditions_identical": true,
+    "confidence_intervals_are_report_only": true,
+    "deterministic_policy_mean": true,
+    "original_actor_observation_interface": true,
+    "runtime_cbf": true,
+    "target_episodes": 512,
+    "target_seed_start": 125000000
+  },
+  "policy_method": "CBF-Shielded KL-Regularized Online PPO v23",
+  "protocol_id": "safe100-cbf-proximal-online-refinement-v23",
+  "raw_evaluations": {
+    "baseline_D0": {
+      "actor_state_sha256": "7afed309902a323a43b47005c01529c84160944bb8cea2c45d000b38b18cc099",
+      "correction_mean": 0.0006189906522412608,
+      "correction_mean_std": 8.610809917410916e-05,
+      "fall_rate": 0.0078125,
+      "fall_rate_std": 0.0,
+      "initial_state_signatures": [
+        "f8546c8af723b9ba4ad2ffe37d9b434f4a8169d605850d27fbedd797cd2da221",
+        "0e24e91c468684028d132457a9e2fd49b5b9d6720e6bf1d8e0dd8c8bc5ad31c6"
+      ],
+      "intervention_per_riser": 0.5295573038747534,
+      "intervention_per_riser_std": 0.003130421117834842,
+      "mean_return": 8.41410860576434,
+      "mean_return_std": 0.23704497949726294,
+      "num_episodes": 256,
+      "original_observation_interface": true,
+      "paired_one_initial_episode_per_env": true,
+      "repeats": 2,
+      "replicates": [
+        {
+          "actor_observation_dim": 405,
+          "actor_state_sha256": "7afed309902a323a43b47005c01529c84160944bb8cea2c45d000b38b18cc099",
+          "correction_mean": 0.0005581030314001645,
+          "deployment_context": null,
+          "deterministic_policy_mean": true,
+          "fall_rate": 0.0078125,
+          "initial_state_signature": "f8546c8af723b9ba4ad2ffe37d9b434f4a8169d605850d27fbedd797cd2da221",
+          "intervention_per_riser": 0.531770845875144,
+          "mean_return": 8.581724718213081,
+          "num_envs": 128,
+          "num_episodes": 128,
+          "one_initial_episode_per_env": true,
+          "original_observation_interface": true,
+          "runtime_filter": true,
+          "schema_version": 1,
+          "seed": 126000000,
+          "success_rate": 0.9375,
+          "task": "Unitree-G1-Stairs-Online-D0",
+          "timeout_rate": 0.0546875
+        },
+        {
+          "actor_observation_dim": 405,
+          "actor_state_sha256": "7afed309902a323a43b47005c01529c84160944bb8cea2c45d000b38b18cc099",
+          "correction_mean": 0.0006798782730823572,
+          "deployment_context": null,
+          "deterministic_policy_mean": true,
+          "fall_rate": 0.0078125,
+          "initial_state_signature": "0e24e91c468684028d132457a9e2fd49b5b9d6720e6bf1d8e0dd8c8bc5ad31c6",
+          "intervention_per_riser": 0.5273437618743628,
+          "mean_return": 8.2464924933156,
+          "num_envs": 128,
+          "num_episodes": 128,
+          "one_initial_episode_per_env": true,
+          "original_observation_interface": true,
+          "runtime_filter": true,
+          "schema_version": 1,
+          "seed": 126000001,
+          "success_rate": 0.9140625,
+          "task": "Unitree-G1-Stairs-Online-D0",
+          "timeout_rate": 0.078125
+        }
+      ],
+      "runtime_filter": true,
+      "seeds": [
+        126000000,
+        126000001
+      ],
+      "success_rate": 0.92578125,
+      "success_rate_std": 0.016572815184059706,
+      "task": "Unitree-G1-Stairs-Online-D0",
+      "timeout_rate": 0.06640625,
+      "timeout_rate_std": 0.016572815184059706
+    },
+    "baseline_target": {
+      "actor_state_sha256": "7afed309902a323a43b47005c01529c84160944bb8cea2c45d000b38b18cc099",
+      "correction_mean": 0.0020792439911262867,
+      "correction_mean_std": 0.0003071064742268169,
+      "fall_rate": 0.306640625,
+      "fall_rate_std": 0.024185124506519155,
+      "initial_state_signatures": [
+        "386a35dfb38a88b128587daba90d4dde6b40a39c525f13729f9cd31185dcdf19",
+        "38852ad36e1a6c3f7455cd316f02bda80c03cdfd545924d5e7aa37c004e19130",
+        "7e3dfad925c301413d1b37395eff6c443bcd17a22a6aecdb4efd0fcc7def90da",
+        "0ba24ef7782dc4a4eaa452fa75f07880421b199e10cfe741017557b5129cf186"
+      ],
+      "intervention_per_riser": 0.9447358808247373,
+      "intervention_per_riser_std": 0.11471293143752193,
+      "mean_return": 6.457640760578215,
+      "mean_return_std": 0.3571093352070127,
+      "num_episodes": 512,
+      "original_observation_interface": true,
+      "paired_one_initial_episode_per_env": true,
+      "repeats": 4,
+      "replicates": [
+        {
+          "actor_observation_dim": 405,
+          "actor_state_sha256": "7afed309902a323a43b47005c01529c84160944bb8cea2c45d000b38b18cc099",
+          "correction_mean": 0.0017219236092054224,
+          "deployment_context": {
+            "actor_context_fields_added": 0,
+            "applied_command_delay_range_s": [
+              0.04,
+              0.16
+            ],
+            "cbf_proximal_interface": {
+              "deployable_failure_group_absent": true,
+              "historical_adapter_removed_before_environment_construction": true,
+              "original_observation_interface": true,
+              "specialist_reward_term_absent": true
+            },
+            "declared_effect_axes": [
+              "lateral_command_bias",
+              "lateral_disturbance_pulse"
+            ],
+            "parameters": {
+              "action_bias": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "action_delay_steps": 0,
+              "action_gain": 1.0,
+              "command_delay_s": 0.1,
+              "command_forward_scale": 1.0,
+              "command_low_pass_s": 0.08,
+              "encoder_bias": 0.0,
+              "episode_length_s": 35.0,
+              "num_steps": 9,
+              "rise_profile": [
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13
+              ],
+              "tread_profile": [
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35
+              ]
+            },
+            "parameters_sha256": "f3d4470ec01c7f55982d93b4be53dcafb13c0d2d82f4c03f34835f84c99cf4ae",
+            "role": "target",
+            "scenario": {
+              "observable_actor": {
+                "actor_feature_count": 5,
+                "actor_gait_phase_observation_offset": 0.0,
+                "contact_observation_delay_steps": 0,
+                "mode": "lateral",
+                "phase_offset": 0.0,
+                "reward_class": "V19LateralRecoveryReward",
+                "target_contact_phase_shift_applied": false
+              },
+              "parameters": {
+                "centerline_heading_gain": 1.4,
+                "centerline_heading_reference_bias": 0.0,
+                "centerline_lateral_gain": 0.8,
+                "centerline_max_lateral_velocity": 0.16,
+                "centerline_max_yaw_velocity": 0.45,
+                "contact_observation_delay_steps": 0,
+                "disturbance_pulses_with_centering": true,
+                "edge_penalty_scale": 0.2,
+                "foot_friction": 0.6,
+                "gait_phase_offset": 0.0,
+                "lateral_command_bias": 0.104,
+                "lateral_pulse_max": 0.334,
+                "lateral_pulse_min": 0.146,
+                "left_response_scale": 1.0,
+                "pulse_duration_max_s": 0.55,
+                "pulse_duration_min_s": 0.3,
+                "pulse_interval_max_s": 3.4,
+                "pulse_interval_min_s": 2.0,
+                "recovery_reward_scale": 0.5,
+                "right_response_scale": 1.0,
+                "stair_half_width": 1.2,
+                "toe_margin": 0.08,
+                "yaw_command_bias": 0.0,
+                "yaw_pulse_max": 0.0,
+                "yaw_pulse_min": 0.0
+              },
+              "specialist_mode": "lateral",
+              "target_failure_type": "lateral_heading_drift"
+            }
+          },
+          "deterministic_policy_mean": true,
+          "fall_rate": 0.3046875,
+          "initial_state_signature": "386a35dfb38a88b128587daba90d4dde6b40a39c525f13729f9cd31185dcdf19",
+          "intervention_per_riser": 0.7918340915930457,
+          "mean_return": 6.47194355353713,
+          "num_envs": 128,
+          "num_episodes": 128,
+          "one_initial_episode_per_env": true,
+          "original_observation_interface": true,
+          "runtime_filter": true,
+          "schema_version": 1,
+          "seed": 125000000,
+          "success_rate": 0.6953125,
+          "task": "Unitree-G1-Stairs-Online-DQHMED",
+          "timeout_rate": 0.0
+        },
+        {
+          "actor_observation_dim": 405,
+          "actor_state_sha256": "7afed309902a323a43b47005c01529c84160944bb8cea2c45d000b38b18cc099",
+          "correction_mean": 0.0021299759430113696,
+          "deployment_context": {
+            "actor_context_fields_added": 0,
+            "applied_command_delay_range_s": [
+              0.04,
+              0.16
+            ],
+            "cbf_proximal_interface": {
+              "deployable_failure_group_absent": true,
+              "historical_adapter_removed_before_environment_construction": true,
+              "original_observation_interface": true,
+              "specialist_reward_term_absent": true
+            },
+            "declared_effect_axes": [
+              "lateral_command_bias",
+              "lateral_disturbance_pulse"
+            ],
+            "parameters": {
+              "action_bias": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "action_delay_steps": 0,
+              "action_gain": 1.0,
+              "command_delay_s": 0.1,
+              "command_forward_scale": 1.0,
+              "command_low_pass_s": 0.08,
+              "encoder_bias": 0.0,
+              "episode_length_s": 35.0,
+              "num_steps": 9,
+              "rise_profile": [
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13
+              ],
+              "tread_profile": [
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35
+              ]
+            },
+            "parameters_sha256": "f3d4470ec01c7f55982d93b4be53dcafb13c0d2d82f4c03f34835f84c99cf4ae",
+            "role": "target",
+            "scenario": {
+              "observable_actor": {
+                "actor_feature_count": 5,
+                "actor_gait_phase_observation_offset": 0.0,
+                "contact_observation_delay_steps": 0,
+                "mode": "lateral",
+                "phase_offset": 0.0,
+                "reward_class": "V19LateralRecoveryReward",
+                "target_contact_phase_shift_applied": false
+              },
+              "parameters": {
+                "centerline_heading_gain": 1.4,
+                "centerline_heading_reference_bias": 0.0,
+                "centerline_lateral_gain": 0.8,
+                "centerline_max_lateral_velocity": 0.16,
+                "centerline_max_yaw_velocity": 0.45,
+                "contact_observation_delay_steps": 0,
+                "disturbance_pulses_with_centering": true,
+                "edge_penalty_scale": 0.2,
+                "foot_friction": 0.6,
+                "gait_phase_offset": 0.0,
+                "lateral_command_bias": 0.104,
+                "lateral_pulse_max": 0.334,
+                "lateral_pulse_min": 0.146,
+                "left_response_scale": 1.0,
+                "pulse_duration_max_s": 0.55,
+                "pulse_duration_min_s": 0.3,
+                "pulse_interval_max_s": 3.4,
+                "pulse_interval_min_s": 2.0,
+                "recovery_reward_scale": 0.5,
+                "right_response_scale": 1.0,
+                "stair_half_width": 1.2,
+                "toe_margin": 0.08,
+                "yaw_command_bias": 0.0,
+                "yaw_pulse_max": 0.0,
+                "yaw_pulse_min": 0.0
+              },
+              "specialist_mode": "lateral",
+              "target_failure_type": "lateral_heading_drift"
+            }
+          },
+          "deterministic_policy_mean": true,
+          "fall_rate": 0.2734375,
+          "initial_state_signature": "38852ad36e1a6c3f7455cd316f02bda80c03cdfd545924d5e7aa37c004e19130",
+          "intervention_per_riser": 0.9849175552371889,
+          "mean_return": 6.899205554276705,
+          "num_envs": 128,
+          "num_episodes": 128,
+          "one_initial_episode_per_env": true,
+          "original_observation_interface": true,
+          "runtime_filter": true,
+          "schema_version": 1,
+          "seed": 125000001,
+          "success_rate": 0.7265625,
+          "task": "Unitree-G1-Stairs-Online-DQHMED",
+          "timeout_rate": 0.0
+        },
+        {
+          "actor_observation_dim": 405,
+          "actor_state_sha256": "7afed309902a323a43b47005c01529c84160944bb8cea2c45d000b38b18cc099",
+          "correction_mean": 0.002462422242717005,
+          "deployment_context": {
+            "actor_context_fields_added": 0,
+            "applied_command_delay_range_s": [
+              0.04,
+              0.16
+            ],
+            "cbf_proximal_interface": {
+              "deployable_failure_group_absent": true,
+              "historical_adapter_removed_before_environment_construction": true,
+              "original_observation_interface": true,
+              "specialist_reward_term_absent": true
+            },
+            "declared_effect_axes": [
+              "lateral_command_bias",
+              "lateral_disturbance_pulse"
+            ],
+            "parameters": {
+              "action_bias": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "action_delay_steps": 0,
+              "action_gain": 1.0,
+              "command_delay_s": 0.1,
+              "command_forward_scale": 1.0,
+              "command_low_pass_s": 0.08,
+              "encoder_bias": 0.0,
+              "episode_length_s": 35.0,
+              "num_steps": 9,
+              "rise_profile": [
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13
+              ],
+              "tread_profile": [
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35
+              ]
+            },
+            "parameters_sha256": "f3d4470ec01c7f55982d93b4be53dcafb13c0d2d82f4c03f34835f84c99cf4ae",
+            "role": "target",
+            "scenario": {
+              "observable_actor": {
+                "actor_feature_count": 5,
+                "actor_gait_phase_observation_offset": 0.0,
+                "contact_observation_delay_steps": 0,
+                "mode": "lateral",
+                "phase_offset": 0.0,
+                "reward_class": "V19LateralRecoveryReward",
+                "target_contact_phase_shift_applied": false
+              },
+              "parameters": {
+                "centerline_heading_gain": 1.4,
+                "centerline_heading_reference_bias": 0.0,
+                "centerline_lateral_gain": 0.8,
+                "centerline_max_lateral_velocity": 0.16,
+                "centerline_max_yaw_velocity": 0.45,
+                "contact_observation_delay_steps": 0,
+                "disturbance_pulses_with_centering": true,
+                "edge_penalty_scale": 0.2,
+                "foot_friction": 0.6,
+                "gait_phase_offset": 0.0,
+                "lateral_command_bias": 0.104,
+                "lateral_pulse_max": 0.334,
+                "lateral_pulse_min": 0.146,
+                "left_response_scale": 1.0,
+                "pulse_duration_max_s": 0.55,
+                "pulse_duration_min_s": 0.3,
+                "pulse_interval_max_s": 3.4,
+                "pulse_interval_min_s": 2.0,
+                "recovery_reward_scale": 0.5,
+                "right_response_scale": 1.0,
+                "stair_half_width": 1.2,
+                "toe_margin": 0.08,
+                "yaw_command_bias": 0.0,
+                "yaw_pulse_max": 0.0,
+                "yaw_pulse_min": 0.0
+              },
+              "specialist_mode": "lateral",
+              "target_failure_type": "lateral_heading_drift"
+            }
+          },
+          "deterministic_policy_mean": true,
+          "fall_rate": 0.328125,
+          "initial_state_signature": "7e3dfad925c301413d1b37395eff6c443bcd17a22a6aecdb4efd0fcc7def90da",
+          "intervention_per_riser": 0.9373357089934871,
+          "mean_return": 6.0253915656358,
+          "num_envs": 128,
+          "num_episodes": 128,
+          "one_initial_episode_per_env": true,
+          "original_observation_interface": true,
+          "runtime_filter": true,
+          "schema_version": 1,
+          "seed": 125000002,
+          "success_rate": 0.671875,
+          "task": "Unitree-G1-Stairs-Online-DQHMED",
+          "timeout_rate": 0.0
+        },
+        {
+          "actor_observation_dim": 405,
+          "actor_state_sha256": "7afed309902a323a43b47005c01529c84160944bb8cea2c45d000b38b18cc099",
+          "correction_mean": 0.0020026541695713496,
+          "deployment_context": {
+            "actor_context_fields_added": 0,
+            "applied_command_delay_range_s": [
+              0.04,
+              0.16
+            ],
+            "cbf_proximal_interface": {
+              "deployable_failure_group_absent": true,
+              "historical_adapter_removed_before_environment_construction": true,
+              "original_observation_interface": true,
+              "specialist_reward_term_absent": true
+            },
+            "declared_effect_axes": [
+              "lateral_command_bias",
+              "lateral_disturbance_pulse"
+            ],
+            "parameters": {
+              "action_bias": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "action_delay_steps": 0,
+              "action_gain": 1.0,
+              "command_delay_s": 0.1,
+              "command_forward_scale": 1.0,
+              "command_low_pass_s": 0.08,
+              "encoder_bias": 0.0,
+              "episode_length_s": 35.0,
+              "num_steps": 9,
+              "rise_profile": [
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13
+              ],
+              "tread_profile": [
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35
+              ]
+            },
+            "parameters_sha256": "f3d4470ec01c7f55982d93b4be53dcafb13c0d2d82f4c03f34835f84c99cf4ae",
+            "role": "target",
+            "scenario": {
+              "observable_actor": {
+                "actor_feature_count": 5,
+                "actor_gait_phase_observation_offset": 0.0,
+                "contact_observation_delay_steps": 0,
+                "mode": "lateral",
+                "phase_offset": 0.0,
+                "reward_class": "V19LateralRecoveryReward",
+                "target_contact_phase_shift_applied": false
+              },
+              "parameters": {
+                "centerline_heading_gain": 1.4,
+                "centerline_heading_reference_bias": 0.0,
+                "centerline_lateral_gain": 0.8,
+                "centerline_max_lateral_velocity": 0.16,
+                "centerline_max_yaw_velocity": 0.45,
+                "contact_observation_delay_steps": 0,
+                "disturbance_pulses_with_centering": true,
+                "edge_penalty_scale": 0.2,
+                "foot_friction": 0.6,
+                "gait_phase_offset": 0.0,
+                "lateral_command_bias": 0.104,
+                "lateral_pulse_max": 0.334,
+                "lateral_pulse_min": 0.146,
+                "left_response_scale": 1.0,
+                "pulse_duration_max_s": 0.55,
+                "pulse_duration_min_s": 0.3,
+                "pulse_interval_max_s": 3.4,
+                "pulse_interval_min_s": 2.0,
+                "recovery_reward_scale": 0.5,
+                "right_response_scale": 1.0,
+                "stair_half_width": 1.2,
+                "toe_margin": 0.08,
+                "yaw_command_bias": 0.0,
+                "yaw_pulse_max": 0.0,
+                "yaw_pulse_min": 0.0
+              },
+              "specialist_mode": "lateral",
+              "target_failure_type": "lateral_heading_drift"
+            }
+          },
+          "deterministic_policy_mean": true,
+          "fall_rate": 0.3203125,
+          "initial_state_signature": "0ba24ef7782dc4a4eaa452fa75f07880421b199e10cfe741017557b5129cf186",
+          "intervention_per_riser": 1.0648561674752273,
+          "mean_return": 6.434022368863225,
+          "num_envs": 128,
+          "num_episodes": 128,
+          "one_initial_episode_per_env": true,
+          "original_observation_interface": true,
+          "runtime_filter": true,
+          "schema_version": 1,
+          "seed": 125000003,
+          "success_rate": 0.6796875,
+          "task": "Unitree-G1-Stairs-Online-DQHMED",
+          "timeout_rate": 0.0
+        }
+      ],
+      "runtime_filter": true,
+      "seeds": [
+        125000000,
+        125000001,
+        125000002,
+        125000003
+      ],
+      "success_rate": 0.693359375,
+      "success_rate_std": 0.024185124506519155,
+      "task": "Unitree-G1-Stairs-Online-DQHMED",
+      "timeout_rate": 0.0,
+      "timeout_rate_std": 0.0
+    },
+    "final_D0": {
+      "actor_state_sha256": "a08a2ac986735dfe7bc1fedf54b8c33782a9d45e2162c1eb8382e692136aa5e7",
+      "correction_mean": 0.0005611634590921566,
+      "correction_mean_std": 2.0390151258695805e-05,
+      "fall_rate": 0.02734375,
+      "fall_rate_std": 0.016572815184059706,
+      "initial_state_signatures": [
+        "f8546c8af723b9ba4ad2ffe37d9b434f4a8169d605850d27fbedd797cd2da221",
+        "0e24e91c468684028d132457a9e2fd49b5b9d6720e6bf1d8e0dd8c8bc5ad31c6"
+      ],
+      "intervention_per_riser": 0.44010417838580906,
+      "intervention_per_riser_std": 0.03866990489495348,
+      "mean_return": 8.228486309759319,
+      "mean_return_std": 0.32663386917711174,
+      "num_episodes": 256,
+      "original_observation_interface": true,
+      "paired_one_initial_episode_per_env": true,
+      "repeats": 2,
+      "replicates": [
+        {
+          "actor_observation_dim": 405,
+          "actor_state_sha256": "a08a2ac986735dfe7bc1fedf54b8c33782a9d45e2162c1eb8382e692136aa5e7",
+          "correction_mean": 0.0005467454448677134,
+          "deployment_context": null,
+          "deterministic_policy_mean": true,
+          "fall_rate": 0.0390625,
+          "initial_state_signature": "f8546c8af723b9ba4ad2ffe37d9b434f4a8169d605850d27fbedd797cd2da221",
+          "intervention_per_riser": 0.4127604264067486,
+          "mean_return": 7.9975212858989835,
+          "num_envs": 128,
+          "num_episodes": 128,
+          "one_initial_episode_per_env": true,
+          "original_observation_interface": true,
+          "runtime_filter": true,
+          "schema_version": 1,
+          "seed": 126000000,
+          "success_rate": 0.953125,
+          "task": "Unitree-G1-Stairs-Online-D0",
+          "timeout_rate": 0.0078125
+        },
+        {
+          "actor_observation_dim": 405,
+          "actor_state_sha256": "a08a2ac986735dfe7bc1fedf54b8c33782a9d45e2162c1eb8382e692136aa5e7",
+          "correction_mean": 0.0005755814733165998,
+          "deployment_context": null,
+          "deterministic_policy_mean": true,
+          "fall_rate": 0.015625,
+          "initial_state_signature": "0e24e91c468684028d132457a9e2fd49b5b9d6720e6bf1d8e0dd8c8bc5ad31c6",
+          "intervention_per_riser": 0.46744793036486953,
+          "mean_return": 8.459451333619654,
+          "num_envs": 128,
+          "num_episodes": 128,
+          "one_initial_episode_per_env": true,
+          "original_observation_interface": true,
+          "runtime_filter": true,
+          "schema_version": 1,
+          "seed": 126000001,
+          "success_rate": 0.9375,
+          "task": "Unitree-G1-Stairs-Online-D0",
+          "timeout_rate": 0.046875
+        }
+      ],
+      "runtime_filter": true,
+      "seeds": [
+        126000000,
+        126000001
+      ],
+      "success_rate": 0.9453125,
+      "success_rate_std": 0.011048543456039806,
+      "task": "Unitree-G1-Stairs-Online-D0",
+      "timeout_rate": 0.02734375,
+      "timeout_rate_std": 0.027621358640099514
+    },
+    "final_target": {
+      "actor_state_sha256": "a08a2ac986735dfe7bc1fedf54b8c33782a9d45e2162c1eb8382e692136aa5e7",
+      "correction_mean": 0.002242319773219502,
+      "correction_mean_std": 0.000245648618305382,
+      "fall_rate": 0.310546875,
+      "fall_rate_std": 0.01846021729004925,
+      "initial_state_signatures": [
+        "386a35dfb38a88b128587daba90d4dde6b40a39c525f13729f9cd31185dcdf19",
+        "38852ad36e1a6c3f7455cd316f02bda80c03cdfd545924d5e7aa37c004e19130",
+        "7e3dfad925c301413d1b37395eff6c443bcd17a22a6aecdb4efd0fcc7def90da",
+        "0ba24ef7782dc4a4eaa452fa75f07880421b199e10cfe741017557b5129cf186"
+      ],
+      "intervention_per_riser": 0.9913884418783709,
+      "intervention_per_riser_std": 0.1047761113379026,
+      "mean_return": 6.5257310485467315,
+      "mean_return_std": 0.24146885022579972,
+      "num_episodes": 512,
+      "original_observation_interface": true,
+      "paired_one_initial_episode_per_env": true,
+      "repeats": 4,
+      "replicates": [
+        {
+          "actor_observation_dim": 405,
+          "actor_state_sha256": "a08a2ac986735dfe7bc1fedf54b8c33782a9d45e2162c1eb8382e692136aa5e7",
+          "correction_mean": 0.002156661028237472,
+          "deployment_context": {
+            "actor_context_fields_added": 0,
+            "applied_command_delay_range_s": [
+              0.04,
+              0.16
+            ],
+            "cbf_proximal_interface": {
+              "deployable_failure_group_absent": true,
+              "historical_adapter_removed_before_environment_construction": true,
+              "original_observation_interface": true,
+              "specialist_reward_term_absent": true
+            },
+            "declared_effect_axes": [
+              "lateral_command_bias",
+              "lateral_disturbance_pulse"
+            ],
+            "parameters": {
+              "action_bias": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "action_delay_steps": 0,
+              "action_gain": 1.0,
+              "command_delay_s": 0.1,
+              "command_forward_scale": 1.0,
+              "command_low_pass_s": 0.08,
+              "encoder_bias": 0.0,
+              "episode_length_s": 35.0,
+              "num_steps": 9,
+              "rise_profile": [
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13
+              ],
+              "tread_profile": [
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35
+              ]
+            },
+            "parameters_sha256": "f3d4470ec01c7f55982d93b4be53dcafb13c0d2d82f4c03f34835f84c99cf4ae",
+            "role": "target",
+            "scenario": {
+              "observable_actor": {
+                "actor_feature_count": 5,
+                "actor_gait_phase_observation_offset": 0.0,
+                "contact_observation_delay_steps": 0,
+                "mode": "lateral",
+                "phase_offset": 0.0,
+                "reward_class": "V19LateralRecoveryReward",
+                "target_contact_phase_shift_applied": false
+              },
+              "parameters": {
+                "centerline_heading_gain": 1.4,
+                "centerline_heading_reference_bias": 0.0,
+                "centerline_lateral_gain": 0.8,
+                "centerline_max_lateral_velocity": 0.16,
+                "centerline_max_yaw_velocity": 0.45,
+                "contact_observation_delay_steps": 0,
+                "disturbance_pulses_with_centering": true,
+                "edge_penalty_scale": 0.2,
+                "foot_friction": 0.6,
+                "gait_phase_offset": 0.0,
+                "lateral_command_bias": 0.104,
+                "lateral_pulse_max": 0.334,
+                "lateral_pulse_min": 0.146,
+                "left_response_scale": 1.0,
+                "pulse_duration_max_s": 0.55,
+                "pulse_duration_min_s": 0.3,
+                "pulse_interval_max_s": 3.4,
+                "pulse_interval_min_s": 2.0,
+                "recovery_reward_scale": 0.5,
+                "right_response_scale": 1.0,
+                "stair_half_width": 1.2,
+                "toe_margin": 0.08,
+                "yaw_command_bias": 0.0,
+                "yaw_pulse_max": 0.0,
+                "yaw_pulse_min": 0.0
+              },
+              "specialist_mode": "lateral",
+              "target_failure_type": "lateral_heading_drift"
+            }
+          },
+          "deterministic_policy_mean": true,
+          "fall_rate": 0.296875,
+          "initial_state_signature": "386a35dfb38a88b128587daba90d4dde6b40a39c525f13729f9cd31185dcdf19",
+          "intervention_per_riser": 0.8546100131352432,
+          "mean_return": 6.584257539361715,
+          "num_envs": 128,
+          "num_episodes": 128,
+          "one_initial_episode_per_env": true,
+          "original_observation_interface": true,
+          "runtime_filter": true,
+          "schema_version": 1,
+          "seed": 125000000,
+          "success_rate": 0.703125,
+          "task": "Unitree-G1-Stairs-Online-DQHMED",
+          "timeout_rate": 0.0
+        },
+        {
+          "actor_observation_dim": 405,
+          "actor_state_sha256": "a08a2ac986735dfe7bc1fedf54b8c33782a9d45e2162c1eb8382e692136aa5e7",
+          "correction_mean": 0.0026087010149065393,
+          "deployment_context": {
+            "actor_context_fields_added": 0,
+            "applied_command_delay_range_s": [
+              0.04,
+              0.16
+            ],
+            "cbf_proximal_interface": {
+              "deployable_failure_group_absent": true,
+              "historical_adapter_removed_before_environment_construction": true,
+              "original_observation_interface": true,
+              "specialist_reward_term_absent": true
+            },
+            "declared_effect_axes": [
+              "lateral_command_bias",
+              "lateral_disturbance_pulse"
+            ],
+            "parameters": {
+              "action_bias": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "action_delay_steps": 0,
+              "action_gain": 1.0,
+              "command_delay_s": 0.1,
+              "command_forward_scale": 1.0,
+              "command_low_pass_s": 0.08,
+              "encoder_bias": 0.0,
+              "episode_length_s": 35.0,
+              "num_steps": 9,
+              "rise_profile": [
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13
+              ],
+              "tread_profile": [
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35
+              ]
+            },
+            "parameters_sha256": "f3d4470ec01c7f55982d93b4be53dcafb13c0d2d82f4c03f34835f84c99cf4ae",
+            "role": "target",
+            "scenario": {
+              "observable_actor": {
+                "actor_feature_count": 5,
+                "actor_gait_phase_observation_offset": 0.0,
+                "contact_observation_delay_steps": 0,
+                "mode": "lateral",
+                "phase_offset": 0.0,
+                "reward_class": "V19LateralRecoveryReward",
+                "target_contact_phase_shift_applied": false
+              },
+              "parameters": {
+                "centerline_heading_gain": 1.4,
+                "centerline_heading_reference_bias": 0.0,
+                "centerline_lateral_gain": 0.8,
+                "centerline_max_lateral_velocity": 0.16,
+                "centerline_max_yaw_velocity": 0.45,
+                "contact_observation_delay_steps": 0,
+                "disturbance_pulses_with_centering": true,
+                "edge_penalty_scale": 0.2,
+                "foot_friction": 0.6,
+                "gait_phase_offset": 0.0,
+                "lateral_command_bias": 0.104,
+                "lateral_pulse_max": 0.334,
+                "lateral_pulse_min": 0.146,
+                "left_response_scale": 1.0,
+                "pulse_duration_max_s": 0.55,
+                "pulse_duration_min_s": 0.3,
+                "pulse_interval_max_s": 3.4,
+                "pulse_interval_min_s": 2.0,
+                "recovery_reward_scale": 0.5,
+                "right_response_scale": 1.0,
+                "stair_half_width": 1.2,
+                "toe_margin": 0.08,
+                "yaw_command_bias": 0.0,
+                "yaw_pulse_max": 0.0,
+                "yaw_pulse_min": 0.0
+              },
+              "specialist_mode": "lateral",
+              "target_failure_type": "lateral_heading_drift"
+            }
+          },
+          "deterministic_policy_mean": true,
+          "fall_rate": 0.296875,
+          "initial_state_signature": "38852ad36e1a6c3f7455cd316f02bda80c03cdfd545924d5e7aa37c004e19130",
+          "intervention_per_riser": 1.1084945643669926,
+          "mean_return": 6.440488724038005,
+          "num_envs": 128,
+          "num_episodes": 128,
+          "one_initial_episode_per_env": true,
+          "original_observation_interface": true,
+          "runtime_filter": true,
+          "schema_version": 1,
+          "seed": 125000001,
+          "success_rate": 0.703125,
+          "task": "Unitree-G1-Stairs-Online-DQHMED",
+          "timeout_rate": 0.0
+        },
+        {
+          "actor_observation_dim": 405,
+          "actor_state_sha256": "a08a2ac986735dfe7bc1fedf54b8c33782a9d45e2162c1eb8382e692136aa5e7",
+          "correction_mean": 0.002096736643220909,
+          "deployment_context": {
+            "actor_context_fields_added": 0,
+            "applied_command_delay_range_s": [
+              0.04,
+              0.16
+            ],
+            "cbf_proximal_interface": {
+              "deployable_failure_group_absent": true,
+              "historical_adapter_removed_before_environment_construction": true,
+              "original_observation_interface": true,
+              "specialist_reward_term_absent": true
+            },
+            "declared_effect_axes": [
+              "lateral_command_bias",
+              "lateral_disturbance_pulse"
+            ],
+            "parameters": {
+              "action_bias": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "action_delay_steps": 0,
+              "action_gain": 1.0,
+              "command_delay_s": 0.1,
+              "command_forward_scale": 1.0,
+              "command_low_pass_s": 0.08,
+              "encoder_bias": 0.0,
+              "episode_length_s": 35.0,
+              "num_steps": 9,
+              "rise_profile": [
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13
+              ],
+              "tread_profile": [
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35
+              ]
+            },
+            "parameters_sha256": "f3d4470ec01c7f55982d93b4be53dcafb13c0d2d82f4c03f34835f84c99cf4ae",
+            "role": "target",
+            "scenario": {
+              "observable_actor": {
+                "actor_feature_count": 5,
+                "actor_gait_phase_observation_offset": 0.0,
+                "contact_observation_delay_steps": 0,
+                "mode": "lateral",
+                "phase_offset": 0.0,
+                "reward_class": "V19LateralRecoveryReward",
+                "target_contact_phase_shift_applied": false
+              },
+              "parameters": {
+                "centerline_heading_gain": 1.4,
+                "centerline_heading_reference_bias": 0.0,
+                "centerline_lateral_gain": 0.8,
+                "centerline_max_lateral_velocity": 0.16,
+                "centerline_max_yaw_velocity": 0.45,
+                "contact_observation_delay_steps": 0,
+                "disturbance_pulses_with_centering": true,
+                "edge_penalty_scale": 0.2,
+                "foot_friction": 0.6,
+                "gait_phase_offset": 0.0,
+                "lateral_command_bias": 0.104,
+                "lateral_pulse_max": 0.334,
+                "lateral_pulse_min": 0.146,
+                "left_response_scale": 1.0,
+                "pulse_duration_max_s": 0.55,
+                "pulse_duration_min_s": 0.3,
+                "pulse_interval_max_s": 3.4,
+                "pulse_interval_min_s": 2.0,
+                "recovery_reward_scale": 0.5,
+                "right_response_scale": 1.0,
+                "stair_half_width": 1.2,
+                "toe_margin": 0.08,
+                "yaw_command_bias": 0.0,
+                "yaw_pulse_max": 0.0,
+                "yaw_pulse_min": 0.0
+              },
+              "specialist_mode": "lateral",
+              "target_failure_type": "lateral_heading_drift"
+            }
+          },
+          "deterministic_policy_mean": true,
+          "fall_rate": 0.3359375,
+          "initial_state_signature": "7e3dfad925c301413d1b37395eff6c443bcd17a22a6aecdb4efd0fcc7def90da",
+          "intervention_per_riser": 0.9886067859479226,
+          "mean_return": 6.252843314781785,
+          "num_envs": 128,
+          "num_episodes": 128,
+          "one_initial_episode_per_env": true,
+          "original_observation_interface": true,
+          "runtime_filter": true,
+          "schema_version": 1,
+          "seed": 125000002,
+          "success_rate": 0.6640625,
+          "task": "Unitree-G1-Stairs-Online-DQHMED",
+          "timeout_rate": 0.0
+        },
+        {
+          "actor_observation_dim": 405,
+          "actor_state_sha256": "a08a2ac986735dfe7bc1fedf54b8c33782a9d45e2162c1eb8382e692136aa5e7",
+          "correction_mean": 0.0021071804065130872,
+          "deployment_context": {
+            "actor_context_fields_added": 0,
+            "applied_command_delay_range_s": [
+              0.04,
+              0.16
+            ],
+            "cbf_proximal_interface": {
+              "deployable_failure_group_absent": true,
+              "historical_adapter_removed_before_environment_construction": true,
+              "original_observation_interface": true,
+              "specialist_reward_term_absent": true
+            },
+            "declared_effect_axes": [
+              "lateral_command_bias",
+              "lateral_disturbance_pulse"
+            ],
+            "parameters": {
+              "action_bias": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "action_delay_steps": 0,
+              "action_gain": 1.0,
+              "command_delay_s": 0.1,
+              "command_forward_scale": 1.0,
+              "command_low_pass_s": 0.08,
+              "encoder_bias": 0.0,
+              "episode_length_s": 35.0,
+              "num_steps": 9,
+              "rise_profile": [
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13,
+                0.13
+              ],
+              "tread_profile": [
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35,
+                0.35
+              ]
+            },
+            "parameters_sha256": "f3d4470ec01c7f55982d93b4be53dcafb13c0d2d82f4c03f34835f84c99cf4ae",
+            "role": "target",
+            "scenario": {
+              "observable_actor": {
+                "actor_feature_count": 5,
+                "actor_gait_phase_observation_offset": 0.0,
+                "contact_observation_delay_steps": 0,
+                "mode": "lateral",
+                "phase_offset": 0.0,
+                "reward_class": "V19LateralRecoveryReward",
+                "target_contact_phase_shift_applied": false
+              },
+              "parameters": {
+                "centerline_heading_gain": 1.4,
+                "centerline_heading_reference_bias": 0.0,
+                "centerline_lateral_gain": 0.8,
+                "centerline_max_lateral_velocity": 0.16,
+                "centerline_max_yaw_velocity": 0.45,
+                "contact_observation_delay_steps": 0,
+                "disturbance_pulses_with_centering": true,
+                "edge_penalty_scale": 0.2,
+                "foot_friction": 0.6,
+                "gait_phase_offset": 0.0,
+                "lateral_command_bias": 0.104,
+                "lateral_pulse_max": 0.334,
+                "lateral_pulse_min": 0.146,
+                "left_response_scale": 1.0,
+                "pulse_duration_max_s": 0.55,
+                "pulse_duration_min_s": 0.3,
+                "pulse_interval_max_s": 3.4,
+                "pulse_interval_min_s": 2.0,
+                "recovery_reward_scale": 0.5,
+                "right_response_scale": 1.0,
+                "stair_half_width": 1.2,
+                "toe_margin": 0.08,
+                "yaw_command_bias": 0.0,
+                "yaw_pulse_max": 0.0,
+                "yaw_pulse_min": 0.0
+              },
+              "specialist_mode": "lateral",
+              "target_failure_type": "lateral_heading_drift"
+            }
+          },
+          "deterministic_policy_mean": true,
+          "fall_rate": 0.3125,
+          "initial_state_signature": "0ba24ef7782dc4a4eaa452fa75f07880421b199e10cfe741017557b5129cf186",
+          "intervention_per_riser": 1.0138424040633254,
+          "mean_return": 6.825334616005421,
+          "num_envs": 128,
+          "num_episodes": 128,
+          "one_initial_episode_per_env": true,
+          "original_observation_interface": true,
+          "runtime_filter": true,
+          "schema_version": 1,
+          "seed": 125000003,
+          "success_rate": 0.6875,
+          "task": "Unitree-G1-Stairs-Online-DQHMED",
+          "timeout_rate": 0.0
+        }
+      ],
+      "runtime_filter": true,
+      "seeds": [
+        125000000,
+        125000001,
+        125000002,
+        125000003
+      ],
+      "success_rate": 0.689453125,
+      "success_rate_std": 0.01846021729004925,
+      "task": "Unitree-G1-Stairs-Online-DQHMED",
+      "timeout_rate": 0.0,
+      "timeout_rate_std": 0.0
+    }
+  },
+  "schema_version": 1,
+  "smoke": false,
+  "target": {
+    "fall": {
+      "baseline_mean": 0.306640625,
+      "bootstrap_samples": 2000,
+      "bootstrap_seed": 127000001,
+      "confidence_interval_is_gate": false,
+      "delta": 0.00390625,
+      "final_mean": 0.310546875,
+      "paired_bootstrap_ci95": [
+        -0.048876953125,
+        0.056640625
+      ]
+    },
+    "intervention_per_riser": {
+      "baseline_mean": 0.9447358808247373,
+      "bootstrap_samples": 2000,
+      "bootstrap_seed": 127000003,
+      "confidence_interval_is_gate": false,
+      "delta": 0.04665256105363369,
+      "final_mean": 0.9913884418783709,
+      "paired_bootstrap_ci95": [
+        -0.10292862556343607,
+        0.22451010534168736
+      ]
+    },
+    "paired_conditions": 512,
+    "repairs_regressions": {
+      "base_failure_count": 157,
+      "base_success_count": 355,
+      "net_success_change": -2,
+      "paired_conditions": 512,
+      "regression_count": 95,
+      "regression_rate_given_base_success": 0.2676056338028169,
+      "repair_count": 93,
+      "repair_rate_given_base_failure": 0.5923566878980892
+    },
+    "return": {
+      "baseline_mean": 6.457640760578215,
+      "bootstrap_samples": 2000,
+      "bootstrap_seed": 127000002,
+      "confidence_interval_is_gate": false,
+      "delta": 0.06809028796851635,
+      "final_mean": 6.5257310485467315,
+      "paired_bootstrap_ci95": [
+        -0.5579192080185749,
+        0.6818379988661034
+      ]
+    },
+    "success": {
+      "baseline_mean": 0.693359375,
+      "bootstrap_samples": 2000,
+      "bootstrap_seed": 127000000,
+      "confidence_interval_is_gate": false,
+      "delta": -0.00390625,
+      "final_mean": 0.689453125,
+      "paired_bootstrap_ci95": [
+        -0.058642578125,
+        0.05078125
+      ]
+    }
+  }
+}

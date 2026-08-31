@@ -1,0 +1,92 @@
+{
+  "schema_version": "paper_dual_v35.v68.decision.v1",
+  "candidate": "mixed-filter-split-actor-objectives-v68",
+  "decision": "rejected_at_training_gate",
+  "reason": "The best rollout-aligned filter-off rate was 69.70%, below the predeclared 75% gate and below v67's 72.22%; the next checkpoint again diverged between filter-on and filter-off.",
+  "source_commit": "4c9b6fdb0785d5b8ef83bf9fa9507255cc2b23e9",
+  "base_checkpoint_sha256": "3ec45cd196447901cf815d0fa1ff400af1b519ed2bb85c2fc179458ce3e81d3f",
+  "training": {
+    "seed": 201352615,
+    "num_envs": 128,
+    "filter_on_envs": 64,
+    "filter_off_envs": 64,
+    "rounds": 4,
+    "rollout_steps_per_round": 1024,
+    "elapsed_seconds": 132.05817813402973,
+    "actor_learning_rate": 2.5e-7,
+    "moving_kl_beta": 0.5,
+    "filter_group_balanced_advantages": true,
+    "split_filter_actor_objectives": true,
+    "domain_randomization": false
+  },
+  "actor_objective_routing": {
+    "ppo": "filter-off environment transitions only",
+    "teacher": "deterministic-mean CBF interventions from filter-on environments only",
+    "critic": "all transitions",
+    "moving_kl": "all transitions"
+  },
+  "rollout_checkpoint_alignment": "round_N_rollout_uses_round_N_minus_1_checkpoint",
+  "aligned_rollouts": [
+    {
+      "rollout_round": 1,
+      "checkpoint_round": 0,
+      "filter_off_success_count": 73,
+      "filter_off_episode_count": 131,
+      "filter_off_success_rate": 0.5572519083969466,
+      "filter_on_success_count": 104,
+      "filter_on_episode_count": 140,
+      "filter_on_success_rate": 0.7428571428571429
+    },
+    {
+      "rollout_round": 2,
+      "checkpoint_round": 1,
+      "filter_off_success_count": 84,
+      "filter_off_episode_count": 131,
+      "filter_off_success_rate": 0.6412213740458015,
+      "filter_on_success_count": 91,
+      "filter_on_episode_count": 139,
+      "filter_on_success_rate": 0.6546762589928058
+    },
+    {
+      "rollout_round": 3,
+      "checkpoint_round": 2,
+      "filter_off_success_count": 92,
+      "filter_off_episode_count": 132,
+      "filter_off_success_rate": 0.696969696969697,
+      "filter_on_success_count": 96,
+      "filter_on_episode_count": 138,
+      "filter_on_success_rate": 0.6956521739130435
+    },
+    {
+      "rollout_round": 4,
+      "checkpoint_round": 3,
+      "filter_off_success_count": 82,
+      "filter_off_episode_count": 130,
+      "filter_off_success_rate": 0.6307692307692307,
+      "filter_on_success_count": 102,
+      "filter_on_episode_count": 136,
+      "filter_on_success_rate": 0.75
+    }
+  ],
+  "best_aligned_checkpoint": {
+    "checkpoint_round": 2,
+    "checkpoint_sha256": "db0de699163e87f209f73063a2c6c803df2afff50e9e2c32e8f8aaf4bb092622",
+    "actor_sha256": "0f1810b08d139ea00ab584c58f5be14ed0e8ac58f47e4d6eb9bb021efca71430",
+    "filter_off_success_rate": 0.696969696969697,
+    "selected": false,
+    "uploaded": false
+  },
+  "deployment_filter_off_gate": {
+    "planned_episode_count": 128,
+    "success_threshold": 0.75,
+    "run": false,
+    "reason": "training_gate_failed"
+  },
+  "optimization_diagnostics": {
+    "actor_gradient_clipped_fraction_by_round": [1.0, 1.0, 1.0, 1.0],
+    "actor_gradient_norm_pre_clip_max_by_round": [6.694390773773193, 7.32073450088501, 5.712342739105225, 6.3696393966674805],
+    "moving_forward_kl_by_round": [0.00024352619948331267, 0.00014829500287305564, 0.00013096656766720116, 0.00015326341963373125]
+  },
+  "current_best_changed": false,
+  "next_hypothesis": "Measure and resolve PPO/CBF-teacher gradient conflict before clipping, rather than adding repeated validation or another scalar learning-rate sweep."
+}

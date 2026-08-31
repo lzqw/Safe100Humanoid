@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "decision": "rejected_below_75_percent_filter_off_gate",
+  "binary_uploaded_to_github": false,
+  "source_commit": "adf83d4bfae6406d1d3abc439e06b9cef0552aa5",
+  "input": {
+    "label": "v79_round_03",
+    "checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317"
+  },
+  "base_expanded": {
+    "actor_observation_dim": 415,
+    "new_geometry_columns_zero": true,
+    "checkpoint_sha256": "3aeb0bd4e4a528144be8e370fbd339033676b0de9f45caf4796ed1b9f361e89d",
+    "local_path": "/home/lzqw/PycharmProject/safe100/HUMANOID/artifacts/paper_dual_v35/persistent_geometry_sgd_v94_adf83d4_4x64/base_expanded.pt"
+  },
+  "candidate": {
+    "actor_observation_interface": "deployable-cbf-persistent-geometry-415",
+    "actor_state_sha256": "0f4e20e2532592cdd0ba17bda6ddffcbfadcdd25b986b35c27bb16f91a156dd6",
+    "checkpoint_sha256": "249dd5bda299008e6adf7e62bc437c2fc95bb2045bb102d3799c064194bae6a0",
+    "local_path": "/home/lzqw/PycharmProject/safe100/HUMANOID/artifacts/paper_dual_v35/persistent_geometry_sgd_v94_adf83d4_4x64/candidate.pt",
+    "selected": false
+  }
+}

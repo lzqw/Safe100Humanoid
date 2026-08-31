@@ -1,0 +1,89 @@
+{
+  "calibration": {
+    "base_policy_only": true,
+    "batch_size": 128,
+    "paired_episodes": 256,
+    "paired_filter_arms_share_each_seed": true,
+    "repeats": 2,
+    "seeds": [
+      151270000,
+      151270001
+    ],
+    "single_fixed_candidate": true,
+    "thresholds": {
+      "alignment_coverage_minimum": 0.8,
+      "off_success_bounds": [
+        0.4,
+        0.65
+      ],
+      "on_success_bounds": [
+        0.8,
+        0.95
+      ],
+      "shield_rescue_minimum": 0.6
+    }
+  },
+  "conditional_followup": {
+    "adaptation_seed": 152270001,
+    "final_episodes": 512,
+    "final_seed_base": 153270000,
+    "training_algorithm": "unchanged_v26_eight_round_moving_kl_ppo",
+    "training_only_if_calibration_qualifies": true
+  },
+  "development_selection": {
+    "development_only": true,
+    "excluded_from_formal_evidence": true,
+    "seed": 150270018,
+    "selected_candidate": {
+      "alignment_coverage": 0.8888888888888888,
+      "formal_gate_on_development_sample": true,
+      "off_success_rate": 0.578125,
+      "on_success_rate": 0.8125,
+      "recovery_distance_m": 0.02,
+      "regressed_count": 6,
+      "rescued_count": 21,
+      "shield_rescue_rate": 0.7777777777777778,
+      "success_delta": 0.234375
+    },
+    "summary_sha256": "15797f34c7c1f7bbcc7ffab86e05f2d9c72258f1262177e8ba5908ad667ff2fb"
+  },
+  "environment": {
+    "actor_observation_corruption": "disabled",
+    "actor_observation_interface": "original_405D",
+    "clearance_barrier": "sloped_xz",
+    "clearance_barrier_slope": 0.8,
+    "command": "nominal",
+    "controller": "nominal",
+    "curriculum": "disabled",
+    "friction": "nominal",
+    "geometry": "uniform_higher_riser",
+    "plant_action_transform": "identity",
+    "recovery_distance_m": 0.02,
+    "registered_variant": "fixed_deployment_play",
+    "riser_height_m": 0.18,
+    "task_id": "Unitree-G1-Stairs-Online-DQHMED"
+  },
+  "experiment_name": "v27 Short-Recovery Sloped-Clearance CBF Teacher",
+  "freshness": {
+    "before_any_formal_v27_simulator_episode": true,
+    "formal_seeds_disjoint_from_development": true
+  },
+  "implementation_boundary": {
+    "git_commit": "b4f39434eb055de51201529efba91b1e4e1b6f8a",
+    "source_files": {
+      "experiments/scripts/calibrate_cbf_teacher_v27.py": "38c50831896ba00353979f8ae1123fdb50c198f10e53b50cfcde0f51945f903b",
+      "experiments/scripts/cbf_teacher_v27_protocol.py": "e88727b43e9a57e75746b15f1c56c2eb49e52092d1e18d3d9b1dacc7d8f34da1",
+      "experiments/scripts/evaluate_cbf_teacher_v26.py": "9df649cdf79fe65e457a03f655d5b0a67766cab6a7d020b403fc22fb438e9997",
+      "experiments/scripts/freeze_cbf_teacher_v27_precalibration.py": "e9a2bc305f592d4145dfe6df04920648d0d8f0e3dcf1dbea058ee65ca0293f9b",
+      "experiments/scripts/proximal_v23_io.py": "04077ac25965163cde89f3d2ec0ff27ea822c686acc19562bc3c90990fd61052",
+      "src/tasks/stairs_cbf/actions.py": "83151afb1f9aa8b38c8985a3885c084b6e988716acee36ac0324cbb4985d0c6d",
+      "src/tasks/stairs_cbf/cbf_math.py": "6a931cbbcd80e6af518857ece6a5fb755285a18f35636da7977ea836943a31da",
+      "src/tasks/stairs_cbf/edge_detection.py": "302735da8506bd7d40bb7745e76fa280496775520329bf1bd059732e8746b662",
+      "src/tasks/stairs_cbf/teacher.py": "afc276f213d06470c407e867ffafb7370a19bb5ab83506dbf6a7762e96172586",
+      "src/tasks/stairs_cbf/teacher_v26.py": "47105d668f6cd9ba2c8675c36fa92e5a9e6218b554c89a34cfee476f1edcce08"
+    }
+  },
+  "protocol_id": "safe100-success-gated-cbf-teacher-v27",
+  "schema_version": 1,
+  "status": "prospectively_frozen_before_v27_confirmatory_calibration"
+}

@@ -1,0 +1,42 @@
+{
+  "arms": [
+    "frozen",
+    "nominal_ft",
+    "reward_only_ft",
+    "filter_only_ft",
+    "dual_safe_ft"
+  ],
+  "base_checkpoint_sha256": "323f1e00b58d379b8746c0191a44272f2e1df134139050417c56e733cc484728",
+  "checkpoint_rounds": [
+    0,
+    1,
+    2,
+    4
+  ],
+  "checkpoint_spec_count": 111,
+  "completed_jobs": 222,
+  "context_initial_state_signatures": {
+    "F1": "51952643fd8a1cd5169df2beaa0d5bd55dd36fa3dee7bd1bbfc626fd6dd0410b",
+    "F2": "eefb18c62ccab59c724121ef543ab7b123dc146cac38ca99d3838a140caf97ae",
+    "F3": "3d5d7c883154d412c1b0fcf9a201e5d7d4a6e37f74880a309ddcda0a40b6786b"
+  },
+  "contexts": [
+    "F1",
+    "F2",
+    "F3"
+  ],
+  "episodes_per_filter_condition": 512,
+  "evaluation_job_count": 222,
+  "evaluation_seed": 201357900,
+  "experiment": "paper_filter_free_paired_evaluation_matrix",
+  "finished_unix": 1788000981.5008566,
+  "git_commit": "7d84d19c5f274cb21ea1405e7064e3db4b588ded",
+  "mean_job_seconds": 54.50564114248178,
+  "paired_checkpoint_count": 111,
+  "schema_version": 1,
+  "shared_round_0_evaluation": true,
+  "skipped_jobs": 100,
+  "started_unix": 1787994329.4384832,
+  "status": "complete",
+  "training_git_commit": "8deaeff4293aa747bb4599f180b0a6304942a3e3"
+}

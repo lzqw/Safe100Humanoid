@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "version": "v128",
+  "remote_artifact_root": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/early_continuous_v128_5f66a78_64x1024x10_s201354900",
+  "checkpoints": {
+    "base": {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/retention_v13/arm_b_state_retention/accepted_final.pt",
+      "checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+      "actor_sha256": "7afed309902a323a43b47005c01529c84160944bb8cea2c45d000b38b18cc099"
+    },
+    "selected": {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/early_continuous_v128_5f66a78_64x1024x10_s201354900/round_06.pt",
+      "checkpoint_round": 6,
+      "aligned_rollout_round": 7,
+      "checkpoint_sha256": "0075f6436666a3a73fca0048ad4a849637ee610c71c6e598393c9ee43a1b8e1d",
+      "actor_sha256": "4561c182c42776d37daf6393d1422723fe288e8b6d2f9687bc5a3f38f5480acf",
+      "deterministic_actor_sha256": "7a1da0bd3e625f42294fd52a7895b5c981c7cf6acff03274376e45ff8ab4e8be"
+    },
+    "final_unaligned": {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/early_continuous_v128_5f66a78_64x1024x10_s201354900/round_10.pt",
+      "checkpoint_round": 10,
+      "checkpoint_sha256": "b3dc85f82e0416c50186e1511745e4ac4573be2c368d8556a9911e3e4b3573dd",
+      "actor_sha256": "9abd9785a5e6e331bba2ffb21fd32f69602bce1834bd61b4b13fd5459728ef79"
+    }
+  },
+  "binary_upload": {
+    "uploaded_to_git": false,
+    "reason": "The selected candidate failed the 48/64 deployment screen; raw metrics, paths, and cryptographic hashes are published instead."
+  }
+}

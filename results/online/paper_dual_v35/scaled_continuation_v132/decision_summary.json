@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "experiment": "paper_dual_v35",
+  "version": "v132",
+  "method_id": "paper-cbf-dual-scaled-continuation-v132",
+  "status": "screen_passed_independent_gate_failed",
+  "source_git_commit": "194917e8b8b02713a083bcb61bdbc3509fc48696",
+  "target": {
+    "context": "F2",
+    "riser_height_m": 0.184,
+    "runtime_filter_at_deployment": false,
+    "success_threshold": 0.75,
+    "screen_threshold_count": 48,
+    "screen_episode_count": 64,
+    "independent_gate_threshold_count": 48,
+    "independent_gate_episode_count": 64
+  },
+  "training": {
+    "seed": 201355300,
+    "num_envs": 128,
+    "rollout_steps": 1024,
+    "rounds": 8,
+    "transition_count": 1048576,
+    "transition_scale_vs_v129": 2.0,
+    "elapsed_seconds": 287.82355673401617,
+    "runtime_filter_fraction": 1.0,
+    "training_action_std": 0.05,
+    "continuous_without_rollback": true,
+    "target_forward_kl": 0.0006,
+    "selected_filter_on": {
+      "rollout_round": 8,
+      "checkpoint_round": 7,
+      "success_count": 198,
+      "episode_count": 269,
+      "success_rate": 0.7360594795539034,
+      "mean_reached_riser": 8.029739776951672
+    },
+    "selection_additional_evaluation_count": 0
+  },
+  "screen": {
+    "seed": 201355380,
+    "policy": "deterministic_mean",
+    "runtime_filter": false,
+    "success_count": 50,
+    "episode_count": 64,
+    "success_rate": 0.78125,
+    "fall_count": 14,
+    "fall_rate": 0.21875,
+    "mean_reached_riser": 8.46875,
+    "mean_return": -4.112755745649338,
+    "mean_success_completion_time_s": 9.1736,
+    "initial_state_signature": "e5a77a3ab4d42159793c5e2daf74b5066aa10c6151b69004c2060359f8ee283d"
+  },
+  "independent_gate": {
+    "seed": 201355390,
+    "policy": "deterministic_mean",
+    "runtime_filter": false,
+    "success_count": 46,
+    "episode_count": 64,
+    "success_rate": 0.71875,
+    "fall_count": 18,
+    "fall_rate": 0.28125,
+    "mean_reached_riser": 7.953125,
+    "mean_return": -5.034620568156242,
+    "mean_success_completion_time_s": 8.857391304347829,
+    "initial_state_signature": "4b8af711a93bb909ecff5a2f1ff12474e67bd5e6c190304ecc9e3912ac9af6a8"
+  },
+  "descriptive_two_seed_pool": {
+    "success_count": 96,
+    "episode_count": 128,
+    "success_rate": 0.75,
+    "acceptance_metric": false,
+    "reason": "The gate was conditionally run only after the screen passed; formal acceptance requires the independent gate itself to reach 48/64."
+  },
+  "gate": {
+    "screen_passed": true,
+    "independent_gate_run": true,
+    "independent_gate_passed": false,
+    "additional_validation_run": false,
+    "reason": "The 50/64 screen passed, but the sole independent gate scored 46/64, below 48/64."
+  },
+  "decision": {
+    "accepted": false,
+    "replaces_v129": false,
+    "replaces_v79": false,
+    "formal_best_remains": "v79 aligned filter-off 139/193 = 72.02%",
+    "development_screen_best": "v132 50/64 = 78.125%",
+    "interpretation": "Doubling the paper-style full-filter transition count produced the first screen above 75% and exactly 75% descriptively over two evaluation seeds, but the independent held-out gate missed by two episodes; scale is the first change with positive deployment evidence but is not yet a formal pass."
+  }
+}

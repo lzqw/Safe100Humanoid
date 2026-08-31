@@ -1,0 +1,50 @@
+{
+  "schema_version": "paper_dual_v35.v122.decision.v1",
+  "method_id": "heldout-validated-paired-antithetic-residual-ppo-v122",
+  "decision": "antithetic_proposal_rejected_by_heldout_clipped_surrogate_and_rolled_back",
+  "reason": "The held-out unclipped direction was positive, but PPO clipping made the held-out clipped surrogate slightly negative at the train-KL step size.",
+  "source_commit": "37508577f7017628bc0a030fb041f25188d5cf9f",
+  "targeted_tests_passed": 1,
+  "hardware": "NVIDIA GeForce RTX 4080 SUPER",
+  "input_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "paired_rollout": {
+    "pair_count": 256,
+    "matched_initial_state_signatures": true,
+    "plus_success_count": 171,
+    "minus_success_count": 170,
+    "positive_difference_count": 64,
+    "negative_difference_count": 68,
+    "zero_difference_count": 124,
+    "score_difference_mean": 0.01171875,
+    "score_difference_std": 3.3301210403442383
+  },
+  "training": {
+    "episode_credit": "paired-antithetic-progress",
+    "train_transition_count": 134023,
+    "validation_transition_count": 45633,
+    "train_clipped_surrogate_before": -2.9103830456733704e-09,
+    "train_clipped_surrogate_after": 0.0015101699391379952,
+    "validation_clipped_surrogate_before": 0.0,
+    "validation_clipped_surrogate_after": -0.0001333113839215865,
+    "validation_unclipped_surrogate_after": 0.0011132825829555143,
+    "reference_forward_kl": 0.004972831811755896,
+    "parameter_interpolation_scale": 0.014404296875,
+    "offline_gate_passed": false,
+    "transactional_rollback": true,
+    "initial_residual_sha256": "5484f4d42e88b183e33a367104d1b944e8f2ffb97ee9f3021fcfcaa510e7503d",
+    "final_residual_sha256": "5484f4d42e88b183e33a367104d1b944e8f2ffb97ee9f3021fcfcaa510e7503d"
+  },
+  "screen": {
+    "seed": 201354380,
+    "episode_count": 64,
+    "runtime_filter": false,
+    "success_count": 42,
+    "success_rate": 0.65625,
+    "mean_reached_riser": 7.625,
+    "mean_residual_norm": 0.0,
+    "independent_gate_run": false
+  },
+  "elapsed_seconds": 182.73861550702713,
+  "global_best_changed": false,
+  "next_hypothesis": "Keep the paired-antithetic direction and select the largest predefined geometric scale whose train and held-out clipped surrogates both improve."
+}

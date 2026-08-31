@@ -1,0 +1,102 @@
+{
+  "candidate": "c017",
+  "checkpoint_sha256": "65ebc05a007fda98076b4c671028cf3ce2026db0fc0da5ac6c056c207363967f",
+  "checks": {
+    "exact_nominal_safe_identity": true,
+    "finite": true,
+    "gpu_vectorized": true,
+    "hard_margin_within_tolerance": true,
+    "no_cpu_sync_in_action_hot_path": true,
+    "safe_action_routing_exact": true,
+    "single_smoke_invocation": true,
+    "violation_correction_nonzero": true,
+    "violation_observed": true
+  },
+  "current_CBF0": {
+    "all_finite": true,
+    "cbf": {
+      "acceleration_or_drift_model": false,
+      "actor_observation_changed": false,
+      "critic_observation_changed": false,
+      "current_CBF0_source_unchanged": true,
+      "mode": "current_velocity_cbf",
+      "parameters": {
+        "alpha": 10.0,
+        "barrier_slope": 0.8,
+        "lambda_s": 0.0,
+        "lambda_x": 0.0,
+        "metric": "euclidean",
+        "toe_margin": 0.08,
+        "top_clearance": 0.025
+      },
+      "plant_action_transform": "identity",
+      "runtime_filter": true
+    },
+    "device": "cuda:0",
+    "elapsed_seconds": 5.940899634966627,
+    "environment_steps_per_second": 344.72893430920664,
+    "maximum_executed_safe_target_routing_error": 3.3785102367401123,
+    "maximum_nominal_safe_target_error": 2.384185791015625e-07,
+    "mean_cbf_compute_time_ms": 2.660179626196623,
+    "minimum_filtered_margin": -6.377696990966797e-06,
+    "mode": "current_velocity_cbf",
+    "nonzero_correction_steps": 301,
+    "violation_steps": 296
+  },
+  "forbidden_hot_path_tokens": [],
+  "parameters": {
+    "alpha": 10.0,
+    "barrier_slope": 0.8,
+    "hip_roll_yaw_weight": 4.0,
+    "lambda_s": 0.0,
+    "lambda_x": 0.0,
+    "other_joint_weight": 2.0,
+    "stance_leg_weight": 4.0,
+    "swing_ankle_pitch_weight": 0.5,
+    "swing_hip_pitch_weight": 1.0,
+    "swing_knee_weight": 0.5,
+    "toe_margin": 0.08,
+    "top_clearance": 0.025
+  },
+  "passed": true,
+  "protocol_id": "safe100-outcome-optimized-task-metric-velocity-cbf-v34",
+  "schema_version": 1,
+  "seed": 234100001,
+  "task_metric_velocity_CBF": {
+    "all_finite": true,
+    "cbf": {
+      "acceleration_or_drift_model": false,
+      "actor_observation_changed": false,
+      "critic_observation_changed": false,
+      "current_CBF0_source_unchanged": true,
+      "mode": "task_metric_velocity_cbf",
+      "parameters": {
+        "alpha": 10.0,
+        "barrier_slope": 0.8,
+        "hip_roll_yaw_weight": 4.0,
+        "lambda_s": 0.0,
+        "lambda_x": 0.0,
+        "other_joint_weight": 2.0,
+        "stance_leg_weight": 4.0,
+        "swing_ankle_pitch_weight": 0.5,
+        "swing_hip_pitch_weight": 1.0,
+        "swing_knee_weight": 0.5,
+        "toe_margin": 0.08,
+        "top_clearance": 0.025
+      },
+      "plant_action_transform": "identity",
+      "runtime_filter": true
+    },
+    "device": "cuda:0",
+    "elapsed_seconds": 5.54742510500364,
+    "environment_steps_per_second": 369.1802883742864,
+    "maximum_executed_safe_target_routing_error": 0.0,
+    "maximum_nominal_safe_target_error": 0.0,
+    "mean_cbf_compute_time_ms": 2.0567006338387728,
+    "minimum_filtered_margin": -2.4437904357910156e-06,
+    "mode": "task_metric_velocity_cbf",
+    "nonzero_correction_steps": 277,
+    "violation_steps": 277
+  },
+  "throughput_ratio": 1.0709292189646837
+}

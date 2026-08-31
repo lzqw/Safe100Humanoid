@@ -1,0 +1,217 @@
+{
+  "schema_version": 1,
+  "snapshot_time": "2026-08-31T20:59:26+08:00",
+  "status": "generation_10_paused_after_user_requested_shutdown",
+  "method_id": "intervention-aware-cbf-distillation-ppo-v141",
+  "correction_action_reduction": "sum_over_action_dimensions_then_weighted_transition_mean",
+  "remote_artifact_root": "/home/carla/LZQW/SAFE100/humanoid/artifacts/filter_free_v141/development",
+  "current_failure": false,
+  "historical_recovered_failed_job_records": 1,
+  "formal_freeze_allowed": false,
+  "f2_frozen": {
+    "target_off_success": 0.671875,
+    "target_on_success": 0.78125,
+    "f1_retention_off_success": 0.71875,
+    "shield_gap": 0.109375,
+    "would_intervene_fraction": 0.09977528953079685,
+    "would_intervene_gate_max": 0.07483146714809764
+  },
+  "generation_10_f2": {
+    "successful_candidates": 0,
+    "ranking": [
+      {
+        "candidate": "g10_would_coverage_lowkl_eta025_2",
+        "target_off_success": 0.796875,
+        "target_on_success": 0.8125,
+        "f1_retention_off_success": 0.765625,
+        "shield_gap": 0.015625,
+        "would_intervene_fraction": 0.09713231904103273,
+        "counterfactual_correction_norm": 0.017969289078806995,
+        "actor_moving_forward_kl": 0.000972843321505934,
+        "development_score": 0.7867187500000001,
+        "checks": {
+          "target_off_improves_2pp": true,
+          "f1_retention_within_1p5pp": true,
+          "shield_gap_target": true,
+          "would_intervene_reduced_25pct": false
+        }
+      },
+      {
+        "candidate": "g10_would_coverage_lowkl_eta0_1",
+        "target_off_success": 0.7578125,
+        "target_on_success": 0.765625,
+        "f1_retention_off_success": 0.703125,
+        "shield_gap": 0.0078125,
+        "would_intervene_fraction": 0.0976056616313114,
+        "counterfactual_correction_norm": 0.018565448075669417,
+        "actor_moving_forward_kl": 0.000983229954726994,
+        "development_score": 0.7449218750000001,
+        "checks": {
+          "target_off_improves_2pp": true,
+          "f1_retention_within_1p5pp": false,
+          "shield_gap_target": true,
+          "would_intervene_reduced_25pct": false
+        }
+      },
+      {
+        "candidate": "g10_would_low_noise_lowkl_3",
+        "target_off_success": 0.7109375,
+        "target_on_success": 0.765625,
+        "f1_retention_off_success": 0.7265625,
+        "shield_gap": 0.0546875,
+        "would_intervene_fraction": 0.0992234685073339,
+        "counterfactual_correction_norm": 0.020523564557354445,
+        "actor_moving_forward_kl": 0.0010389736853539944,
+        "development_score": 0.700390625,
+        "checks": {
+          "target_off_improves_2pp": true,
+          "f1_retention_within_1p5pp": true,
+          "shield_gap_target": true,
+          "would_intervene_reduced_25pct": false
+        }
+      },
+      {
+        "candidate": "g10_would_coverage_target80_4",
+        "target_off_success": 0.7109375,
+        "target_on_success": 0.7421875,
+        "f1_retention_off_success": 0.6640625,
+        "shield_gap": 0.03125,
+        "would_intervene_fraction": 0.09852198245910568,
+        "counterfactual_correction_norm": 0.018915025859285922,
+        "actor_moving_forward_kl": 0.0009578815079294145,
+        "development_score": 0.69375,
+        "checks": {
+          "target_off_improves_2pp": true,
+          "f1_retention_within_1p5pp": false,
+          "shield_gap_target": true,
+          "would_intervene_reduced_25pct": false
+        }
+      }
+    ]
+  },
+  "f3_frozen": {
+    "target_off_success": 0.6484375,
+    "target_on_success": 0.703125,
+    "f1_retention_off_success": 0.71875,
+    "shield_gap": 0.0546875,
+    "would_intervene_fraction": 0.1016316537367627,
+    "would_intervene_gate_max": 0.07622374030257203
+  },
+  "generation_10_f3": {
+    "successful_candidates": 0,
+    "completed_candidates": 3,
+    "planned_candidates": 4,
+    "ranking": [
+      {
+        "candidate": "g10_would_coverage_target80_2",
+        "target_off_success": 0.71875,
+        "target_on_success": 0.765625,
+        "f1_retention_off_success": 0.75,
+        "shield_gap": 0.046875,
+        "would_intervene_fraction": 0.09979018473977791,
+        "counterfactual_correction_norm": 0.020393902184667436,
+        "actor_moving_forward_kl": 0.0011973800137639046,
+        "development_score": 0.7132812500000001,
+        "checks": {
+          "target_off_improves_2pp": true,
+          "f1_retention_within_1p5pp": true,
+          "shield_gap_target": false,
+          "would_intervene_reduced_25pct": false
+        }
+      },
+      {
+        "candidate": "g10_would_coverage_target80_lownoise_3",
+        "target_off_success": 0.7109375,
+        "target_on_success": 0.78125,
+        "f1_retention_off_success": 0.7734375,
+        "shield_gap": 0.0703125,
+        "would_intervene_fraction": 0.09532737948389007,
+        "counterfactual_correction_norm": 0.019314159498181625,
+        "actor_moving_forward_kl": 0.0010600690729916096,
+        "development_score": 0.705859375,
+        "checks": {
+          "target_off_improves_2pp": true,
+          "f1_retention_within_1p5pp": true,
+          "shield_gap_target": false,
+          "would_intervene_reduced_25pct": false
+        }
+      },
+      {
+        "candidate": "g10_would_success_lowkl_1",
+        "target_off_success": 0.65625,
+        "target_on_success": 0.765625,
+        "f1_retention_off_success": 0.7421875,
+        "shield_gap": 0.109375,
+        "would_intervene_fraction": 0.09331553963883304,
+        "counterfactual_correction_norm": 0.017898013709088743,
+        "actor_moving_forward_kl": 0.0009072276297956705,
+        "development_score": 0.64609375,
+        "checks": {
+          "target_off_improves_2pp": false,
+          "f1_retention_within_1p5pp": true,
+          "shield_gap_target": false,
+          "would_intervene_reduced_25pct": false
+        }
+      }
+    ],
+    "interrupted_candidate": {
+      "candidate": "g10_internalize_4",
+      "completed_training_rounds": 1,
+      "latest_checkpoint": "round_01.pt",
+      "candidate_result_available": false
+    }
+  },
+  "diagnosis": {
+    "remaining_bottleneck": "would_intervene_fraction_for_both_specialists_and_shield_gap_for_f3",
+    "best_f2_relative_would_intervene_reduction": 0.02648921289776407,
+    "best_f3_relative_would_intervene_reduction": 0.08182602360746105,
+    "target80_observation": "80/20 reduced F1 retention to 0.6640625 and did not improve intervention internalization; future target80 trials require explicit F1 headroom",
+    "next_weighting": "episode_success_positive_advantage"
+  },
+  "execution": {
+    "state": "paused_by_operator",
+    "reason": "user_requested_carla_or_related_program_shutdown",
+    "stopped_at": "2026-08-31T20:34:36+08:00",
+    "pause_state_recorded_at": "2026-08-31T20:59:26+08:00",
+    "remote_process_group": 3517113,
+    "remote_commit": "2487ae908f36815e6298e7866c7575bc8d0c9229",
+    "current_job": null,
+    "paused_job": "g10_F3_g10_internalize_4_train",
+    "generation": 10,
+    "specialist": "F3",
+    "candidate": "g10_internalize_4",
+    "completed_training_rounds": 1,
+    "resume_checkpoint": "generation_10/F3/g10_internalize_4/training/round_01.pt",
+    "target_fraction": 0.75,
+    "intervention_ppo_eta": 0.0,
+    "correction_weight_mode": "positive_advantage",
+    "correction_loss_weight": 0.4,
+    "correction_loss_weight_schedule": "constant",
+    "dual_reward_scale": 0.0,
+    "actor_learning_rate_multiplier": 2.0,
+    "moving_kl_beta": 0.5,
+    "actor_epochs": 4,
+    "rounds": 6,
+    "exploration_std": 0.05,
+    "num_envs": 128,
+    "remaining_training_time": null
+  },
+  "offline_refinement": {
+    "status": "implemented_and_targeted_tested_without_restarting_training",
+    "correction_loss_weight_schedule": "front_high_decay",
+    "six_round_weight_sequence_for_base_0p4": [
+      0.4,
+      0.4,
+      0.2,
+      0.2,
+      0.1,
+      0.1
+    ],
+    "development_search_trigger": "target_success_improves_but_shield_gap_remains_above_gate",
+    "resume_safe": true,
+    "formal_pipeline_supported": true,
+    "pause_only_state_applied_on_remote": true,
+    "targeted_test_result": "12 passed"
+  },
+  "next_action": "paused; after an explicit resume, finish g10_internalize_4 from round_01 under its original constant schedule, then allow Generation 11 to evaluate front_high_decay"
+}

@@ -1,0 +1,53 @@
+{
+  "attempts": [
+    {
+      "balance_telemetry": {
+        "mean_contact_mismatch_fraction": 0.15372434991877526,
+        "mean_maximum_angular_velocity_signal": 0.9993764964165166,
+        "mean_maximum_pitch_signal": 0.6703362225671299,
+        "mean_maximum_roll_signal": 0.47469592216657475,
+        "mean_slip_signal": 0.09687110138474964
+      },
+      "base_policy_only": true,
+      "candidate_seed": 2315,
+      "evaluation_seed_start": 1833000,
+      "evaluation_seeds": [
+        1833000,
+        1833001,
+        1833002,
+        1833003
+      ],
+      "failure_type_counts": {
+        "lateral_heading_drift": 26,
+        "non_lateral_balance_or_phase": 71,
+        "non_lateral_high_cbf_demand": 19
+      },
+      "failure_type_fractions": {
+        "lateral_heading_drift": 0.22413793103448276,
+        "non_lateral_balance_or_phase": 0.6120689655172413,
+        "non_lateral_high_cbf_demand": 0.16379310344827586
+      },
+      "fall_count": 116,
+      "fall_rate": 0.2265625,
+      "intervention_per_riser": 1.8724875414045528,
+      "mean_reached_riser": 9.982421875,
+      "num_episodes": 512,
+      "parameters_sha256": "5bf28258852b76c5c18cc005a604f9bf7183fe7a1984ee83e44d2d25fc811e81",
+      "qualifies": true,
+      "second_failure_fraction": 0.22413793103448276,
+      "success_rate": 0.7734375,
+      "target_failure_fraction": 0.6120689655172413,
+      "target_failure_type": "non_lateral_balance_or_phase"
+    }
+  ],
+  "base_policy_checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/retention_v13/arm_b_state_retention/accepted_final.pt",
+  "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "candidate_seeds": [
+    2315
+  ],
+  "exploratory": false,
+  "mode": "balance",
+  "protocol": "Failure-Mode-Conditioned Brief PPO v17 context calibration",
+  "selection_rule": "first base-only context with 70--85% success, at least 100 falls, target failure fraction >= 60%, and second fraction <= 30%",
+  "target_failure_type": "non_lateral_balance_or_phase"
+}

@@ -1,0 +1,215 @@
+{
+  "base_checkpoint": {
+    "reference": "/home/carla/LZQW/SAFE100/humanoid/artifacts/retention_v13/arm_b_state_retention/accepted_final.pt",
+    "sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8"
+  },
+  "base_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "effect_interpretation": {
+    "clearly_effective": {
+      "minimum_D0_on_success_delta": -0.05,
+      "minimum_target_off_success_delta": 0.05,
+      "minimum_target_on_success_delta": 0.03,
+      "off_kick_rate_decreases": true,
+      "on_intervention_per_riser_decreases": true
+    },
+    "conditional_followup": "teacher-weight-zero only after clearly effective",
+    "partially_effective": {
+      "minimum_internalization_metrics_improved": 2,
+      "target_on_success_non_decreasing": true
+    }
+  },
+  "environment": {
+    "action_delay": "zero",
+    "action_gain": "nominal_identity",
+    "additional_observation_noise": "absent",
+    "centerline_controller": "nominal",
+    "clearance_barrier": "sloped_xz",
+    "clearance_barrier_slope": 0.8,
+    "command_delay": "zero",
+    "command_low_pass": "nominal",
+    "encoder_bias": "absent",
+    "exponential_cbf_alpha": 10.0,
+    "foot_friction": "nominal",
+    "gait_parameters": "nominal",
+    "lateral_yaw_disturbance": "absent",
+    "observation_interface": "original_405D_actor_838D_critic",
+    "post_edge_recovery_window_m": 0.15,
+    "registered_variant": "fixed_deployment_play",
+    "runtime_cbf_during_training": "always_on",
+    "task_id": "Unitree-G1-Stairs-Online-DQHMED",
+    "terrain_profile_other_than_riser_height": "nominal",
+    "uniform_riser_height_m": 0.18
+  },
+  "evaluation": {
+    "D0_conditions_in_order": [
+      "pi0_on",
+      "pi8_on"
+    ],
+    "D0_paired_identities": 256,
+    "D0_seed_base": 161290000,
+    "deterministic_policy_mean": true,
+    "memory_only_fallback_batch_size": 128,
+    "paired_95_ci_is_not_a_gate": true,
+    "preferred_batch_size": 256,
+    "target_conditions_in_order": [
+      "pi0_off",
+      "pi0_on",
+      "pi8_on",
+      "pi8_off"
+    ],
+    "target_paired_identities": 512,
+    "target_seed_base": 160290000
+  },
+  "excluded": {
+    "extra_reward_observation_noise_gain_or_drift": true,
+    "failure_or_success_replay": true,
+    "full_step_telemetry_in_git": true,
+    "multiple_seeds_or_contexts": true,
+    "parameter_or_checkpoint_sweep": true,
+    "pre_main_no_teacher_control": true
+  },
+  "experiment_name": "v29 CBF-Teacher Proximal Online Fine-Tuning",
+  "final_policy": {
+    "candidate_best_or_checkpoint_selection": false,
+    "rule": "unconditional round 8 actor"
+  },
+  "fresh_execution_seeds": {
+    "D0_base": 161290000,
+    "adaptation": 159290001,
+    "final_base": 160290000,
+    "smoke": 158290001
+  },
+  "implementation_boundary": {
+    "all_sources_committed_before_smoke": true,
+    "git_commit": "d92feec71d93119a8fe942a41e176b50076d4c7e",
+    "source_files": {
+      "experiments/scripts/audit_cbf_teacher_v29.py": "169963066f0062b86c92f382d24bc54cfdb6f701445f34728aeb3e519c925f09",
+      "experiments/scripts/cbf_teacher_v29_protocol.py": "ab3427e7291726b5ad21ec7d6696d0317d2b5194b54e253f325ca93459158687",
+      "experiments/scripts/evaluate_cbf_teacher_v26.py": "231667835051f39f9eaef4bb21a87130c328fc06c71f55bb9e1bfe71f809506e",
+      "experiments/scripts/evaluate_cbf_teacher_v29.py": "fece3cd2295dc154ce6df8aa5b9f40d8f10416995b2badc2317fae74791bdcd2",
+      "experiments/scripts/freeze_cbf_teacher_v29.py": "69fddf3e54385ca5c8d5fd11c6ecba1fa3e25377f36f951908df01e4d571d561",
+      "experiments/scripts/package_cbf_teacher_v29.py": "2199682325cc068ba5a9618fe53c33934f56ec685b3683c380d9c791f2c380dd",
+      "experiments/scripts/proximal_v23_io.py": "04077ac25965163cde89f3d2ec0ff27ea822c686acc19562bc3c90990fd61052",
+      "experiments/scripts/refine_cbf_teacher_v29.py": "512e6286b2016c5d58e433dcb6c1b5c73e225b1656f1fc2fa2b4aadc051de3c0",
+      "experiments/scripts/run_cbf_teacher_v29.sh": "dc360aa0fbdac9eda527c42b4a4342c0fbcd9217037777e814c299caddabe9a8",
+      "experiments/tests/test_cbf_teacher_v29.py": "87219d377d4c7f2a677b874eb12ac866fe1190c5e0e1acea1f453b89e73ab65f",
+      "src/tasks/stairs_cbf/actions.py": "83151afb1f9aa8b38c8985a3885c084b6e988716acee36ac0324cbb4985d0c6d",
+      "src/tasks/stairs_cbf/cbf_math.py": "6a931cbbcd80e6af518857ece6a5fb755285a18f35636da7977ea836943a31da",
+      "src/tasks/stairs_cbf/config.py": "22a57df095616e1f19f7cf6f18d7ba173ecef7901bf2a85da2a5faaa11c32f8a",
+      "src/tasks/stairs_cbf/edge_detection.py": "302735da8506bd7d40bb7745e76fa280496775520329bf1bd059732e8746b662",
+      "src/tasks/stairs_cbf/mdp.py": "631a9fefcf2026521c1c43ecf2dc1851124ce47921a1ddf4191ae7db31475754",
+      "src/tasks/stairs_cbf/online.py": "0b53dd2d58a2bc4745cb523b73853f5af5f172a6406c7d121415ad9ee18aa90a",
+      "src/tasks/stairs_cbf/proximal.py": "d879fc138dc3bebe26d913182519b0280884e30ed7f529be2bdd9e259b8c4838",
+      "src/tasks/stairs_cbf/teacher.py": "c5b04c3497875e6ae313b65eaa856bdbe2ae1b2871339a212ad4acb1a7fbae68",
+      "src/tasks/stairs_cbf/teacher_math.py": "ec5761fd06211c0b49c4bca3399f4a7f6679ac5e57d59da15445976b2442a0d8",
+      "src/tasks/stairs_cbf/teacher_v26.py": "b8097e4292dda1038c98dcc3eda0e7d4fceb390adf7756618f3bd3c59e08a2f4",
+      "src/tasks/stairs_cbf/teacher_v29.py": "5cc23a3f5d44245904ecba90f17058e317c57e38ac1c526012bcaa60ca1c16d9",
+      "src/tasks/stairs_cbf/terrain.py": "f24dcfc9fb2d364c42e1b872a787dd940d4abee1656d2e9a840c19828075bcf8"
+    }
+  },
+  "learning_semantics": {
+    "cbf_safe_action_is_executed_only": true,
+    "original_actor_and_critic_observation_interfaces": true,
+    "ppo_stores_raw_action_and_raw_behavior_log_probability": true,
+    "round_reference": "deepcopy_round_start_actor",
+    "runtime_cbf_always_on_during_training": true,
+    "single_actor_and_single_privileged_critic": true,
+    "teacher_label_python_loops_at_most_horizon_offsets": true,
+    "teacher_labels_vectorized_on_gpu": true,
+    "teacher_loss_normalization": "sum_weights_plus_1e-8",
+    "teacher_target_actor_coordinate_plant": "identity",
+    "teacher_target_stop_gradient": true
+  },
+  "policy_method": "Raw-Action PPO + Moving-KL + Local-Success CBF Teacher",
+  "prior_functional_smoke": {
+    "attempt_count": 1,
+    "completed_episode_count": 0,
+    "formal_adaptation_started": false,
+    "log_sha256": "7bf46fff27ff4bb5b699a938b43a83b7f00c83704ecf5345b00450b335b978df",
+    "moving_forward_kl": 0.11568695306777954,
+    "status": "hard_rollback_before_critic_update",
+    "task_performance_used_for_revision": false
+  },
+  "prior_results_immutable": {
+    "git_trees": {
+      "v25": "8d4384adb934c6155eb5b9a2429fcf3187950381",
+      "v26": "011f4302b83d1dafe424aa4f7f1954bbb8860764",
+      "v27": "368144c8ef7426590bf20eb82de7fcca419feb04",
+      "v28": "bae47e710bcf1441b1ed7617244a1378a457db78"
+    },
+    "rerun_recomputed_or_reinterpreted": false,
+    "unchanged_at_freeze": true,
+    "versions": [
+      "v25",
+      "v26",
+      "v27",
+      "v28"
+    ]
+  },
+  "prospective_execution": {
+    "adaptation_started": false,
+    "final_evaluation_started": false,
+    "outcomes_observed": false,
+    "previous_smoke_attempt_count": 1,
+    "smoke_started": false
+  },
+  "protocol_id": "safe100-cbf-teacher-proximal-online-v29",
+  "revision": 2,
+  "rollback": {
+    "allowed_reasons": [
+      "non-finite value",
+      "moving forward KL above 0.01",
+      "raw/safe action or behavior-logprob routing error",
+      "teacher transform error above 1e-6"
+    ],
+    "performance_rollback_forbidden": true
+  },
+  "schema_version": 1,
+  "smoke": {
+    "must_have_nonzero_eligible_teacher_count": true,
+    "num_envs": 8,
+    "seed": 158290001,
+    "steps": 128,
+    "updates": 1
+  },
+  "status": "fixed_before_v29_replacement_smoke_and_adaptation",
+  "supersession": {
+    "formal_hyperparameters_changed": false,
+    "reason": "complete and report both actor and critic backward paths in the small functional smoke while retaining formal hard-KL rollback",
+    "supersedes_file": "results/online/proximal_v29/config.json",
+    "supersedes_sha256": "038580322ec710afe82e976b3e1f220ed458aaa6c9ab1473e1138bab7b7ab3e5"
+  },
+  "training": {
+    "actor_learning_rate": 5e-06,
+    "critic_epochs": 2,
+    "critic_learning_rate": 0.0001,
+    "entropy_coefficient": 0.0,
+    "executed_action": "cbf_safe_action",
+    "freeze_log_std": true,
+    "gae_lambda": 0.95,
+    "gamma": 0.99,
+    "hard_kl_ceiling": 0.01,
+    "maximum_actor_epochs": 2,
+    "maximum_gradient_norm": 0.5,
+    "maximum_std": 0.25,
+    "minibatches": 4,
+    "minimum_std": 0.05,
+    "moving_kl_beta": 0.5,
+    "num_envs": 64,
+    "online_rounds": 8,
+    "ppo_clip": 0.05,
+    "ppo_ratio_action": "raw_policy_action",
+    "rollout_steps_per_round": 1024,
+    "round_reference": "deepcopy_round_start_actor",
+    "std_scale_from_base": 0.35,
+    "target_kl": 0.003,
+    "teacher_correction_scale": 0.05,
+    "teacher_future_label": "vectorized_up_to_50_full_tensor_offsets",
+    "teacher_horizon_steps": 50,
+    "teacher_loss_epsilon": 1e-08,
+    "teacher_loss_normalization": "sum_weights_plus_epsilon",
+    "teacher_target_stop_gradient": true,
+    "teacher_weight": 0.1,
+    "whole_rollout_advantage_normalization": true
+  }
+}

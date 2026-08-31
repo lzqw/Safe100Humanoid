@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "experiment": "intervention_local_distill_v65",
+  "decision": "rejected_deployment_gate",
+  "source_commit": "b7ecf953f8e9b0445b0b31ef3c203c32a081b1e6",
+  "base_checkpoint_sha256": "f00e3a56276f629504234a20b40c124ee43a2f4d145cb143b3b2899acc024b27",
+  "training": {
+    "seed": 201352411,
+    "num_envs": 128,
+    "rounds": 4,
+    "rollout_steps": 1024,
+    "transition_count": 524288,
+    "elapsed_seconds": 132.63186284899712,
+    "actor_learning_rate": 1e-7,
+    "actor_ppo_transition_fraction": 0.0,
+    "teacher_eta": 0.25,
+    "teacher_scope": "all_deterministic_mean_cbf_interventions",
+    "domain_randomization_strength": 0.25,
+    "domain_randomization_refresh": "round",
+    "filter_fraction": 1.0
+  },
+  "selection": {
+    "checkpoint_round": 1,
+    "selection_rollout_round": 2,
+    "base_rollout_success_rate": 0.6642335766423357,
+    "selection_rollout_success_rate": 0.7111111111111111,
+    "training_delta_percentage_points": 4.687753446877537,
+    "checkpoint_sha256": "4b69938604fd8235ce50401e5ed07fdcda6cd3ab5977adc41ce329249e73eb1c",
+    "actor_sha256": "a25b36f03a4a3e7c2b2433908fbe3d3ac530dc360933234d7c4e344f79c14436"
+  },
+  "deployment_gate": {
+    "runtime_filter": false,
+    "deterministic_policy_mean": true,
+    "fixed_target_height_m": 0.184,
+    "seed": 201352512,
+    "num_episodes": 128,
+    "success_count": 76,
+    "success_rate": 0.59375,
+    "fall_count": 52,
+    "fall_rate": 0.40625,
+    "threshold": 0.75,
+    "passed": false,
+    "initial_state_signature": "cd3ea21e0eee784a0a5b73bf561535fbaca2c87b39846bfcf129e4372642b92d"
+  },
+  "extra_evaluations_run": false,
+  "next_algorithm": "intervention-local safety update with explicit successful-state task preservation"
+}

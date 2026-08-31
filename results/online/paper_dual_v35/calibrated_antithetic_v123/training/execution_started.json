@@ -1,0 +1,31 @@
+{
+  "base_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "episode_credit": "paired-antithetic-calibrated",
+  "gae_lambda": 0.95,
+  "gamma": 0.99,
+  "git_commit": "750281da5116f40b990824744cb3d68b798c5dbc",
+  "joint_scale_grid": [
+    1.0,
+    0.5,
+    0.25,
+    0.125,
+    0.0625,
+    0.03125,
+    0.015625,
+    0.0078125
+  ],
+  "joint_scale_search": true,
+  "method_id": "heldout-calibrated-paired-antithetic-residual-ppo-v123",
+  "num_envs": 64,
+  "paired_antithetic": true,
+  "screen_seed": 201354480,
+  "success_bonus": 1.0,
+  "training_runtime_filter": false,
+  "training_seeds": [
+    201354400,
+    201354410,
+    201354420,
+    201354430
+  ],
+  "validation_last_seed": true
+}

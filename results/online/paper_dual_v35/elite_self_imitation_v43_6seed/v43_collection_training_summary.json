@@ -1,0 +1,113 @@
+{
+  "actor_learning_rate": 5e-06,
+  "base_checkpoint_sha256": "3ec45cd196447901cf815d0fa1ff400af1b519ed2bb85c2fc179458ce3e81d3f",
+  "candidate_actor_sha256": "c8fba35379a68b5a49efb0701b0eba0d8e3193eb50fc45a61e47fa26a3e731c8",
+  "candidate_checkpoint_sha256": "e487677e311c1839b3f9d324a4df01b8855dff1005adfffe739de06f2c203d8a",
+  "candidate_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/pilot/F2/filter_free_elite_additional_v43_3x32/candidate.pt",
+  "context": "F2",
+  "dataset_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/pilot/F2/filter_free_elite_additional_v43_3x32/elite_dataset.pt",
+  "dataset_sha256": "ba86487a7716d63bcb33eebd8b6bdee4ece295905ca8a0b279b131ea5786d4a2",
+  "elapsed_seconds": 57.26619971101172,
+  "epochs": 1,
+  "exploration_std": [
+    0.05000000074505806,
+    0.05000000074505806,
+    0.05000000074505806,
+    0.05000000074505806,
+    0.05000000074505806,
+    0.05000000074505806,
+    0.05000000074505806,
+    0.05000000074505806,
+    0.05000000074505806,
+    0.05000000074505806,
+    0.05000000074505806,
+    0.05000000074505806
+  ],
+  "fall_count": 32,
+  "git_commit": "5ac4e3e243c990590aa1d0773304ae123c3d7856",
+  "initial_actor_sha256": "3964c0ef24707addbaa0dacfd4fd627882bd8b45a2c9799142710fa45bc29499",
+  "initial_state_signatures": {
+    "201350392": "66a108c261404f0057b652312fd60edc48bd306979c55e88f47c1b086accfb47",
+    "201350402": "7f90a7c8075b95f3ac3bd560d34a3bc868a6270d55fb2654ed2f249360e9616d",
+    "201350412": "22e40862ee1ab1a37bc661c79cec54aa4275f887debf68b3b38bb38dfa095fb8"
+  },
+  "max_reference_kl": 0.0001,
+  "method_id": "filter-free-elite-self-imitation-v41",
+  "minibatches": 4,
+  "moving_kl_beta": 0.5,
+  "num_envs_per_seed": 32,
+  "optimization_seed": 201350422,
+  "per_seed": [
+    {
+      "fall_count": 10,
+      "initial_state_signature": "66a108c261404f0057b652312fd60edc48bd306979c55e88f47c1b086accfb47",
+      "seed": 201350392,
+      "success_count": 22
+    },
+    {
+      "fall_count": 8,
+      "initial_state_signature": "7f90a7c8075b95f3ac3bd560d34a3bc868a6270d55fb2654ed2f249360e9616d",
+      "seed": 201350402,
+      "success_count": 24
+    },
+    {
+      "fall_count": 14,
+      "initial_state_signature": "22e40862ee1ab1a37bc661c79cec54aa4275f887debf68b3b38bb38dfa095fb8",
+      "seed": 201350412,
+      "success_count": 18
+    }
+  ],
+  "schema_version": 1,
+  "success_count": 64,
+  "total_initial_episodes": 96,
+  "training": {
+    "actor_gradient_clipped_fraction": 0.75,
+    "actor_gradient_norm_pre_clip_max": 2.2067527770996094,
+    "actor_update_scope": "last-layer",
+    "after": {
+      "elite_smooth_l1": 0.02121423590064181,
+      "elite_target_distance": 0.16956095213895367,
+      "reference_elite_target_distance": 0.1695593856151043
+    },
+    "before": {
+      "elite_smooth_l1": 0.021213808281969414,
+      "elite_target_distance": 0.1695593856151043,
+      "reference_elite_target_distance": 0.1695593856151043
+    },
+    "dataset_transition_count": 39257,
+    "elite_loss_during_update": 0.021214249078184366,
+    "elite_transition_count": 28832,
+    "elite_transition_fraction": 0.7344422936439514,
+    "minibatches_with_elite": 4,
+    "moving_kl_during_update": 9.517625494481763e-05,
+    "optimizer_updates": 4,
+    "trainable_parameter_count": 1548,
+    "trust_region": {
+      "after": {
+        "reference_forward_kl": 9.734900481083185e-05,
+        "reference_mean_shift": 0.0006553228684243229
+      },
+      "before": {
+        "reference_forward_kl": 0.0,
+        "reference_mean_shift": 0.0
+      },
+      "max_reference_kl": 0.0001,
+      "parameter_interpolation_scale": 1.0,
+      "projection_iterations": 0,
+      "unprojected_after": {
+        "reference_forward_kl": 9.734900481083185e-05,
+        "reference_mean_shift": 0.0006553228684243229
+      }
+    },
+    "unprojected_after": {
+      "elite_smooth_l1": 0.02121423590064181,
+      "elite_target_distance": 0.16956095213895367,
+      "reference_elite_target_distance": 0.1695593856151043
+    }
+  },
+  "training_seeds": [
+    201350392,
+    201350402,
+    201350412
+  ]
+}

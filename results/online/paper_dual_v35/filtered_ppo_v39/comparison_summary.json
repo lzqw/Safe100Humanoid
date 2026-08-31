@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "method_id": "paper-filtered-ppo-bounded-dual-reward-v39",
+  "source_git_commit": "7f6bcee",
+  "decision": "rejected_filter_off_gate",
+  "training": {
+    "seed": 201350322,
+    "num_envs": 32,
+    "rounds": 4,
+    "rollout_steps": 1024,
+    "runtime_filter_fraction": 1.0,
+    "teacher_arm": "A0",
+    "reward": "raw_moderate_bounded_dual_cbf",
+    "actor_learning_rate": 0.000002,
+    "rollout_success_rates": [
+      0.7424242424242424,
+      0.7058823529411765,
+      0.7246376811594203,
+      0.7681159420289855
+    ],
+    "rollout_checkpoint_rounds": [0, 1, 2, 3],
+    "selected_checkpoint_round": 3,
+    "elapsed_seconds": 115.24630070605781
+  },
+  "gate": {
+    "seed": 201350912,
+    "initial_state_signature": "f56bacd97c200ede74cf055e7817d16374b14f3f6f66d8f4eaf81106d8e9f1fd",
+    "baseline_filter_off_success_count": 43,
+    "candidate_filter_off_success_count": 33,
+    "candidate_filter_off_success_rate": 0.515625,
+    "candidate_minus_baseline_success_count": -10,
+    "filter_on_run": false
+  },
+  "selected_actor_sha256": "ffbdce7d2107ac529ab1036bd13a75fc1ebd77f279828a5c151a8eaf9c29284e",
+  "selected_checkpoint_sha256": "2181be3b935d009655920dc82e2ade03a50203e0431270768aad3e05d381b263"
+}

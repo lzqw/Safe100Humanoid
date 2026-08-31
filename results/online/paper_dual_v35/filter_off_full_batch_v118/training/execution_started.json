@@ -1,0 +1,14 @@
+{
+  "base_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "git_commit": "f2e3b11c28ae24151fdca2710ff0c551970e98be",
+  "method_id": "filter-off-episodic-full-batch-residual-ppo-v118",
+  "num_envs": 64,
+  "screen_seed": 201353980,
+  "training_runtime_filter": false,
+  "training_seeds": [
+    201353900,
+    201353910,
+    201353920,
+    201353930
+  ]
+}

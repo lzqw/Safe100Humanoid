@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "experiment": "paper_dual_v35",
+  "version": "v134",
+  "method_id": "paper-cbf-dual-uniform-actor-swa-v134",
+  "status": "rejected_screen_below_gate",
+  "source_git_commit": "49f20b16e42db4521662975043a15442b830033b",
+  "target": {
+    "context": "F2",
+    "riser_height_m": 0.184,
+    "runtime_filter_at_deployment": false,
+    "success_threshold": 0.75,
+    "screen_threshold_count": 48,
+    "screen_episode_count": 64
+  },
+  "build": {
+    "source_version": "v132",
+    "source_rounds": [1, 2, 3, 4, 5, 6, 7],
+    "snapshot_count": 7,
+    "uniform_snapshot_weight": 0.14285714285714285,
+    "mlp_parameter_count": 373644,
+    "non_mlp_actor_state_exactly_preserved": true,
+    "selected_snapshot_mlp_distance": 0.004497656533123513,
+    "mean_snapshot_mlp_distance": 0.0029278541600098844,
+    "maximum_snapshot_mlp_distance": 0.004497656533123513,
+    "additional_training_transitions": 0
+  },
+  "screen": {
+    "seed": 201355580,
+    "policy": "deterministic_mean",
+    "runtime_filter": false,
+    "success_count": 40,
+    "episode_count": 64,
+    "success_rate": 0.625,
+    "fall_count": 24,
+    "fall_rate": 0.375,
+    "mean_reached_riser": 7.734375,
+    "mean_return": -4.573324903845787,
+    "mean_success_completion_time_s": 9.0475,
+    "initial_state_signature": "ff55de58f47e8ea38112bc9fdf4d4cc9bab85f09913c5d3e1ce41a37d90f6db9"
+  },
+  "gate": {
+    "screen_passed": false,
+    "independent_gate_run": false,
+    "additional_validation_run": false,
+    "reason": "40/64 is below the predeclared 48/64 threshold"
+  },
+  "decision": {
+    "accepted": false,
+    "replaces_v132": false,
+    "replaces_v79": false,
+    "formal_best_remains": "v79 aligned filter-off 139/193 = 72.02%",
+    "development_screen_best_remains": "v132 50/64 = 78.125%",
+    "interpretation": "Uniformly averaging the seven v132 actor snapshots reduced deterministic deployment to 62.50%; the useful v132 behavior is not a shared parameter-space center of the PPO trajectory, so alternate averaging windows are not justified."
+  }
+}

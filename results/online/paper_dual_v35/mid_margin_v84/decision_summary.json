@@ -1,0 +1,21 @@
+{
+  "schema_version": "paper_dual_v35.v84.decision.v1",
+  "candidate": "paper_stair_sloped_mid_balanced",
+  "decision": "reject_below_gate",
+  "reason": "Increasing the state-margin coefficient to 0.25 raised the CBF penalty to about 23% of nominal reward but peaked at only 67.59% filter-off success.",
+  "source_commit": "b1756e8",
+  "input_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "training": {"seed": 201352627, "num_envs": 256, "rounds": 4, "rollout_steps_per_round": 1024, "elapsed_seconds": 150.27742514805868, "actor_gradient_accumulation_microbatches": 2, "transactional_rollback_count": 1},
+  "reward": {"margin_weight": 0.25, "intervention_weight": 1.0, "observed_cbf_to_nominal_magnitude_ratio": 0.23},
+  "aligned_filter_off_rollouts": [
+    {"round": 1, "success_count": 260, "episode_count": 403, "success_rate": 0.6451612903225806},
+    {"round": 2, "success_count": 261, "episode_count": 393, "success_rate": 0.6641221374045801},
+    {"round": 3, "success_count": 267, "episode_count": 395, "success_rate": 0.6759493670886076},
+    {"round": 4, "success_count": 260, "episode_count": 401, "success_rate": 0.6483790523690773, "rollback": true}
+  ],
+  "selected_checkpoint_sha256": "69b8463a07cd6a13ec50b1a5a7ba991022bf22310f33e65af6736bb94df44883",
+  "selected_actor_sha256": "9f037fe041ff89220b1118a9ad9b53f0c22a7cf2df40a49c4eabd5cea8d64f53",
+  "deployment_gate_run": false,
+  "global_best_changed": false,
+  "next_hypothesis": "Restore margin weight 0.1 and increase only the Eq. (23) action-proximity coefficient to improve nominal-to-filtered action transfer."
+}

@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "method_family": "filter-free-elite-self-imitation",
+  "decision": "promising_but_not_selected_untouched_seed_below_gate",
+  "v41_collection": {
+    "source_git_commit": "7d43ac5",
+    "training_seeds": [201350342, 201350352, 201350362],
+    "total_initial_episodes": 96,
+    "successful_initial_episodes": 72,
+    "elite_transition_count": 32144,
+    "exploration_std": 0.05,
+    "minibatch_update_gate_passed": false,
+    "elite_smooth_l1_before": 0.021215955792166452,
+    "elite_smooth_l1_after": 0.02121642147385107,
+    "elapsed_seconds": 53.76887048303615
+  },
+  "v42_full_batch_update": {
+    "source_git_commit": "070f559",
+    "actor_update_scope": "last-layer",
+    "trainable_parameter_count": 1548,
+    "optimizer_updates": 1,
+    "elite_smooth_l1_before": 0.021215956266867456,
+    "elite_smooth_l1_after": 0.02121465748492137,
+    "reference_forward_kl": 0.00009996380655039587,
+    "offline_gate_passed": true,
+    "elapsed_seconds": 9.581462538917549
+  },
+  "gate_seed_201350912": {
+    "initial_state_signature": "f56bacd97c200ede74cf055e7817d16374b14f3f6f66d8f4eaf81106d8e9f1fd",
+    "baseline_filter_off_success_count": 43,
+    "candidate_filter_on_success_count": 49,
+    "candidate_filter_off_success_count": 48,
+    "candidate_filter_on_success_rate": 0.765625,
+    "candidate_filter_off_success_rate": 0.75,
+    "filter_off_minus_on_percentage_points": -1.5625
+  },
+  "untouched_seed_201350922": {
+    "initial_state_signature": "00c0952f21c0488485f70633a3b921c1aeaeef8bdf9c91713b5f5500255c0c9c",
+    "candidate_filter_off_success_count": 44,
+    "candidate_filter_off_success_rate": 0.6875,
+    "filter_on_run": false,
+    "early_stop_reason": "filter_off_below_75_percent_gate"
+  },
+  "candidate_actor_sha256": "fd312b6197883dd2aea3f53b10163e04ec25f9d015414695bfc809082ae7b98a",
+  "candidate_checkpoint_sha256": "63731517c63ccdb14afdf7ca513be28ab22ce5a160a8edd1f1bd29945c8b3b83"
+}

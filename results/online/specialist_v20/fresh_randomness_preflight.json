@@ -1,0 +1,925 @@
+{
+  "collisions": {
+    "adaptation": [],
+    "audit_or_bootstrap": [],
+    "calibration": []
+  },
+  "historical_registry": [
+    {
+      "json_path": "protocol.adaptation_seed",
+      "kind": "adaptation",
+      "seed": 17,
+      "source": "results/online/specialist_v17/development/lateral_seed17_v6.json"
+    },
+    {
+      "json_path": "formal_status.adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 42,
+      "source": "results/online/specialist_v17/development/lateral_seed17_v6.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 42,
+      "source": "results/online/specialist_v17/formal/audit/final_audit_compact.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 42,
+      "source": "results/online/specialist_v17/formal/audit/final_audit_summary.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 42,
+      "source": "results/online/specialist_v17/formal/training_manifest.json"
+    },
+    {
+      "json_path": "runs[0].adaptation_seed",
+      "kind": "adaptation",
+      "seed": 42,
+      "source": "results/online/specialist_v17/formal/training_manifest.json"
+    },
+    {
+      "json_path": "runs[3].adaptation_seed",
+      "kind": "adaptation",
+      "seed": 42,
+      "source": "results/online/specialist_v17/formal/training_manifest.json"
+    },
+    {
+      "json_path": "runs[6].adaptation_seed",
+      "kind": "adaptation",
+      "seed": 42,
+      "source": "results/online/specialist_v17/formal/training_manifest.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 42,
+      "source": "results/online/specialist_v18/formal/diagonal_audit_summary.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 42,
+      "source": "results/online/specialist_v18/protocol.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 43,
+      "source": "results/online/specialist_v19/protocol.json"
+    },
+    {
+      "json_path": "development_exclusions.revision_2_declared_adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 43,
+      "source": "results/online/specialist_v19/protocol_revision3.json"
+    },
+    {
+      "json_path": "development_exclusions.revision_2_declared_adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 43,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 53,
+      "source": "results/online/specialist_v19/protocol_revision3.json"
+    },
+    {
+      "json_path": "development_exclusions.revision_3_declared_adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 53,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 63,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "formal_status.adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 142,
+      "source": "results/online/specialist_v17/development/lateral_seed17_v6.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 142,
+      "source": "results/online/specialist_v17/formal/audit/final_audit_compact.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 142,
+      "source": "results/online/specialist_v17/formal/audit/final_audit_summary.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 142,
+      "source": "results/online/specialist_v17/formal/training_manifest.json"
+    },
+    {
+      "json_path": "runs[1].adaptation_seed",
+      "kind": "adaptation",
+      "seed": 142,
+      "source": "results/online/specialist_v17/formal/training_manifest.json"
+    },
+    {
+      "json_path": "runs[4].adaptation_seed",
+      "kind": "adaptation",
+      "seed": 142,
+      "source": "results/online/specialist_v17/formal/training_manifest.json"
+    },
+    {
+      "json_path": "runs[7].adaptation_seed",
+      "kind": "adaptation",
+      "seed": 142,
+      "source": "results/online/specialist_v17/formal/training_manifest.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 142,
+      "source": "results/online/specialist_v18/formal/diagonal_audit_summary.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 142,
+      "source": "results/online/specialist_v18/protocol.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 143,
+      "source": "results/online/specialist_v19/protocol.json"
+    },
+    {
+      "json_path": "development_exclusions.development_only_adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 143,
+      "source": "results/online/specialist_v19/protocol_revision3.json"
+    },
+    {
+      "json_path": "development_exclusions.revision_2_declared_adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 143,
+      "source": "results/online/specialist_v19/protocol_revision3.json"
+    },
+    {
+      "json_path": "development_exclusions.development_only_adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 143,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "development_exclusions.revision_2_declared_adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 143,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "protocol_failure.adaptation_seed",
+      "kind": "adaptation",
+      "seed": 143,
+      "source": "results/online/specialist_v19/training/revision2_lateral_training_stop.json"
+    },
+    {
+      "json_path": "development_adaptation_seed",
+      "kind": "adaptation",
+      "seed": 153,
+      "source": "results/online/specialist_v19/development/revision4_joint_feasibility_preflight.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 153,
+      "source": "results/online/specialist_v19/protocol_revision3.json"
+    },
+    {
+      "json_path": "development_exclusions.development_only_adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 153,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "development_exclusions.revision_3_declared_adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 153,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 163,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "formal_status.adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 242,
+      "source": "results/online/specialist_v17/development/lateral_seed17_v6.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 242,
+      "source": "results/online/specialist_v17/formal/audit/final_audit_compact.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 242,
+      "source": "results/online/specialist_v17/formal/audit/final_audit_summary.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 242,
+      "source": "results/online/specialist_v17/formal/training_manifest.json"
+    },
+    {
+      "json_path": "interrupted_attempt_excluded_from_formal_results.adaptation_seed",
+      "kind": "adaptation",
+      "seed": 242,
+      "source": "results/online/specialist_v17/formal/training_manifest.json"
+    },
+    {
+      "json_path": "runs[2].adaptation_seed",
+      "kind": "adaptation",
+      "seed": 242,
+      "source": "results/online/specialist_v17/formal/training_manifest.json"
+    },
+    {
+      "json_path": "runs[5].adaptation_seed",
+      "kind": "adaptation",
+      "seed": 242,
+      "source": "results/online/specialist_v17/formal/training_manifest.json"
+    },
+    {
+      "json_path": "runs[8].adaptation_seed",
+      "kind": "adaptation",
+      "seed": 242,
+      "source": "results/online/specialist_v17/formal/training_manifest.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 242,
+      "source": "results/online/specialist_v18/formal/diagonal_audit_summary.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 242,
+      "source": "results/online/specialist_v18/protocol.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 243,
+      "source": "results/online/specialist_v19/protocol.json"
+    },
+    {
+      "json_path": "development_exclusions.revision_2_declared_adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 243,
+      "source": "results/online/specialist_v19/protocol_revision3.json"
+    },
+    {
+      "json_path": "development_exclusions.revision_2_declared_adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 243,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 253,
+      "source": "results/online/specialist_v19/protocol_revision3.json"
+    },
+    {
+      "json_path": "development_exclusions.revision_3_declared_adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 253,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 263,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 343,
+      "source": "results/online/specialist_v19/protocol.json"
+    },
+    {
+      "json_path": "development_exclusions.revision_2_declared_adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 343,
+      "source": "results/online/specialist_v19/protocol_revision3.json"
+    },
+    {
+      "json_path": "development_exclusions.revision_2_declared_adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 343,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 353,
+      "source": "results/online/specialist_v19/protocol_revision3.json"
+    },
+    {
+      "json_path": "development_exclusions.revision_3_declared_adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 353,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 363,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 443,
+      "source": "results/online/specialist_v19/protocol.json"
+    },
+    {
+      "json_path": "development_exclusions.revision_2_declared_adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 443,
+      "source": "results/online/specialist_v19/protocol_revision3.json"
+    },
+    {
+      "json_path": "development_exclusions.revision_2_declared_adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 443,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 453,
+      "source": "results/online/specialist_v19/protocol_revision3.json"
+    },
+    {
+      "json_path": "development_exclusions.revision_3_declared_adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 453,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "adaptation_seeds",
+      "kind": "adaptation",
+      "seed": 463,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "fresh_paired_holdout.paired_inference.bootstrap_seed",
+      "kind": "audit_or_bootstrap",
+      "seed": 1706,
+      "source": "results/online/specialist_v17/development/lateral_seed17_v6.json"
+    },
+    {
+      "json_path": "audit_seed",
+      "kind": "audit_or_bootstrap",
+      "seed": 1900000,
+      "source": "results/online/specialist_v17/formal/audit/final_audit_compact.json"
+    },
+    {
+      "json_path": "audit_seed",
+      "kind": "audit_or_bootstrap",
+      "seed": 1900000,
+      "source": "results/online/specialist_v17/formal/audit/final_audit_summary.json"
+    },
+    {
+      "json_path": "audit_seed",
+      "kind": "audit_or_bootstrap",
+      "seed": 3100000,
+      "source": "results/online/specialist_v18/formal/diagonal_audit_summary.json"
+    },
+    {
+      "json_path": "evaluation.audit_seed",
+      "kind": "audit_or_bootstrap",
+      "seed": 3100000,
+      "source": "results/online/specialist_v18/protocol.json"
+    },
+    {
+      "json_path": "bootstrap_seed",
+      "kind": "audit_or_bootstrap",
+      "seed": 4000000,
+      "source": "results/online/specialist_v18/formal/diagonal_audit_summary.json"
+    },
+    {
+      "json_path": "evaluation.bootstrap_seed",
+      "kind": "audit_or_bootstrap",
+      "seed": 4000000,
+      "source": "results/online/specialist_v18/protocol.json"
+    },
+    {
+      "json_path": "evaluation.audit_seed",
+      "kind": "audit_or_bootstrap",
+      "seed": 5100000,
+      "source": "results/online/specialist_v19/protocol.json"
+    },
+    {
+      "json_path": "evaluation.audit_seed",
+      "kind": "audit_or_bootstrap",
+      "seed": 5300000,
+      "source": "results/online/specialist_v19/protocol_revision3.json"
+    },
+    {
+      "json_path": "evaluation.audit_seed",
+      "kind": "audit_or_bootstrap",
+      "seed": 5400000,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "evaluation.bootstrap_seed",
+      "kind": "audit_or_bootstrap",
+      "seed": 6000000,
+      "source": "results/online/specialist_v19/protocol.json"
+    },
+    {
+      "json_path": "evaluation.bootstrap_seed",
+      "kind": "audit_or_bootstrap",
+      "seed": 6300000,
+      "source": "results/online/specialist_v19/protocol_revision3.json"
+    },
+    {
+      "json_path": "evaluation.bootstrap_seed",
+      "kind": "audit_or_bootstrap",
+      "seed": 6400000,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "candidate_seeds",
+      "kind": "calibration",
+      "seed": 2115,
+      "source": "results/online/specialist_v17/calibration/lateral_progress.json"
+    },
+    {
+      "json_path": "calibration.candidate_seeds",
+      "kind": "calibration",
+      "seed": 2115,
+      "source": "results/online/specialist_v17/calibration/lateral_summary.json"
+    },
+    {
+      "json_path": "calibration.candidate_seeds",
+      "kind": "calibration",
+      "seed": 2115,
+      "source": "results/online/specialist_v17/contexts/lateral.json"
+    },
+    {
+      "json_path": "contexts.lateral.calibration.candidate_seeds",
+      "kind": "calibration",
+      "seed": 2115,
+      "source": "results/online/specialist_v17/formal/audit/final_audit_compact.json"
+    },
+    {
+      "json_path": "contexts.lateral.calibration.candidate_seeds",
+      "kind": "calibration",
+      "seed": 2115,
+      "source": "results/online/specialist_v17/formal/audit/final_audit_summary.json"
+    },
+    {
+      "json_path": "contexts.lateral.calibration.candidate_seeds",
+      "kind": "calibration",
+      "seed": 2115,
+      "source": "results/online/specialist_v18/formal/diagonal_audit_summary.json"
+    },
+    {
+      "json_path": "candidate_seeds",
+      "kind": "calibration",
+      "seed": 2212,
+      "source": "results/online/specialist_v17/calibration/cbf_progress.json"
+    },
+    {
+      "json_path": "calibration.candidate_seeds",
+      "kind": "calibration",
+      "seed": 2212,
+      "source": "results/online/specialist_v17/calibration/cbf_summary.json"
+    },
+    {
+      "json_path": "calibration.candidate_seeds",
+      "kind": "calibration",
+      "seed": 2212,
+      "source": "results/online/specialist_v17/contexts/cbf.json"
+    },
+    {
+      "json_path": "contexts.cbf.calibration.candidate_seeds",
+      "kind": "calibration",
+      "seed": 2212,
+      "source": "results/online/specialist_v17/formal/audit/final_audit_compact.json"
+    },
+    {
+      "json_path": "contexts.cbf.calibration.candidate_seeds",
+      "kind": "calibration",
+      "seed": 2212,
+      "source": "results/online/specialist_v17/formal/audit/final_audit_summary.json"
+    },
+    {
+      "json_path": "contexts.cbf.calibration.candidate_seeds",
+      "kind": "calibration",
+      "seed": 2212,
+      "source": "results/online/specialist_v18/formal/diagonal_audit_summary.json"
+    },
+    {
+      "json_path": "candidate_seeds",
+      "kind": "calibration",
+      "seed": 2315,
+      "source": "results/online/specialist_v17/calibration/balance_progress.json"
+    },
+    {
+      "json_path": "calibration.candidate_seeds",
+      "kind": "calibration",
+      "seed": 2315,
+      "source": "results/online/specialist_v17/calibration/balance_summary.json"
+    },
+    {
+      "json_path": "calibration.candidate_seeds",
+      "kind": "calibration",
+      "seed": 2315,
+      "source": "results/online/specialist_v17/contexts/balance.json"
+    },
+    {
+      "json_path": "contexts.balance.calibration.candidate_seeds",
+      "kind": "calibration",
+      "seed": 2315,
+      "source": "results/online/specialist_v17/formal/audit/final_audit_compact.json"
+    },
+    {
+      "json_path": "contexts.balance.calibration.candidate_seeds",
+      "kind": "calibration",
+      "seed": 2315,
+      "source": "results/online/specialist_v17/formal/audit/final_audit_summary.json"
+    },
+    {
+      "json_path": "contexts.balance.calibration.candidate_seeds",
+      "kind": "calibration",
+      "seed": 2315,
+      "source": "results/online/specialist_v18/formal/diagonal_audit_summary.json"
+    },
+    {
+      "json_path": "calibration.candidate_seeds",
+      "kind": "calibration",
+      "seed": 7217,
+      "source": "results/online/specialist_v19/contexts/contact_stability.json"
+    },
+    {
+      "json_path": "calibration.contact_stability_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7217,
+      "source": "results/online/specialist_v19/protocol.json"
+    },
+    {
+      "json_path": "calibration.contact_stability_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7217,
+      "source": "results/online/specialist_v19/protocol_revision3.json"
+    },
+    {
+      "json_path": "calibration.contact_stability_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7217,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "calibration.candidate_seeds",
+      "kind": "calibration",
+      "seed": 7218,
+      "source": "results/online/specialist_v19/contexts/contact_stability.json"
+    },
+    {
+      "json_path": "calibration.contact_stability_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7218,
+      "source": "results/online/specialist_v19/protocol.json"
+    },
+    {
+      "json_path": "calibration.contact_stability_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7218,
+      "source": "results/online/specialist_v19/protocol_revision3.json"
+    },
+    {
+      "json_path": "calibration.contact_stability_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7218,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "calibration.candidate_seeds",
+      "kind": "calibration",
+      "seed": 7219,
+      "source": "results/online/specialist_v19/contexts/contact_stability.json"
+    },
+    {
+      "json_path": "calibration.contact_stability_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7219,
+      "source": "results/online/specialist_v19/protocol.json"
+    },
+    {
+      "json_path": "calibration.contact_stability_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7219,
+      "source": "results/online/specialist_v19/protocol_revision3.json"
+    },
+    {
+      "json_path": "calibration.contact_stability_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7219,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "calibration.candidate_seeds",
+      "kind": "calibration",
+      "seed": 7312,
+      "source": "results/online/specialist_v19/contexts/lateral.json"
+    },
+    {
+      "json_path": "calibration.lateral_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7312,
+      "source": "results/online/specialist_v19/protocol.json"
+    },
+    {
+      "json_path": "calibration.lateral_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7312,
+      "source": "results/online/specialist_v19/protocol_revision3.json"
+    },
+    {
+      "json_path": "calibration.lateral_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7312,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "calibration.candidate_seeds",
+      "kind": "calibration",
+      "seed": 7313,
+      "source": "results/online/specialist_v19/contexts/lateral.json"
+    },
+    {
+      "json_path": "calibration.lateral_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7313,
+      "source": "results/online/specialist_v19/protocol.json"
+    },
+    {
+      "json_path": "calibration.lateral_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7313,
+      "source": "results/online/specialist_v19/protocol_revision3.json"
+    },
+    {
+      "json_path": "calibration.lateral_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7313,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "calibration.candidate_seeds",
+      "kind": "calibration",
+      "seed": 7314,
+      "source": "results/online/specialist_v19/contexts/lateral.json"
+    },
+    {
+      "json_path": "calibration.lateral_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7314,
+      "source": "results/online/specialist_v19/protocol.json"
+    },
+    {
+      "json_path": "calibration.lateral_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7314,
+      "source": "results/online/specialist_v19/protocol_revision3.json"
+    },
+    {
+      "json_path": "calibration.lateral_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7314,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "calibration.candidate_seeds",
+      "kind": "calibration",
+      "seed": 7315,
+      "source": "results/online/specialist_v19/contexts/lateral.json"
+    },
+    {
+      "json_path": "calibration.lateral_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7315,
+      "source": "results/online/specialist_v19/protocol.json"
+    },
+    {
+      "json_path": "calibration.lateral_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7315,
+      "source": "results/online/specialist_v19/protocol_revision3.json"
+    },
+    {
+      "json_path": "calibration.lateral_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7315,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "calibration.candidate_seeds",
+      "kind": "calibration",
+      "seed": 7316,
+      "source": "results/online/specialist_v19/contexts/lateral.json"
+    },
+    {
+      "json_path": "calibration.lateral_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7316,
+      "source": "results/online/specialist_v19/protocol.json"
+    },
+    {
+      "json_path": "calibration.lateral_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7316,
+      "source": "results/online/specialist_v19/protocol_revision3.json"
+    },
+    {
+      "json_path": "calibration.lateral_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7316,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "calibration.candidate_seeds",
+      "kind": "calibration",
+      "seed": 7317,
+      "source": "results/online/specialist_v19/contexts/lateral.json"
+    },
+    {
+      "json_path": "calibration.lateral_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7317,
+      "source": "results/online/specialist_v19/protocol.json"
+    },
+    {
+      "json_path": "calibration.lateral_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7317,
+      "source": "results/online/specialist_v19/protocol_revision3.json"
+    },
+    {
+      "json_path": "calibration.lateral_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7317,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "calibration.candidate_seeds",
+      "kind": "calibration",
+      "seed": 7318,
+      "source": "results/online/specialist_v19/contexts/lateral.json"
+    },
+    {
+      "json_path": "calibration.lateral_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7318,
+      "source": "results/online/specialist_v19/protocol.json"
+    },
+    {
+      "json_path": "calibration.lateral_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7318,
+      "source": "results/online/specialist_v19/protocol_revision3.json"
+    },
+    {
+      "json_path": "calibration.lateral_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7318,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "calibration.candidate_seeds",
+      "kind": "calibration",
+      "seed": 7319,
+      "source": "results/online/specialist_v19/contexts/lateral.json"
+    },
+    {
+      "json_path": "calibration.lateral_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7319,
+      "source": "results/online/specialist_v19/protocol.json"
+    },
+    {
+      "json_path": "calibration.lateral_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7319,
+      "source": "results/online/specialist_v19/protocol_revision3.json"
+    },
+    {
+      "json_path": "calibration.lateral_candidate_seeds",
+      "kind": "calibration",
+      "seed": 7319,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "calibration.contact_stability_evaluation_seed_base",
+      "kind": "calibration",
+      "seed": 4710000,
+      "source": "results/online/specialist_v19/protocol.json"
+    },
+    {
+      "json_path": "calibration.contact_stability_evaluation_seed_base",
+      "kind": "calibration",
+      "seed": 4710000,
+      "source": "results/online/specialist_v19/protocol_revision3.json"
+    },
+    {
+      "json_path": "calibration.contact_stability_evaluation_seed_base",
+      "kind": "calibration",
+      "seed": 4710000,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    },
+    {
+      "json_path": "calibration.lateral_evaluation_seed_base",
+      "kind": "calibration",
+      "seed": 4720000,
+      "source": "results/online/specialist_v19/protocol.json"
+    },
+    {
+      "json_path": "calibration.lateral_evaluation_seed_base",
+      "kind": "calibration",
+      "seed": 4720000,
+      "source": "results/online/specialist_v19/protocol_revision3.json"
+    },
+    {
+      "json_path": "calibration.lateral_evaluation_seed_base",
+      "kind": "calibration",
+      "seed": 4720000,
+      "source": "results/online/specialist_v19/protocol_revision4.json"
+    }
+  ],
+  "historical_versions_scanned": [
+    17,
+    18,
+    19
+  ],
+  "passed": true,
+  "proposed": {
+    "adaptation_seeds": [
+      73,
+      173,
+      273,
+      373,
+      473
+    ],
+    "audit_seed": 5500000,
+    "bootstrap_seed": 6500000,
+    "calibration_candidate_seeds": {
+      "contact_stability": [
+        8212,
+        8213,
+        8214,
+        8215,
+        8216,
+        8217,
+        8218,
+        8219
+      ],
+      "lateral": [
+        8312,
+        8313,
+        8314,
+        8315,
+        8316,
+        8317,
+        8318,
+        8319
+      ]
+    },
+    "calibration_evaluation_seed_bases": {
+      "contact_stability": 4810000,
+      "lateral": 4820000
+    }
+  },
+  "proposed_internal_collision": false,
+  "protocol_id": "safe100-fixed-budget-observable-failure-conditioned-v20",
+  "schema_version": 1
+}

@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "experiment": "paper_dual_v35",
+  "version": "v139",
+  "method_id": "paper-cbf-dual-clearance-mixed-v139",
+  "status": "screen_passed_independent_gate_passed",
+  "source_git_commit": "fdc2a63a484651c4e0fd73cb0227fdba935b1058",
+  "target": {
+    "context": "F2",
+    "riser_height_m": 0.184,
+    "runtime_filter_at_deployment": false,
+    "deterministic_policy_mean": true,
+    "success_threshold": 0.75,
+    "screen_threshold_count": 48,
+    "screen_episode_count": 64,
+    "independent_gate_threshold_count": 48,
+    "independent_gate_episode_count": 64
+  },
+  "training": {
+    "seed": 201356000,
+    "num_envs": 128,
+    "rollout_steps": 1024,
+    "rounds": 4,
+    "transition_count": 524288,
+    "elapsed_seconds": 120.62266315706074,
+    "runtime_filter_fraction": 0.25,
+    "runtime_filter_off_fraction": 0.75,
+    "filter_group_balanced_advantages": true,
+    "clearance_margin_m": 0.08,
+    "training_action_std": 0.05,
+    "continuous_without_rollback": true,
+    "target_forward_kl": 0.0006,
+    "selected_filter_off": {
+      "rollout_round": 2,
+      "checkpoint_round": 1,
+      "success_count": 132,
+      "episode_count": 195,
+      "success_rate": 0.676923076923077,
+      "mean_reached_riser": 7.923076923076923
+    },
+    "selection_additional_evaluation_count": 0
+  },
+  "screen": {
+    "seed": 201356080,
+    "policy": "deterministic_mean",
+    "runtime_filter": false,
+    "success_count": 50,
+    "episode_count": 64,
+    "success_rate": 0.78125,
+    "fall_count": 14,
+    "fall_rate": 0.21875,
+    "mean_reached_riser": 8.140625,
+    "mean_return": -2.9879828728735447,
+    "mean_success_completion_time_s": 9.0884,
+    "unsafe_overlap_steps_per_riser": 0.8138195777351248,
+    "initial_state_signature": "d1326a866bf06deb692840d4b5f0733558e912b0f6cc76d902997646629b22e9"
+  },
+  "independent_gate": {
+    "seed": 201356090,
+    "policy": "deterministic_mean",
+    "runtime_filter": false,
+    "success_count": 49,
+    "episode_count": 64,
+    "success_rate": 0.765625,
+    "fall_count": 15,
+    "fall_rate": 0.234375,
+    "mean_reached_riser": 8.03125,
+    "mean_return": -3.3485805131495,
+    "mean_success_completion_time_s": 9.010204081632653,
+    "unsafe_overlap_steps_per_riser": 0.9902723735408561,
+    "initial_state_signature": "22b4c5593433b52915981830854db2c6e0bf33d325fbc8523493ad0142943b03"
+  },
+  "descriptive_two_seed_pool": {
+    "success_count": 99,
+    "episode_count": 128,
+    "success_rate": 0.7734375,
+    "acceptance_metric": false,
+    "reason": "Formal acceptance uses the sole independent gate itself; the pooled result is descriptive only."
+  },
+  "gate": {
+    "screen_passed": true,
+    "independent_gate_run": true,
+    "independent_gate_passed": true,
+    "additional_validation_run": false,
+    "reason": "The 50/64 screen triggered exactly one independent gate, which scored 49/64 and exceeded the 48/64 threshold."
+  },
+  "decision": {
+    "accepted": true,
+    "replaces_v79": true,
+    "formal_best": "v139 independent deterministic filter-off gate 49/64 = 76.5625%",
+    "previous_formal_best": "v79 aligned filter-off 139/193 = 72.02%",
+    "development_screen": "v139 50/64 = 78.125%",
+    "interpretation": "Keeping v138's reduced-overlap 8 cm clearance while exposing 75% of training environments to deployment-style filter-off execution produced the first candidate to pass both the predeclared screen and its sole independent gate."
+  }
+}

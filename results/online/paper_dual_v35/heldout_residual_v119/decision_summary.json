@@ -1,0 +1,34 @@
+{
+  "schema_version": "paper_dual_v35.v119.decision.v1",
+  "method_id": "heldout-validated-filter-off-full-batch-residual-ppo-v119",
+  "decision": "proposal_rejected_by_heldout_surrogate_and_exactly_rolled_back",
+  "reason": "The train surrogate improved but the complete held-out seed surrogate became negative, so the residual was restored exactly before screening.",
+  "source_commit": "2d49d9910ed37404a2d5add7c7181da9957ca879",
+  "targeted_tests_passed": 1,
+  "hardware": "NVIDIA GeForce RTX 4080 SUPER",
+  "input_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "training": {
+    "train_transition_count": 67300,
+    "validation_transition_count": 22206,
+    "train_clipped_surrogate_after": 0.0016749147325754166,
+    "validation_clipped_surrogate_after": -0.0014488929882645607,
+    "reference_forward_kl": 0.004840504378080368,
+    "offline_gate_passed": false,
+    "transactional_rollback": true,
+    "initial_residual_sha256": "da250c507b93b53ec62fb684313f4e0d71624e361cded6ec98de02bacd45a17a",
+    "final_residual_sha256": "da250c507b93b53ec62fb684313f4e0d71624e361cded6ec98de02bacd45a17a"
+  },
+  "screen": {
+    "seed": 201354080,
+    "episode_count": 64,
+    "runtime_filter": false,
+    "success_count": 46,
+    "success_rate": 0.71875,
+    "mean_reached_riser": 8.40625,
+    "mean_residual_norm": 0.0,
+    "independent_gate_run": false
+  },
+  "elapsed_seconds": 95.64489459199831,
+  "global_best_changed": false,
+  "next_hypothesis": "Keep held-out transactional acceptance but replace binary episode labels with standardized terminal reached-riser progress credit."
+}

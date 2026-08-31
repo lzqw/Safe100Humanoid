@@ -1,0 +1,259 @@
+{
+  "accepted_final_checkpoint": {
+    "bytes": 61688225,
+    "included_in_git": false,
+    "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/training/contact_stability/seed473/accepted_final.pt",
+    "sha256": "543b28af35551f47a456548215143df07d64ef86464f806115b2c6445499ecc7"
+  },
+  "actor_observation_expansion": {
+    "expanded_width": 410,
+    "features": [
+      "left_contact",
+      "right_contact",
+      "left_slip_speed",
+      "right_slip_speed",
+      "phase_contact_mismatch"
+    ],
+    "legacy_first_layer_input_column_change_max_abs": 0.0,
+    "legacy_input_columns_frozen_during_adaptation": true,
+    "legacy_width": 405,
+    "new_feature_count": 5,
+    "new_first_layer_column_max_abs_after_adaptation": 7.28769155102782e-05,
+    "new_first_layer_column_max_abs_before_adaptation": 0.0,
+    "new_first_layer_column_rms_after_adaptation": 2.3650089133298025e-05,
+    "new_input_columns_use_full_actor_learning_rate": true,
+    "pre_adaptation_policy_exactly_preserved": true
+  },
+  "advantage_normalization": "separate normal/failure/success groups across both batches",
+  "base_policy_checkpoint": {
+    "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/retention_v13/arm_b_state_retention/accepted_final.pt",
+    "sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8"
+  },
+  "baseline_training_diagnostic": {
+    "D0": {
+      "actor_state_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+      "correction_mean": 0.0012017511889219068,
+      "fall_rate": 0.0390625,
+      "initial_state_signatures": [
+        "50c7bddd6cb0b75491e9f013ef90075b78fd0fa5b2d187f7823f520dcb9e2b0a"
+      ],
+      "intervention_per_riser": 0.6341145960614085,
+      "mean_reached_riser": 5.828125,
+      "mean_return": 8.813603402115405,
+      "num_episodes": 128,
+      "paired_one_initial_episode_per_env": true,
+      "runtime_filter": true,
+      "seeds": [
+        300473
+      ],
+      "success_rate": 0.9140625
+    },
+    "DQHMED": {
+      "actor_state_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+      "correction_mean": 0.010134217503946275,
+      "fall_rate": 0.265625,
+      "initial_state_signatures": [
+        "cf7cf58f4dabeef95b49a934dd023cf28e1761d48f039be63a437c27b8efbe23"
+      ],
+      "intervention_per_riser": 2.332236713729799,
+      "mean_reached_riser": 21.328125,
+      "mean_return": -17.239082438871264,
+      "num_episodes": 128,
+      "paired_one_initial_episode_per_env": true,
+      "runtime_filter": true,
+      "seeds": [
+        300473
+      ],
+      "success_rate": 0.734375
+    }
+  },
+  "deployment_context": {
+    "parameters_sha256": "9cd591c555b08323ad780f50a80e769052a849748e298c06252a9f9b56b220a9",
+    "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/contexts/contact_stability.json",
+    "sha256": "cd0423b8f7ece3962f4d8fff4458c2f4639a303d40da48cc57b919a9b05d0f34"
+  },
+  "development_run": false,
+  "evidence_role": "compact provenance and result index; full source artifact is hash-addressed in training_manifest.json",
+  "final_actor_sha256": "91729d034f49e3c7a863f3ac4c0ac9cdd9cf7243c82c7586b650f320a2af9c8d",
+  "final_training_diagnostic": {
+    "D0": {
+      "actor_state_sha256": "91729d034f49e3c7a863f3ac4c0ac9cdd9cf7243c82c7586b650f320a2af9c8d",
+      "correction_mean": 0.0005316261951631429,
+      "fall_rate": 0.015625,
+      "initial_state_signatures": [
+        "6145633cb84ba1d72d17798715fd0f479784015a8223124224565e9ba5e47b9a"
+      ],
+      "intervention_per_riser": 0.6815104315755889,
+      "mean_reached_riser": 5.96875,
+      "mean_return": 9.159266971517354,
+      "num_episodes": 128,
+      "paired_one_initial_episode_per_env": true,
+      "runtime_filter": true,
+      "seeds": [
+        900473
+      ],
+      "success_rate": 0.9296875
+    },
+    "DQHMED": {
+      "actor_state_sha256": "91729d034f49e3c7a863f3ac4c0ac9cdd9cf7243c82c7586b650f320a2af9c8d",
+      "correction_mean": 0.009907762603688752,
+      "fall_rate": 0.34375,
+      "initial_state_signatures": [
+        "a1c4cba9a91aa7700ef1b8b7d809a6f586c1b5750e864bffef31602031ee99e6"
+      ],
+      "intervention_per_riser": 2.607508370652795,
+      "mean_reached_riser": 20.6953125,
+      "mean_return": -16.251735290512443,
+      "num_episodes": 128,
+      "paired_one_initial_episode_per_env": true,
+      "runtime_filter": true,
+      "seeds": [
+        900473
+      ],
+      "success_rate": 0.65625
+    }
+  },
+  "formal_protocol": true,
+  "frozen_protocol": {
+    "checks": {
+      "adaptation_seeds": true,
+      "base_checkpoint": true,
+      "context_calibration_seed": true,
+      "context_file": true,
+      "context_parameters": true,
+      "protocol_id": true,
+      "protocol_revision": true,
+      "runtime_seed": true,
+      "status": true
+    },
+    "git_commit": "1ded5b84f1c4b8605fd285ef3138c0363db20ee4",
+    "path": "/home/carla/LZQW/SAFE100/humanoid/worktrees/v20_formal/results/online/specialist_v20/protocol.json",
+    "relative_path": "results/online/specialist_v20/protocol.json",
+    "sha256": "74242b1131499f7163ef1985d25a94ca06b0758f6a3d5f2dea9f56ac200c28da",
+    "tracked_worktree_and_index_clean": true
+  },
+  "independent_training_branch": true,
+  "initial_actor_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+  "integer_start_mixture_for_64_envs": {
+    "failure": 12,
+    "normal": 40,
+    "success": 12
+  },
+  "learning_core": "v19 Revision-4 Observable Failure-Conditioned Brief PPO",
+  "method": "Fixed-Budget Observable Failure-Conditioned Brief PPO v20",
+  "protocol_completed": true,
+  "requested_start_mixture": {
+    "failure": 0.1875,
+    "normal": 0.625,
+    "success": 0.1875
+  },
+  "rollout_per_round": {
+    "batch_count": 2,
+    "different_rollout_seeds": true,
+    "environments_per_batch": 64,
+    "gradient_cosine_is_diagnostic_only": true,
+    "loss_and_gradient_combination": "arithmetic mean",
+    "same_frozen_behavior_policy": true,
+    "steps_per_environment": 1024
+  },
+  "round_protocol": {
+    "accepted_updates": 5,
+    "actual_rounds": 8,
+    "early_termination_enabled": false,
+    "fixed_round_budget": 8,
+    "minimum_accepted_updates": null,
+    "rejection_patience": null,
+    "retained_update_count_is_protocol_gate": false,
+    "stop_reason": "fixed_round_budget_completed",
+    "zero_to_eight_retained_updates_are_valid": true
+  },
+  "schema_version": 1,
+  "seed": 473,
+  "smoke_run": false,
+  "source_file_sha256": {
+    "experiments/scripts/evaluate_online_stairs.py": "0d0960f3f2f88b66b8613b2481da45cd7a21ef584606bfe0b91317422dd92bcf",
+    "experiments/scripts/online_refine_stairs.py": "e0176eec024c8a0fb2c6012bdf4660888ee5969fa2a5b364d9fb0acf907b7cde",
+    "experiments/scripts/refine_specialist_v20.py": "cf1b1dec4e104debb5d507d5ad982432e4a4ba9502b1d896666920348a39d667",
+    "experiments/scripts/specialist_v20_protocol.py": "d93a27ec6ba7c2bf7fcca9211fb15f6f8c21d8ac01ca38d27b79ecb76d11cc3f",
+    "experiments/scripts/specialist_v20_tables.py": "a65c701eba17ce88715833a551067139e4fac08d7ff4b8843eb421fca0d19f29",
+    "src/tasks/stairs_cbf/actions.py": "e04354c1bb9bfe4f57055a98dde22a1e13a30ff3a7b02af93633bd90001a5514",
+    "src/tasks/stairs_cbf/command.py": "af568a025f275fa018aeb97e8a1c341ee7bfa07d4b04be73b48caed7f794ab43",
+    "src/tasks/stairs_cbf/config.py": "22a57df095616e1f19f7cf6f18d7ba173ecef7901bf2a85da2a5faaa11c32f8a",
+    "src/tasks/stairs_cbf/deployment_context.py": "8344ae02ae062cfb542df68f3327e208120f3af94e43228b4f47d5f8e25eaff6",
+    "src/tasks/stairs_cbf/hard_cases.py": "b20cd15228dcdfcc6ad16955b5177ff4c3c714237b73c9a0e02eb316ab90f430",
+    "src/tasks/stairs_cbf/mdp.py": "631a9fefcf2026521c1c43ecf2dc1851124ce47921a1ddf4191ae7db31475754",
+    "src/tasks/stairs_cbf/online.py": "7a20fea7e487a6b484e6fd23b225b7cdaab4e0764d377d5867805829d5a0b5e5",
+    "src/tasks/velocity/mdp/observations.py": "5e759917b7d3132b4bd7c640eae14d472f01b175f222d6358330ae9a159becd1"
+  },
+  "source_summary": {
+    "bytes": 8235789,
+    "included_in_git": false,
+    "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/training/contact_stability/seed473/specialist_summary.json",
+    "sha256": "9fce79a1a3927d01b0050000d62e7d49bb8ccfa0b086bed6185a2186d7908e71"
+  },
+  "specialist_mode": "contact_stability",
+  "structural_checks": {
+    "actor_layer_multipliers": [
+      0.1,
+      0.25,
+      0.5,
+      1.0
+    ],
+    "actor_learning_rate": 5e-06,
+    "actor_module_count": 1,
+    "actor_new_feature_count": 5,
+    "actor_new_feature_learning_rate_multiplier": 1.0,
+    "actor_new_feature_optimizer_group_count": 1,
+    "actor_new_feature_optimizer_learning_rate": 5e-06,
+    "actor_new_feature_optimizer_owns_first_layer_weight": true,
+    "actor_obs_dim": 410,
+    "auxiliary_critics_absent": true,
+    "brief_ppo_refinement": true,
+    "critic_learning_rate": 0.0001,
+    "critic_module_count": 1,
+    "critic_obs_dim": 843,
+    "failure_focused_refinement": true,
+    "freeze_legacy_actor_input_columns": true,
+    "grouped_advantage_deferred": true,
+    "hard_case_policy_weight": 1.0,
+    "observable_failure_conditioned_refinement": true,
+    "ppo_clip": 0.05,
+    "ppo_epochs": 1,
+    "ppo_minibatches": 4,
+    "success_counterexample_policy_weight": 1.25,
+    "target_kl": 0.003,
+    "target_kl_early_stopping": true,
+    "task_first_constrained": false
+  },
+  "training_tables": {
+    "candidate_metrics.csv": {
+      "rows": 24,
+      "sha256": "b6e954a0418f04c8d663275fbd7bbd1463e63e3d06241e914b00c0eb17ce13f5"
+    },
+    "replay_metrics.csv": {
+      "rows": 16,
+      "sha256": "0e7824990ff73f11f31c176eedea3bf72ff04536fe4207d626b80282430d4f94"
+    },
+    "round_metrics.csv": {
+      "rows": 9,
+      "sha256": "9ef82708374e5dabd779e12d18836e586d2d944b4abe85c6ada7ca7923c5925e"
+    }
+  },
+  "warm_start": {
+    "actor_layout": "legacy_prefix_plus_v19_deployable_failure",
+    "critic_layout": "online_prefix",
+    "expanded_actor_width": 410,
+    "expanded_critic_width": 843,
+    "legacy_tensor_copy_max_abs_error": 0.0,
+    "loaded_task_first_heads": false,
+    "new_first_layer_column_max_abs": 0.0,
+    "new_normalizer_identity_max_abs_error": 0.0,
+    "optimizer_reset": true,
+    "pi0_exact_preservation_proof": true,
+    "source_actor_width": 405,
+    "source_critic_offset": 0,
+    "source_critic_width": 838,
+    "source_iteration": 3,
+    "zero_initialized_actor_columns": 5
+  }
+}

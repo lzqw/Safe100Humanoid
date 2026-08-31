@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "experiment": "paper_dual_v35",
+  "version": "v133",
+  "method_id": "paper-cbf-dual-scaled-stage-two-v133",
+  "status": "rejected_screen_below_gate",
+  "source_git_commit": "ae093e7a65737e8bef00e163d86b9075a7091c50",
+  "target": {
+    "context": "F2",
+    "riser_height_m": 0.184,
+    "runtime_filter_at_deployment": false,
+    "success_threshold": 0.75,
+    "screen_threshold_count": 48,
+    "screen_episode_count": 64
+  },
+  "training": {
+    "seed": 201355400,
+    "num_envs": 128,
+    "rollout_steps": 1024,
+    "rounds": 8,
+    "stage_transition_count": 1048576,
+    "scaled_stage_cumulative_transition_count": 2097152,
+    "elapsed_seconds": 265.19614881800953,
+    "runtime_filter_fraction": 1.0,
+    "training_action_std": 0.05,
+    "objective_changed_from_v132": false,
+    "optimizer_protocol_changed_from_v132": false,
+    "continuous_without_rollback": true,
+    "target_forward_kl": 0.0006,
+    "selected_filter_on": {
+      "rollout_round": 3,
+      "checkpoint_round": 2,
+      "success_count": 197,
+      "episode_count": 263,
+      "success_rate": 0.7490494296577946,
+      "mean_reached_riser": 8.144486692015208
+    },
+    "selection_additional_evaluation_count": 0
+  },
+  "screen": {
+    "seed": 201355480,
+    "policy": "deterministic_mean",
+    "runtime_filter": false,
+    "success_count": 41,
+    "episode_count": 64,
+    "success_rate": 0.640625,
+    "fall_count": 23,
+    "fall_rate": 0.359375,
+    "mean_reached_riser": 7.984375,
+    "mean_return": -4.452525354921818,
+    "mean_success_completion_time_s": 9.112682926829269,
+    "initial_state_signature": "0c93cd345782470d3176d6a1e368be566e8672b1d95e3d2c65e20f8c51f5938e"
+  },
+  "gate": {
+    "screen_passed": false,
+    "independent_gate_run": false,
+    "additional_validation_run": false,
+    "reason": "41/64 is below the predeclared 48/64 threshold"
+  },
+  "decision": {
+    "accepted": false,
+    "replaces_v132": false,
+    "replaces_v79": false,
+    "formal_best_remains": "v79 aligned filter-off 139/193 = 72.02%",
+    "development_screen_best_remains": "v132 50/64 = 78.125%",
+    "interpretation": "A second unchanged million-transition stage achieved 74.90% filtered training success but reduced deterministic filter-off deployment to 64.06%; v132 is a local deployment peak, so further identical continuation is not justified."
+  }
+}

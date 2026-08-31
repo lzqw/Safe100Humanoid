@@ -1,0 +1,16 @@
+{
+  "action_delay_steps": [
+    1,
+    2
+  ],
+  "episodes_per_policy_context_delay": 256,
+  "evaluation_seed": 201357901,
+  "experiment": "paper_filter_free_hardware_proxy",
+  "job_count": 42,
+  "method_id": "paper-filter-free-hardware-proxy-v1",
+  "nominal_sim_evaluation_root": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_filter_free_ablation/formal_8deaeff/evaluation_seed201357900",
+  "nominal_sim_paired_result_sha256": "54c55220866b02de0823169ad24d64af587bb6324b47d8b43ced765257f82008",
+  "policy_spec_count": 21,
+  "schema_version": 1,
+  "started_unix": 1788001071.7432668
+}

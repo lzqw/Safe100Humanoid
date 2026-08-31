@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "experiment": "paper_dual_v35",
+  "run": "raw_moderate_A2x4_A1w0075x4",
+  "status": "rejected_after_f2_gate",
+  "source_git_commit": "8f6d232011ba1aeb870c63aef2047b6cebc14ba4",
+  "context": "F2",
+  "training_seed": 201350102,
+  "evaluation_seed": 201350902,
+  "a1_teacher_weight": 0.0075,
+  "training_elapsed_seconds": 234.2137498620432,
+  "final_checkpoint_sha256": "f7d5b2922b51b7ef268d25a1b3c88e2857aab4a7e1fad3f195a19e2b5f938c18",
+  "final_actor_sha256": "d3b671d665c835cb9673f7f25558e9cae9225a184038beba62eb0bad294a6490",
+  "optimization": {
+    "round_5_moving_forward_kl": 0.004969448316842318,
+    "round_8_moving_forward_kl": 0.006062339060008526,
+    "full_weight_round_5_moving_forward_kl": 0.22139903903007507,
+    "full_weight_round_8_moving_forward_kl": 0.7107006907463074,
+    "kl_mechanism_improved": true
+  },
+  "evaluation": {
+    "filter_on": {
+      "success_count": 40,
+      "num_episodes": 64,
+      "success_rate": 0.625,
+      "fall_rate": 0.375,
+      "mean_reached_riser": 8.1875,
+      "mean_return": -7.582208827137947
+    },
+    "filter_off": {
+      "success_count": 41,
+      "num_episodes": 64,
+      "success_rate": 0.640625,
+      "fall_rate": 0.359375,
+      "mean_reached_riser": 7.9375,
+      "mean_return": -6.029014058411121
+    },
+    "off_minus_on_pp": 1.5625
+  },
+  "comparison_to_current_best_f2": {
+    "filter_on_change_pp": -7.8125,
+    "filter_off_change_pp": -4.6875
+  },
+  "decision": {
+    "selected": false,
+    "f3_run": false,
+    "reason": "The optimization mechanism improved, but both paired task-success conditions regressed.",
+    "next_algorithm_change": "stair_height_curriculum"
+  }
+}
+

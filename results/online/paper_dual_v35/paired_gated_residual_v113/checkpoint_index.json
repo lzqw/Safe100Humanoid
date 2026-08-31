@@ -1,0 +1,14 @@
+{
+  "schema_version": "paper_dual_v35.v113.checkpoints.v1",
+  "input": {
+    "path_4080": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt",
+    "sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317"
+  },
+  "rejected_candidate": {
+    "path_4080": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/paired_gated_residual_v113_85556ef_4x64_s201353500/candidate.pt",
+    "checkpoint_sha256": "98cb500993fcc5b1caa36e16c186722c902cbc238adf311aff5e7eeefe38a4d4",
+    "gated_residual_sha256": "7b12e063422b59cded50db0b79e5d9e533efb40fdd3f6ed0b35f87a5c17ab32c",
+    "uploaded": false,
+    "reason": "64-episode filter-off screen was 42/64, below 75%"
+  }
+}

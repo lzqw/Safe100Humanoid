@@ -1,0 +1,280 @@
+{
+  "actor_expansion": {
+    "expanded_actor_width": 415,
+    "inactive_geometry_exact_base_policy": true,
+    "legacy_first_layer_copy_max_abs_error": 0.0,
+    "new_feature_count": 10,
+    "new_first_layer_column_max_abs": 0.0,
+    "pi0_exact_preservation_proof": true,
+    "source_actor_width": 405
+  },
+  "actor_observation_dim": 415,
+  "base_actor_sha256": "c08c387c0939a0774904cd8f3ccc3d459acc5134f26c5dd44ae411a9eb005188",
+  "base_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "batch_size": 4096,
+  "candidate_checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/task_metric_successful_residual_v101_586d58c_4x128/candidate.pt",
+  "candidate_checkpoint_sha256": "40c4f8cda03d11c3f1f65911936e08eebc25981bd5754ac5bd0d504afa6d4b48",
+  "cbf": {
+    "acceleration_or_drift_model": false,
+    "actor_observation_changed": false,
+    "critic_observation_changed": false,
+    "current_CBF0_source_unchanged": true,
+    "mode": "task_metric_velocity_cbf",
+    "parameters": {
+      "alpha": 10.0,
+      "barrier_slope": 0.8,
+      "hip_roll_yaw_weight": 2.0,
+      "lambda_s": 0.0,
+      "lambda_x": 0.0,
+      "other_joint_weight": 1.0,
+      "stance_leg_weight": 2.0,
+      "swing_ankle_pitch_weight": 1.0,
+      "swing_hip_pitch_weight": 1.0,
+      "swing_knee_weight": 1.0,
+      "toe_margin": 0.08,
+      "top_clearance": 0.03
+    },
+    "plant_action_transform": "identity",
+    "runtime_filter": true
+  },
+  "context": "F2",
+  "elapsed_seconds": 68.65275120397564,
+  "epochs_per_round": 3,
+  "final_gate_skipped_for_scale_selection": true,
+  "final_residual_sha256": "e23d95e2a5acf0dd9fcf78e263f617923f5b02940a5eeb99e04629b6ae34b7ce",
+  "geometry_observation": {
+    "deployable": true,
+    "feature_count": 10,
+    "features_per_foot": [
+      "horizontal",
+      "vertical",
+      "barrier",
+      "contact",
+      "valid"
+    ],
+    "future_or_filtered_action_fields": 0,
+    "group": "cbf_geometry",
+    "source": "current bilateral foot FK + contact + mapped next-riser edges",
+    "timing": "persistent approach and swing, including pre-toe-off"
+  },
+  "git_commit": "586d58ccd8674deecad1f28c6cb2ff5d9abd93c0",
+  "initial_residual_sha256": "ff191b585ea78a10480dd92c76f11ac7e6206a44d8c0220011b6751457da0eeb",
+  "learning_rate": 0.001,
+  "max_residual": 0.25,
+  "method_id": "task-metric-successful-filtered-learned-cbf-residual-dagger-v101",
+  "num_envs": 128,
+  "paper_dual_reward": {
+    "candidate": "raw_moderate",
+    "historical_default_preserved": false,
+    "paper_arxiv_id": "2510.14959v6",
+    "paper_demo_commit": "68955c8ba9e929d974b6677635370ee93eecc63a",
+    "reward_parameters": {
+      "correction_space": "raw_action",
+      "intervention_weight": 10.0,
+      "margin_weight": 1.0,
+      "sigma": 0.5
+    },
+    "runtime_filter_during_training": true
+  },
+  "round_summaries": [
+    {
+      "correction_norm_max": 2.6050162315368652,
+      "correction_norm_mean": 0.5236122012138367,
+      "elapsed_seconds": 12.774516275967471,
+      "fall_count": 46,
+      "fit": {
+        "after": {
+          "prediction_norm": 0.18573019340459482,
+          "smooth_l1": 0.017918213790762888,
+          "target_distance": 0.16993778711495006,
+          "transition_count": 3153
+        },
+        "before": {
+          "prediction_norm": 0.0,
+          "smooth_l1": 0.034188442066893136,
+          "target_distance": 0.2957202295556811,
+          "transition_count": 3153
+        },
+        "epochs": 3,
+        "maximum_gradient_norm_pre_clip": 0.47827234864234924,
+        "mean_teacher_loss_during_update": 0.028780543555816013,
+        "mean_trust_loss_during_update": 0.005632005321482818,
+        "optimizer_updates": 3
+      },
+      "initial_state_signature": "00cc6af556dde1617a4efaa23869a509853d331c48acff7ad4b71ea1c8af7844",
+      "intervention_count": 5268,
+      "intervention_fraction": 0.10603651295263783,
+      "replay_teacher_transition_count": 3153,
+      "replay_trust_transition_count": 49681,
+      "residual_state_sha256": "7ba5c046f787a754a715ef1091424a10962fbe22e1cd236b229efcf20cda5df3",
+      "round": 1,
+      "seed": 201353220,
+      "success_count": 82,
+      "teacher_successful_episodes_only": true,
+      "teacher_transition_count": 3153,
+      "transition_count": 49681
+    },
+    {
+      "correction_norm_max": 3.8108372688293457,
+      "correction_norm_mean": 0.5159362554550171,
+      "elapsed_seconds": 13.449041203013621,
+      "fall_count": 44,
+      "fit": {
+        "after": {
+          "prediction_norm": 0.3529138110593376,
+          "smooth_l1": 0.010098916262115324,
+          "target_distance": 0.11402457630583068,
+          "transition_count": 5351
+        },
+        "before": {
+          "prediction_norm": 0.18624307043952065,
+          "smooth_l1": 0.018976752278159165,
+          "target_distance": 0.1773298217568124,
+          "transition_count": 5351
+        },
+        "epochs": 3,
+        "maximum_gradient_norm_pre_clip": 0.4028947651386261,
+        "mean_teacher_loss_during_update": 0.012151848990470171,
+        "mean_trust_loss_during_update": 0.022685936652123928,
+        "optimizer_updates": 6
+      },
+      "initial_state_signature": "0026733644a3f1cac0ebebd7a299812ad8f2e4f4d31de259db35e8bdfe6d9b16",
+      "intervention_count": 3652,
+      "intervention_fraction": 0.07928272149013307,
+      "replay_teacher_transition_count": 5351,
+      "replay_trust_transition_count": 95744,
+      "residual_state_sha256": "c6be949aea04dd38b8e1bd7e1051f981cd89c9e5c9bb9ed2c718d946cfd08376",
+      "round": 2,
+      "seed": 201353230,
+      "success_count": 84,
+      "teacher_successful_episodes_only": true,
+      "teacher_transition_count": 2198,
+      "transition_count": 46063
+    },
+    {
+      "correction_norm_max": 3.800020933151245,
+      "correction_norm_mean": 0.5325987935066223,
+      "elapsed_seconds": 20.816957207978703,
+      "fall_count": 42,
+      "fit": {
+        "after": {
+          "prediction_norm": 0.36498529673654795,
+          "smooth_l1": 0.007961942261947698,
+          "target_distance": 0.0946766741864093,
+          "transition_count": 7392
+        },
+        "before": {
+          "prediction_norm": 0.35324522736784697,
+          "smooth_l1": 0.008709884309149409,
+          "target_distance": 0.1018939410453235,
+          "transition_count": 7392
+        },
+        "epochs": 3,
+        "maximum_gradient_norm_pre_clip": 0.5003253817558289,
+        "mean_teacher_loss_during_update": 0.008428727742284536,
+        "mean_trust_loss_during_update": 0.02184806267420451,
+        "optimizer_updates": 6
+      },
+      "initial_state_signature": "f815652eb8932cfcc4b6ef0bafd2f2ccf9fb87c8746786f10e4e2ac1eaae90ae",
+      "intervention_count": 3385,
+      "intervention_fraction": 0.07434985064136355,
+      "replay_teacher_transition_count": 7392,
+      "replay_trust_transition_count": 141272,
+      "residual_state_sha256": "8a9a41dfa80e275a478aca895a40ebb935576d3261903b3949e4e7281a39016d",
+      "round": 3,
+      "seed": 201353240,
+      "success_count": 86,
+      "teacher_successful_episodes_only": true,
+      "teacher_transition_count": 2041,
+      "transition_count": 45528
+    },
+    {
+      "correction_norm_max": 3.3063971996307373,
+      "correction_norm_mean": 0.5708922147750854,
+      "elapsed_seconds": 12.400780896074139,
+      "fall_count": 52,
+      "fit": {
+        "after": {
+          "prediction_norm": 0.3624082117385612,
+          "smooth_l1": 0.006853342844869494,
+          "target_distance": 0.0866129949836773,
+          "transition_count": 9070
+        },
+        "before": {
+          "prediction_norm": 0.3653427712841097,
+          "smooth_l1": 0.0074389193260419985,
+          "target_distance": 0.09025679381180231,
+          "transition_count": 9070
+        },
+        "epochs": 3,
+        "maximum_gradient_norm_pre_clip": 0.3685084283351898,
+        "mean_teacher_loss_during_update": 0.0072607834202547865,
+        "mean_trust_loss_during_update": 0.01802635110086865,
+        "optimizer_updates": 9
+      },
+      "initial_state_signature": "76749b4d430a43874f3480829216030ef3304114f4818ff2b44bbf7a47057652",
+      "intervention_count": 2917,
+      "intervention_fraction": 0.06981141106643692,
+      "replay_teacher_transition_count": 9070,
+      "replay_trust_transition_count": 183056,
+      "residual_state_sha256": "e23d95e2a5acf0dd9fcf78e263f617923f5b02940a5eeb99e04629b6ae34b7ce",
+      "round": 4,
+      "seed": 201353250,
+      "success_count": 76,
+      "teacher_successful_episodes_only": true,
+      "teacher_transition_count": 1678,
+      "transition_count": 41784
+    }
+  ],
+  "schema_version": 1,
+  "selected": false,
+  "shift": {
+    "actor_observation_fields_added": 0,
+    "baseline_riser_height_m": 0.13,
+    "cbf_geometry_exact": true,
+    "clearance_barrier": "sloped_xz",
+    "clearance_barrier_slope": 0.8,
+    "command_changed": false,
+    "context": "F2",
+    "context_name": "hard_uniform_18_4cm",
+    "controller_changed": false,
+    "filter_alpha": 10.0,
+    "fixed_deployment_environment": {
+      "actor_observation_corruption_disabled": true,
+      "base_com_randomization_absent": true,
+      "curriculum_disabled": true,
+      "encoder_bias_absent": true,
+      "friction_randomization_absent": true,
+      "push_randomization_absent": true,
+      "registered_environment_variant": "fixed_deployment_play",
+      "reset_events_exact": true,
+      "retained_fresh_initial_state_events": [
+        "reset_base",
+        "reset_robot_joints"
+      ]
+    },
+    "friction_changed": false,
+    "num_risers": 9,
+    "plant_action_transform": "identity",
+    "recovery_distance_m": 0.15,
+    "riser_height_m": 0.184,
+    "riser_profile_m": null,
+    "runtime_filter": true,
+    "shift": "fixed_uniform_higher_riser",
+    "stair_riser_patch_slots": 9,
+    "stair_target_patch_slots": 10,
+    "terrain_geometry_changed": true,
+    "top_platform_patch_included": true
+  },
+  "successful_episodes_only": true,
+  "teacher_eta": 1.0,
+  "trainable_parameter_count": 28364,
+  "training_seeds": [
+    201353220,
+    201353230,
+    201353240,
+    201353250
+  ],
+  "trust_weight": 0.05,
+  "untouched_filter_off_gate": null
+}

@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "audit_date": "2026-08-29",
+  "status": "not_ready_for_hardware_execution",
+  "hardware_actions_attempted": false,
+  "completed_inputs": {
+    "v139_checkpoint_frozen": true,
+    "v139_checkpoint_sha256": "323f1e00b58d379b8746c0191a44272f2e1df134139050417c56e733cc484728",
+    "v139_deterministic_onnx_exported": true,
+    "v139_onnx_sha256": "d3f75cbb7699ddcc824d16a34a46b48e03d5345676d544366ba89db414a89d6b",
+    "simulation_safe_ft_protocol_frozen": true,
+    "simulation_main_table_complete": true,
+    "real_filter_off_traversal_forbidden": true
+  },
+  "repository_scope": {
+    "simulation_only": true,
+    "offline_observation_action_cbf_reference_present": true,
+    "unitree_sdk2_controller_present": false,
+    "real_robot_network_transport_present": false,
+    "real_runtime_cbf_present": false,
+    "real_online_ppo_collector_present": false,
+    "real_online_ppo_updater_present": false
+  },
+  "offline_reference": {
+    "module": "src/tasks/stairs_cbf/real_robot_reference.py",
+    "test": "experiments/tests/test_real_robot_reference.py",
+    "test_result": "1 passed",
+    "covered_contract": "term-major 405-D history, 12-to-29 target mapping, and inherited slope-0.8 x-z CBF projection",
+    "limitation": "numeric reference only; it is not connected to Unitree state, kinematics, transport, watchdog, or motor commands"
+  },
+  "reference_stack_found_outside_this_repository": {
+    "path": "/home/lzqw/PycharmProject/safe100/HUMANOID/third_party/unitree_rl_mjlab/deploy/robots/g1",
+    "usable_without_changes": false,
+    "reason": "Its stock velocity policy uses a one-frame 29-action interface and has no stair CBF; v139 uses a term-major five-history 405-D input and 12 lower-body actions."
+  },
+  "network_observation": {
+    "host_interface": "enp3s0",
+    "host_ipv4_at_audit": "192.168.5.8/24",
+    "upstream_example_robot_subnet": "192.168.123.222/24",
+    "direct_robot_subnet_observed": false,
+    "robot_identity_or_reachability_verified": false
+  },
+  "required_gates": [
+    {
+      "id": "operator_frozen_manifest",
+      "status": "missing",
+      "requires": "robot identity, firmware/SDK versions, staircase geometry, baseline/evaluation counts, operator and safety-reviewer sign-off"
+    },
+    {
+      "id": "observation_bridge_405",
+      "status": "offline_reference_complete_hardware_integration_missing",
+      "requires": "exact term order, oldest-to-newest five-sample buffers, training-compatible IMU/joint/command/phase semantics, and first-frame backfill"
+    },
+    {
+      "id": "action_bridge_12_to_29",
+      "status": "offline_reference_complete_operator_mapping_missing",
+      "requires": "verified Unitree joint-index mapping, lower-body scale/offset parity, approved fixed upper-body posture, and hardware joint/velocity/torque limits"
+    },
+    {
+      "id": "real_stair_localization_and_kinematics",
+      "status": "missing",
+      "requires": "robot pose relative to fixed measured risers, foot positions, foot Jacobians, synchronized contact and joint state"
+    },
+    {
+      "id": "runtime_cbf_port",
+      "status": "offline_numeric_reference_complete_real_time_port_missing",
+      "requires": "hardware-side parity for nominal-to-safe projection at every 20 ms policy step, plus fail-closed behavior when required state is stale or invalid"
+    },
+    {
+      "id": "independent_hardware_safety",
+      "status": "missing",
+      "requires": "operator takeover, verified emergency stop, watchdog, support rig/fall protection, workspace exclusion, and approved abort thresholds"
+    },
+    {
+      "id": "off_robot_closed_loop_test",
+      "status": "missing",
+      "requires": "the exact deployment bridge and CBF must pass suspended and unitree_mujoco/hardware-in-the-loop tests before stair contact"
+    },
+    {
+      "id": "protected_real_online_update",
+      "status": "missing",
+      "requires": "raw nominal action storage, executed safe action logging, reward/termination reconstruction, fixed two-round PPO update, and no hardware-outcome checkpoint selection"
+    }
+  ],
+  "hard_stop": "Do not launch g1_ctrl or send motor commands from this repository while any required gate is missing.",
+  "next_authoritative_input": "A robot operator must complete and sign real_robot_run_manifest.template.json and provide access to the exact controller/SDK checkout and robot test setup."
+}

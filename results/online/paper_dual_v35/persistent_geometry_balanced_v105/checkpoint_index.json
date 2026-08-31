@@ -1,0 +1,24 @@
+{
+  "schema_version": "paper_dual_v35.v105.checkpoints.v1",
+  "source_commit": "8e3c0a23fb6a6033115e64a86f42d76e954daf4b",
+  "base": {
+    "role": "v79_historical_best",
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt",
+    "sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317"
+  },
+  "best_aligned_v105": {
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/persistent_geometry_balanced_v105_8e3c0a2_s201353360/round_02.pt",
+    "sha256": "e1debe45edd0cc8db6f6ff1278972b17ddb66ee16474fabae84cba85d18257b6",
+    "actor_sha256": "1c74f980f54737cd7a138ed88ecc4f8320a3c1e333612b5c84c7d816a22cf522",
+    "aligned_filter_off_success_rate": 0.711340206185567,
+    "accepted": false,
+    "uploaded_to_git": false
+  },
+  "final_unaligned_v105": {
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/persistent_geometry_balanced_v105_8e3c0a2_s201353360/round_06.pt",
+    "sha256": "fc5365a8913ffa4a24e0f558c8172f703f410f4be3add26fb348ffc34112de48",
+    "actor_sha256": "eeaf2530bf1f63e8e137bd9a4557ff023ad7c049538f750bd178b166b865f8a5",
+    "aligned": false,
+    "uploaded_to_git": false
+  }
+}

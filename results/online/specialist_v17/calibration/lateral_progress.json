@@ -1,0 +1,53 @@
+{
+  "attempts": [
+    {
+      "balance_telemetry": {
+        "mean_contact_mismatch_fraction": 0.2691406836092938,
+        "mean_maximum_angular_velocity_signal": 1.0,
+        "mean_maximum_pitch_signal": 0.7216599796665832,
+        "mean_maximum_roll_signal": 0.5055145327351056,
+        "mean_slip_signal": 0.08988826304266695
+      },
+      "base_policy_only": true,
+      "candidate_seed": 2115,
+      "evaluation_seed_start": 1831000,
+      "evaluation_seeds": [
+        1831000,
+        1831001,
+        1831002,
+        1831003
+      ],
+      "failure_type_counts": {
+        "lateral_heading_drift": 92,
+        "non_lateral_balance_or_phase": 6,
+        "non_lateral_high_cbf_demand": 10
+      },
+      "failure_type_fractions": {
+        "lateral_heading_drift": 0.8518518518518519,
+        "non_lateral_balance_or_phase": 0.05555555555555555,
+        "non_lateral_high_cbf_demand": 0.09259259259259259
+      },
+      "fall_count": 108,
+      "fall_rate": 0.2109375,
+      "intervention_per_riser": 1.3494679922005162,
+      "mean_reached_riser": 10.583984375,
+      "num_episodes": 512,
+      "parameters_sha256": "e79dad659a30c99837c0c9ff11da2186a01b9dcbfd3bc1ee118e8f77b173bf85",
+      "qualifies": true,
+      "second_failure_fraction": 0.09259259259259259,
+      "success_rate": 0.7890625,
+      "target_failure_fraction": 0.8518518518518519,
+      "target_failure_type": "lateral_heading_drift"
+    }
+  ],
+  "base_policy_checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/retention_v13/arm_b_state_retention/accepted_final.pt",
+  "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "candidate_seeds": [
+    2115
+  ],
+  "exploratory": false,
+  "mode": "lateral",
+  "protocol": "Failure-Mode-Conditioned Brief PPO v17 context calibration",
+  "selection_rule": "first base-only context with 70--85% success, at least 100 falls, target failure fraction >= 60%, and second fraction <= 30%",
+  "target_failure_type": "lateral_heading_drift"
+}

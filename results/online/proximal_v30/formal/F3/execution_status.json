@@ -1,0 +1,25 @@
+{
+  "protocol_id": "safe100-cbf-teacher-overnight-v30",
+  "context": "F3",
+  "complete": false,
+  "training": {
+    "A0": {
+      "status": "failed_before_rollout",
+      "rounds_completed": 0,
+      "error_type": "ValueError",
+      "error": "could not broadcast input array from shape (12,3) into shape (10,3)"
+    },
+    "A2": {
+      "status": "failed_before_rollout",
+      "rounds_completed": 0,
+      "error_type": "ValueError",
+      "error": "could not broadcast input array from shape (12,3) into shape (10,3)"
+    }
+  },
+  "diagnosis": "The frozen F3 terrain requests 11 stair steps, producing 12 stair-target patches including the top platform, while the inherited patch allocation has 10 slots.",
+  "audit": {
+    "status": "not_run",
+    "reason": "Neither formal training run produced a checkpoint."
+  },
+  "protocol_integrity_action": "Attempted each predeclared arm once, then stopped without changing the frozen source or retrying."
+}

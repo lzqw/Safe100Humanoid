@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "protocol_id": "safe100-deployment-unit-local-matched-success-v21",
+  "event_id": "v21-valid-revision0-base-calibration-range-failure-001",
+  "stage": "base_policy_only_calibration",
+  "started_at_utc": "2026-08-08T13:48:05Z",
+  "stopped_at_utc": "2026-08-08T14:07:44Z",
+  "context_id": "L_dev",
+  "prospective_protocol": {
+    "file": "results/online/specialist_v21/protocol_precalibration_valid.json",
+    "git_commit": "6dfdd45b5ca734c4cd0ee0886a189e5b27d4655d",
+    "sha256": "dc181bb604b8cbb8bc19f6abd95f7063302ff98d7ed495f99e1624e208ad360b"
+  },
+  "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "failure_class": "prospectively_frozen_context_range_produced_no_qualifying_candidate",
+  "error_type": "RuntimeError",
+  "error_message": "no declared v21 L_dev candidate passed every gate",
+  "selection_rule_completed_without_manual_intervention": true,
+  "candidate_seeds_evaluated_in_frozen_order": [
+    9108,
+    9109,
+    9110,
+    9111,
+    9112,
+    9113,
+    9114,
+    9115,
+    9116,
+    9117,
+    9118,
+    9119
+  ],
+  "candidate_count": 12,
+  "episodes_per_candidate": 512,
+  "total_base_policy_episodes": 6144,
+  "gate_counts": {
+    "success_rate_between_0p70_and_0p85": 0,
+    "fall_count_at_least_100": 0,
+    "lateral_failure_fraction_at_least_0p80": 1,
+    "second_failure_fraction_at_most_0p30": 5,
+    "all_gates": 0
+  },
+  "observed_ranges": {
+    "success_rate": [
+      0.8671875,
+      0.9296875
+    ],
+    "fall_count": [
+      36,
+      68
+    ],
+    "lateral_failure_fraction": [
+      0.5277777777777778,
+      0.8
+    ]
+  },
+  "endpoint_observation": {
+    "candidate_seed": 9119,
+    "candidate_severity": 1.0,
+    "success_rate": 0.9296875,
+    "fall_count": 36,
+    "lateral_failure_fraction": 0.5833333333333334,
+    "second_failure_fraction": 0.4166666666666667,
+    "qualifies": false
+  },
+  "base_policy_calibration_outcomes_observed": true,
+  "adaptation_process_started": false,
+  "adapted_policy_outcomes_observed": false,
+  "formal_context_outcomes_observed": false,
+  "algorithm_outcome_rerun": false,
+  "contexts_not_attempted_after_fail_fast_stop": [
+    "C_dev",
+    "L1",
+    "L2",
+    "L3",
+    "L4",
+    "L5",
+    "C1",
+    "C2",
+    "C3",
+    "C4",
+    "C5"
+  ],
+  "committed_evidence": {
+    "file": "results/online/specialist_v21/preflight/valid_revision0_L_dev_calibration_progress.json",
+    "sha256": "beb477c6ae13097b8a16923288f9ced0ef3ab0331cc15715cd1a51551d99f4b1"
+  },
+  "external_evidence": {
+    "artifact_root": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_valid/calibration/L_dev",
+    "file_count": 121,
+    "total_bytes": 52001419,
+    "candidate_context_count": 12,
+    "evaluation_json_count": 48,
+    "evaluation_csv_count": 48,
+    "manifest_sha256": "152a796b99f8171f2ace33cf51b2b2ca771ec9e8d2edfb267eb61e7bf418f342",
+    "manifest_definition": "SHA-256 of the sorted sha256sum lines after removing the artifact-root prefix",
+    "queue_log": {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v21_valid/queue_calibration.log",
+      "sha256": "29c70cc56229cf1bae59226d1e314468edc233fd2629f9173f129dd09c89a133"
+    },
+    "context_log": {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v21_valid/calibration_L_dev.log",
+      "sha256": "8062c709fcd498994687408fd99032006831b64e47e8b94e7482753dc254bcd9"
+    }
+  },
+  "interpretation": "The frozen mixed-lateral range was too easy and its nominal severity direction was not monotone in realized base-policy difficulty; increasing command smoothing and weakening centering coincided with higher success and lower failure purity.",
+  "disposition": "stopped_before_any_adaptation_and_superseded_after_base_only_range_failure",
+  "remediation_constraints": {
+    "use_only_base_policy_evidence_to_revise_context_ranges": true,
+    "do_not_use_any_adaptation_outcome_for_context_design": true,
+    "use_new_candidate_and_evaluation_randomness_for_replacement_calibration": true,
+    "freeze_and_commit_replacement_protocol_before_replacement_calibration": true,
+    "retain_this_failure_as_part_of_the_provenance_chain": true
+  }
+}

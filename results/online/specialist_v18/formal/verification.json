@@ -1,0 +1,165 @@
+{
+  "failed_specialists": [
+    "cbf"
+  ],
+  "independent_claims": {
+    "balance": {
+      "claim_passed": true,
+      "d0_success_mean_lcb95_ucb95": [
+        0.00390625,
+        -0.01953125,
+        0.024739583333333332
+      ],
+      "gate": {
+        "criteria": {
+          "at_least_two_of_three_seed_gains_positive": true,
+          "d0_success_drop_at_most_5pp": true,
+          "diagonal_fall_increase_at_most_3pp": true,
+          "mean_diagonal_success_gain_positive": true
+        },
+        "passed": true,
+        "positive_adaptation_seed_count": 3,
+        "thresholds": {
+          "maximum_diagonal_fall_increase": 0.03,
+          "mean_diagonal_success_delta_strictly_above": 0.0,
+          "minimum_d0_success_delta": -0.05,
+          "minimum_positive_adaptation_seed_count": 2
+        }
+      },
+      "per_adaptation_seed_success_delta": [
+        0.0078125,
+        0.009765625,
+        0.015625
+      ],
+      "target_fall_mean_lcb95_ucb95": [
+        -0.011067708333333334,
+        -0.027994791666666668,
+        0.005859375
+      ],
+      "target_success_mean_lcb95_ucb95": [
+        0.011067708333333334,
+        -0.005208333333333333,
+        0.027994791666666668
+      ]
+    },
+    "cbf": {
+      "claim_passed": false,
+      "d0_success_mean_lcb95_ucb95": [
+        -0.0026041666666666665,
+        -0.022135416666666668,
+        0.014322916666666666
+      ],
+      "gate": {
+        "criteria": {
+          "at_least_two_of_three_seed_gains_positive": true,
+          "d0_success_drop_at_most_5pp": true,
+          "diagonal_fall_increase_at_most_3pp": true,
+          "mean_diagonal_success_gain_positive": false
+        },
+        "passed": false,
+        "positive_adaptation_seed_count": 2,
+        "thresholds": {
+          "maximum_diagonal_fall_increase": 0.03,
+          "mean_diagonal_success_delta_strictly_above": 0.0,
+          "minimum_d0_success_delta": -0.05,
+          "minimum_positive_adaptation_seed_count": 2
+        }
+      },
+      "per_adaptation_seed_success_delta": [
+        0.017578125,
+        -0.0625,
+        0.025390625
+      ],
+      "target_fall_mean_lcb95_ucb95": [
+        0.006510416666666667,
+        -0.032552083333333336,
+        0.05859375
+      ],
+      "target_success_mean_lcb95_ucb95": [
+        -0.006510416666666667,
+        -0.061197916666666664,
+        0.032552083333333336
+      ]
+    },
+    "lateral": {
+      "claim_passed": true,
+      "d0_success_mean_lcb95_ucb95": [
+        0.010416666666666666,
+        -0.013020833333333334,
+        0.033854166666666664
+      ],
+      "gate": {
+        "criteria": {
+          "at_least_two_of_three_seed_gains_positive": true,
+          "d0_success_drop_at_most_5pp": true,
+          "diagonal_fall_increase_at_most_3pp": true,
+          "mean_diagonal_success_gain_positive": true
+        },
+        "passed": true,
+        "positive_adaptation_seed_count": 3,
+        "thresholds": {
+          "maximum_diagonal_fall_increase": 0.03,
+          "mean_diagonal_success_delta_strictly_above": 0.0,
+          "minimum_d0_success_delta": -0.05,
+          "minimum_positive_adaptation_seed_count": 2
+        }
+      },
+      "per_adaptation_seed_success_delta": [
+        0.00390625,
+        0.041015625,
+        0.046875
+      ],
+      "target_fall_mean_lcb95_ucb95": [
+        -0.030598958333333332,
+        -0.061197916666666664,
+        0.00196940104166643
+      ],
+      "target_success_mean_lcb95_ucb95": [
+        0.030598958333333332,
+        -0.001953125,
+        0.061848958333333336
+      ]
+    }
+  },
+  "no_joint_claim": true,
+  "paired_csv": {
+    "group_count": 18,
+    "path": "results/online/specialist_v18/formal/paired_episode_metrics.csv",
+    "row_count": 6912,
+    "sha256": "64ad56aab3acca6b73302d5a6e3a69fa4df23dbc134e49d52aba6400269a00db"
+  },
+  "passed_specialists": [
+    "lateral",
+    "balance"
+  ],
+  "summary": {
+    "path": "results/online/specialist_v18/formal/diagonal_audit_summary.json",
+    "sha256": "e4c43642179bc8b3a465fb7d00c46ba843176bd9b69c1a2c3ff7f4d9d59bcb78"
+  },
+  "top_level": {
+    "conditions": {
+      "adaptation_seeds": true,
+      "all_three_not_required": true,
+      "audit_seed": true,
+      "bootstrap_seed": true,
+      "ci_not_a_gate": true,
+      "clean_formal_worktree": true,
+      "formal_protocol": true,
+      "joint_claim_absent": true,
+      "macro_absent": true,
+      "off_diagonal_absent": true,
+      "paired_csv_declared_rows": true,
+      "paired_csv_hash": true,
+      "protocol_commit": true,
+      "protocol_hash": true,
+      "protocol_id": true,
+      "training_manifest_hash": true
+    },
+    "protocol_path": "results/online/specialist_v18/protocol.json",
+    "protocol_sha256": "48d9ad0ab3232927601b5a6c69c3f362bbc1184c7bdc59e7d199e6084eb66d2e",
+    "training_manifest_path": "results/online/specialist_v17/formal/training_manifest.json",
+    "training_manifest_sha256": "6d8149d9a47ec786405feab2503fe5e2b21e64df3d3e943911c5f92e0044494d"
+  },
+  "verified": true,
+  "verifier": "independent paired-CSV reconstruction v1"
+}

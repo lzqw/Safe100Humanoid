@@ -1,0 +1,673 @@
+{
+  "active_trust_transition_count": 69179,
+  "actor_expansion": {
+    "expanded_actor_width": 415,
+    "inactive_geometry_exact_base_policy": true,
+    "legacy_first_layer_copy_max_abs_error": 0.0,
+    "new_feature_count": 10,
+    "new_first_layer_column_max_abs": 0.0,
+    "pi0_exact_preservation_proof": true,
+    "source_actor_width": 405
+  },
+  "actor_learning_rate": 0.1,
+  "actor_observation_dim": 415,
+  "adapter_optimizer": "sgd",
+  "base_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "base_expanded_checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/deployment_counterfactual_v110_bdd57f0_4x32_s201353400/base_expanded.pt",
+  "base_expanded_checkpoint_sha256": "74f834b1352a12032c84af113381028da7ca3224e7cfff021eee845c3e9069c6",
+  "candidate_actor_sha256": "aaeba19083c43f86fd53de4d83d1d2064e0bc843bdc96a0badc517ae40501eda",
+  "candidate_checkpoint": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/deployment_counterfactual_v110_bdd57f0_4x32_s201353400/candidate.pt",
+  "candidate_checkpoint_sha256": "473724b36cc416ab0ae5f011d4daee5645aaef9b1579369843476cab050e0ca6",
+  "cbf": {
+    "acceleration_or_drift_model": false,
+    "actor_observation_changed": false,
+    "critic_observation_changed": false,
+    "current_CBF0_source_unchanged": true,
+    "mode": "current_velocity_cbf",
+    "parameters": {
+      "alpha": 10.0,
+      "barrier_slope": 0.8,
+      "lambda_s": 0.0,
+      "lambda_x": 0.0,
+      "metric": "euclidean",
+      "toe_margin": 0.08,
+      "top_clearance": 0.025
+    },
+    "plant_action_transform": "identity",
+    "runtime_filter": true
+  },
+  "context": "F2",
+  "elapsed_seconds": 129.59975095500704,
+  "geometry_interface": "persistent-10",
+  "geometry_observation": {
+    "deployable": true,
+    "feature_count": 10,
+    "features_per_foot": [
+      "horizontal",
+      "vertical",
+      "barrier",
+      "contact",
+      "valid"
+    ],
+    "future_or_filtered_action_fields": 0,
+    "group": "cbf_geometry",
+    "source": "current bilateral foot FK + contact + mapped next-riser edges",
+    "timing": "persistent approach and swing, including pre-toe-off"
+  },
+  "git_commit": "bdd57f0669f7406340c346422c09351f393e8258",
+  "initial_actor_sha256": "c08c387c0939a0774904cd8f3ccc3d459acc5134f26c5dd44ae411a9eb005188",
+  "max_reference_kl": 5e-05,
+  "method_id": "deployment-state-counterfactual-rescue-trajectory-adapter-v110",
+  "moving_kl_beta": 0.1,
+  "num_envs": 32,
+  "offline_gate_passed": true,
+  "optimization_seed": 201353491,
+  "paired_trace": {
+    "post_horizon": 50,
+    "pre_decay": 0.9,
+    "pre_horizon": 20,
+    "seed_summaries": [
+      {
+        "episode_count": 6,
+        "episode_weight_sum_max": 1.0000001192092896,
+        "episode_weight_sum_min": 0.9999999403953552,
+        "episodes": [
+          {
+            "correction_norm_max": 1.7060256004333496,
+            "correction_norm_mean": 0.1618054211139679,
+            "environment_id": 6,
+            "episode_weight_sum": 1.0000001192092896,
+            "first_intervention_step": 57,
+            "post_transition_count": 46,
+            "pre_transition_count": 20,
+            "shared_length": 319,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 66
+          },
+          {
+            "correction_norm_max": 1.3099770545959473,
+            "correction_norm_mean": 0.09403178840875626,
+            "environment_id": 8,
+            "episode_weight_sum": 0.9999999403953552,
+            "first_intervention_step": 57,
+            "post_transition_count": 45,
+            "pre_transition_count": 20,
+            "shared_length": 441,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 65
+          },
+          {
+            "correction_norm_max": 1.023263931274414,
+            "correction_norm_mean": 0.12593111395835876,
+            "environment_id": 24,
+            "episode_weight_sum": 1.0000001192092896,
+            "first_intervention_step": 57,
+            "post_transition_count": 45,
+            "pre_transition_count": 20,
+            "shared_length": 482,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 65
+          },
+          {
+            "correction_norm_max": 1.3255352973937988,
+            "correction_norm_mean": 0.15656831860542297,
+            "environment_id": 26,
+            "episode_weight_sum": 1.0000001192092896,
+            "first_intervention_step": 57,
+            "post_transition_count": 40,
+            "pre_transition_count": 20,
+            "shared_length": 439,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 60
+          },
+          {
+            "correction_norm_max": 0.6311534643173218,
+            "correction_norm_mean": 0.09893915802240372,
+            "environment_id": 27,
+            "episode_weight_sum": 1.0,
+            "first_intervention_step": 57,
+            "post_transition_count": 44,
+            "pre_transition_count": 20,
+            "shared_length": 245,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 64
+          },
+          {
+            "correction_norm_max": 1.3332221508026123,
+            "correction_norm_mean": 0.1207769513130188,
+            "environment_id": 28,
+            "episode_weight_sum": 1.0,
+            "first_intervention_step": 57,
+            "post_transition_count": 50,
+            "pre_transition_count": 20,
+            "shared_length": 379,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 70
+          }
+        ],
+        "post_transition_count": 270,
+        "pre_transition_count": 120,
+        "seed": 201353400,
+        "target_mode": "deployment-counterfactual",
+        "teacher_transition_count": 390
+      },
+      {
+        "episode_count": 8,
+        "episode_weight_sum_max": 1.0000001192092896,
+        "episode_weight_sum_min": 0.9999998211860657,
+        "episodes": [
+          {
+            "correction_norm_max": 0.6271796822547913,
+            "correction_norm_mean": 0.10760460048913956,
+            "environment_id": 8,
+            "episode_weight_sum": 1.0,
+            "first_intervention_step": 57,
+            "post_transition_count": 46,
+            "pre_transition_count": 20,
+            "shared_length": 401,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 66
+          },
+          {
+            "correction_norm_max": 0.8765909671783447,
+            "correction_norm_mean": 0.09260395914316177,
+            "environment_id": 20,
+            "episode_weight_sum": 0.9999999403953552,
+            "first_intervention_step": 57,
+            "post_transition_count": 46,
+            "pre_transition_count": 20,
+            "shared_length": 412,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 66
+          },
+          {
+            "correction_norm_max": 0.6477529406547546,
+            "correction_norm_mean": 0.10295773297548294,
+            "environment_id": 22,
+            "episode_weight_sum": 1.0000001192092896,
+            "first_intervention_step": 57,
+            "post_transition_count": 47,
+            "pre_transition_count": 20,
+            "shared_length": 146,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 67
+          },
+          {
+            "correction_norm_max": 0.45691511034965515,
+            "correction_norm_mean": 0.08294244110584259,
+            "environment_id": 24,
+            "episode_weight_sum": 1.0000001192092896,
+            "first_intervention_step": 57,
+            "post_transition_count": 45,
+            "pre_transition_count": 20,
+            "shared_length": 415,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 65
+          },
+          {
+            "correction_norm_max": 1.453869342803955,
+            "correction_norm_mean": 0.11187011003494263,
+            "environment_id": 25,
+            "episode_weight_sum": 1.0,
+            "first_intervention_step": 57,
+            "post_transition_count": 48,
+            "pre_transition_count": 20,
+            "shared_length": 733,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 68
+          },
+          {
+            "correction_norm_max": 1.0667742490768433,
+            "correction_norm_mean": 0.12868580222129822,
+            "environment_id": 26,
+            "episode_weight_sum": 0.9999999403953552,
+            "first_intervention_step": 57,
+            "post_transition_count": 41,
+            "pre_transition_count": 20,
+            "shared_length": 409,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 61
+          },
+          {
+            "correction_norm_max": 0.9752696752548218,
+            "correction_norm_mean": 0.11293357610702515,
+            "environment_id": 27,
+            "episode_weight_sum": 1.0,
+            "first_intervention_step": 57,
+            "post_transition_count": 49,
+            "pre_transition_count": 20,
+            "shared_length": 391,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 69
+          },
+          {
+            "correction_norm_max": 0.46871218085289,
+            "correction_norm_mean": 0.06612971425056458,
+            "environment_id": 30,
+            "episode_weight_sum": 0.9999998211860657,
+            "first_intervention_step": 57,
+            "post_transition_count": 49,
+            "pre_transition_count": 20,
+            "shared_length": 352,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 69
+          }
+        ],
+        "post_transition_count": 371,
+        "pre_transition_count": 160,
+        "seed": 201353410,
+        "target_mode": "deployment-counterfactual",
+        "teacher_transition_count": 531
+      },
+      {
+        "episode_count": 6,
+        "episode_weight_sum_max": 1.0000001192092896,
+        "episode_weight_sum_min": 0.9999998807907104,
+        "episodes": [
+          {
+            "correction_norm_max": 1.5972110033035278,
+            "correction_norm_mean": 0.15482266247272491,
+            "environment_id": 10,
+            "episode_weight_sum": 0.9999999403953552,
+            "first_intervention_step": 57,
+            "post_transition_count": 45,
+            "pre_transition_count": 20,
+            "shared_length": 290,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 65
+          },
+          {
+            "correction_norm_max": 1.634844422340393,
+            "correction_norm_mean": 0.15390326082706451,
+            "environment_id": 12,
+            "episode_weight_sum": 1.0000001192092896,
+            "first_intervention_step": 57,
+            "post_transition_count": 49,
+            "pre_transition_count": 20,
+            "shared_length": 412,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 69
+          },
+          {
+            "correction_norm_max": 1.2810612916946411,
+            "correction_norm_mean": 0.09602878242731094,
+            "environment_id": 22,
+            "episode_weight_sum": 1.0000001192092896,
+            "first_intervention_step": 57,
+            "post_transition_count": 45,
+            "pre_transition_count": 20,
+            "shared_length": 640,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 65
+          },
+          {
+            "correction_norm_max": 1.3542554378509521,
+            "correction_norm_mean": 0.14133265614509583,
+            "environment_id": 23,
+            "episode_weight_sum": 0.9999998807907104,
+            "first_intervention_step": 57,
+            "post_transition_count": 49,
+            "pre_transition_count": 20,
+            "shared_length": 401,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 69
+          },
+          {
+            "correction_norm_max": 1.6299875974655151,
+            "correction_norm_mean": 0.1639678180217743,
+            "environment_id": 26,
+            "episode_weight_sum": 1.0,
+            "first_intervention_step": 57,
+            "post_transition_count": 45,
+            "pre_transition_count": 20,
+            "shared_length": 417,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 65
+          },
+          {
+            "correction_norm_max": 0.873524010181427,
+            "correction_norm_mean": 0.08111417293548584,
+            "environment_id": 27,
+            "episode_weight_sum": 1.0000001192092896,
+            "first_intervention_step": 57,
+            "post_transition_count": 46,
+            "pre_transition_count": 20,
+            "shared_length": 445,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 66
+          }
+        ],
+        "post_transition_count": 279,
+        "pre_transition_count": 120,
+        "seed": 201353420,
+        "target_mode": "deployment-counterfactual",
+        "teacher_transition_count": 399
+      },
+      {
+        "episode_count": 10,
+        "episode_weight_sum_max": 1.0000001192092896,
+        "episode_weight_sum_min": 0.9999998807907104,
+        "episodes": [
+          {
+            "correction_norm_max": 1.0404458045959473,
+            "correction_norm_mean": 0.11137362569570541,
+            "environment_id": 1,
+            "episode_weight_sum": 0.9999999403953552,
+            "first_intervention_step": 57,
+            "post_transition_count": 45,
+            "pre_transition_count": 20,
+            "shared_length": 472,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 65
+          },
+          {
+            "correction_norm_max": 1.6212334632873535,
+            "correction_norm_mean": 0.16807828843593597,
+            "environment_id": 6,
+            "episode_weight_sum": 1.0,
+            "first_intervention_step": 57,
+            "post_transition_count": 46,
+            "pre_transition_count": 20,
+            "shared_length": 477,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 66
+          },
+          {
+            "correction_norm_max": 0.6507293581962585,
+            "correction_norm_mean": 0.08628986775875092,
+            "environment_id": 8,
+            "episode_weight_sum": 0.9999998807907104,
+            "first_intervention_step": 57,
+            "post_transition_count": 47,
+            "pre_transition_count": 20,
+            "shared_length": 415,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 67
+          },
+          {
+            "correction_norm_max": 1.2929760217666626,
+            "correction_norm_mean": 0.1371288299560547,
+            "environment_id": 10,
+            "episode_weight_sum": 1.0,
+            "first_intervention_step": 57,
+            "post_transition_count": 44,
+            "pre_transition_count": 20,
+            "shared_length": 413,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 64
+          },
+          {
+            "correction_norm_max": 1.3395591974258423,
+            "correction_norm_mean": 0.12037476152181625,
+            "environment_id": 12,
+            "episode_weight_sum": 1.0,
+            "first_intervention_step": 57,
+            "post_transition_count": 49,
+            "pre_transition_count": 20,
+            "shared_length": 313,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 69
+          },
+          {
+            "correction_norm_max": 0.8112792372703552,
+            "correction_norm_mean": 0.1085723489522934,
+            "environment_id": 14,
+            "episode_weight_sum": 0.9999999403953552,
+            "first_intervention_step": 57,
+            "post_transition_count": 45,
+            "pre_transition_count": 20,
+            "shared_length": 369,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 65
+          },
+          {
+            "correction_norm_max": 0.6757581233978271,
+            "correction_norm_mean": 0.10898619890213013,
+            "environment_id": 15,
+            "episode_weight_sum": 0.9999999403953552,
+            "first_intervention_step": 57,
+            "post_transition_count": 48,
+            "pre_transition_count": 20,
+            "shared_length": 349,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 68
+          },
+          {
+            "correction_norm_max": 1.3603839874267578,
+            "correction_norm_mean": 0.11461982876062393,
+            "environment_id": 16,
+            "episode_weight_sum": 1.0000001192092896,
+            "first_intervention_step": 57,
+            "post_transition_count": 48,
+            "pre_transition_count": 20,
+            "shared_length": 414,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 68
+          },
+          {
+            "correction_norm_max": 1.3022851943969727,
+            "correction_norm_mean": 0.14028526842594147,
+            "environment_id": 17,
+            "episode_weight_sum": 1.0,
+            "first_intervention_step": 57,
+            "post_transition_count": 44,
+            "pre_transition_count": 20,
+            "shared_length": 344,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 64
+          },
+          {
+            "correction_norm_max": 1.3145501613616943,
+            "correction_norm_mean": 0.13245142996311188,
+            "environment_id": 30,
+            "episode_weight_sum": 0.9999999403953552,
+            "first_intervention_step": 57,
+            "post_transition_count": 46,
+            "pre_transition_count": 20,
+            "shared_length": 438,
+            "target_mode": "deployment-counterfactual",
+            "teacher_transition_count": 66
+          }
+        ],
+        "post_transition_count": 462,
+        "pre_transition_count": 200,
+        "seed": 201353430,
+        "target_mode": "deployment-counterfactual",
+        "teacher_transition_count": 662
+      }
+    ]
+  },
+  "paper_dual_reward": {
+    "candidate": "raw_moderate",
+    "historical_default_preserved": false,
+    "paper_arxiv_id": "2510.14959v6",
+    "paper_demo_commit": "68955c8ba9e929d974b6677635370ee93eecc63a",
+    "reward_parameters": {
+      "correction_space": "raw_action",
+      "intervention_weight": 10.0,
+      "margin_weight": 1.0,
+      "sigma": 0.5
+    },
+    "runtime_filter_during_training": true
+  },
+  "rescued_episode_count": 30,
+  "rollout_summaries": [
+    {
+      "fall_count": 10,
+      "initial_state_signature": "708451af4cf9afc1c55317725dd6fadb74b52349d628a70e220c35ad54732240",
+      "runtime_filter": false,
+      "seed": 201353400,
+      "success_count": 22,
+      "transition_count": 13615
+    },
+    {
+      "fall_count": 10,
+      "initial_state_signature": "708451af4cf9afc1c55317725dd6fadb74b52349d628a70e220c35ad54732240",
+      "rescued_episode_count": 6,
+      "runtime_filter": true,
+      "seed": 201353400,
+      "success_count": 22,
+      "teacher_transition_count": 390,
+      "transition_count": 11998
+    },
+    {
+      "fall_count": 10,
+      "initial_state_signature": "69f237ae5dc35419abb4bd7aaa5c9c566880f5d6d23b6149a91cf0afcc57b3fb",
+      "runtime_filter": false,
+      "seed": 201353410,
+      "success_count": 22,
+      "transition_count": 14220
+    },
+    {
+      "fall_count": 6,
+      "initial_state_signature": "69f237ae5dc35419abb4bd7aaa5c9c566880f5d6d23b6149a91cf0afcc57b3fb",
+      "rescued_episode_count": 8,
+      "runtime_filter": true,
+      "seed": 201353410,
+      "success_count": 26,
+      "teacher_transition_count": 531,
+      "transition_count": 13420
+    },
+    {
+      "fall_count": 12,
+      "initial_state_signature": "df1b06802984907c55bfebb9879cb92d126433cf829dea66ee9a8181f6493e03",
+      "runtime_filter": false,
+      "seed": 201353420,
+      "success_count": 20,
+      "transition_count": 13310
+    },
+    {
+      "fall_count": 11,
+      "initial_state_signature": "df1b06802984907c55bfebb9879cb92d126433cf829dea66ee9a8181f6493e03",
+      "rescued_episode_count": 6,
+      "runtime_filter": true,
+      "seed": 201353420,
+      "success_count": 21,
+      "teacher_transition_count": 399,
+      "transition_count": 12658
+    },
+    {
+      "fall_count": 17,
+      "initial_state_signature": "85c957c59454b7f77f6c6c293dbb5ca024b537186f248b8cdc08a52617d1665c",
+      "runtime_filter": false,
+      "seed": 201353430,
+      "success_count": 15,
+      "transition_count": 13088
+    },
+    {
+      "fall_count": 11,
+      "initial_state_signature": "85c957c59454b7f77f6c6c293dbb5ca024b537186f248b8cdc08a52617d1665c",
+      "rescued_episode_count": 10,
+      "runtime_filter": true,
+      "seed": 201353430,
+      "success_count": 21,
+      "teacher_transition_count": 662,
+      "transition_count": 11747
+    }
+  ],
+  "schema_version": 1,
+  "shielded_success_episode_count": 90,
+  "shift": {
+    "actor_observation_fields_added": 0,
+    "baseline_riser_height_m": 0.13,
+    "cbf_geometry_exact": true,
+    "clearance_barrier": "sloped_xz",
+    "clearance_barrier_slope": 0.8,
+    "command_changed": false,
+    "context": "F2",
+    "context_name": "hard_uniform_18_4cm",
+    "controller_changed": false,
+    "filter_alpha": 10.0,
+    "fixed_deployment_environment": {
+      "actor_observation_corruption_disabled": true,
+      "base_com_randomization_absent": true,
+      "curriculum_disabled": true,
+      "encoder_bias_absent": true,
+      "friction_randomization_absent": true,
+      "push_randomization_absent": true,
+      "registered_environment_variant": "fixed_deployment_play",
+      "reset_events_exact": true,
+      "retained_fresh_initial_state_events": [
+        "reset_base",
+        "reset_robot_joints"
+      ]
+    },
+    "friction_changed": false,
+    "num_risers": 9,
+    "plant_action_transform": "identity",
+    "recovery_distance_m": 0.15,
+    "riser_height_m": 0.184,
+    "riser_profile_m": null,
+    "runtime_filter": true,
+    "shift": "fixed_uniform_higher_riser",
+    "stair_riser_patch_slots": 9,
+    "stair_target_patch_slots": 10,
+    "terrain_geometry_changed": true,
+    "top_platform_patch_included": true
+  },
+  "teacher_episode_scope": "rescued-only",
+  "teacher_eta": 0.25,
+  "teacher_target": "deployment-counterfactual",
+  "training": {
+    "actor_update_scope": "new-geometry-first-layer-input-columns-only",
+    "after": {
+      "teacher": {
+        "teacher_correction_cosine": 0.4538801829020182,
+        "teacher_transition_count": 1982,
+        "teacher_weight_sum": 30.0,
+        "teacher_weighted_distance": 0.06200230518976847,
+        "teacher_weighted_smooth_l1": 0.00440385639667511
+      },
+      "trust": {
+        "reference_forward_kl": 4.9994100378976096e-05,
+        "reference_mean_shift": 0.00044187788596000444
+      }
+    },
+    "batch_size": 1000000,
+    "before": {
+      "teacher": {
+        "teacher_correction_cosine": 0.0,
+        "teacher_transition_count": 1982,
+        "teacher_weight_sum": 30.0,
+        "teacher_weighted_distance": 0.0622792641321818,
+        "teacher_weighted_smooth_l1": 0.0044297864039738975
+      },
+      "trust": {
+        "reference_forward_kl": 0.0,
+        "reference_mean_shift": 0.0
+      }
+    },
+    "epochs": 1,
+    "inactive_geometry_exact_base_policy": true,
+    "legacy_first_layer_change_max_abs": 0.0,
+    "maximum_gradient_norm_pre_clip": 0.019499871879816055,
+    "optimizer": "sgd",
+    "optimizer_updates": 1,
+    "trainable_parameter_count": 5120,
+    "trust_region": {
+      "adapter_interpolation_scale": 0.687255859375,
+      "max_reference_kl": 5e-05,
+      "projection_iterations": 12
+    },
+    "unprojected_after": {
+      "teacher": {
+        "teacher_correction_cosine": 0.4539033571879069,
+        "teacher_transition_count": 1982,
+        "teacher_weight_sum": 30.0,
+        "teacher_weighted_distance": 0.0618781328201294,
+        "teacher_weighted_smooth_l1": 0.004392192761103312
+      },
+      "trust": {
+        "reference_forward_kl": 0.00010585490589458639,
+        "reference_mean_shift": 0.0006429461349037122
+      }
+    }
+  },
+  "training_seeds": [
+    201353400,
+    201353410,
+    201353420,
+    201353430
+  ],
+  "training_transition_count": 1982
+}

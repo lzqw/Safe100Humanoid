@@ -1,0 +1,541 @@
+"""Pure, simulator-free checks for the prospectively fixed v30 semantics."""
+
+from __future__ import annotations
+
+import ast
+import importlib.util
+import json
+from pathlib import Path
+
+import pytest
+import torch
+
+REPO = Path(__file__).resolve().parents[2]
+
+
+def _load(name: str, relative: str):
+    specification = importlib.util.spec_from_file_location(name, REPO / relative)
+    assert specification is not None and specification.loader is not None
+    module = importlib.util.module_from_spec(specification)
+    specification.loader.exec_module(module)
+    return module
+
+
+MATH = _load("v30_teacher_math", "src/tasks/stairs_cbf/teacher_v30_math.py")
+PROTOCOL = _load("v30_protocol", "experiments/scripts/cbf_teacher_v30_protocol.py")
+V73 = _load(
+    "paper_transactional_v73_math",
+    "experiments/scripts/paper_transactional_v73_math.py",
+)
+
+
+def test_v106_episode_outcome_credit_is_group_and_episode_balanced() -> None:
+    episode_ids = torch.tensor(
+        (
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 1, 0, 0),
+            (1, 1, 0, 0),
+            (1, 1, 1, 0),
+            (1, 1, 1, 1),
+        ),
+        dtype=torch.long,
+    )
+    successful = torch.zeros_like(episode_ids, dtype=torch.bool)
+    failed = torch.zeros_like(successful)
+    successful[2, 0] = True
+    failed[1, 1] = True
+    successful[5, 1] = True
+    successful[3, 2] = True
+    failed[4, 3] = True
+    credit, metrics = MATH.episode_balanced_outcome_advantage(
+        episode_ids,
+        successful,
+        failed,
+        torch.tensor((True, True, False, False)),
+    )
+    assert torch.count_nonzero(credit[3:, 0]) == 0
+    assert torch.count_nonzero(credit[4:, 2]) == 0
+    for name, mask in (
+        ("filter_on", torch.tensor((True, True, False, False))),
+        ("filter_off", torch.tensor((False, False, True, True))),
+    ):
+        values = credit[:, mask]
+        eligible = values != 0
+        assert float(values[eligible].mean()) == pytest.approx(0.0, abs=1e-6)
+        assert float(values[eligible].std(unbiased=False)) == pytest.approx(
+            1.0, abs=1e-5
+        )
+        assert metrics[f"outcome_{name}_raw_credit_sum"] == pytest.approx(
+            0.0, abs=1e-6
+        )
+    assert metrics["outcome_filter_on_success_episode_count"] == 2
+    assert metrics["outcome_filter_on_failure_episode_count"] == 1
+    assert metrics["outcome_filter_off_success_episode_count"] == 1
+    assert metrics["outcome_filter_off_failure_episode_count"] == 1
+
+
+def test_v30_exact_six_arm_matrix_and_contexts_are_json_safe() -> None:
+    assert tuple(PROTOCOL.ARMS) == ("A0", "A1", "A2", "A3", "A4", "A5")
+    assert tuple(PROTOCOL.TEACHER_ARMS) == ("A1", "A2", "A3", "A4", "A5")
+    assert PROTOCOL.ARMS["A2"]["teacher_eta"] == 0.25
+    assert PROTOCOL.ARMS["A3"]["teacher_eta"] == 0.5
+    assert PROTOCOL.ARMS["A4"]["teacher_eta"] == 1.0
+    assert PROTOCOL.ARMS["A5"]["teacher_gate"] == "local_success_50"
+    f3 = PROTOCOL.environment_parameters("F3")
+    assert f3["riser_profile_m"] == list(PROTOCOL.F3_PROFILE_M)
+    json.dumps(
+        {
+            "arms": PROTOCOL.ARMS,
+            "contexts": {
+                name: PROTOCOL.environment_parameters(name)
+                for name in ("DEV", "F1", "F2", "F3", "D0")
+            },
+        }
+    )
+
+
+def test_v73_transaction_accepts_baseline_retry_and_only_noninferior_proposal() -> None:
+    baseline = V73.rollout_candidate_decision(
+        actor_sha256="base",
+        success_count=71,
+        episode_count=100,
+        accepted_actor_sha256=None,
+        accepted_success_count=None,
+        accepted_episode_count=None,
+    )
+    assert baseline["accepted"] and baseline["replace_anchor"]
+    retry = V73.rollout_candidate_decision(
+        actor_sha256="base",
+        success_count=68,
+        episode_count=100,
+        accepted_actor_sha256="base",
+        accepted_success_count=71,
+        accepted_episode_count=100,
+    )
+    assert retry["accepted"] and not retry["replace_anchor"]
+    assert retry["same_actor_retry"]
+    assert retry["anchor_success_count_after"] == 139
+    assert retry["anchor_episode_count_after"] == 200
+    assert retry["anchor_success_rate_after"] == pytest.approx(0.695)
+    improved = V73.rollout_candidate_decision(
+        actor_sha256="candidate",
+        success_count=73,
+        episode_count=100,
+        accepted_actor_sha256="base",
+        accepted_success_count=71,
+        accepted_episode_count=100,
+    )
+    assert improved["accepted"] and improved["replace_anchor"]
+    regressed = V73.rollout_candidate_decision(
+        actor_sha256="candidate",
+        success_count=70,
+        episode_count=100,
+        accepted_actor_sha256="base",
+        accepted_success_count=71,
+        accepted_episode_count=100,
+    )
+    assert not regressed["accepted"] and not regressed["replace_anchor"]
+
+
+def test_v73_learning_rate_only_shrinks_and_penalizes_rejection() -> None:
+    assert V73.adaptive_actor_learning_rate(
+        5.0e-5, 1.0e-5, rejected=False
+    ) == pytest.approx(5.0e-5)
+    assert V73.adaptive_actor_learning_rate(
+        5.0e-5, 4.0e-5, rejected=False
+    ) == pytest.approx(2.5e-5)
+    assert V73.adaptive_actor_learning_rate(
+        5.0e-5, 4.0e-5, rejected=True
+    ) == pytest.approx(1.25e-5)
+    assert V73.adaptive_actor_learning_rate(
+        1.0e-6, 1.0, rejected=True
+    ) == pytest.approx(1.0e-6)
+
+
+def test_v73_script_snapshots_and_restores_transactional_state() -> None:
+    source = (REPO / "experiments/scripts/refine_paper_dual_v35.py").read_text()
+    assert "--transactional-rollout-acceptance" in source
+    assert "runner.snapshot_proximal_state()" in source
+    assert "runner.restore_proximal_state(accepted_transaction)" in source
+    assert "selected_checkpoint_sha256" in source
+
+
+def test_v75_full_batch_allows_paper_fully_filtered_execution() -> None:
+    script = (REPO / "experiments/scripts/refine_paper_dual_v35.py").read_text()
+    assert "paper_fully_filtered_execution" in script
+    assert 'transactional_acceptance_group = (' in script
+    assert '"filter_on" if fully_filtered_transactional_actor' in script
+    assert "PaperFullFilterV75PPO" in script
+    algorithm = (
+        REPO / "src/tasks/stairs_cbf/paper_full_filter_v75.py"
+    ).read_text()
+    assert "paper_training_execution_fully_safety_filtered" in algorithm
+    assert "paper_ppo_storage_uses_nominal_policy_action" in algorithm
+
+
+def test_v76_records_exact_cbf_reward_decomposition() -> None:
+    reward = (REPO / "src/tasks/stairs_cbf/mdp.py").read_text()
+    collection = (
+        REPO / "experiments/scripts/refine_cbf_teacher_v31.py"
+    ).read_text()
+    assert 'env.extras["cbf_reward_margin_component"]' in reward
+    assert 'env.extras["cbf_reward_proximity_component"]' in reward
+    assert '"rollout_cbf_reward_component_sum_max_abs_error"' in collection
+    assert '"rollout_nominal_reward_mean_per_transition"' in collection
+    assert "reward_manager_dt_scale = float(runner.env.unwrapped.step_dt)" in collection
+    assert '"rollout_cbf_dual_reward_raw_mean_per_transition"' in collection
+
+
+def test_v30_residual_target_uses_round_reference_and_sample_correction() -> None:
+    reference = torch.tensor(((1.0, -2.0),), requires_grad=True)
+    raw = torch.tensor(((0.2, 0.4),), requires_grad=True)
+    safe = torch.tensor(((0.4, 0.0),), requires_grad=True)
+    target, correction = MATH.residual_teacher_target(reference, safe, raw, eta=0.5)
+    assert torch.allclose(correction, torch.tensor(((0.2, -0.4),)))
+    assert torch.allclose(target, torch.tensor(((1.1, -2.2),)))
+    assert not target.requires_grad and not correction.requires_grad
+
+
+def test_v30_intervention_weights_use_actual_intervention_and_clipped_norm() -> None:
+    intervened = torch.tensor(((True, False, True), (True, True, False)))
+    norm = torch.tensor(((0.0, 0.025, 0.05), (0.10, 0.0125, 1.0)))
+    eligible, weights = MATH.intervention_teacher_weights(intervened, norm)
+    assert torch.equal(eligible, intervened)
+    assert torch.allclose(weights, torch.tensor(((0.0, 0.0, 1.0), (1.0, 0.25, 0.0))))
+
+
+def test_v30_smooth_l1_is_per_action_mean_and_weight_normalized() -> None:
+    mean = torch.tensor(((0.10, 0.0), (0.05, 0.05)), requires_grad=True)
+    target = torch.zeros_like(mean, requires_grad=True)
+    eligible = torch.tensor((True, True))
+    weights = torch.tensor((1.0, 0.5))
+    loss = MATH.weighted_smooth_l1_teacher_loss(
+        mean, target, eligible, weights, beta=0.05
+    )
+    # SmoothL1(beta=.05): [0.075, 0] -> mean .0375; [.025, .025] -> .025.
+    assert float(loss.detach()) == pytest.approx((0.0375 + 0.5 * 0.025) / 1.5)
+    loss.backward()
+    assert mean.grad is not None and torch.isfinite(mean.grad).all()
+    assert target.grad is None
+
+
+def test_v30_empty_teacher_loss_is_exact_differentiable_zero() -> None:
+    mean = torch.ones(4, 3, requires_grad=True)
+    loss = MATH.weighted_smooth_l1_teacher_loss(
+        mean,
+        torch.zeros_like(mean),
+        torch.zeros(4, dtype=torch.bool),
+        torch.zeros(4),
+    )
+    assert float(loss) == 0.0
+    loss.backward()
+    assert torch.equal(mean.grad, torch.zeros_like(mean))
+
+
+def test_v35_masked_actor_mean_preserves_population_scale() -> None:
+    values = torch.tensor((2.0, 100.0, 4.0), requires_grad=True)
+    selected = MATH.masked_population_mean(
+        values, torch.tensor((True, False, True))
+    )
+    assert float(selected) == pytest.approx(2.0)
+    selected.backward()
+    assert torch.allclose(values.grad, torch.tensor((1.0 / 3.0, 0.0, 1.0 / 3.0)))
+
+    empty_values = torch.ones(3, requires_grad=True)
+    empty = MATH.masked_population_mean(
+        empty_values, torch.zeros(3, dtype=torch.bool)
+    )
+    assert float(empty) == 0.0
+    empty.backward()
+    assert torch.equal(empty_values.grad, torch.zeros_like(empty_values))
+
+
+def test_v88_success_imitation_keeps_population_scale_and_stops_target_grad() -> None:
+    policy_mean = torch.tensor(
+        ((0.10, 0.0), (1.0, 1.0), (0.0, -0.10), (2.0, 2.0)),
+        requires_grad=True,
+    )
+    target = torch.zeros_like(policy_mean, requires_grad=True)
+    successful = torch.tensor((True, False, True, False))
+    loss = MATH.success_population_smooth_l1_loss(
+        policy_mean,
+        target,
+        successful,
+        beta=0.05,
+    )
+    # Each selected transition has per-action Smooth-L1 mean 0.0375, then the
+    # success mask retains the original four-transition population scale.
+    assert float(loss.detach()) == pytest.approx(0.01875)
+    loss.backward()
+    assert policy_mean.grad is not None
+    assert torch.equal(policy_mean.grad[1], torch.zeros(2))
+    assert torch.equal(policy_mean.grad[3], torch.zeros(2))
+    assert target.grad is None
+
+
+def test_v35_terminal_episode_mask_keeps_environment_identity() -> None:
+    episode_ids = torch.tensor(
+        ((0, 0), (0, 0), (1, 0), (1, 1)), dtype=torch.long
+    )
+    terminal = torch.tensor(
+        ((False, False), (True, False), (False, True), (False, False))
+    )
+    mask = MATH.terminal_episode_transition_mask(episode_ids, terminal)
+    assert torch.equal(
+        mask,
+        torch.tensor(
+            ((True, True), (True, True), (False, True), (False, False))
+        ),
+    )
+
+
+def test_v35_outcome_gate_selects_only_successful_interventions() -> None:
+    intervened = torch.tensor(
+        ((True, True, False), (True, False, True)), dtype=torch.bool
+    )
+    failed = torch.tensor(
+        ((True, False, False), (True, False, False)), dtype=torch.bool
+    )
+    successful = torch.tensor(
+        ((False, True, True), (False, True, True)), dtype=torch.bool
+    )
+    eligible = MATH.outcome_gated_interventions(
+        intervened, failed, successful, gate="successful"
+    )
+    assert torch.equal(
+        eligible,
+        torch.tensor(((False, True, False), (False, False, True))),
+    )
+
+
+def test_v35_joint_top_and_fall_terminal_gets_success_priority() -> None:
+    done = torch.tensor((True, True, True, False))
+    fell = torch.tensor((True, True, False, True))
+    reached_top = torch.tensor((True, False, True, False))
+    failed, successful, joint = MATH.disjoint_terminal_outcomes(
+        done, fell, reached_top
+    )
+    assert torch.equal(failed, torch.tensor((False, True, False, False)))
+    assert torch.equal(successful, torch.tensor((True, False, True, False)))
+    assert torch.equal(joint, torch.tensor((True, False, False, False)))
+    assert not bool((failed & successful).any())
+
+
+def test_v66_allows_success_local_kl_for_shielded_distillation_only() -> None:
+    source = (REPO / "experiments/scripts/refine_paper_dual_v35.py").read_text()
+    assert "shielded_distillation = (" in source
+    assert "args.distill_only_actor" in source
+    assert 'args.training_runtime_filter == "on"' in source
+    assert 'args.training_filter_schedule == "fixed"' in source
+    assert "training_filter_fraction == 1.0" in source
+    assert "shielded_distillation or unshielded_ppo" in source
+
+
+def test_v68_routes_mixed_execution_actor_objectives_before_update() -> None:
+    source = (REPO / "src/tasks/stairs_cbf/paper_teacher_v35.py").read_text()
+    assert "set_v35_filter_execution_environment_mask" in source
+    assert "gated_intervention &= teacher_environment" in source
+    assert "return ppo_environment" in source
+    script = (REPO / "experiments/scripts/refine_paper_dual_v35.py").read_text()
+    assert "runner.alg.set_v35_filter_execution_environment_mask(" in script
+
+
+def test_v69_routes_actor_backward_through_task_priority_gradient_surgery() -> None:
+    source = (REPO / "src/tasks/stairs_cbf/paper_teacher_v35.py").read_text()
+    assert "task_priority_project_auxiliary_gradients(" in source
+    assert "deployment_loss = (" in source
+    assert "parameter.grad = deployment + teacher" in source
+    script = (REPO / "experiments/scripts/refine_paper_dual_v35.py").read_text()
+    assert '"--task-priority-gradient-surgery"' in script
+    assert 'runner_cfg["algorithm"]["v35_task_priority_gradient_surgery"]' in script
+
+
+def test_v70_exposes_capped_teacher_gradient_norm_balancing() -> None:
+    source = (REPO / "src/tasks/stairs_cbf/paper_teacher_v35.py").read_text()
+    assert "capped_norm_balance_auxiliary_gradients(" in source
+    assert "TEACHER_GRADIENT_MAXIMUM_SCALE = 4.0" in source
+    script = (REPO / "experiments/scripts/refine_paper_dual_v35.py").read_text()
+    assert '"--teacher-gradient-target-ratio"' in script
+    assert 'runner_cfg["algorithm"]["v35_teacher_gradient_target_ratio"]' in script
+
+
+def test_v72_uses_one_direction_preserving_full_batch_sgd_actor_step() -> None:
+    source = (REPO / "src/tasks/stairs_cbf/paper_full_batch_v72.py").read_text()
+    assert "self.actor_optimizer = torch.optim.SGD(" in source
+    assert '"actor_optimizer_updates_per_round": 1' in source
+    assert "self.num_learning_epochs != 1" in source
+    assert "self.num_mini_batches != 1" in source
+    script = (REPO / "experiments/scripts/refine_paper_dual_v35.py").read_text()
+    assert '"--full-batch-sgd-actor"' in script
+    assert "agent_cfg.algorithm.num_learning_epochs = 1" in script
+    assert "args.actor_gradient_accumulation_microbatches" in script
+    assert "paper_full_batch_v72:PaperFullBatchV72PPO" in script
+
+
+def test_v82_accumulates_equal_chunk_gradients_before_one_sgd_step() -> None:
+    torch.manual_seed(82)
+    full = torch.nn.Linear(5, 3, bias=True, dtype=torch.float64)
+    accumulated = torch.nn.Linear(5, 3, bias=True, dtype=torch.float64)
+    accumulated.load_state_dict(full.state_dict())
+    observations = torch.randn(10, 5, dtype=torch.float64)
+    targets = torch.randn(10, 3, dtype=torch.float64)
+    weights = torch.tensor(
+        (1.0, 0.0, 0.5, 1.0, 1.0, 0.25, 0.0, 1.0, 0.75, 1.0),
+        dtype=torch.float64,
+    )
+
+    full_losses = (full(observations) - targets).square().mean(dim=-1) * weights
+    full_losses.mean().backward()
+    for observation_chunk, target_chunk, weight_chunk in zip(
+        observations.chunk(2), targets.chunk(2), weights.chunk(2), strict=True
+    ):
+        chunk_losses = (
+            (accumulated(observation_chunk) - target_chunk)
+            .square()
+            .mean(dim=-1)
+            * weight_chunk
+        )
+        (chunk_losses.mean() / 2).backward()
+
+    for full_parameter, accumulated_parameter in zip(
+        full.parameters(), accumulated.parameters(), strict=True
+    ):
+        assert torch.allclose(
+            full_parameter.grad,
+            accumulated_parameter.grad,
+            rtol=1.0e-12,
+            atol=1.0e-12,
+        )
+
+    update = (REPO / "src/tasks/stairs_cbf/teacher_v30.py").read_text()
+    algorithm = (
+        REPO / "src/tasks/stairs_cbf/paper_accumulated_v82.py"
+    ).read_text()
+    script = (REPO / "experiments/scripts/refine_paper_dual_v35.py").read_text()
+    assert "actor_loss=actor_loss * actor_loss_scale" in update
+    assert "mini_batch + 1 == self.num_mini_batches" in update
+    assert '"actor_optimizer_updates_completed"' in update
+    assert "accumulate_actor_microbatch_gradients = True" in algorithm
+    assert '"--actor-gradient-accumulation-microbatches"' in script
+    assert "paper_accumulated_v82:PaperAccumulatedV82PPO" in script
+
+
+def test_v88_routes_success_safe_action_imitation_through_one_sgd_step() -> None:
+    algorithm = (
+        REPO / "src/tasks/stairs_cbf/paper_success_imitation_v88.py"
+    ).read_text()
+    script = (REPO / "experiments/scripts/refine_paper_dual_v35.py").read_text()
+    assert "self.teacher_policy_actions.detach()" in algorithm
+    assert "self.v35_success_episode_transition" in algorithm
+    assert "success_population_smooth_l1_loss(" in algorithm
+    assert "accumulate_actor_microbatch_gradients = True" in algorithm
+    assert "self.actor_optimizer = torch.optim.SGD(" in algorithm
+    assert '"--success-safe-action-imitation"' in script
+    assert "paper_success_imitation_v88:" in script
+    assert 'runner_cfg["algorithm"]["v88_success_imitation_weight"]' in script
+
+
+def test_v89_removes_sampled_action_noise_from_success_imitation() -> None:
+    algorithm = (
+        REPO / "src/tasks/stairs_cbf/paper_success_intervention_v89.py"
+    ).read_text()
+    script = (REPO / "experiments/scripts/refine_paper_dual_v35.py").read_text()
+    assert "self.v35_success_episode_transition & self.v35_mean_intervened" in algorithm
+    assert "target = self.v35_safe_policy_means.detach()" in algorithm
+    assert "v89_exploration_noise_target_removed" in algorithm
+    assert '"--success-intervention-safe-mean-only"' in script
+    assert "paper_success_intervention_v89:" in script
+
+
+def test_v90_bounds_success_intervention_to_a2_residual() -> None:
+    algorithm = (
+        REPO / "src/tasks/stairs_cbf/paper_success_residual_v90.py"
+    ).read_text()
+    script = (REPO / "experiments/scripts/refine_paper_dual_v35.py").read_text()
+    assert "float(self.teacher_eta) * full_correction" in algorithm
+    assert "v90_full_safe_mean_cloning_disabled" in algorithm
+    assert '"--success-intervention-bounded-residual"' in script
+    assert "paper_success_residual_v90:" in script
+
+
+def test_v91_removes_noisy_ppo_actor_gradient() -> None:
+    algorithm = (
+        REPO / "src/tasks/stairs_cbf/paper_success_residual_only_v91.py"
+    ).read_text()
+    script = (REPO / "experiments/scripts/refine_paper_dual_v35.py").read_text()
+    assert "return torch.zeros_like(self.teacher_eligible" in algorithm
+    assert 'result["actor_ppo_transition_count"] != 0' in algorithm
+    assert "v91_critic_task_and_cbf_learning_retained" in algorithm
+    assert '"--success-residual-only-actor"' in script
+    assert "paper_success_residual_only_v91:" in script
+
+
+def test_v35_filter_dropout_mask_is_balanced_and_rotates() -> None:
+    first = MATH.rotating_environment_filter_mask(
+        4, 0.5, 1, device="cpu"
+    )
+    second = MATH.rotating_environment_filter_mask(
+        4, 0.5, 2, device="cpu"
+    )
+    assert torch.equal(first, torch.tensor((True, True, False, False)))
+    assert torch.equal(second, torch.tensor((False, False, True, True)))
+    assert torch.equal(
+        MATH.rotating_environment_filter_mask(4, 1.0, 2, device="cpu"),
+        torch.ones(4, dtype=torch.bool),
+    )
+
+
+def test_v56_filter_fraction_schedule_reaches_pure_unshielded_rollout() -> None:
+    schedule = MATH.linear_filter_fraction_schedule(4, 1.0, 0.0)
+    assert schedule == pytest.approx((1.0, 2.0 / 3.0, 1.0 / 3.0, 0.0))
+    assert int(
+        MATH.rotating_environment_filter_mask(
+            64, schedule[-1], 4, device="cpu"
+        ).sum()
+    ) == 0
+    with pytest.raises(ValueError, match="strictly decrease"):
+        MATH.linear_filter_fraction_schedule(4, 0.5, 0.5)
+
+
+def test_v60_target_terrain_floor_prevents_late_curriculum_retreat() -> None:
+    assert MATH.target_terrain_floor_schedule(6, 5, 4) == (0, 0, 0, 4, 4, 4)
+    assert MATH.target_terrain_floor_schedule(4, 5, None) == (0, 0, 0, 0)
+    with pytest.raises(ValueError, match="within training rounds"):
+        MATH.target_terrain_floor_schedule(4, 5, 5)
+
+
+def test_v36_rescue_gate_uses_matched_on_success_off_failure() -> None:
+    on = torch.tensor((True, True, False, False))
+    off = torch.tensor((False, True, False, True))
+    assert torch.equal(
+        MATH.filter_rescued_episode_mask(on, off),
+        torch.tensor((True, False, False, False)),
+    )
+
+
+def test_v30_update_has_no_kl_threshold_control_flow() -> None:
+    source = (REPO / "src/tasks/stairs_cbf/teacher_v30.py").read_text()
+    tree = ast.parse(source)
+    update = next(
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+        and node.name == "update"
+    )
+    names = {node.id for node in ast.walk(update) if isinstance(node, ast.Name)}
+    attributes = {
+        node.attr for node in ast.walk(update) if isinstance(node, ast.Attribute)
+    }
+    assert "desired_kl" not in names | attributes
+    assert "hard_kl_ceiling" not in names | attributes
+    assert "rollback" not in names | attributes
+    assert "candidate" not in names | attributes
+    assert "performance" not in names | attributes
+    assert any(
+        isinstance(node, ast.For)
+        and isinstance(node.iter, ast.Call)
+        and isinstance(node.iter.func, ast.Name)
+        and node.iter.func.id == "range"
+        for node in ast.walk(update)
+    )

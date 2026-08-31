@@ -1,0 +1,23 @@
+{
+  "schema_version": "paper_dual_v35.v107.checkpoints.v1",
+  "source_commit": "e6ec3fdad1586fa95bba79713f212d9cca54df8e",
+  "input_v106": {
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/outcome_geometry_v106_58ad05d_64e_s201353360/round_03.pt",
+    "sha256": "4b1e558fb21eea162d0585263f7af018b34d6996877b9788ebcf1983d52c274c",
+    "actor_sha256": "9053bbf42079f397a83d73c6d6a9f5b508021ebcf74f4f441ce5b964939ff935"
+  },
+  "retained_v107_anchor": {
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/outcome_transactional_v107_e6ec3fd_128e_s201353361/round_00.pt",
+    "sha256": "1aa0e63be195296065d89719e1238120bf0bfef0896a816a2b979ee0e3092057",
+    "actor_sha256": "9053bbf42079f397a83d73c6d6a9f5b508021ebcf74f4f441ce5b964939ff935",
+    "accepted_new_proposal": false,
+    "uploaded_to_git": false
+  },
+  "final_restored_v107": {
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/outcome_transactional_v107_e6ec3fd_128e_s201353361/round_08.pt",
+    "sha256": "6e703844068a154c9e6889c8ae96dab341a345f2dbd79b92102e74e675cc0c26",
+    "actor_sha256": "9053bbf42079f397a83d73c6d6a9f5b508021ebcf74f4f441ce5b964939ff935",
+    "same_actor_as_input": true,
+    "uploaded_to_git": false
+  }
+}

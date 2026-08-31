@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "snapshot_time": "2026-08-31T18:34:33+08:00",
+  "status": "generation_8_running",
+  "latest_completed_generation": 7,
+  "method_id": "intervention-aware-cbf-distillation-ppo-v141",
+  "gate_directed_search_commit": "6e4a84b93f6dd8871dd8b958c87ddfd9412f3808",
+  "remote_artifact_root": "/home/carla/LZQW/SAFE100/humanoid/artifacts/filter_free_v141/development",
+  "current_failure": false,
+  "historical_recovered_failed_job_records": 1,
+  "formal_freeze_allowed": false,
+  "f2": {
+    "frozen": {
+      "target_off_success": 0.671875,
+      "target_on_success": 0.78125,
+      "f1_retention_off_success": 0.71875,
+      "would_intervene_fraction": 0.09977528953079685
+    },
+    "score_selected_candidate": {
+      "generation": 3,
+      "candidate": "g3_eta0.25_3",
+      "target_off_success": 0.7890625,
+      "target_on_success": 0.640625,
+      "f1_retention_off_success": 0.71875,
+      "shield_gap": -0.1484375,
+      "would_intervene_fraction": 0.09625717147800747,
+      "counterfactual_correction_norm": 0.018748527015670056,
+      "development_score": 0.8121093750000001,
+      "checks": {
+        "target_off_improves_2pp": true,
+        "f1_retention_within_1p5pp": true,
+        "shield_gap_target": false,
+        "would_intervene_reduced_25pct": false
+      }
+    }
+  },
+  "f3": {
+    "frozen": {
+      "target_off_success": 0.6484375,
+      "target_on_success": 0.703125,
+      "f1_retention_off_success": 0.71875,
+      "would_intervene_fraction": 0.10163165374013389
+    },
+    "score_selected_candidate": {
+      "generation": 7,
+      "candidate": "g7_epochs4_1",
+      "target_off_success": 0.765625,
+      "target_on_success": 0.75,
+      "f1_retention_off_success": 0.7578125,
+      "shield_gap": -0.015625,
+      "would_intervene_fraction": 0.09067592033796017,
+      "counterfactual_correction_norm": 0.01701857797786007,
+      "development_score": 0.7679687500000001,
+      "checks": {
+        "target_off_improves_2pp": true,
+        "f1_retention_within_1p5pp": true,
+        "shield_gap_target": true,
+        "would_intervene_reduced_25pct": false
+      }
+    }
+  },
+  "remaining_bottleneck": "nominal-policy intervention internalization",
+  "next_action": "finish Generation 8, restart at the generation boundary with gate-directed parent selection, and continue development until both specialists pass all four gates"
+}

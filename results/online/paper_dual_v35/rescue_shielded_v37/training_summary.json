@@ -1,0 +1,81 @@
+{
+  "actor_learning_rate": 5e-06,
+  "base_checkpoint_sha256": "3ec45cd196447901cf815d0fa1ff400af1b519ed2bb85c2fc179458ce3e81d3f",
+  "candidate_actor_sha256": "fdc872355f38a31f7c35d16e1ee5f151d156ae2907cf2f5cf8492f7d18891733",
+  "candidate_checkpoint_sha256": "483ea5f137cc6cdca8e098500f45e6e347f8f74085fa32b0656322813697a357",
+  "candidate_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/pilot/F2/raw_moderate_rescue_shielded_v37_seed201350282/candidate.pt",
+  "context": "F2",
+  "dataset_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/pilot/F2/raw_moderate_rescue_shielded_v37_seed201350282/rescue_dataset.pt",
+  "dataset_sha256": "809baf661b8f22376b1eef97081bac83dcbde0ac8518b3b1a1ca57b141b79dd4",
+  "elapsed_seconds": 49.087358696968295,
+  "epochs": 1,
+  "evaluation_seed_separate_from_training": true,
+  "filter_harmed_count": 6,
+  "filter_off_success_count": 21,
+  "filter_on_success_count": 22,
+  "filter_rescued_count": 7,
+  "filter_rescued_environment_ids": [
+    2,
+    3,
+    7,
+    13,
+    17,
+    23,
+    29
+  ],
+  "git_commit": "f4a8e65e23b316fcb3a53d88fd5518568c4c7208",
+  "initial_actor_sha256": "3964c0ef24707addbaa0dacfd4fd627882bd8b45a2c9799142710fa45bc29499",
+  "initial_state_signature": "eacf9db144f936592162e6f642234850ac4297dafd9b62b2907c682b1c0f88d1",
+  "max_reference_kl": 0.00025,
+  "method_id": "matched-filter-rescue-shielded-state-distillation-v37",
+  "minibatches": 4,
+  "moving_kl_beta": 0.5,
+  "num_envs": 32,
+  "paired_actor_sha256": "3964c0ef24707addbaa0dacfd4fd627882bd8b45a2c9799142710fa45bc29499",
+  "schema_version": 1,
+  "seed": 201350282,
+  "teacher_eta": 0.25,
+  "teacher_state_source": "on",
+  "training": {
+    "actor_gradient_clipped_fraction": 1.0,
+    "actor_gradient_norm_pre_clip_max": 17.94777488708496,
+    "after": {
+      "reference_forward_kl": 0.0002498576048933243,
+      "reference_mean_shift": 0.0010285821110273762,
+      "teacher_weighted_distance": 0.12841751343929642,
+      "teacher_weighted_smooth_l1": 0.011380247010819078
+    },
+    "before": {
+      "reference_forward_kl": 0.0,
+      "reference_mean_shift": 0.0,
+      "teacher_weighted_distance": 0.12940672068857154,
+      "teacher_weighted_smooth_l1": 0.011501866525736565
+    },
+    "dataset_transition_count": 13001,
+    "epochs": 1,
+    "minibatches": 4,
+    "minibatches_with_teacher": 4,
+    "moving_kl_beta": 0.5,
+    "moving_kl_during_update": 0.008960211416706443,
+    "optimizer_updates": 4,
+    "rescued_environment_count": 7,
+    "rescued_transition_count": 3078,
+    "teacher_eta": 0.25,
+    "teacher_loss_during_update": 0.010717758443206549,
+    "teacher_transition_count": 291,
+    "teacher_transition_fraction": 0.022382894530892372,
+    "teacher_weight_sum": 285.08477783203125,
+    "trust_region": {
+      "enabled": true,
+      "max_reference_kl": 0.00025,
+      "parameter_interpolation_scale": 0.2275390625,
+      "projection_iterations": 12
+    },
+    "unprojected_after": {
+      "reference_forward_kl": 0.004826840378029439,
+      "reference_mean_shift": 0.004520842446041936,
+      "teacher_weighted_distance": 0.1252784218647479,
+      "teacher_weighted_smooth_l1": 0.01099002252377171
+    }
+  }
+}

@@ -1,0 +1,1823 @@
+{
+  "cross_run_invariants": {
+    "all_bank_transaction_usable_preflights_passed": true,
+    "all_round_replay_pair_audits_exact": true,
+    "bank_update_transactions": {
+      "attempted": 138,
+      "committed": 137,
+      "restored_after_infeasible_update": 1
+    },
+    "d0_candidate_rollbacks": 2,
+    "initial_actor_sha256_values": [
+      "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb"
+    ],
+    "maximum_round_replay_marginal_imbalance": 0,
+    "protocol_invalid_run_count": 1,
+    "protocol_valid_run_count": 8,
+    "same_initial_actor_for_all_started_runs": true,
+    "same_source_file_manifest_for_all_started_runs": true,
+    "source_file_sha256": {
+      "experiments/scripts/evaluate_online_stairs.py": "0ce926848911b3f22ecc34914d6eadc9ae2969b23132e8569710a4abc6888769",
+      "experiments/scripts/online_refine_stairs.py": "e0176eec024c8a0fb2c6012bdf4660888ee5969fa2a5b364d9fb0acf907b7cde",
+      "experiments/scripts/refine_specialist_v19.py": "9e254a02be2bc837f470c3b888a6bcf4302aad6e818e80f7367206ccb26c982e",
+      "src/tasks/stairs_cbf/actions.py": "e04354c1bb9bfe4f57055a98dde22a1e13a30ff3a7b02af93633bd90001a5514",
+      "src/tasks/stairs_cbf/command.py": "af568a025f275fa018aeb97e8a1c341ee7bfa07d4b04be73b48caed7f794ab43",
+      "src/tasks/stairs_cbf/config.py": "22a57df095616e1f19f7cf6f18d7ba173ecef7901bf2a85da2a5faaa11c32f8a",
+      "src/tasks/stairs_cbf/deployment_context.py": "8344ae02ae062cfb542df68f3327e208120f3af94e43228b4f47d5f8e25eaff6",
+      "src/tasks/stairs_cbf/hard_cases.py": "b20cd15228dcdfcc6ad16955b5177ff4c3c714237b73c9a0e02eb316ab90f430",
+      "src/tasks/stairs_cbf/mdp.py": "631a9fefcf2026521c1c43ecf2dc1851124ce47921a1ddf4191ae7db31475754",
+      "src/tasks/stairs_cbf/online.py": "d530455a222be9f5a61c912fd38f9c3a27ca896d7821f691a317fc90b28a0e34",
+      "src/tasks/velocity/mdp/observations.py": "5e759917b7d3132b4bd7c640eae14d472f01b175f222d6358330ae9a159becd1"
+    },
+    "started_run_count": 9
+  },
+  "execution": {
+    "failed_run_log": {
+      "bytes": 8938346,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v19_revision4/train_contact_stability_seed363.log",
+      "sha256": "7edc9147cddecea5907574d3571fd5bf50b4f4070e5dd3ce8260534ab280d30e"
+    },
+    "formal_worktree": "/home/carla/LZQW/SAFE100/humanoid/worktrees/v19_r4_formal",
+    "gpu": "NVIDIA GeForce RTX 4080 SUPER",
+    "head_after_stop": "c6947c402ec6883e11762652270437df57fb0bca",
+    "host": "4080",
+    "queue_exit_code": 1,
+    "queue_failed_utc": "2026-08-06T18:21:08Z",
+    "queue_log": {
+      "bytes": 83903079,
+      "path": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v19_revision4/formal_queue.log",
+      "sha256": "1e967cef4bb35f313147e271203c4bba705cf2034e8d8606fdd653b25d05fd33"
+    },
+    "queue_started_utc": "2026-08-06T13:38:34Z",
+    "sequential_fail_fast": true,
+    "tracked_worktree_and_index_clean_after_stop": true
+  },
+  "failure": {
+    "accepted_updates": 2,
+    "actual_rounds": 8,
+    "maximum_rounds": 8,
+    "mode": "contact_stability",
+    "required_accepted_updates": 3,
+    "runner_terminal_error": "RuntimeError: v19 run ended without the required three accepted updates",
+    "seed": 363,
+    "stage": "minimum accepted-update check after maximum round"
+  },
+  "formal_claim": "none",
+  "formal_diagonal_audit_started": false,
+  "independent_verification_started": false,
+  "interpretation": "Revision 4 cannot support a formal specialist claim because contact-stability seed 363 failed the prospectively frozen minimum of three accepted updates. All per-run 128-episode values are training diagnostics only and are not substitutes for the unstarted 512-target/256-D0 paired audit.",
+  "not_started_after_fail_fast_stop": {
+    "contact_stability": [
+      463
+    ]
+  },
+  "protocol": {
+    "commit": "c6947c402ec6883e11762652270437df57fb0bca",
+    "file": "results/online/specialist_v19/protocol_revision4.json",
+    "sha256": "ae695d328d52bcce04a5818eb370cc210adee2e0df7993043bcb35e5bd1208aa"
+  },
+  "protocol_invalid_runs": [
+    "contact_stability/363"
+  ],
+  "protocol_valid_runs": [
+    "lateral/63",
+    "lateral/163",
+    "lateral/263",
+    "lateral/363",
+    "lateral/463",
+    "contact_stability/63",
+    "contact_stability/163",
+    "contact_stability/263"
+  ],
+  "round_outcome_semantics": {
+    "accepted": "target-scene gate accepted before the D0 retention gate; a true value with d0_rollback=true was not retained",
+    "accepted_update_count": "cumulative D0-safe retained updates; this is the authoritative protocol count"
+  },
+  "runs": {
+    "contact_stability/163": {
+      "actor_observation_expansion": {
+        "legacy_first_layer_input_column_change_max_abs": 0,
+        "legacy_input_columns_frozen_during_adaptation": true,
+        "legacy_width": 405,
+        "new_feature_count": 5,
+        "new_first_layer_column_max_abs_after_adaptation": 0.00004376073047751561,
+        "new_first_layer_column_rms_after_adaptation": 0.00001603921191417612,
+        "new_input_columns_use_full_actor_learning_rate": true,
+        "pre_adaptation_policy_exactly_preserved": true,
+        "v19_width": 410
+      },
+      "discovery_joint_feasibility_attempts": [
+        {
+          "error": null,
+          "exact_match_passed": true,
+          "maximum_marginal_imbalance": 0,
+          "pair_count": 12,
+          "passed": true
+        }
+      ],
+      "discovery_rollout_count": 1,
+      "external_artifacts": {
+        "accepted_final.pt": {
+          "bytes": 62475809,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/contact_stability/seed163/accepted_final.pt",
+          "sha256": "d7a9e4b693a0302685110b7e6758b39d6949dc5e25b82292e005b662830a3f96"
+        },
+        "bank_discovery.json": {
+          "bytes": 23847,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/contact_stability/seed163/bank_discovery.json",
+          "sha256": "4b75b985948e7b5b255a783b09f157158e284ad4be6240077609245150c648f4"
+        },
+        "baseline_eval.json": {
+          "bytes": 30136,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/contact_stability/seed163/baseline_eval.json",
+          "sha256": "932a0edfc42c79fb5b80e8491491c2c5dc675f6651e742352239b63cdd905434"
+        },
+        "online_rounds.json": {
+          "bytes": 8230248,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/contact_stability/seed163/online_rounds.json",
+          "sha256": "923128de5998e73acbdeb4143d5b1a6db5ce3a32089ca0f63dc8139b13d30a18"
+        },
+        "specialist_summary.json": {
+          "bytes": 8749538,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/contact_stability/seed163/specialist_summary.json",
+          "sha256": "7d66502725d3d412c010fb8765d3cef6b7739e12f690e686808a78ea1cb2bf38"
+        }
+      },
+      "final_actor_sha256": "2a7e0e1848731694528337d93f80d837c50be2356039c254d770d30762d40520",
+      "final_joint_feasibility_preflight": {
+        "error": null,
+        "exact_match_passed": true,
+        "maximum_marginal_imbalance": 0,
+        "pair_count": 12,
+        "passed": true
+      },
+      "formal_protocol": true,
+      "initial_actor_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+      "protocol_completed": true,
+      "round_outcomes": [
+        {
+          "accepted": false,
+          "accepted_update_count": 0,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 1,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 1,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 2,
+          "selected_candidate_fraction": 0.5,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 1,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 3,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 2,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 4,
+          "selected_candidate_fraction": 0.5,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 2,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 5,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 2,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 6,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 3,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 7,
+          "selected_candidate_fraction": 1.5,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 3,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": true,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 8,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        }
+      ],
+      "round_protocol": {
+        "accepted_updates": 3,
+        "actual_rounds": 8,
+        "maximum_rounds": 8,
+        "minimum_accepted_updates": 3,
+        "rejection_patience_after_minimum": 2,
+        "stop_reason": "maximum_rounds"
+      },
+      "training_diagnostic_only_128_episodes": {
+        "D0": {
+          "baseline_fall_rate": 0.03125,
+          "baseline_success_rate": 0.9375,
+          "episodes": 128,
+          "fall_delta": -0.0234375,
+          "final_fall_rate": 0.0078125,
+          "final_success_rate": 0.9296875,
+          "success_delta": -0.0078125
+        },
+        "target": {
+          "baseline_fall_rate": 0.2734375,
+          "baseline_success_rate": 0.7265625,
+          "episodes": 128,
+          "fall_delta": -0.09375,
+          "final_fall_rate": 0.1796875,
+          "final_success_rate": 0.8203125,
+          "success_delta": 0.09375
+        }
+      }
+    },
+    "contact_stability/263": {
+      "actor_observation_expansion": {
+        "legacy_first_layer_input_column_change_max_abs": 0,
+        "legacy_input_columns_frozen_during_adaptation": true,
+        "legacy_width": 405,
+        "new_feature_count": 5,
+        "new_first_layer_column_max_abs_after_adaptation": 0.00006391978240571916,
+        "new_first_layer_column_rms_after_adaptation": 0.00001945097028510645,
+        "new_input_columns_use_full_actor_learning_rate": true,
+        "pre_adaptation_policy_exactly_preserved": true,
+        "v19_width": 410
+      },
+      "discovery_joint_feasibility_attempts": [
+        {
+          "error": null,
+          "exact_match_passed": true,
+          "maximum_marginal_imbalance": 0,
+          "pair_count": 12,
+          "passed": true
+        }
+      ],
+      "discovery_rollout_count": 1,
+      "external_artifacts": {
+        "accepted_final.pt": {
+          "bytes": 61809697,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/contact_stability/seed263/accepted_final.pt",
+          "sha256": "df906432eeb7b6ee8b0b99ea80cd28fb57c580c0407f9995c391e8b037a282cf"
+        },
+        "bank_discovery.json": {
+          "bytes": 32761,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/contact_stability/seed263/bank_discovery.json",
+          "sha256": "557b90339997f065f30e6af4db2fec4595f30e6ce1186f41a44794820d75fbf0"
+        },
+        "baseline_eval.json": {
+          "bytes": 30246,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/contact_stability/seed263/baseline_eval.json",
+          "sha256": "f6e7d9728f3264859355b0172d131e765ef0547ce3260a7bf67a147e1dc808ed"
+        },
+        "online_rounds.json": {
+          "bytes": 5821896,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/contact_stability/seed263/online_rounds.json",
+          "sha256": "8eb59e734d88bd68edf87bd2eb208bb2da961be14616a63da7d6da491a7856e3"
+        },
+        "specialist_summary.json": {
+          "bytes": 6231774,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/contact_stability/seed263/specialist_summary.json",
+          "sha256": "b1dd76c6fb59570561723d14a5802dedf2568d850eb881bdc191326aeab3fb4b"
+        }
+      },
+      "final_actor_sha256": "4e87647016efd304edba19fd0e3b8a136a19e1717ed0b709ee7b0fbfadbfa650",
+      "final_joint_feasibility_preflight": {
+        "error": null,
+        "exact_match_passed": true,
+        "maximum_marginal_imbalance": 0,
+        "pair_count": 12,
+        "passed": true
+      },
+      "formal_protocol": true,
+      "initial_actor_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+      "protocol_completed": true,
+      "round_outcomes": [
+        {
+          "accepted": true,
+          "accepted_update_count": 1,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 1,
+          "selected_candidate_fraction": 1.5,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 1,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 2,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 2,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 3,
+          "selected_candidate_fraction": 1,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 3,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 4,
+          "selected_candidate_fraction": 1,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 3,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 5,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 3,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 6,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        }
+      ],
+      "round_protocol": {
+        "accepted_updates": 3,
+        "actual_rounds": 6,
+        "maximum_rounds": 8,
+        "minimum_accepted_updates": 3,
+        "rejection_patience_after_minimum": 2,
+        "stop_reason": "minimum_updates_reached_then_two_consecutive_rejections"
+      },
+      "training_diagnostic_only_128_episodes": {
+        "D0": {
+          "baseline_fall_rate": 0.0234375,
+          "baseline_success_rate": 0.8515625,
+          "episodes": 128,
+          "fall_delta": 0.0078125,
+          "final_fall_rate": 0.03125,
+          "final_success_rate": 0.9296875,
+          "success_delta": 0.078125
+        },
+        "target": {
+          "baseline_fall_rate": 0.21875,
+          "baseline_success_rate": 0.78125,
+          "episodes": 128,
+          "fall_delta": 0.0078125,
+          "final_fall_rate": 0.2265625,
+          "final_success_rate": 0.7734375,
+          "success_delta": -0.0078125
+        }
+      }
+    },
+    "contact_stability/363": {
+      "actor_observation_expansion": {
+        "legacy_first_layer_input_column_change_max_abs": 0,
+        "legacy_input_columns_frozen_during_adaptation": true,
+        "legacy_width": 405,
+        "new_feature_count": 5,
+        "new_first_layer_column_max_abs_after_adaptation": 0.000029119795726728626,
+        "new_first_layer_column_rms_after_adaptation": 0.000012754272574966308,
+        "new_input_columns_use_full_actor_learning_rate": true,
+        "pre_adaptation_policy_exactly_preserved": true,
+        "v19_width": 410
+      },
+      "discovery_joint_feasibility_attempts": [
+        {
+          "error": "v19 restart sampling found no exact matched pairs",
+          "exact_match_passed": null,
+          "maximum_marginal_imbalance": null,
+          "pair_count": 12,
+          "passed": false
+        },
+        {
+          "error": null,
+          "exact_match_passed": true,
+          "maximum_marginal_imbalance": 0,
+          "pair_count": 12,
+          "passed": true
+        }
+      ],
+      "discovery_rollout_count": 2,
+      "external_artifacts": {
+        "accepted_final.pt": {
+          "bytes": 62017633,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/contact_stability/seed363/accepted_final.pt",
+          "sha256": "5fd324cba64f8dcd46a8b94819e3281eefe46fa157fb33df0c33e3577b40564f"
+        },
+        "bank_discovery.json": {
+          "bytes": 53554,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/contact_stability/seed363/bank_discovery.json",
+          "sha256": "f6c0b40b907c41d3457a8245697f5e3d922247b6edbba2966d0bd6252555edb3"
+        },
+        "baseline_eval.json": {
+          "bytes": 30242,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/contact_stability/seed363/baseline_eval.json",
+          "sha256": "dcb1e08a60e7796ace5aee032011285725375773d5ac162d0c970ea2fdd49db4"
+        },
+        "online_rounds.json": {
+          "bytes": 8368319,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/contact_stability/seed363/online_rounds.json",
+          "sha256": "cde76e0421dcfcc493a9e7ac151ef6cab16f95eecf06b0929c15d824447de7b6"
+        },
+        "specialist_summary.json": {
+          "bytes": 8925805,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/contact_stability/seed363/specialist_summary.json",
+          "sha256": "e636720d4d5020fa27838ab2407384af6c19c2852bc8f2cc478c539df06a4158"
+        }
+      },
+      "final_actor_sha256": "53095545ce83b280eaa1c93d0df3bd65255693f237bea457c73b25291393f462",
+      "final_joint_feasibility_preflight": {
+        "error": null,
+        "exact_match_passed": true,
+        "maximum_marginal_imbalance": 0,
+        "pair_count": 12,
+        "passed": true
+      },
+      "formal_protocol": true,
+      "initial_actor_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+      "protocol_completed": false,
+      "round_outcomes": [
+        {
+          "accepted": false,
+          "accepted_update_count": 0,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "confirmed_target_deltas": {
+            "fall_delta": 0.0078125,
+            "mean_kl": 0.00007282270235009491,
+            "success_delta": -0.0078125
+          },
+          "d0_check_passed": true,
+          "d0_rollback": false,
+          "dual_rollout_gradient_cosine_diagnostic_only": 0.045381635427474976,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 1,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 0,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "confirmed_target_deltas": {
+            "fall_delta": 0,
+            "mean_kl": 0.0006605738890357316,
+            "success_delta": 0
+          },
+          "d0_check_passed": true,
+          "d0_rollback": false,
+          "dual_rollout_gradient_cosine_diagnostic_only": -0.2612002193927765,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 2,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 0,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "confirmed_target_deltas": {
+            "fall_delta": 0.0078125,
+            "mean_kl": 0.00008469398744637147,
+            "success_delta": -0.0078125
+          },
+          "d0_check_passed": true,
+          "d0_rollback": false,
+          "dual_rollout_gradient_cosine_diagnostic_only": -0.006400697864592075,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 3,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 1,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "confirmed_target_deltas": {
+            "fall_delta": -0.0625,
+            "mean_kl": 0.0002684475912246853,
+            "success_delta": 0.0625
+          },
+          "d0_check_passed": true,
+          "d0_rollback": false,
+          "dual_rollout_gradient_cosine_diagnostic_only": 0.09205062687397003,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 4,
+          "selected_candidate_fraction": 1,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 1,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "confirmed_target_deltas": {
+            "fall_delta": 0.015625,
+            "mean_kl": 0.0005800955696031451,
+            "success_delta": -0.015625
+          },
+          "d0_check_passed": true,
+          "d0_rollback": false,
+          "dual_rollout_gradient_cosine_diagnostic_only": 0.3830491602420807,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 5,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 2,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "confirmed_target_deltas": {
+            "fall_delta": -0.015625,
+            "mean_kl": 0.00007907477993285283,
+            "success_delta": 0.015625
+          },
+          "d0_check_passed": true,
+          "d0_rollback": false,
+          "dual_rollout_gradient_cosine_diagnostic_only": 0.11522196233272552,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 6,
+          "selected_candidate_fraction": 0.5,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 2,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "confirmed_target_deltas": {
+            "fall_delta": 0.015625,
+            "mean_kl": 0.0003303403500467539,
+            "success_delta": -0.015625
+          },
+          "d0_check_passed": true,
+          "d0_rollback": false,
+          "dual_rollout_gradient_cosine_diagnostic_only": -0.06317854672670364,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 7,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 2,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "confirmed_target_deltas": {
+            "fall_delta": 0.0546875,
+            "mean_kl": 0.00007467401155736297,
+            "success_delta": -0.0546875
+          },
+          "d0_check_passed": true,
+          "d0_rollback": false,
+          "dual_rollout_gradient_cosine_diagnostic_only": -0.08191917836666107,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 8,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        }
+      ],
+      "round_protocol": {
+        "accepted_updates": 2,
+        "actual_rounds": 8,
+        "maximum_rounds": 8,
+        "minimum_accepted_updates": 3,
+        "rejection_patience_after_minimum": 2,
+        "stop_reason": "insufficient_accepted_updates_after_maximum_rounds"
+      },
+      "training_diagnostic_only_128_episodes": {
+        "D0": {
+          "baseline_fall_rate": 0.0234375,
+          "baseline_success_rate": 0.921875,
+          "episodes": 128,
+          "fall_delta": -0.015625,
+          "final_fall_rate": 0.0078125,
+          "final_success_rate": 0.90625,
+          "success_delta": -0.015625
+        },
+        "target": {
+          "baseline_fall_rate": 0.234375,
+          "baseline_success_rate": 0.765625,
+          "episodes": 128,
+          "fall_delta": -0.046875,
+          "final_fall_rate": 0.1875,
+          "final_success_rate": 0.8125,
+          "success_delta": 0.046875
+        }
+      }
+    },
+    "contact_stability/63": {
+      "actor_observation_expansion": {
+        "legacy_first_layer_input_column_change_max_abs": 0,
+        "legacy_input_columns_frozen_during_adaptation": true,
+        "legacy_width": 405,
+        "new_feature_count": 5,
+        "new_first_layer_column_max_abs_after_adaptation": 0.00005578231139224954,
+        "new_first_layer_column_rms_after_adaptation": 0.000018377028027316555,
+        "new_input_columns_use_full_actor_learning_rate": true,
+        "pre_adaptation_policy_exactly_preserved": true,
+        "v19_width": 410
+      },
+      "discovery_joint_feasibility_attempts": [
+        {
+          "error": null,
+          "exact_match_passed": true,
+          "maximum_marginal_imbalance": 0,
+          "pair_count": 12,
+          "passed": true
+        }
+      ],
+      "discovery_rollout_count": 1,
+      "external_artifacts": {
+        "accepted_final.pt": {
+          "bytes": 60869889,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/contact_stability/seed63/accepted_final.pt",
+          "sha256": "52a23ee94d4ae0b0e499dc50ddaa3f8600350fce83a54721010a334764c848ed"
+        },
+        "bank_discovery.json": {
+          "bytes": 32551,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/contact_stability/seed63/bank_discovery.json",
+          "sha256": "7f214ec7b1cc4033cda001c4a2b82caa043be96324753207c280102072dc92b4"
+        },
+        "baseline_eval.json": {
+          "bytes": 30147,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/contact_stability/seed63/baseline_eval.json",
+          "sha256": "c7c86c465fcd466b2d163bad53e6cad6f680fc1bc4e1d6aa46945d7cd6e80fa0"
+        },
+        "online_rounds.json": {
+          "bytes": 7473025,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/contact_stability/seed63/online_rounds.json",
+          "sha256": "b3140a2e345694c0e693a121f34e5aafab9c7dd2e12be0d5baf4a689f74f5cdc"
+        },
+        "specialist_summary.json": {
+          "bytes": 7964316,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/contact_stability/seed63/specialist_summary.json",
+          "sha256": "4ae89d5ad17c98f812eb58b7c032fb46a3883f9e3aec03f40305d569bdb345c1"
+        }
+      },
+      "final_actor_sha256": "ab878d5c35e17effb0f7d016912904fc09b1c7e4df5b89bae5bf6711fbb859ef",
+      "final_joint_feasibility_preflight": {
+        "error": null,
+        "exact_match_passed": true,
+        "maximum_marginal_imbalance": 0,
+        "pair_count": 12,
+        "passed": true
+      },
+      "formal_protocol": true,
+      "initial_actor_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+      "protocol_completed": true,
+      "round_outcomes": [
+        {
+          "accepted": true,
+          "accepted_update_count": 1,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 1,
+          "selected_candidate_fraction": 1.5,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 2,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 2,
+          "selected_candidate_fraction": 0.5,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 2,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 3,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 2,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 4,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 3,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 5,
+          "selected_candidate_fraction": 0.5,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 4,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 6,
+          "selected_candidate_fraction": 1,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 4,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 7,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 4,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 8,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        }
+      ],
+      "round_protocol": {
+        "accepted_updates": 4,
+        "actual_rounds": 8,
+        "maximum_rounds": 8,
+        "minimum_accepted_updates": 3,
+        "rejection_patience_after_minimum": 2,
+        "stop_reason": "minimum_updates_reached_then_two_consecutive_rejections"
+      },
+      "training_diagnostic_only_128_episodes": {
+        "D0": {
+          "baseline_fall_rate": 0.0078125,
+          "baseline_success_rate": 0.8984375,
+          "episodes": 128,
+          "fall_delta": 0,
+          "final_fall_rate": 0.0078125,
+          "final_success_rate": 0.921875,
+          "success_delta": 0.0234375
+        },
+        "target": {
+          "baseline_fall_rate": 0.234375,
+          "baseline_success_rate": 0.765625,
+          "episodes": 128,
+          "fall_delta": -0.0703125,
+          "final_fall_rate": 0.1640625,
+          "final_success_rate": 0.8359375,
+          "success_delta": 0.0703125
+        }
+      }
+    },
+    "lateral/163": {
+      "actor_observation_expansion": {
+        "legacy_first_layer_input_column_change_max_abs": 0,
+        "legacy_input_columns_frozen_during_adaptation": true,
+        "legacy_width": 405,
+        "new_feature_count": 5,
+        "new_first_layer_column_max_abs_after_adaptation": 0.0000848848358145915,
+        "new_first_layer_column_rms_after_adaptation": 0.000028234353521838784,
+        "new_input_columns_use_full_actor_learning_rate": true,
+        "pre_adaptation_policy_exactly_preserved": true,
+        "v19_width": 410
+      },
+      "discovery_joint_feasibility_attempts": [
+        {
+          "error": null,
+          "exact_match_passed": true,
+          "maximum_marginal_imbalance": 0,
+          "pair_count": 12,
+          "passed": true
+        },
+        {
+          "error": null,
+          "exact_match_passed": true,
+          "maximum_marginal_imbalance": 0,
+          "pair_count": 12,
+          "passed": true
+        }
+      ],
+      "discovery_rollout_count": 2,
+      "external_artifacts": {
+        "accepted_final.pt": {
+          "bytes": 66765985,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/lateral/seed163/accepted_final.pt",
+          "sha256": "21f9f7ec1b8564db633830694a9f84d94afdb75b7c93eb185858e3c361029c6c"
+        },
+        "bank_discovery.json": {
+          "bytes": 185405,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/lateral/seed163/bank_discovery.json",
+          "sha256": "3f0a3856c43e77d209e7d4649db381357acd7901a0db50f1dd868b033cff49f7"
+        },
+        "baseline_eval.json": {
+          "bytes": 23400,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/lateral/seed163/baseline_eval.json",
+          "sha256": "ff5927c611fada2cbaf27d95174cbab699042b6a66fd95d3e6864eddd2f34bb5"
+        },
+        "online_rounds.json": {
+          "bytes": 9995164,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/lateral/seed163/online_rounds.json",
+          "sha256": "95460c05bc92ad3314f10fd6df7013722571055ac848894f3a567b4b456d93ef"
+        },
+        "specialist_summary.json": {
+          "bytes": 10758983,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/lateral/seed163/specialist_summary.json",
+          "sha256": "99233a7ae485301ca0164abf66d57b64eb9622fb9cde04f1430a0d4380debab9"
+        }
+      },
+      "final_actor_sha256": "aa11b51044fb175a379e0b972f3e57a8f6a9672449318afb5fc01c7804208184",
+      "final_joint_feasibility_preflight": {
+        "error": null,
+        "exact_match_passed": true,
+        "maximum_marginal_imbalance": 0,
+        "pair_count": 12,
+        "passed": true
+      },
+      "formal_protocol": true,
+      "initial_actor_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+      "protocol_completed": true,
+      "round_outcomes": [
+        {
+          "accepted": false,
+          "accepted_update_count": 0,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 1,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 0,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": true,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 2,
+          "selected_candidate_fraction": 0.5,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 0,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 3,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 0,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 4,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 1,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 5,
+          "selected_candidate_fraction": 1.5,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 2,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 6,
+          "selected_candidate_fraction": 1.5,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 3,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 7,
+          "selected_candidate_fraction": 0.5,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 4,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 8,
+          "selected_candidate_fraction": 1.5,
+          "usable_preflights_passed": true
+        }
+      ],
+      "round_protocol": {
+        "accepted_updates": 4,
+        "actual_rounds": 8,
+        "maximum_rounds": 8,
+        "minimum_accepted_updates": 3,
+        "rejection_patience_after_minimum": 2,
+        "stop_reason": "maximum_rounds"
+      },
+      "training_diagnostic_only_128_episodes": {
+        "D0": {
+          "baseline_fall_rate": 0.0234375,
+          "baseline_success_rate": 0.9296875,
+          "episodes": 128,
+          "fall_delta": 0.0078125,
+          "final_fall_rate": 0.03125,
+          "final_success_rate": 0.9140625,
+          "success_delta": -0.015625
+        },
+        "target": {
+          "baseline_fall_rate": 0.2578125,
+          "baseline_success_rate": 0.7421875,
+          "episodes": 128,
+          "fall_delta": 0,
+          "final_fall_rate": 0.2578125,
+          "final_success_rate": 0.7421875,
+          "success_delta": 0
+        }
+      }
+    },
+    "lateral/263": {
+      "actor_observation_expansion": {
+        "legacy_first_layer_input_column_change_max_abs": 0,
+        "legacy_input_columns_frozen_during_adaptation": true,
+        "legacy_width": 405,
+        "new_feature_count": 5,
+        "new_first_layer_column_max_abs_after_adaptation": 0.00004624344001058489,
+        "new_first_layer_column_rms_after_adaptation": 0.00001558548137836624,
+        "new_input_columns_use_full_actor_learning_rate": true,
+        "pre_adaptation_policy_exactly_preserved": true,
+        "v19_width": 410
+      },
+      "discovery_joint_feasibility_attempts": [
+        {
+          "error": null,
+          "exact_match_passed": true,
+          "maximum_marginal_imbalance": 0,
+          "pair_count": 12,
+          "passed": true
+        }
+      ],
+      "discovery_rollout_count": 1,
+      "external_artifacts": {
+        "accepted_final.pt": {
+          "bytes": 66985377,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/lateral/seed263/accepted_final.pt",
+          "sha256": "95d335afabdfb1621d918bfa9128949785694fb431b1a6d48a84494fbdb75d63"
+        },
+        "bank_discovery.json": {
+          "bytes": 93785,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/lateral/seed263/bank_discovery.json",
+          "sha256": "99e4ebf713abaeb9b006104087ff260b94e0ac8f3aa101bc38d02dcd16c0a128"
+        },
+        "baseline_eval.json": {
+          "bytes": 23331,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/lateral/seed263/baseline_eval.json",
+          "sha256": "4d4ebb218e83479569021aa306b9c644c797f31a9175267c516b26732d4defcd"
+        },
+        "online_rounds.json": {
+          "bytes": 10188820,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/lateral/seed263/online_rounds.json",
+          "sha256": "472974997763ddf49ccb563e4521c63c384380042d579a8f565d7f425e1d0eeb"
+        },
+        "specialist_summary.json": {
+          "bytes": 10864540,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/lateral/seed263/specialist_summary.json",
+          "sha256": "c1db454330e2433b1402b0622ab20330a064b5101fd1a6ac222acf19229e4e61"
+        }
+      },
+      "final_actor_sha256": "02ecc4d1152cf782478860ca4c98ea262a12d3499d8f310d3dced9c16fa08327",
+      "final_joint_feasibility_preflight": {
+        "error": null,
+        "exact_match_passed": true,
+        "maximum_marginal_imbalance": 0,
+        "pair_count": 12,
+        "passed": true
+      },
+      "formal_protocol": true,
+      "initial_actor_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+      "protocol_completed": true,
+      "round_outcomes": [
+        {
+          "accepted": true,
+          "accepted_update_count": 1,
+          "bank_transactions_committed": 1,
+          "bank_transactions_restored": 1,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 1,
+          "selected_candidate_fraction": 0.5,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 1,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 2,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 1,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 3,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 2,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 4,
+          "selected_candidate_fraction": 0.5,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 2,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 5,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 2,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 6,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 2,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 7,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 3,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 8,
+          "selected_candidate_fraction": 1.5,
+          "usable_preflights_passed": true
+        }
+      ],
+      "round_protocol": {
+        "accepted_updates": 3,
+        "actual_rounds": 8,
+        "maximum_rounds": 8,
+        "minimum_accepted_updates": 3,
+        "rejection_patience_after_minimum": 2,
+        "stop_reason": "maximum_rounds"
+      },
+      "training_diagnostic_only_128_episodes": {
+        "D0": {
+          "baseline_fall_rate": 0.015625,
+          "baseline_success_rate": 0.90625,
+          "episodes": 128,
+          "fall_delta": -0.015625,
+          "final_fall_rate": 0,
+          "final_success_rate": 0.921875,
+          "success_delta": 0.015625
+        },
+        "target": {
+          "baseline_fall_rate": 0.2734375,
+          "baseline_success_rate": 0.7265625,
+          "episodes": 128,
+          "fall_delta": -0.0390625,
+          "final_fall_rate": 0.234375,
+          "final_success_rate": 0.765625,
+          "success_delta": 0.0390625
+        }
+      }
+    },
+    "lateral/363": {
+      "actor_observation_expansion": {
+        "legacy_first_layer_input_column_change_max_abs": 0,
+        "legacy_input_columns_frozen_during_adaptation": true,
+        "legacy_width": 405,
+        "new_feature_count": 5,
+        "new_first_layer_column_max_abs_after_adaptation": 0.000051937822718173265,
+        "new_first_layer_column_rms_after_adaptation": 0.000019442017219262198,
+        "new_input_columns_use_full_actor_learning_rate": true,
+        "pre_adaptation_policy_exactly_preserved": true,
+        "v19_width": 410
+      },
+      "discovery_joint_feasibility_attempts": [
+        {
+          "error": null,
+          "exact_match_passed": true,
+          "maximum_marginal_imbalance": 0,
+          "pair_count": 12,
+          "passed": true
+        }
+      ],
+      "discovery_rollout_count": 1,
+      "external_artifacts": {
+        "accepted_final.pt": {
+          "bytes": 67200737,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/lateral/seed363/accepted_final.pt",
+          "sha256": "175728d69bca46ae23ca54f0d954ba2d89a612403bf7bee7b63e71d8521e3d16"
+        },
+        "bank_discovery.json": {
+          "bytes": 90834,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/lateral/seed363/bank_discovery.json",
+          "sha256": "a51a47e8ffcfe6a613f706b073adec0448239e5940e6abd2b37081e2bfabca82"
+        },
+        "baseline_eval.json": {
+          "bytes": 23300,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/lateral/seed363/baseline_eval.json",
+          "sha256": "e051d6eb2eec90c90710e945be99f146870a5475f6376137e884579b875d8aef"
+        },
+        "online_rounds.json": {
+          "bytes": 8656881,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/lateral/seed363/online_rounds.json",
+          "sha256": "9db9f4bb3975ae844d0d2ab2ad7d8cd0126960eab146ba1b60627eb87dbed953"
+        },
+        "specialist_summary.json": {
+          "bytes": 9253585,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/lateral/seed363/specialist_summary.json",
+          "sha256": "d9758cc87874546f3997917eca6a2a5f339b220b5029451cf3826a973520a6bd"
+        }
+      },
+      "final_actor_sha256": "967146d106836650202e81b4242a9b2e4a60e4acce689d10a3e47c0a74cd96e8",
+      "final_joint_feasibility_preflight": {
+        "error": null,
+        "exact_match_passed": true,
+        "maximum_marginal_imbalance": 0,
+        "pair_count": 12,
+        "passed": true
+      },
+      "formal_protocol": true,
+      "initial_actor_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+      "protocol_completed": true,
+      "round_outcomes": [
+        {
+          "accepted": false,
+          "accepted_update_count": 0,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 1,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 0,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 2,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 1,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 3,
+          "selected_candidate_fraction": 0.5,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 2,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 4,
+          "selected_candidate_fraction": 1,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 3,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 5,
+          "selected_candidate_fraction": 1.5,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 3,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 6,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 3,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 7,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        }
+      ],
+      "round_protocol": {
+        "accepted_updates": 3,
+        "actual_rounds": 7,
+        "maximum_rounds": 8,
+        "minimum_accepted_updates": 3,
+        "rejection_patience_after_minimum": 2,
+        "stop_reason": "minimum_updates_reached_then_two_consecutive_rejections"
+      },
+      "training_diagnostic_only_128_episodes": {
+        "D0": {
+          "baseline_fall_rate": 0.0078125,
+          "baseline_success_rate": 0.953125,
+          "episodes": 128,
+          "fall_delta": -0.0078125,
+          "final_fall_rate": 0,
+          "final_success_rate": 0.8984375,
+          "success_delta": -0.0546875
+        },
+        "target": {
+          "baseline_fall_rate": 0.2578125,
+          "baseline_success_rate": 0.7421875,
+          "episodes": 128,
+          "fall_delta": -0.0078125,
+          "final_fall_rate": 0.25,
+          "final_success_rate": 0.75,
+          "success_delta": 0.0078125
+        }
+      }
+    },
+    "lateral/463": {
+      "actor_observation_expansion": {
+        "legacy_first_layer_input_column_change_max_abs": 0,
+        "legacy_input_columns_frozen_during_adaptation": true,
+        "legacy_width": 405,
+        "new_feature_count": 5,
+        "new_first_layer_column_max_abs_after_adaptation": 0.00010105111141456291,
+        "new_first_layer_column_rms_after_adaptation": 0.000032129533792613074,
+        "new_input_columns_use_full_actor_learning_rate": true,
+        "pre_adaptation_policy_exactly_preserved": true,
+        "v19_width": 410
+      },
+      "discovery_joint_feasibility_attempts": [
+        {
+          "error": null,
+          "exact_match_passed": true,
+          "maximum_marginal_imbalance": 0,
+          "pair_count": 12,
+          "passed": true
+        }
+      ],
+      "discovery_rollout_count": 1,
+      "external_artifacts": {
+        "accepted_final.pt": {
+          "bytes": 66462385,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/lateral/seed463/accepted_final.pt",
+          "sha256": "2db9f0dd5dce41b701d04b969c603422e37889ad387b51b74c68134e1b9de209"
+        },
+        "bank_discovery.json": {
+          "bytes": 94407,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/lateral/seed463/bank_discovery.json",
+          "sha256": "deccecc0a42eca105303e673c4eb6ce4d120e7d473e6e93fccfa903057197045"
+        },
+        "baseline_eval.json": {
+          "bytes": 23289,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/lateral/seed463/baseline_eval.json",
+          "sha256": "05bf1b0c2b5beceddba0364bf9ff66a188263e155a512ce12dbb530a76648fa0"
+        },
+        "online_rounds.json": {
+          "bytes": 9723456,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/lateral/seed463/online_rounds.json",
+          "sha256": "534c48f5b4e3555f07b8d21d8f0612ea9fd6cd03801c1e7059b406f7fc8e302b"
+        },
+        "specialist_summary.json": {
+          "bytes": 10377058,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/lateral/seed463/specialist_summary.json",
+          "sha256": "7a9f5ea6517902400c5f291591a2226830edaa3b54dd716bb1d3e86a397a56a8"
+        }
+      },
+      "final_actor_sha256": "5d52f37f407380bb8ba8e80f012c9c884bfd66564162eb8b504846cf847bdf56",
+      "final_joint_feasibility_preflight": {
+        "error": null,
+        "exact_match_passed": true,
+        "maximum_marginal_imbalance": 0,
+        "pair_count": 12,
+        "passed": true
+      },
+      "formal_protocol": true,
+      "initial_actor_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+      "protocol_completed": true,
+      "round_outcomes": [
+        {
+          "accepted": true,
+          "accepted_update_count": 1,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 1,
+          "selected_candidate_fraction": 1.5,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 2,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 2,
+          "selected_candidate_fraction": 0.5,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 3,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 3,
+          "selected_candidate_fraction": 1,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 4,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 4,
+          "selected_candidate_fraction": 1,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 5,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 5,
+          "selected_candidate_fraction": 1,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 5,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 6,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 6,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 7,
+          "selected_candidate_fraction": 1,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 7,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 8,
+          "selected_candidate_fraction": 1.5,
+          "usable_preflights_passed": true
+        }
+      ],
+      "round_protocol": {
+        "accepted_updates": 7,
+        "actual_rounds": 8,
+        "maximum_rounds": 8,
+        "minimum_accepted_updates": 3,
+        "rejection_patience_after_minimum": 2,
+        "stop_reason": "maximum_rounds"
+      },
+      "training_diagnostic_only_128_episodes": {
+        "D0": {
+          "baseline_fall_rate": 0.03125,
+          "baseline_success_rate": 0.90625,
+          "episodes": 128,
+          "fall_delta": -0.015625,
+          "final_fall_rate": 0.015625,
+          "final_success_rate": 0.9296875,
+          "success_delta": 0.0234375
+        },
+        "target": {
+          "baseline_fall_rate": 0.3359375,
+          "baseline_success_rate": 0.6640625,
+          "episodes": 128,
+          "fall_delta": -0.0703125,
+          "final_fall_rate": 0.265625,
+          "final_success_rate": 0.734375,
+          "success_delta": 0.0703125
+        }
+      }
+    },
+    "lateral/63": {
+      "actor_observation_expansion": {
+        "legacy_first_layer_input_column_change_max_abs": 0,
+        "legacy_input_columns_frozen_during_adaptation": true,
+        "legacy_width": 405,
+        "new_feature_count": 5,
+        "new_first_layer_column_max_abs_after_adaptation": 0.00004916227044304833,
+        "new_first_layer_column_rms_after_adaptation": 0.000015918492863420397,
+        "new_input_columns_use_full_actor_learning_rate": true,
+        "pre_adaptation_policy_exactly_preserved": true,
+        "v19_width": 410
+      },
+      "discovery_joint_feasibility_attempts": [
+        {
+          "error": null,
+          "exact_match_passed": true,
+          "maximum_marginal_imbalance": 0,
+          "pair_count": 12,
+          "passed": true
+        }
+      ],
+      "discovery_rollout_count": 1,
+      "external_artifacts": {
+        "accepted_final.pt": {
+          "bytes": 66863025,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/lateral/seed63/accepted_final.pt",
+          "sha256": "6a9cbf5c0de421390728b19bcbce712422d927899e9beff67ec7f60503cbc704"
+        },
+        "bank_discovery.json": {
+          "bytes": 91963,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/lateral/seed63/bank_discovery.json",
+          "sha256": "9de58b14729409b17b4ac8d57082c6b4951ecca2195a8c07813efebfbb578cee"
+        },
+        "baseline_eval.json": {
+          "bytes": 23334,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/lateral/seed63/baseline_eval.json",
+          "sha256": "5932363fdd16cc2c061e9bba7e75c14fa0de3647bf524668db85deea70f1b94c"
+        },
+        "online_rounds.json": {
+          "bytes": 10002311,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/lateral/seed63/online_rounds.json",
+          "sha256": "7b3442da517eee7cabc9c1c78f522476fe7146d75b9e19e903701ccbdc24bce0"
+        },
+        "specialist_summary.json": {
+          "bytes": 10667092,
+          "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v19_revision4/training/lateral/seed63/specialist_summary.json",
+          "sha256": "254baac4fa5838e14aa5914194f035e6f20c81f24866ba3ce127d9d92223e16f"
+        }
+      },
+      "final_actor_sha256": "07e9db23985af26c718e4fc02e10dd994cabecb6048759636c5514a9ab642f7a",
+      "final_joint_feasibility_preflight": {
+        "error": null,
+        "exact_match_passed": true,
+        "maximum_marginal_imbalance": 0,
+        "pair_count": 12,
+        "passed": true
+      },
+      "formal_protocol": true,
+      "initial_actor_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+      "protocol_completed": true,
+      "round_outcomes": [
+        {
+          "accepted": false,
+          "accepted_update_count": 0,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 1,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 0,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 2,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 1,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 3,
+          "selected_candidate_fraction": 0.5,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 1,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 4,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 2,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 5,
+          "selected_candidate_fraction": 0.5,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 3,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 6,
+          "selected_candidate_fraction": 1,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": true,
+          "accepted_update_count": 4,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 7,
+          "selected_candidate_fraction": 1,
+          "usable_preflights_passed": true
+        },
+        {
+          "accepted": false,
+          "accepted_update_count": 4,
+          "bank_transactions_committed": 2,
+          "bank_transactions_restored": 0,
+          "d0_rollback": false,
+          "maximum_replay_marginal_imbalance": 0,
+          "replay_pair_audits_exact": true,
+          "round": 8,
+          "selected_candidate_fraction": null,
+          "usable_preflights_passed": true
+        }
+      ],
+      "round_protocol": {
+        "accepted_updates": 4,
+        "actual_rounds": 8,
+        "maximum_rounds": 8,
+        "minimum_accepted_updates": 3,
+        "rejection_patience_after_minimum": 2,
+        "stop_reason": "maximum_rounds"
+      },
+      "training_diagnostic_only_128_episodes": {
+        "D0": {
+          "baseline_fall_rate": 0.015625,
+          "baseline_success_rate": 0.875,
+          "episodes": 128,
+          "fall_delta": -0.015625,
+          "final_fall_rate": 0,
+          "final_success_rate": 0.9453125,
+          "success_delta": 0.0703125
+        },
+        "target": {
+          "baseline_fall_rate": 0.2421875,
+          "baseline_success_rate": 0.7578125,
+          "episodes": 128,
+          "fall_delta": -0.0078125,
+          "final_fall_rate": 0.234375,
+          "final_success_rate": 0.765625,
+          "success_delta": 0.0078125
+        }
+      }
+    }
+  },
+  "schema_version": 1,
+  "sealed_inputs": {
+    "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+    "contact_stability_context_file_sha256": "db2d128134056e8aaa2b4cbeb3d61d8304110d5ef8abd886d153c1c268fc6bec",
+    "lateral_context_file_sha256": "1cc6e4aaa166bd8dc548b79cf975c04b6e09228c158ab752006dc002346a3e16"
+  },
+  "status": "revision4_formal_training_stopped_before_audit",
+  "training_diagnostic_only_values_are_formal_evidence": false
+}

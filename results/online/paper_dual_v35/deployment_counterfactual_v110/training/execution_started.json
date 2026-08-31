@@ -1,0 +1,18 @@
+{
+  "actor_observation_interface": "405D proprioception + 10D deployable CBF geometry",
+  "base_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "git_commit": "bdd57f0669f7406340c346422c09351f393e8258",
+  "method_id": "deployment-state-counterfactual-rescue-trajectory-adapter-v110",
+  "rollout_conditions": [
+    "filter_off",
+    "filter_on"
+  ],
+  "teacher_episode_scope": "rescued-only",
+  "teacher_target": "deployment-counterfactual",
+  "training_seeds": [
+    201353400,
+    201353410,
+    201353420,
+    201353430
+  ]
+}

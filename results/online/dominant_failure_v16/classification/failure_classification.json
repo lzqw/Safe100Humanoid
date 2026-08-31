@@ -1,0 +1,129 @@
+{
+  "adapted_v16_policy_evaluations_used": false,
+  "classification_rule": "lateral_heading_drift if side edge breached, root centerline error >= 2/3 stair half-width, or heading error >= 90 degrees; otherwise split at correction_max >= 0.5",
+  "classified_falls_csv": {
+    "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/dominant_failure_v16/failure_classification/classified_baseline_falls.csv",
+    "row_count": 265,
+    "sha256": "84b458ec7a07afbc016f25ccb077b3622cdb5f8efd83318bdddd16350492be9e"
+  },
+  "failure_type_counts": {
+    "lateral_heading_drift": 146,
+    "non_lateral_balance_or_phase": 47,
+    "non_lateral_high_cbf_demand": 72
+  },
+  "failure_type_fractions": {
+    "lateral_heading_drift": 0.5509433962264151,
+    "non_lateral_balance_or_phase": 0.17735849056603772,
+    "non_lateral_high_cbf_demand": 0.27169811320754716
+  },
+  "method": "Branch-B target failure classification v16",
+  "selected_dominant_failure_type": "lateral_heading_drift",
+  "selection_rule": "select the unique largest baseline fall class",
+  "source_audit_summary": {
+    "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/failure_focused_v15/final_audit/final_audit_summary.json",
+    "sha256": "c203f6939a6a9f4370325f5bac1740c518064aff80678561e88ea5b58bea461b"
+  },
+  "source_episode_count": 1536,
+  "source_fall_count": 265,
+  "source_files": [
+    {
+      "evaluation_seed": 1510000,
+      "path": "train_seed142/baseline/DQHMED/DQHMED-seed1510000.csv",
+      "row_count": 128,
+      "sha256": "5a43badc58b5abacb9a0a43e9954e832747e0fbdf47bdacf035500f06527afb3",
+      "training_seed": 142
+    },
+    {
+      "evaluation_seed": 1510001,
+      "path": "train_seed142/baseline/DQHMED/DQHMED-seed1510001.csv",
+      "row_count": 128,
+      "sha256": "116692bcc12862355b0dec32217d0f6862ad6afefef23fcd7288e69505a61f2b",
+      "training_seed": 142
+    },
+    {
+      "evaluation_seed": 1510002,
+      "path": "train_seed142/baseline/DQHMED/DQHMED-seed1510002.csv",
+      "row_count": 128,
+      "sha256": "156304c376c0644b8add11acbfa82d317705ac7d536280a7def117e636a72a60",
+      "training_seed": 142
+    },
+    {
+      "evaluation_seed": 1510003,
+      "path": "train_seed142/baseline/DQHMED/DQHMED-seed1510003.csv",
+      "row_count": 128,
+      "sha256": "db1d28ca970605761ea6b980a78079965f5440bbdc121e570f3d6e09a6912eb9",
+      "training_seed": 142
+    },
+    {
+      "evaluation_seed": 1520000,
+      "path": "train_seed242/baseline/DQHMED/DQHMED-seed1520000.csv",
+      "row_count": 128,
+      "sha256": "5eab2972ce885d8da638f355b1ef8a23624153c7d6068c6a0337590663f99343",
+      "training_seed": 242
+    },
+    {
+      "evaluation_seed": 1520001,
+      "path": "train_seed242/baseline/DQHMED/DQHMED-seed1520001.csv",
+      "row_count": 128,
+      "sha256": "0c5274205b07cbf18c38f727ea9e66d02b2c16f0a360b15f76bd5f6a5e504620",
+      "training_seed": 242
+    },
+    {
+      "evaluation_seed": 1520002,
+      "path": "train_seed242/baseline/DQHMED/DQHMED-seed1520002.csv",
+      "row_count": 128,
+      "sha256": "4575f5b51edad2f9eb9a7bff192a37a0a2ea3ce406c582307779e483c99b0359",
+      "training_seed": 242
+    },
+    {
+      "evaluation_seed": 1520003,
+      "path": "train_seed242/baseline/DQHMED/DQHMED-seed1520003.csv",
+      "row_count": 128,
+      "sha256": "e7c76045a72dee33778067764517adefef0c92dcdde48e3553230f0281c7c84b",
+      "training_seed": 242
+    },
+    {
+      "evaluation_seed": 1500000,
+      "path": "train_seed42/baseline/DQHMED/DQHMED-seed1500000.csv",
+      "row_count": 128,
+      "sha256": "4003e9b8f2160f6974c5b2650843148aa27b1f5d6c9daed10f691ae1ab4a1842",
+      "training_seed": 42
+    },
+    {
+      "evaluation_seed": 1500001,
+      "path": "train_seed42/baseline/DQHMED/DQHMED-seed1500001.csv",
+      "row_count": 128,
+      "sha256": "a554b7edf0aafdb9a79f93b7248e5af758968234cf39fc04cdd8bff856b0878b",
+      "training_seed": 42
+    },
+    {
+      "evaluation_seed": 1500002,
+      "path": "train_seed42/baseline/DQHMED/DQHMED-seed1500002.csv",
+      "row_count": 128,
+      "sha256": "4857cccacfa3e39157c037df40fc561be4c693ce553a4c411cf31975a16d2be1",
+      "training_seed": 42
+    },
+    {
+      "evaluation_seed": 1500003,
+      "path": "train_seed42/baseline/DQHMED/DQHMED-seed1500003.csv",
+      "row_count": 128,
+      "sha256": "c71195b2952c97d420c6211e5e7405d1fd5f2c0ea763fa5f092f245743b8c1be",
+      "training_seed": 42
+    }
+  ],
+  "source_method": "Failure-Focused Brief PPO v15",
+  "source_policy_role": "online-start baseline",
+  "source_success_count": 1271,
+  "source_training_seeds": [
+    42,
+    142,
+    242
+  ],
+  "thresholds": {
+    "centerline_width_fraction": 0.6666666666666666,
+    "heading_error_degrees": 90.0,
+    "heading_error_rad": 1.5707963267948966,
+    "high_cbf_correction": 0.5,
+    "stair_half_width_m": 1.2
+  }
+}

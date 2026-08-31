@@ -1,0 +1,54 @@
+{
+  "schema_version": "paper_dual_v35.v106.decision.v1",
+  "candidate": "outcome-centered-episode-advantage-persistent-geometry-v106",
+  "context": "F2_18.4cm",
+  "deployment_filter": "off",
+  "gate_threshold": 0.75,
+  "training_transition_count": 524288,
+  "aligned_rollout_count": 8,
+  "elapsed_seconds": 269.4161470789695,
+  "zero_column_baseline": {
+    "checkpoint_round": 0,
+    "success_count": 68,
+    "episode_count": 98,
+    "success_rate": 0.6938775510204082
+  },
+  "best_aligned_result": {
+    "rollout_round": 4,
+    "checkpoint_round": 3,
+    "success_count": 68,
+    "episode_count": 95,
+    "success_rate": 0.7157894736842105,
+    "improvement_percentage_points_over_run_baseline": 2.19119226638023,
+    "checkpoint_sha256": "4b1e558fb21eea162d0585263f7af018b34d6996877b9788ebcf1983d52c274c",
+    "actor_sha256": "9053bbf42079f397a83d73c6d6a9f5b508021ebcf74f4f441ce5b964939ff935"
+  },
+  "outcome_credit": {
+    "episode_mass_per_filter_group": {
+      "success": 0.5,
+      "failure": -0.5
+    },
+    "weight": 1.0,
+    "mean_labeled_transition_fraction": 0.8033065795898438,
+    "base_gae_credit_cosine_min": 0.22735407948493958,
+    "base_gae_credit_cosine_max": 0.3063758611679077,
+    "base_gae_credit_cosine_mean": 0.2642917800694704
+  },
+  "geometry_gradient_applied_scale_range": [
+    6.955043491788089,
+    11.217939591555556
+  ],
+  "geometry_to_legacy_scaled_gradient_ratio": 1.0,
+  "historical_best_success_rate": 0.7202072538860104,
+  "historical_best_version": "v79",
+  "training_threshold_passed": false,
+  "independent_gate_run": false,
+  "accepted": false,
+  "global_selection": "v79",
+  "initial_128_env_attempt": {
+    "completed": false,
+    "reason": "OOM during the first update under concurrent GPU memory occupancy",
+    "candidate_checkpoint_selected": false
+  },
+  "reason": "Outcome-centered credit improved the run-local peak by 2.19 percentage points, but the best aligned filter-off result was 71.58%, below both the 75% gate and v79."
+}

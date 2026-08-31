@@ -1,0 +1,83 @@
+{
+  "actor_learning_rate": 5e-06,
+  "base_checkpoint_sha256": "3ec45cd196447901cf815d0fa1ff400af1b519ed2bb85c2fc179458ce3e81d3f",
+  "candidate_actor_sha256": "9fef52da06db9fe22a2dafc1f64bc9cef3d4f2a699a89788e0abb51c5b727962",
+  "candidate_checkpoint_sha256": "afb948c96bae9a22d93cfa565192a8bafdf27ee49842e2e66c7759535cd30ae6",
+  "candidate_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/pilot/F2/filter_free_elite_full_batch_v43b_6x32_kl2e4/candidate.pt",
+  "context": "F2",
+  "elapsed_seconds": 9.826962932944298,
+  "epochs": 1,
+  "git_commit": "bd9122a4fc8db9c0bccdb73442510a892b6e7f92",
+  "initial_actor_sha256": "3964c0ef24707addbaa0dacfd4fd627882bd8b45a2c9799142710fa45bc29499",
+  "max_reference_kl": 0.0002,
+  "method_id": "six-seed-full-batch-filter-free-elite-self-imitation-v43",
+  "minibatches": 1,
+  "moving_kl_beta": 0.5,
+  "offline_elite_loss_delta": -1.1010671719172138e-06,
+  "offline_gate_passed": true,
+  "optimization_seed": 201350432,
+  "schema_version": 1,
+  "source_dataset": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/pilot/F2/filter_free_elite_self_imitation_v41_3x32/elite_dataset.pt",
+  "source_dataset_sha256": "7540dcd99cd67d90dc5c9b511fe7050469eb6e02696fbbc67841d74a89fd6ac7",
+  "source_dataset_sha256s": [
+    "7540dcd99cd67d90dc5c9b511fe7050469eb6e02696fbbc67841d74a89fd6ac7",
+    "ba86487a7716d63bcb33eebd8b6bdee4ece295905ca8a0b279b131ea5786d4a2"
+  ],
+  "source_datasets": [
+    "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/pilot/F2/filter_free_elite_self_imitation_v41_3x32/elite_dataset.pt",
+    "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/pilot/F2/filter_free_elite_additional_v43_3x32/elite_dataset.pt"
+  ],
+  "source_training_seeds": [
+    201350342,
+    201350352,
+    201350362,
+    201350392,
+    201350402,
+    201350412
+  ],
+  "training": {
+    "actor_gradient_clipped_fraction": 0.0,
+    "actor_gradient_norm_pre_clip_max": 0.01321063470095396,
+    "actor_update_scope": "last-layer",
+    "after": {
+      "elite_smooth_l1": 0.021213836790038295,
+      "elite_target_distance": 0.1695801517964035,
+      "reference_elite_target_distance": 0.1695851005928562
+    },
+    "before": {
+      "elite_smooth_l1": 0.021214937857210212,
+      "elite_target_distance": 0.1695851005928562,
+      "reference_elite_target_distance": 0.1695851005928562
+    },
+    "dataset_transition_count": 80044,
+    "elite_loss_during_update": 0.021214941516518593,
+    "elite_transition_count": 60976,
+    "elite_transition_fraction": 0.7617810368537903,
+    "minibatches_with_elite": 1,
+    "moving_kl_during_update": 0.0,
+    "optimizer_updates": 1,
+    "trainable_parameter_count": 1548,
+    "trust_region": {
+      "after": {
+        "reference_forward_kl": 0.0001999166056965788,
+        "reference_mean_shift": 0.0009322361600350764
+      },
+      "before": {
+        "reference_forward_kl": 0.0,
+        "reference_mean_shift": 0.0
+      },
+      "max_reference_kl": 0.0002,
+      "parameter_interpolation_scale": 0.886962890625,
+      "projection_iterations": 12,
+      "unprojected_after": {
+        "reference_forward_kl": 0.00025418475378245336,
+        "reference_mean_shift": 0.0010511918640060468
+      }
+    },
+    "unprojected_after": {
+      "elite_smooth_l1": 0.02121378073570954,
+      "elite_target_distance": 0.16957994359461098,
+      "reference_elite_target_distance": 0.1695851005928562
+    }
+  }
+}

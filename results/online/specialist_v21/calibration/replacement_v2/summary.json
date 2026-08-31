@@ -1,0 +1,237 @@
+{
+  "schema_version": 1,
+  "protocol_id": "safe100-deployment-unit-local-matched-success-v21",
+  "event_id": "v21-replacement-v2-base-policy-calibration-complete",
+  "stage": "replacement_v2_base_policy_only_calibration",
+  "started_at_utc": "2026-08-08T21:05:59Z",
+  "completed_at_utc": "2026-08-08T22:01:48Z",
+  "prospective_protocol": {
+    "file": "results/online/specialist_v21/protocol_precalibration_replacement_v2.json",
+    "git_commit": "5dac6962a2a9b13053032477008c81cc9a82f269",
+    "sha256": "af073b100c7446e2ffe34033ef24bff3905e770dd2cc77b3c89df9d3a83df23d",
+    "sealed_source_commit": "9d62c897a066428a78881a210d33249617ce8100"
+  },
+  "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "base_policy_only": true,
+  "first_qualifying_candidate_frozen": true,
+  "gates": {
+    "success_rate_bounds_inclusive": [
+      0.7,
+      0.85
+    ],
+    "minimum_fall_count": 100,
+    "lateral_target_failure_fraction_min": 0.8,
+    "lateral_second_failure_fraction_max": 0.3,
+    "contact_stability_target_failure_fraction_min": 0.75,
+    "contact_stability_second_failure_fraction_max": 0.2
+  },
+  "context_count": 12,
+  "candidate_attempt_count": 30,
+  "episodes_per_candidate": 512,
+  "total_base_policy_episodes": 15360,
+  "all_contexts_frozen": true,
+  "selected_contexts": [
+    {
+      "context_id": "L_dev",
+      "formal": false,
+      "attempt_count": 2,
+      "candidate_seed": 39109,
+      "success_rate": 0.791015625,
+      "fall_count": 107,
+      "target_failure_fraction": 0.8411214953271028,
+      "second_failure_fraction": 0.1588785046728972
+    },
+    {
+      "context_id": "C_dev",
+      "formal": false,
+      "attempt_count": 1,
+      "candidate_seed": 39208,
+      "success_rate": 0.8046875,
+      "fall_count": 100,
+      "target_failure_fraction": 0.98,
+      "second_failure_fraction": 0.02
+    },
+    {
+      "context_id": "L1",
+      "formal": true,
+      "attempt_count": 1,
+      "candidate_seed": 39308,
+      "success_rate": 0.7265625,
+      "fall_count": 139,
+      "target_failure_fraction": 0.9136690647482014,
+      "second_failure_fraction": 0.08633093525179857
+    },
+    {
+      "context_id": "L2",
+      "formal": true,
+      "attempt_count": 1,
+      "candidate_seed": 39408,
+      "success_rate": 0.78515625,
+      "fall_count": 110,
+      "target_failure_fraction": 0.8272727272727273,
+      "second_failure_fraction": 0.17272727272727273
+    },
+    {
+      "context_id": "L3",
+      "formal": true,
+      "attempt_count": 1,
+      "candidate_seed": 39508,
+      "success_rate": 0.779296875,
+      "fall_count": 113,
+      "target_failure_fraction": 0.8672566371681416,
+      "second_failure_fraction": 0.13274336283185842
+    },
+    {
+      "context_id": "L4",
+      "formal": true,
+      "attempt_count": 1,
+      "candidate_seed": 39608,
+      "success_rate": 0.765625,
+      "fall_count": 120,
+      "target_failure_fraction": 0.8583333333333333,
+      "second_failure_fraction": 0.14166666666666666
+    },
+    {
+      "context_id": "L5",
+      "formal": true,
+      "attempt_count": 5,
+      "candidate_seed": 39712,
+      "success_rate": 0.755859375,
+      "fall_count": 125,
+      "target_failure_fraction": 0.88,
+      "second_failure_fraction": 0.12
+    },
+    {
+      "context_id": "C1",
+      "formal": true,
+      "attempt_count": 5,
+      "candidate_seed": 39812,
+      "success_rate": 0.798828125,
+      "fall_count": 103,
+      "target_failure_fraction": 0.9902912621359223,
+      "second_failure_fraction": 0.009708737864077669
+    },
+    {
+      "context_id": "C2",
+      "formal": true,
+      "attempt_count": 1,
+      "candidate_seed": 39908,
+      "success_rate": 0.771484375,
+      "fall_count": 117,
+      "target_failure_fraction": 0.9658119658119658,
+      "second_failure_fraction": 0.03418803418803419
+    },
+    {
+      "context_id": "C3",
+      "formal": true,
+      "attempt_count": 1,
+      "candidate_seed": 40008,
+      "success_rate": 0.78515625,
+      "fall_count": 110,
+      "target_failure_fraction": 0.990909090909091,
+      "second_failure_fraction": 0.00909090909090909
+    },
+    {
+      "context_id": "C4",
+      "formal": true,
+      "attempt_count": 2,
+      "candidate_seed": 40109,
+      "success_rate": 0.80078125,
+      "fall_count": 102,
+      "target_failure_fraction": 0.9803921568627451,
+      "second_failure_fraction": 0.0196078431372549
+    },
+    {
+      "context_id": "C5",
+      "formal": true,
+      "attempt_count": 9,
+      "candidate_seed": 40216,
+      "success_rate": 0.76953125,
+      "fall_count": 118,
+      "target_failure_fraction": 0.9661016949152542,
+      "second_failure_fraction": 0.03389830508474576
+    }
+  ],
+  "C4_repair_result": {
+    "prior_replacement_failure": {
+      "easy_side_candidate_seed": 36112,
+      "easy_side_fall_count": 91,
+      "hard_side_candidate_seed": 36113,
+      "hard_side_success_rate": 0.69921875,
+      "failure_class": "coarse_grid_skipped_the_formal_window"
+    },
+    "replacement_v2_first_candidate": {
+      "candidate_seed": 40108,
+      "success_rate": 0.8203125,
+      "fall_count": 92,
+      "target_failure_fraction": 0.9891304347826086,
+      "qualifies": false,
+      "failed_gate": "fall_count_below_100"
+    },
+    "replacement_v2_selected_candidate": {
+      "candidate_seed": 40109,
+      "success_rate": 0.80078125,
+      "fall_count": 102,
+      "target_failure_fraction": 0.9803921568627451,
+      "second_failure_fraction": 0.0196078431372549,
+      "qualifies": true
+    },
+    "blocked_context_repaired": true
+  },
+  "execution": {
+    "queue_completed_marker_observed": true,
+    "tmux_session_running_after_completion": false,
+    "v21_calibration_or_adaptation_process_running_after_completion": false,
+    "error_signature_count_in_logs": 0,
+    "process_audit_at_utc": "2026-08-08T22:03:33Z"
+  },
+  "committed_evidence": {
+    "evidence_commit": "458cf01a7705ae1a88508fbebd3ff5292d057db0",
+    "calibration_file_count": 24,
+    "calibration_total_bytes": 67777,
+    "calibration_manifest_sha256": "dda33e9f7a10a7736de11445176d4af9dc5c6ec6563606482bb61faebccd5ca4",
+    "frozen_context_file_count": 12,
+    "frozen_context_total_bytes": 81853,
+    "frozen_context_manifest_sha256": "31b85a7a45fc976d5ad50fff4c4d643656076bc51e9aa079fa35a28433d4d02a",
+    "manifest_definition": "SHA-256 of sorted sha256sum lines rooted at the corresponding directory and using ./ relative paths; the calibration manifest covers the 24 per-context progress/summary files and excludes this overview"
+  },
+  "external_evidence": {
+    "artifact_root": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_replacement_v2",
+    "artifact_file_count": 324,
+    "artifact_total_bytes": 131758452,
+    "artifact_manifest_sha256": "a0ff2a921ee2643dd1cc566c263e5546a1e60546cb22dc71c011b054663f5fb3",
+    "evaluation_json_file_count": 120,
+    "evaluation_csv_file_count": 120,
+    "actor_file_count": 30,
+    "actor_file_sha256": "8613b51907b06f4a8845d60bb40c31ef1b6cdc977af7207394b9b44a2c1bc7b4",
+    "actor_state_sha256": "f8e27e9b3bb92dd33a460f38ecbd72f8b0fe03809683f697d54d3549626d69bb",
+    "log_root": "/home/carla/LZQW/SAFE100/humanoid/logs/specialist_v21_replacement_v2",
+    "log_file_count": 13,
+    "log_total_bytes": 388773,
+    "log_manifest_sha256": "a9b269afcd84895e54d509906cc44a287bb9525f1ab96453e712159576fdfdf8",
+    "queue_log_sha256": "d2900623c3ab35b0b793aacaf328cbf558072ef3cef32ffc33fedd0e0ae1c29d",
+    "manifest_definition": "SHA-256 of sorted sha256sum lines rooted at the corresponding directory and using ./ relative paths"
+  },
+  "base_policy_calibration_outcomes_observed": true,
+  "adaptation_process_started": false,
+  "adapted_policy_outcomes_observed": false,
+  "development_adaptation_outcomes_observed": false,
+  "formal_adaptation_or_audit_outcomes_observed": false,
+  "development_contexts_excluded_from_formal_claims": [
+    "L_dev",
+    "C_dev"
+  ],
+  "formal_contexts_ready": [
+    "L1",
+    "L2",
+    "L3",
+    "L4",
+    "L5",
+    "C1",
+    "C2",
+    "C3",
+    "C4",
+    "C5"
+  ],
+  "disposition": "calibration_complete_ready_for_development_protocol_freeze"
+}

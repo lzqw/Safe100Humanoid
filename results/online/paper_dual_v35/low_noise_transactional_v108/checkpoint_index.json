@@ -1,0 +1,24 @@
+{
+  "schema_version": "paper_dual_v35.v108.checkpoints.v1",
+  "source_commit": "f5093c4310551c66ea214798f6259eeec4aaa82a",
+  "base": {
+    "role": "v79_historical_best",
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/mixed_unit_balanced_v79_d65f0b6_s201352619/round_03.pt",
+    "sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317"
+  },
+  "retained_v108_anchor": {
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/low_noise_transactional_v108b_f5093c4_128e_s201353362/round_00.pt",
+    "sha256": "850b88116c191b094242cc6fd8f97acfdc68a34eb9947dbd28fd5ff534017df7",
+    "actor_sha256": "9d4efc6f67b4098b8cf9742aaa38d5744918781017c6f46266745881aa1d5b8e",
+    "nominal_policy_exact_v79_with_zero_geometry_columns": true,
+    "accepted_new_proposal": false,
+    "uploaded_to_git": false
+  },
+  "final_restored_v108": {
+    "remote_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/low_noise_transactional_v108b_f5093c4_128e_s201353362/round_08.pt",
+    "sha256": "7994f59ca757452bb8b2bfde26fe74769c70256c21c1556a5ed8fa7b4e24972f",
+    "actor_sha256": "9d4efc6f67b4098b8cf9742aaa38d5744918781017c6f46266745881aa1d5b8e",
+    "same_actor_as_input": true,
+    "uploaded_to_git": false
+  }
+}

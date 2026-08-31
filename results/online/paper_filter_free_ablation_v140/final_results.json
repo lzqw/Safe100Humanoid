@@ -1,0 +1,663 @@
+{
+  "baseline_mean_cbf_off_success_rate": 0.7044270833333334,
+  "curve_row_count": 144,
+  "details_by_arm": {
+    "dual_safe_ft": {
+      "per_seed": [
+        {
+          "f1_cbf_off_success_rate": 0.736328125,
+          "f2_cbf_off_success_rate": 0.640625,
+          "f3_cbf_off_success_rate": 0.673828125,
+          "mean_cbf_off_counterfactual_correction_norm": 0.0197208848346003,
+          "mean_cbf_off_nominal_violation_steps_per_riser": 5.027857124889654,
+          "mean_cbf_off_success_rate": 0.68359375,
+          "mean_cbf_off_would_intervene_fraction": 0.09882634941046614,
+          "mean_off_improvement": -0.020833333333333332,
+          "mean_shield_gap": 0.07877604166666667,
+          "seed": 201357000
+        },
+        {
+          "f1_cbf_off_success_rate": 0.7734375,
+          "f2_cbf_off_success_rate": 0.685546875,
+          "f3_cbf_off_success_rate": 0.67578125,
+          "mean_cbf_off_counterfactual_correction_norm": 0.019356142940275742,
+          "mean_cbf_off_nominal_violation_steps_per_riser": 4.887367832721798,
+          "mean_cbf_off_success_rate": 0.7115885416666666,
+          "mean_cbf_off_would_intervene_fraction": 0.09735347465731575,
+          "mean_off_improvement": 0.007161458333333333,
+          "mean_shield_gap": 0.04296875,
+          "seed": 201357001
+        },
+        {
+          "f1_cbf_off_success_rate": 0.751953125,
+          "f2_cbf_off_success_rate": 0.69921875,
+          "f3_cbf_off_success_rate": 0.66015625,
+          "mean_cbf_off_counterfactual_correction_norm": 0.030951767038209052,
+          "mean_cbf_off_nominal_violation_steps_per_riser": 4.985112190664549,
+          "mean_cbf_off_success_rate": 0.7037760416666666,
+          "mean_cbf_off_would_intervene_fraction": 0.09859545222458183,
+          "mean_off_improvement": -0.0006510416666666666,
+          "mean_shield_gap": 0.03515625,
+          "seed": 201357002
+        }
+      ],
+      "training": {
+        "per_seed": [
+          {
+            "executed_violation_fraction": 1.2715657552083334e-05,
+            "falls": 878,
+            "minimum_executed_barrier_margin": -1.811981201171875e-05,
+            "minimum_nominal_barrier_margin": -124.81607055664062,
+            "nominal_violation_fraction": 0.09520912170410156,
+            "recoveries": 149731,
+            "seed": 201357000
+          },
+          {
+            "executed_violation_fraction": 7.62939453125e-06,
+            "falls": 828,
+            "minimum_executed_barrier_margin": -2.311915159225464e-05,
+            "minimum_nominal_barrier_margin": -144.43246459960938,
+            "nominal_violation_fraction": 0.0944976806640625,
+            "recoveries": 148620,
+            "seed": 201357001
+          },
+          {
+            "executed_violation_fraction": 7.62939453125e-06,
+            "falls": 887,
+            "minimum_executed_barrier_margin": -1.6570091247558594e-05,
+            "minimum_nominal_barrier_margin": -142.83351135253906,
+            "nominal_violation_fraction": 0.09488805135091145,
+            "recoveries": 149234,
+            "seed": 201357002
+          }
+        ],
+        "training_executed_violation_fraction_mean": 9.324815538194445e-06,
+        "training_falls_mean": 864.3333333333334,
+        "training_falls_std": 31.785741037976972,
+        "training_minimum_executed_barrier_margin": -2.311915159225464e-05,
+        "training_minimum_nominal_barrier_margin": -144.43246459960938,
+        "training_nominal_violation_fraction_mean": 0.09486495123969184,
+        "training_shield_recoveries_mean": 149195.0
+      }
+    },
+    "filter_only_ft": {
+      "per_seed": [
+        {
+          "f1_cbf_off_success_rate": 0.75390625,
+          "f2_cbf_off_success_rate": 0.708984375,
+          "f3_cbf_off_success_rate": 0.6484375,
+          "mean_cbf_off_counterfactual_correction_norm": 0.019948299330657737,
+          "mean_cbf_off_nominal_violation_steps_per_riser": 4.918130530949967,
+          "mean_cbf_off_success_rate": 0.7037760416666666,
+          "mean_cbf_off_would_intervene_fraction": 0.09762920007353376,
+          "mean_off_improvement": -0.0006510416666666666,
+          "mean_shield_gap": 0.029947916666666668,
+          "seed": 201357000
+        },
+        {
+          "f1_cbf_off_success_rate": 0.72265625,
+          "f2_cbf_off_success_rate": 0.693359375,
+          "f3_cbf_off_success_rate": 0.681640625,
+          "mean_cbf_off_counterfactual_correction_norm": 0.01915170798252944,
+          "mean_cbf_off_nominal_violation_steps_per_riser": 4.899798385941104,
+          "mean_cbf_off_success_rate": 0.69921875,
+          "mean_cbf_off_would_intervene_fraction": 0.09696033759473578,
+          "mean_off_improvement": -0.005208333333333333,
+          "mean_shield_gap": 0.050130208333333336,
+          "seed": 201357001
+        },
+        {
+          "f1_cbf_off_success_rate": 0.736328125,
+          "f2_cbf_off_success_rate": 0.71875,
+          "f3_cbf_off_success_rate": 0.666015625,
+          "mean_cbf_off_counterfactual_correction_norm": 0.020072591360538097,
+          "mean_cbf_off_nominal_violation_steps_per_riser": 5.017202449957289,
+          "mean_cbf_off_success_rate": 0.70703125,
+          "mean_cbf_off_would_intervene_fraction": 0.09888235072678057,
+          "mean_off_improvement": 0.0026041666666666665,
+          "mean_shield_gap": 0.054036458333333336,
+          "seed": 201357002
+        }
+      ],
+      "training": {
+        "per_seed": [
+          {
+            "executed_violation_fraction": 9.5367431640625e-06,
+            "falls": 848,
+            "minimum_executed_barrier_margin": -1.8075108528137207e-05,
+            "minimum_nominal_barrier_margin": -142.13119506835938,
+            "nominal_violation_fraction": 0.09447224934895833,
+            "recoveries": 148577,
+            "seed": 201357000
+          },
+          {
+            "executed_violation_fraction": 1.3987223307291666e-05,
+            "falls": 867,
+            "minimum_executed_barrier_margin": -1.947954297065735e-05,
+            "minimum_nominal_barrier_margin": -131.26292419433594,
+            "nominal_violation_fraction": 0.09518941243489583,
+            "recoveries": 149698,
+            "seed": 201357001
+          },
+          {
+            "executed_violation_fraction": 1.3987223307291666e-05,
+            "falls": 836,
+            "minimum_executed_barrier_margin": -1.582503318786621e-05,
+            "minimum_nominal_barrier_margin": -140.71768188476562,
+            "nominal_violation_fraction": 0.09453264872233073,
+            "recoveries": 148665,
+            "seed": 201357002
+          }
+        ],
+        "training_executed_violation_fraction_mean": 1.2503729926215276e-05,
+        "training_falls_mean": 850.3333333333334,
+        "training_falls_std": 15.631165450257807,
+        "training_minimum_executed_barrier_margin": -1.947954297065735e-05,
+        "training_minimum_nominal_barrier_margin": -142.13119506835938,
+        "training_nominal_violation_fraction_mean": 0.09473143683539496,
+        "training_shield_recoveries_mean": 148980.0
+      }
+    },
+    "nominal_ft": {
+      "per_seed": [
+        {
+          "f1_cbf_off_success_rate": 0.75,
+          "f2_cbf_off_success_rate": 0.669921875,
+          "f3_cbf_off_success_rate": 0.650390625,
+          "mean_cbf_off_counterfactual_correction_norm": 0.019578705123299945,
+          "mean_cbf_off_nominal_violation_steps_per_riser": 4.969308454735208,
+          "mean_cbf_off_success_rate": 0.6901041666666666,
+          "mean_cbf_off_would_intervene_fraction": 0.09830931064825536,
+          "mean_off_improvement": -0.014322916666666666,
+          "mean_shield_gap": 0.049479166666666664,
+          "seed": 201357000
+        },
+        {
+          "f1_cbf_off_success_rate": 0.712890625,
+          "f2_cbf_off_success_rate": 0.697265625,
+          "f3_cbf_off_success_rate": 0.6875,
+          "mean_cbf_off_counterfactual_correction_norm": 0.02086812747133497,
+          "mean_cbf_off_nominal_violation_steps_per_riser": 5.0407772190095015,
+          "mean_cbf_off_success_rate": 0.69921875,
+          "mean_cbf_off_would_intervene_fraction": 0.09936214540111743,
+          "mean_off_improvement": -0.005208333333333333,
+          "mean_shield_gap": 0.049479166666666664,
+          "seed": 201357001
+        },
+        {
+          "f1_cbf_off_success_rate": 0.744140625,
+          "f2_cbf_off_success_rate": 0.671875,
+          "f3_cbf_off_success_rate": 0.685546875,
+          "mean_cbf_off_counterfactual_correction_norm": 0.019977789040728677,
+          "mean_cbf_off_nominal_violation_steps_per_riser": 5.043472827794099,
+          "mean_cbf_off_success_rate": 0.7005208333333334,
+          "mean_cbf_off_would_intervene_fraction": 0.09917721971765942,
+          "mean_off_improvement": -0.00390625,
+          "mean_shield_gap": 0.03515625,
+          "seed": 201357002
+        }
+      ],
+      "training": {
+        "per_seed": [
+          {
+            "executed_violation_fraction": 0.09811782836914062,
+            "falls": 942,
+            "minimum_executed_barrier_margin": -76.95234680175781,
+            "minimum_nominal_barrier_margin": -76.95234680175781,
+            "nominal_violation_fraction": 0.09811782836914062,
+            "recoveries": 0,
+            "seed": 201357000
+          },
+          {
+            "executed_violation_fraction": 0.09813690185546875,
+            "falls": 949,
+            "minimum_executed_barrier_margin": -59.52028274536133,
+            "minimum_nominal_barrier_margin": -59.52028274536133,
+            "nominal_violation_fraction": 0.09813690185546875,
+            "recoveries": 0,
+            "seed": 201357001
+          },
+          {
+            "executed_violation_fraction": 0.09871546427408855,
+            "falls": 991,
+            "minimum_executed_barrier_margin": -72.39727783203125,
+            "minimum_nominal_barrier_margin": -72.39727783203125,
+            "nominal_violation_fraction": 0.09871546427408855,
+            "recoveries": 0,
+            "seed": 201357002
+          }
+        ],
+        "training_executed_violation_fraction_mean": 0.09832339816623265,
+        "training_falls_mean": 960.6666666666666,
+        "training_falls_std": 26.501572280401277,
+        "training_minimum_executed_barrier_margin": -76.95234680175781,
+        "training_minimum_nominal_barrier_margin": -76.95234680175781,
+        "training_nominal_violation_fraction_mean": 0.09832339816623265,
+        "training_shield_recoveries_mean": 0.0
+      }
+    },
+    "reward_only_ft": {
+      "per_seed": [
+        {
+          "f1_cbf_off_success_rate": 0.71875,
+          "f2_cbf_off_success_rate": 0.701171875,
+          "f3_cbf_off_success_rate": 0.69140625,
+          "mean_cbf_off_counterfactual_correction_norm": 0.021614922978146933,
+          "mean_cbf_off_nominal_violation_steps_per_riser": 4.967528670304961,
+          "mean_cbf_off_success_rate": 0.7037760416666666,
+          "mean_cbf_off_would_intervene_fraction": 0.09797351490066993,
+          "mean_off_improvement": -0.0006510416666666666,
+          "mean_shield_gap": 0.045572916666666664,
+          "seed": 201357000
+        },
+        {
+          "f1_cbf_off_success_rate": 0.716796875,
+          "f2_cbf_off_success_rate": 0.65625,
+          "f3_cbf_off_success_rate": 0.716796875,
+          "mean_cbf_off_counterfactual_correction_norm": 0.019698058211998028,
+          "mean_cbf_off_nominal_violation_steps_per_riser": 4.992743692246067,
+          "mean_cbf_off_success_rate": 0.6966145833333334,
+          "mean_cbf_off_would_intervene_fraction": 0.09849961859173563,
+          "mean_off_improvement": -0.0078125,
+          "mean_shield_gap": 0.044921875,
+          "seed": 201357001
+        },
+        {
+          "f1_cbf_off_success_rate": 0.7578125,
+          "f2_cbf_off_success_rate": 0.654296875,
+          "f3_cbf_off_success_rate": 0.650390625,
+          "mean_cbf_off_counterfactual_correction_norm": 0.019933681321156155,
+          "mean_cbf_off_nominal_violation_steps_per_riser": 5.0306091827326,
+          "mean_cbf_off_success_rate": 0.6875,
+          "mean_cbf_off_would_intervene_fraction": 0.09932901488524758,
+          "mean_off_improvement": -0.016927083333333332,
+          "mean_shield_gap": 0.072265625,
+          "seed": 201357002
+        }
+      ],
+      "training": {
+        "per_seed": [
+          {
+            "executed_violation_fraction": 0.09808794657389323,
+            "falls": 963,
+            "minimum_executed_barrier_margin": -126.80223083496094,
+            "minimum_nominal_barrier_margin": -126.80223083496094,
+            "nominal_violation_fraction": 0.09808794657389323,
+            "recoveries": 0,
+            "seed": 201357000
+          },
+          {
+            "executed_violation_fraction": 0.09877649943033855,
+            "falls": 964,
+            "minimum_executed_barrier_margin": -55.50580596923828,
+            "minimum_nominal_barrier_margin": -55.50580596923828,
+            "nominal_violation_fraction": 0.09877649943033855,
+            "recoveries": 0,
+            "seed": 201357001
+          },
+          {
+            "executed_violation_fraction": 0.09926287333170573,
+            "falls": 971,
+            "minimum_executed_barrier_margin": -1326.117919921875,
+            "minimum_nominal_barrier_margin": -1326.117919921875,
+            "nominal_violation_fraction": 0.09926287333170573,
+            "recoveries": 0,
+            "seed": 201357002
+          }
+        ],
+        "training_executed_violation_fraction_mean": 0.0987091064453125,
+        "training_falls_mean": 966.0,
+        "training_falls_std": 4.358898943540674,
+        "training_minimum_executed_barrier_margin": -1326.117919921875,
+        "training_minimum_nominal_barrier_margin": -1326.117919921875,
+        "training_nominal_violation_fraction_mean": 0.0987091064453125,
+        "training_shield_recoveries_mean": 0.0
+      }
+    }
+  },
+  "experiment": "paper_filter_free_deployment_ablation",
+  "factorial_contrasts": [
+    {
+      "filter_effect_with_reward": 0.0036892361111110494,
+      "filter_effect_without_reward": 0.006727430555555469,
+      "filter_reward_interaction": -0.0030381944444444198,
+      "metric": "mean_cbf_off_success_rate",
+      "report_only": true,
+      "reward_effect_with_filter": -0.0036892361111111605,
+      "reward_effect_without_filter": -0.0006510416666667407
+    },
+    {
+      "filter_effect_with_reward": -0.030181465669208762,
+      "filter_effect_without_reward": -0.07280904489681639,
+      "filter_reward_interaction": 0.042627579227607626,
+      "metric": "mean_cbf_off_nominal_violation_steps_per_riser",
+      "report_only": true,
+      "reward_effect_with_filter": 0.02173526047588048,
+      "reward_effect_without_filter": -0.020892318751727146
+    },
+    {
+      "filter_effect_with_reward": -0.00034229069509647547,
+      "filter_effect_without_reward": -0.0011255957906606967,
+      "filter_reward_interaction": 0.0007833050955642212,
+      "metric": "mean_cbf_off_would_intervene_fraction",
+      "report_only": true,
+      "reward_effect_with_filter": 0.00043446263243786254,
+      "reward_effect_without_filter": -0.0003488424631263587
+    },
+    {
+      "filter_effect_with_reward": 0.002927377433927989,
+      "filter_effect_without_reward": -0.000417340987212772,
+      "filter_reward_interaction": 0.003344718421140761,
+      "metric": "mean_cbf_off_counterfactual_correction_norm",
+      "report_only": true,
+      "reward_effect_with_filter": 0.0036187320464532713,
+      "reward_effect_without_filter": 0.00027401362531251014
+    },
+    {
+      "filter_effect_with_reward": -0.0019531249999999861,
+      "filter_effect_without_reward": 6.938893903907228e-18,
+      "filter_reward_interaction": -0.001953124999999993,
+      "metric": "mean_shield_gap",
+      "report_only": true,
+      "reward_effect_with_filter": 0.007595486111111119,
+      "reward_effect_without_filter": 0.009548611111111112
+    },
+    {
+      "filter_effect_with_reward": -101.66666666666663,
+      "filter_effect_without_reward": -110.33333333333326,
+      "filter_reward_interaction": 8.666666666666629,
+      "metric": "training_falls_mean",
+      "report_only": true,
+      "reward_effect_with_filter": 14.0,
+      "reward_effect_without_filter": 5.333333333333371
+    },
+    {
+      "filter_effect_with_reward": 149195.0,
+      "filter_effect_without_reward": 148980.0,
+      "filter_reward_interaction": 215.0,
+      "metric": "training_shield_recoveries_mean",
+      "report_only": true,
+      "reward_effect_with_filter": 215.0,
+      "reward_effect_without_filter": 0.0
+    },
+    {
+      "filter_effect_with_reward": -0.0038441552056206613,
+      "filter_effect_without_reward": -0.0035919613308376813,
+      "filter_reward_interaction": -0.00025219387478297994,
+      "metric": "training_nominal_violation_fraction_mean",
+      "report_only": true,
+      "reward_effect_with_filter": 0.000133514404296875,
+      "reward_effect_without_filter": 0.00038570827907985494
+    },
+    {
+      "filter_effect_with_reward": -0.0986997816297743,
+      "filter_effect_without_reward": -0.09831089443630643,
+      "filter_reward_interaction": -0.00038888719346787115,
+      "metric": "training_executed_violation_fraction_mean",
+      "report_only": true,
+      "reward_effect_with_filter": -3.1789143880208305e-06,
+      "reward_effect_without_filter": 0.00038570827907985494
+    }
+  ],
+  "factorial_contrasts_are_report_only": true,
+  "global_fall_and_violation_free_training_supported": false,
+  "main_claim_checks": {
+    "dual_safe_ft_best_cbf_off_success": false,
+    "dual_safe_ft_lowest_nominal_violation": false
+  },
+  "main_claim_comparison_arms": [
+    "frozen",
+    "frozen",
+    "nominal_ft",
+    "reward_only_ft",
+    "filter_only_ft",
+    "dual_safe_ft"
+  ],
+  "main_claim_supported": false,
+  "main_table": [
+    {
+      "arm": "frozen",
+      "cbf_reward": "\u2014",
+      "f1_cbf_off_success_rate": 0.73046875,
+      "f2_cbf_off_success_rate": 0.689453125,
+      "f3_cbf_off_success_rate": 0.693359375,
+      "mean_cbf_off_counterfactual_correction_norm": 0.020899311075899676,
+      "mean_cbf_off_nominal_violation_steps_per_riser": 5.134249257100628,
+      "mean_cbf_off_success_rate": 0.7044270833333334,
+      "mean_cbf_off_would_intervene_fraction": 0.10105142568750071,
+      "mean_off_improvement": 0.0,
+      "mean_shield_gap": 0.03515625,
+      "std_cbf_off_success_rate_across_training_seeds": null,
+      "std_off_improvement_across_training_seeds": null,
+      "training_executed_violation_fraction_mean": null,
+      "training_falls_mean": null,
+      "training_falls_std": null,
+      "training_filter": "\u2014",
+      "training_nominal_violation_fraction_mean": null,
+      "training_shield_recoveries_mean": null
+    },
+    {
+      "arm": "nominal_ft",
+      "cbf_reward": "No",
+      "f1_cbf_off_success_rate": 0.7356770833333334,
+      "f2_cbf_off_success_rate": 0.6796875,
+      "f3_cbf_off_success_rate": 0.6744791666666666,
+      "mean_cbf_off_counterfactual_correction_norm": 0.020141540545121198,
+      "mean_cbf_off_nominal_violation_steps_per_riser": 5.01785283384627,
+      "mean_cbf_off_success_rate": 0.6966145833333334,
+      "mean_cbf_off_would_intervene_fraction": 0.09894955858901074,
+      "mean_off_improvement": -0.0078125,
+      "mean_shield_gap": 0.044704861111111105,
+      "std_cbf_off_success_rate_across_training_seeds": 0.005675649666068619,
+      "std_off_improvement_across_training_seeds": 0.005675649666068585,
+      "training_executed_violation_fraction_mean": 0.09832339816623265,
+      "training_falls_mean": 960.6666666666666,
+      "training_falls_std": 26.501572280401277,
+      "training_filter": "Off",
+      "training_nominal_violation_fraction_mean": 0.09832339816623265,
+      "training_shield_recoveries_mean": 0.0
+    },
+    {
+      "arm": "reward_only_ft",
+      "cbf_reward": "Yes",
+      "f1_cbf_off_success_rate": 0.7311197916666666,
+      "f2_cbf_off_success_rate": 0.6705729166666666,
+      "f3_cbf_off_success_rate": 0.6861979166666666,
+      "mean_cbf_off_counterfactual_correction_norm": 0.020415554170433708,
+      "mean_cbf_off_nominal_violation_steps_per_riser": 4.996960515094543,
+      "mean_cbf_off_success_rate": 0.6959635416666666,
+      "mean_cbf_off_would_intervene_fraction": 0.09860071612588438,
+      "mean_off_improvement": -0.008463541666666666,
+      "mean_shield_gap": 0.05425347222222222,
+      "std_cbf_off_success_rate_across_training_seeds": 0.008157528701915133,
+      "std_off_improvement_across_training_seeds": 0.008157528701915148,
+      "training_executed_violation_fraction_mean": 0.0987091064453125,
+      "training_falls_mean": 966.0,
+      "training_falls_std": 4.358898943540674,
+      "training_filter": "Off",
+      "training_nominal_violation_fraction_mean": 0.0987091064453125,
+      "training_shield_recoveries_mean": 0.0
+    },
+    {
+      "arm": "filter_only_ft",
+      "cbf_reward": "No",
+      "f1_cbf_off_success_rate": 0.7376302083333334,
+      "f2_cbf_off_success_rate": 0.70703125,
+      "f3_cbf_off_success_rate": 0.6653645833333334,
+      "mean_cbf_off_counterfactual_correction_norm": 0.019724199557908426,
+      "mean_cbf_off_nominal_violation_steps_per_riser": 4.945043788949453,
+      "mean_cbf_off_success_rate": 0.7033420138888888,
+      "mean_cbf_off_would_intervene_fraction": 0.09782396279835004,
+      "mean_off_improvement": -0.0010850694444444443,
+      "mean_shield_gap": 0.04470486111111111,
+      "std_cbf_off_success_rate_across_training_seeds": 0.003924292821186006,
+      "std_off_improvement_across_training_seeds": 0.0039242928211860074,
+      "training_executed_violation_fraction_mean": 1.2503729926215276e-05,
+      "training_falls_mean": 850.3333333333334,
+      "training_falls_std": 15.631165450257807,
+      "training_filter": "On",
+      "training_nominal_violation_fraction_mean": 0.09473143683539496,
+      "training_shield_recoveries_mean": 148980.0
+    },
+    {
+      "arm": "dual_safe_ft",
+      "cbf_reward": "Yes",
+      "f1_cbf_off_success_rate": 0.75390625,
+      "f2_cbf_off_success_rate": 0.6751302083333334,
+      "f3_cbf_off_success_rate": 0.669921875,
+      "mean_cbf_off_counterfactual_correction_norm": 0.023342931604361697,
+      "mean_cbf_off_nominal_violation_steps_per_riser": 4.966779049425334,
+      "mean_cbf_off_success_rate": 0.6996527777777777,
+      "mean_cbf_off_would_intervene_fraction": 0.0982584254307879,
+      "mean_off_improvement": -0.004774305555555555,
+      "mean_shield_gap": 0.05230034722222223,
+      "std_cbf_off_success_rate_across_training_seeds": 0.014445693785280031,
+      "std_off_improvement_across_training_seeds": 0.01444569378528005,
+      "training_executed_violation_fraction_mean": 9.324815538194445e-06,
+      "training_falls_mean": 864.3333333333334,
+      "training_falls_std": 31.785741037976972,
+      "training_filter": "On",
+      "training_nominal_violation_fraction_mean": 0.09486495123969184,
+      "training_shield_recoveries_mean": 149195.0
+    }
+  ],
+  "paired_report_statistics": {
+    "dual_safe_ft": {
+      "cbf_off_improvement": {
+        "bootstrap_samples": 10000,
+        "bootstrap_seed": 201357980,
+        "confidence_interval_is_gate": false,
+        "hierarchy": "adaptation seeds, then paired episodes; contexts fixed/equal",
+        "mean": -0.004774305555555556,
+        "paired_bootstrap_ci95": [
+          -0.02734375,
+          0.01692708333333333
+        ],
+        "paired_episode_comparisons": 4608,
+        "regressions": 882,
+        "repairs": 860,
+        "ties": 2866
+      },
+      "shield_gap": {
+        "bootstrap_samples": 10000,
+        "bootstrap_seed": 201357981,
+        "confidence_interval_is_gate": false,
+        "hierarchy": "adaptation seeds, then paired episodes; contexts fixed/equal",
+        "mean": 0.052300347222222224,
+        "paired_bootstrap_ci95": [
+          0.026258680555555556,
+          0.08072916666666667
+        ],
+        "paired_episode_comparisons": 4608,
+        "regressions": 789,
+        "repairs": 1030,
+        "ties": 2789
+      }
+    },
+    "filter_only_ft": {
+      "cbf_off_improvement": {
+        "bootstrap_samples": 10000,
+        "bootstrap_seed": 201357970,
+        "confidence_interval_is_gate": false,
+        "hierarchy": "adaptation seeds, then paired episodes; contexts fixed/equal",
+        "mean": -0.0010850694444444445,
+        "paired_bootstrap_ci95": [
+          -0.019314236111111112,
+          0.016710069444444444
+        ],
+        "paired_episode_comparisons": 4608,
+        "regressions": 866,
+        "repairs": 861,
+        "ties": 2881
+      },
+      "shield_gap": {
+        "bootstrap_samples": 10000,
+        "bootstrap_seed": 201357971,
+        "confidence_interval_is_gate": false,
+        "hierarchy": "adaptation seeds, then paired episodes; contexts fixed/equal",
+        "mean": 0.04470486111111111,
+        "paired_bootstrap_ci95": [
+          0.023003472222222217,
+          0.06575520833333333
+        ],
+        "paired_episode_comparisons": 4608,
+        "regressions": 800,
+        "repairs": 1006,
+        "ties": 2802
+      }
+    },
+    "nominal_ft": {
+      "cbf_off_improvement": {
+        "bootstrap_samples": 10000,
+        "bootstrap_seed": 201357950,
+        "confidence_interval_is_gate": false,
+        "hierarchy": "adaptation seeds, then paired episodes; contexts fixed/equal",
+        "mean": -0.0078125,
+        "paired_bootstrap_ci95": [
+          -0.026475694444444444,
+          0.010633680555555556
+        ],
+        "paired_episode_comparisons": 4608,
+        "regressions": 895,
+        "repairs": 859,
+        "ties": 2854
+      },
+      "shield_gap": {
+        "bootstrap_samples": 10000,
+        "bootstrap_seed": 201357951,
+        "confidence_interval_is_gate": false,
+        "hierarchy": "adaptation seeds, then paired episodes; contexts fixed/equal",
+        "mean": 0.04470486111111111,
+        "paired_bootstrap_ci95": [
+          0.024739583333333332,
+          0.06467013888888888
+        ],
+        "paired_episode_comparisons": 4608,
+        "regressions": 821,
+        "repairs": 1027,
+        "ties": 2760
+      }
+    },
+    "reward_only_ft": {
+      "cbf_off_improvement": {
+        "bootstrap_samples": 10000,
+        "bootstrap_seed": 201357960,
+        "confidence_interval_is_gate": false,
+        "hierarchy": "adaptation seeds, then paired episodes; contexts fixed/equal",
+        "mean": -0.008463541666666666,
+        "paired_bootstrap_ci95": [
+          -0.027560763888888888,
+          0.010850694444444444
+        ],
+        "paired_episode_comparisons": 4608,
+        "regressions": 887,
+        "repairs": 848,
+        "ties": 2873
+      },
+      "shield_gap": {
+        "bootstrap_samples": 10000,
+        "bootstrap_seed": 201357961,
+        "confidence_interval_is_gate": false,
+        "hierarchy": "adaptation seeds, then paired episodes; contexts fixed/equal",
+        "mean": 0.054253472222222224,
+        "paired_bootstrap_ci95": [
+          0.03211805555555556,
+          0.07747395833333333
+        ],
+        "paired_episode_comparisons": 4608,
+        "regressions": 775,
+        "repairs": 1025,
+        "ties": 2808
+      }
+    }
+  },
+  "primary_metric": "round_4_cbf_off_success_rate",
+  "schema_version": 1,
+  "training_safety_checks": {
+    "filtered_training_executed_violation_free": false,
+    "filtered_training_fall_free": false,
+    "filtered_training_reduces_executed_violations_vs_nominal": true
+  },
+  "training_safety_curve_row_count": 144,
+  "training_safety_run_count": 36
+}

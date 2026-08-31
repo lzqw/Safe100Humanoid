@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "version": "v139",
+  "remote_artifact_root": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/clearance_mixed_v139_fdc2a63_128x1024x4_s201356000",
+  "checkpoints": {
+    "base_v138": {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/clearance_margin_v138_b1d2d9c_128x1024x4_s201355900/round_02.pt",
+      "checkpoint_sha256": "7a3899c515d5afd93f79f4db251feab4cd59f003e7150711e506ef5850604c63",
+      "actor_sha256": "0efe0cf603f958d6874efa924f62999fe7fb640999d89180d10c30cca8abfeb9",
+      "deterministic_actor_sha256": "750ecaa0612e49041c235894f994c001848fa299aa2d6b0e8e3917ecae69d37f"
+    },
+    "selected": {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/clearance_mixed_v139_fdc2a63_128x1024x4_s201356000/round_01.pt",
+      "git_path": "results/online/paper_dual_v35/clearance_mixed_v139/checkpoints/selected_round_01.pt",
+      "checkpoint_round": 1,
+      "aligned_rollout_round": 2,
+      "checkpoint_sha256": "323f1e00b58d379b8746c0191a44272f2e1df134139050417c56e733cc484728",
+      "actor_sha256": "4a4926d9227c31fb239ceead6c39bed61304d1f2c7e3a47aea510e060cee2acd",
+      "deterministic_actor_sha256": "601a60e066ca1fb805e2f8cd27d4bfe44d79256b93040d23495e5ea8699d8386"
+    },
+    "final_unaligned": {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/clearance_mixed_v139_fdc2a63_128x1024x4_s201356000/round_04.pt",
+      "checkpoint_round": 4,
+      "checkpoint_sha256": "8d9e8fe1b569258662d2270c9dc8b52dc68a39c312f163180a3f4db2b6e6d389",
+      "actor_sha256": "5f29a1d3e32fb3d899d1ed17ea7f79df36d5dcba454d976f3e8c9a5edca83230"
+    }
+  },
+  "binary_upload": {
+    "uploaded_to_git": true,
+    "git_path": "results/online/paper_dual_v35/clearance_mixed_v139/checkpoints/selected_round_01.pt",
+    "size_bytes": 13173425,
+    "checkpoint_sha256": "323f1e00b58d379b8746c0191a44272f2e1df134139050417c56e733cc484728",
+    "reason": "The candidate passed the sole independent 48/64 gate, so the selected deployable checkpoint is published with the metrics."
+  }
+}

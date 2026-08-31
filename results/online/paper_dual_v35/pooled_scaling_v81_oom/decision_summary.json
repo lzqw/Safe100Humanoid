@@ -1,0 +1,73 @@
+{
+  "schema_version": "paper_dual_v35.v81.oom.v1",
+  "experiment": "pooled-scaling-v81",
+  "decision": "aborted_before_first_optimizer_step",
+  "reason": "Both 256-env and 192-env full-batch actor forwards exceeded available RTX 4080 SUPER memory before producing a candidate.",
+  "recorded_at": "2026-08-27T23:10:00+08:00",
+  "source_commit": "8af2862f989fffed149f2ad87fd7044ddf8c29b9",
+  "input_checkpoint_sha256": "9a1316b281b4ed17f7ef45c54290d78de96cf8314de4a581957ee1d161edd317",
+  "common_training_config": {
+    "seed": 201352625,
+    "rounds": 4,
+    "rollout_steps_per_round": 1024,
+    "context": "F2",
+    "candidate": "paper_stair_sloped_unit_balanced",
+    "clearance_barrier_slope": 0.8,
+    "teacher_arm": "A0",
+    "training_runtime_filter": "on",
+    "training_filter_fraction": 0.25,
+    "filter_group_balanced_advantages": true,
+    "full_batch_sgd_actor": true,
+    "transactional_rollout_acceptance": true,
+    "actor_learning_rate": 0.00005,
+    "moving_kl_beta": 0.5,
+    "training_domain_randomization": "off"
+  },
+  "attempts": [
+    {
+      "num_envs": 256,
+      "started_at": "2026-08-27T23:02:34+08:00",
+      "failed_at": "2026-08-27T23:03:23+08:00",
+      "failure_phase": "round_1_actor_full_batch_forward",
+      "requested_allocation_mib": 406.0,
+      "gpu_free_mib_at_error": 504.94,
+      "training_process_memory_gib": 3.96,
+      "pytorch_allocated_gib": 2.71,
+      "pytorch_reserved_unallocated_mib": 674.12,
+      "actor_optimizer_steps": 0,
+      "candidate_checkpoints": 0,
+      "training_summary_written": false,
+      "remote_output_dir": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/pooled_256_v81_8af2862_s201352625"
+    },
+    {
+      "num_envs": 192,
+      "started_at": "2026-08-27T23:03:55+08:00",
+      "failed_at": "2026-08-27T23:04:42+08:00",
+      "failure_phase": "round_1_actor_full_batch_forward",
+      "requested_allocation_mib": 630.0,
+      "gpu_free_mib_at_error": 944.75,
+      "training_process_memory_gib": 4.17,
+      "pytorch_allocated_gib": 3.36,
+      "pytorch_reserved_unallocated_mib": 279.10,
+      "actor_optimizer_steps": 0,
+      "candidate_checkpoints": 0,
+      "training_summary_written": false,
+      "remote_output_dir": "/home/carla/LZQW/SAFE100/humanoid/artifacts/paper_dual_v35/pooled_192_v81b_8af2862_s201352625"
+    }
+  ],
+  "round_00_checkpoint_sha256": "cb555310a5dafff059a65aaeb4b189d115e066414b27eeaa048dbe5ee3ff59b9",
+  "current_best": {
+    "version": "v79",
+    "aligned_filter_off_success_count": 139,
+    "aligned_filter_off_episode_count": 193,
+    "aligned_filter_off_success_rate": 0.7202072538860104,
+    "target_success_rate": 0.75,
+    "changed_by_v81": false
+  },
+  "next_action": "Accumulate equal-weight actor gradients over microbatches and perform one SGD optimizer step per full rollout batch, then retry 256 environments.",
+  "estimated_next_action_minutes": {
+    "implementation": "10-15",
+    "single_training_run": "3-4"
+  }
+}
+

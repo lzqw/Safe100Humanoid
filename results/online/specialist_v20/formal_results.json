@@ -1,0 +1,468 @@
+{
+  "audit_amendment": {
+    "commit": "1428f57ff58ad8bb76da8e6c2fd1f5a22d8bd21c",
+    "sha256": "5700b77302093ce708a9be2aa264e36267f7220d05e5037ca4eff109c85377dc"
+  },
+  "claim_boundary": {
+    "filter_free_evaluation_performed": false,
+    "joint_claim_defined": false,
+    "off_diagonal_evaluation_performed": false,
+    "runtime_cbf": true,
+    "specialists_independent": true
+  },
+  "method": "Fixed-Budget Observable Failure-Conditioned Brief PPO v20",
+  "protocol": {
+    "commit": "1ded5b84f1c4b8605fd285ef3138c0363db20ee4",
+    "sha256": "74242b1131499f7163ef1985d25a94ca06b0758f6a3d5f2dea9f56ac200c28da"
+  },
+  "reporting_commit": "b575cf34aa76649b6c9f793514fbe3e221a32dcf",
+  "schema_version": 1,
+  "specialists": {
+    "contact_stability": {
+      "artifact_sha256": {
+        "final_audit_summary.json": "8bf00ce908c59147f834fc7e3fd7b560c315c69ea0767d6646f7a9afccc18bb1",
+        "mechanism_metrics.csv": "4af085316cdb8e566a1843a94e55f0c21368a8c41688587bee66979e1c7212ad",
+        "mechanism_selection.json": "439837879a4620a89ea25f5d575eb9a8a2ecab74229ad9edbcfd1a2e094b12ef",
+        "paired_episode_metrics.csv": "e258f16a9049dac85439f2c0e494e318a6ef0979d2580f9d7ded8df67c1b7ae4",
+        "verification.json": "41d2f91dea151c946030062309667410fb5ce6325d31dc6e69bbe74b014f64c5"
+      },
+      "claim_passed": false,
+      "independent_claim": {
+        "D0_sanity": {
+          "paired_fall_delta_mean_lcb95_ucb95": [
+            0.0015625,
+            -0.0109375,
+            0.01484375
+          ],
+          "paired_success_delta_mean_lcb95_ucb95": [
+            -0.00703125,
+            -0.0375,
+            0.022675781249999714
+          ]
+        },
+        "claim_passed": false,
+        "gate": {
+          "criteria": {
+            "at_least_four_of_five_seed_gains_positive": false,
+            "d0_success_drop_at_most_5pp": true,
+            "diagonal_fall_increase_at_most_3pp": true,
+            "mean_diagonal_success_gain_positive": true
+          },
+          "passed": false,
+          "positive_adaptation_seed_count": 2,
+          "thresholds": {
+            "maximum_diagonal_fall_increase": 0.03,
+            "mean_diagonal_success_delta_strictly_above": 0.0,
+            "minimum_d0_success_delta": -0.05,
+            "minimum_positive_adaptation_seed_count": 4
+          }
+        },
+        "per_adaptation_seed": {
+          "173": {
+            "D0": {
+              "baseline_fall_rate": 0.01171875,
+              "baseline_success_rate": 0.92578125,
+              "final_fall_rate": 0.0078125,
+              "final_success_rate": 0.91015625,
+              "paired_fall_delta": -0.00390625,
+              "paired_success_delta": -0.015625
+            },
+            "target": {
+              "baseline_fall_rate": 0.302734375,
+              "baseline_success_rate": 0.697265625,
+              "final_fall_rate": 0.259765625,
+              "final_success_rate": 0.740234375,
+              "paired_fall_delta": -0.04296875,
+              "paired_success_delta": 0.04296875
+            }
+          },
+          "273": {
+            "D0": {
+              "baseline_fall_rate": 0.03125,
+              "baseline_success_rate": 0.890625,
+              "final_fall_rate": 0.0234375,
+              "final_success_rate": 0.91015625,
+              "paired_fall_delta": -0.0078125,
+              "paired_success_delta": 0.01953125
+            },
+            "target": {
+              "baseline_fall_rate": 0.30078125,
+              "baseline_success_rate": 0.69921875,
+              "final_fall_rate": 0.294921875,
+              "final_success_rate": 0.705078125,
+              "paired_fall_delta": -0.005859375,
+              "paired_success_delta": 0.005859375
+            }
+          },
+          "373": {
+            "D0": {
+              "baseline_fall_rate": 0.02734375,
+              "baseline_success_rate": 0.91796875,
+              "final_fall_rate": 0.03515625,
+              "final_success_rate": 0.91015625,
+              "paired_fall_delta": 0.0078125,
+              "paired_success_delta": -0.0078125
+            },
+            "target": {
+              "baseline_fall_rate": 0.2890625,
+              "baseline_success_rate": 0.7109375,
+              "final_fall_rate": 0.3125,
+              "final_success_rate": 0.6875,
+              "paired_fall_delta": 0.0234375,
+              "paired_success_delta": -0.0234375
+            }
+          },
+          "473": {
+            "D0": {
+              "baseline_fall_rate": 0.01171875,
+              "baseline_success_rate": 0.9296875,
+              "final_fall_rate": 0.02734375,
+              "final_success_rate": 0.8828125,
+              "paired_fall_delta": 0.015625,
+              "paired_success_delta": -0.046875
+            },
+            "target": {
+              "baseline_fall_rate": 0.2734375,
+              "baseline_success_rate": 0.7265625,
+              "final_fall_rate": 0.283203125,
+              "final_success_rate": 0.716796875,
+              "paired_fall_delta": 0.009765625,
+              "paired_success_delta": -0.009765625
+            }
+          },
+          "73": {
+            "D0": {
+              "baseline_fall_rate": 0.0234375,
+              "baseline_success_rate": 0.8828125,
+              "final_fall_rate": 0.01953125,
+              "final_success_rate": 0.8984375,
+              "paired_fall_delta": -0.00390625,
+              "paired_success_delta": 0.015625
+            },
+            "target": {
+              "baseline_fall_rate": 0.26953125,
+              "baseline_success_rate": 0.73046875,
+              "final_fall_rate": 0.27734375,
+              "final_success_rate": 0.72265625,
+              "paired_fall_delta": 0.0078125,
+              "paired_success_delta": -0.0078125
+            }
+          }
+        },
+        "question": "Does the sealed contact_stability v20 specialist improve its context?",
+        "strong_evidence_lcb95_positive": false,
+        "target": {
+          "confidence_interval_is_report_only": true,
+          "paired_fall_delta_mean_lcb95_ucb95": [
+            -0.0015625,
+            -0.034375,
+            0.028515625
+          ],
+          "paired_success_delta_mean_lcb95_ucb95": [
+            0.0015625,
+            -0.029296875,
+            0.03359375
+          ]
+        }
+      },
+      "repairs_regressions": {
+        "failure_to_failure": 213,
+        "failure_to_success": 522,
+        "net_success_change": 4,
+        "per_adaptation_seed": {
+          "173": {
+            "failure_to_failure": 41,
+            "failure_to_success": 114,
+            "net_success_change": 22,
+            "regressions": 92,
+            "repairs": 114,
+            "success_to_failure": 92,
+            "success_to_success": 265
+          },
+          "273": {
+            "failure_to_failure": 45,
+            "failure_to_success": 109,
+            "net_success_change": 3,
+            "regressions": 106,
+            "repairs": 109,
+            "success_to_failure": 106,
+            "success_to_success": 252
+          },
+          "373": {
+            "failure_to_failure": 52,
+            "failure_to_success": 96,
+            "net_success_change": -12,
+            "regressions": 108,
+            "repairs": 96,
+            "success_to_failure": 108,
+            "success_to_success": 256
+          },
+          "473": {
+            "failure_to_failure": 32,
+            "failure_to_success": 108,
+            "net_success_change": -5,
+            "regressions": 113,
+            "repairs": 108,
+            "success_to_failure": 113,
+            "success_to_success": 259
+          },
+          "73": {
+            "failure_to_failure": 43,
+            "failure_to_success": 95,
+            "net_success_change": -4,
+            "regressions": 99,
+            "repairs": 95,
+            "success_to_failure": 99,
+            "success_to_success": 275
+          }
+        },
+        "regressions": 518,
+        "repairs": 522,
+        "success_to_failure": 518,
+        "success_to_success": 1307
+      },
+      "telemetry_trace_reproduction": {
+        "all_actor_hashes_match_formal": true,
+        "all_initial_state_signatures_match_formal": true,
+        "first_attempt_reused_count": 1,
+        "formal_outcomes_replaced_by_replay": false,
+        "outcome_match_count": 5,
+        "outcome_mismatch_count": 5,
+        "retry_until_outcome_matches": false,
+        "selection_changed_after_formal_audit": false,
+        "trace_count": 10
+      },
+      "training_accepted_updates": {
+        "173": 6,
+        "273": 4,
+        "373": 2,
+        "473": 5,
+        "73": 5
+      },
+      "verified": true
+    },
+    "lateral": {
+      "artifact_sha256": {
+        "final_audit_summary.json": "9dff606fad5f68b052c3e4b7372bfc4b179ff9616b942f3a4e54e1e9ed15a39d",
+        "mechanism_metrics.csv": "9a37735f8e5b1c961878013c29e9a5f718813f5d06f3b64d28a0750d35f904f8",
+        "mechanism_selection.json": "ecc39ae51117caee5cc3499147b466dbe59d88700e43f7a16d6da10d848a46ab",
+        "paired_episode_metrics.csv": "170eb8ce10aeea0924880661ee3d0405472cb35f16225e0d06ab62381d4ef45e",
+        "verification.json": "040359b3d533149476704ecd6a9241b5abf7a4cd478c3a7542d4dcdaec250d55"
+      },
+      "claim_passed": false,
+      "independent_claim": {
+        "D0_sanity": {
+          "paired_fall_delta_mean_lcb95_ucb95": [
+            0.00625,
+            -0.0078125,
+            0.021875
+          ],
+          "paired_success_delta_mean_lcb95_ucb95": [
+            -0.01484375,
+            -0.0375,
+            0.007832031249999715
+          ]
+        },
+        "claim_passed": false,
+        "gate": {
+          "criteria": {
+            "at_least_four_of_five_seed_gains_positive": false,
+            "d0_success_drop_at_most_5pp": true,
+            "diagonal_fall_increase_at_most_3pp": true,
+            "mean_diagonal_success_gain_positive": true
+          },
+          "passed": false,
+          "positive_adaptation_seed_count": 2,
+          "thresholds": {
+            "maximum_diagonal_fall_increase": 0.03,
+            "mean_diagonal_success_delta_strictly_above": 0.0,
+            "minimum_d0_success_delta": -0.05,
+            "minimum_positive_adaptation_seed_count": 4
+          }
+        },
+        "per_adaptation_seed": {
+          "173": {
+            "D0": {
+              "baseline_fall_rate": 0.015625,
+              "baseline_success_rate": 0.9453125,
+              "final_fall_rate": 0.01953125,
+              "final_success_rate": 0.921875,
+              "paired_fall_delta": 0.00390625,
+              "paired_success_delta": -0.0234375
+            },
+            "target": {
+              "baseline_fall_rate": 0.30859375,
+              "baseline_success_rate": 0.69140625,
+              "final_fall_rate": 0.2734375,
+              "final_success_rate": 0.7265625,
+              "paired_fall_delta": -0.03515625,
+              "paired_success_delta": 0.03515625
+            }
+          },
+          "273": {
+            "D0": {
+              "baseline_fall_rate": 0.01953125,
+              "baseline_success_rate": 0.921875,
+              "final_fall_rate": 0.046875,
+              "final_success_rate": 0.8984375,
+              "paired_fall_delta": 0.02734375,
+              "paired_success_delta": -0.0234375
+            },
+            "target": {
+              "baseline_fall_rate": 0.244140625,
+              "baseline_success_rate": 0.755859375,
+              "final_fall_rate": 0.26953125,
+              "final_success_rate": 0.73046875,
+              "paired_fall_delta": 0.025390625,
+              "paired_success_delta": -0.025390625
+            }
+          },
+          "373": {
+            "D0": {
+              "baseline_fall_rate": 0.0234375,
+              "baseline_success_rate": 0.92578125,
+              "final_fall_rate": 0.0234375,
+              "final_success_rate": 0.90234375,
+              "paired_fall_delta": 0.0,
+              "paired_success_delta": -0.0234375
+            },
+            "target": {
+              "baseline_fall_rate": 0.2421875,
+              "baseline_success_rate": 0.7578125,
+              "final_fall_rate": 0.25390625,
+              "final_success_rate": 0.744140625,
+              "paired_fall_delta": 0.01171875,
+              "paired_success_delta": -0.013671875
+            }
+          },
+          "473": {
+            "D0": {
+              "baseline_fall_rate": 0.03515625,
+              "baseline_success_rate": 0.90234375,
+              "final_fall_rate": 0.03125,
+              "final_success_rate": 0.91015625,
+              "paired_fall_delta": -0.00390625,
+              "paired_success_delta": 0.0078125
+            },
+            "target": {
+              "baseline_fall_rate": 0.25,
+              "baseline_success_rate": 0.75,
+              "final_fall_rate": 0.255859375,
+              "final_success_rate": 0.744140625,
+              "paired_fall_delta": 0.005859375,
+              "paired_success_delta": -0.005859375
+            }
+          },
+          "73": {
+            "D0": {
+              "baseline_fall_rate": 0.015625,
+              "baseline_success_rate": 0.93359375,
+              "final_fall_rate": 0.01953125,
+              "final_success_rate": 0.921875,
+              "paired_fall_delta": 0.00390625,
+              "paired_success_delta": -0.01171875
+            },
+            "target": {
+              "baseline_fall_rate": 0.271484375,
+              "baseline_success_rate": 0.728515625,
+              "final_fall_rate": 0.248046875,
+              "final_success_rate": 0.751953125,
+              "paired_fall_delta": -0.0234375,
+              "paired_success_delta": 0.0234375
+            }
+          }
+        },
+        "question": "Does the sealed lateral v20 specialist improve its context?",
+        "strong_evidence_lcb95_positive": false,
+        "target": {
+          "confidence_interval_is_report_only": true,
+          "paired_fall_delta_mean_lcb95_ucb95": [
+            -0.003125,
+            -0.03359375,
+            0.026171875
+          ],
+          "paired_success_delta_mean_lcb95_ucb95": [
+            0.002734375,
+            -0.026953125,
+            0.032421875
+          ]
+        }
+      },
+      "repairs_regressions": {
+        "failure_to_failure": 248,
+        "failure_to_success": 426,
+        "net_success_change": 7,
+        "per_adaptation_seed": {
+          "173": {
+            "failure_to_failure": 58,
+            "failure_to_success": 100,
+            "net_success_change": 18,
+            "regressions": 82,
+            "repairs": 100,
+            "success_to_failure": 82,
+            "success_to_success": 272
+          },
+          "273": {
+            "failure_to_failure": 45,
+            "failure_to_success": 80,
+            "net_success_change": -13,
+            "regressions": 93,
+            "repairs": 80,
+            "success_to_failure": 93,
+            "success_to_success": 294
+          },
+          "373": {
+            "failure_to_failure": 52,
+            "failure_to_success": 72,
+            "net_success_change": -7,
+            "regressions": 79,
+            "repairs": 72,
+            "success_to_failure": 79,
+            "success_to_success": 309
+          },
+          "473": {
+            "failure_to_failure": 44,
+            "failure_to_success": 84,
+            "net_success_change": -3,
+            "regressions": 87,
+            "repairs": 84,
+            "success_to_failure": 87,
+            "success_to_success": 297
+          },
+          "73": {
+            "failure_to_failure": 49,
+            "failure_to_success": 90,
+            "net_success_change": 12,
+            "regressions": 78,
+            "repairs": 90,
+            "success_to_failure": 78,
+            "success_to_success": 295
+          }
+        },
+        "regressions": 419,
+        "repairs": 426,
+        "success_to_failure": 419,
+        "success_to_success": 1467
+      },
+      "telemetry_trace_reproduction": {
+        "all_actor_hashes_match_formal": true,
+        "all_initial_state_signatures_match_formal": true,
+        "first_attempt_reused_count": 3,
+        "formal_outcomes_replaced_by_replay": false,
+        "outcome_match_count": 7,
+        "outcome_mismatch_count": 3,
+        "retry_until_outcome_matches": false,
+        "selection_changed_after_formal_audit": false,
+        "trace_count": 10
+      },
+      "training_accepted_updates": {
+        "173": 3,
+        "273": 4,
+        "373": 2,
+        "473": 2,
+        "73": 4
+      },
+      "verified": true
+    }
+  }
+}

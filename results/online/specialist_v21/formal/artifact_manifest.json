@@ -1,0 +1,600 @@
+{
+  "input_artifacts": [
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/L1/formal_audit_summary.json",
+      "scope": "formal_audit_summary",
+      "sha256": "91ea2a8bc28185dde829b8b0ade163e28452e31169fae4a6f3d4e857de29af70"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/L1/paired_episode_metrics.csv",
+      "scope": "formal_paired_episodes",
+      "sha256": "e569eda09221d216fc8c1f77b1d4b4e0c0de1c55ffca63f39270702da2658110"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/L1/inline_mechanism_telemetry.csv",
+      "scope": "formal_inline_telemetry",
+      "sha256": "c8eb9b4c7c5e18440b8df5848609f98252424b7f3a5f58d8fbc386ff8bd701b8"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/L1/control_beta_0/specialist_summary.json",
+      "scope": "formal_training_summary",
+      "sha256": "4bb2e0412c3e4d37af8239a53d8bcca90e702f821be3df57486d42fbc77246fb"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/L1/control_beta_0/accepted_final.pt",
+      "scope": "formal_final_checkpoint",
+      "sha256": "c92d2008e5bd37a82d047bb2a7b1efad94c579bcb8e371c7cb08f4cffb9602f1"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/L1/v21_beta_0p0/specialist_summary.json",
+      "scope": "formal_training_summary",
+      "sha256": "23e7b4ce0b82f2126644fd4240980582e416a1e4ccd4ede85377e6e31a40500d"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/L1/v21_beta_0p0/accepted_final.pt",
+      "scope": "formal_final_checkpoint",
+      "sha256": "4acd73e117a3a7d11818b4a700a9cfe2abf1587bfe4cb2911deb3ae0d713a8b6"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/L2/formal_audit_summary.json",
+      "scope": "formal_audit_summary",
+      "sha256": "ff8f4c3e2fc898c1ab24dbf1c97d6de70cc9dbbf7667f086a423dec131c3ad6c"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/L2/paired_episode_metrics.csv",
+      "scope": "formal_paired_episodes",
+      "sha256": "a81d4b7b4c20f94d7a44402e3b3e709b4046738e8d99e3c9ed0849ab3ca49161"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/L2/inline_mechanism_telemetry.csv",
+      "scope": "formal_inline_telemetry",
+      "sha256": "f788712560bb0ea06b5b81138a0738e0ac9c838028d703877116bfb9363b492d"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/L2/control_beta_0/specialist_summary.json",
+      "scope": "formal_training_summary",
+      "sha256": "cec7025260c433cadb5596f929da36b83590f6ad0f115fa344c706b92ea97603"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/L2/control_beta_0/accepted_final.pt",
+      "scope": "formal_final_checkpoint",
+      "sha256": "1dc0c2ef195fea40dd2bdf3cb956434f8d7323dc970c9c57ac3bdd7835d76a67"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/L2/v21_beta_0p0/specialist_summary.json",
+      "scope": "formal_training_summary",
+      "sha256": "ee551a4aa5e1ba05199906fbf0e6a40c12bc7bb0cc972838d29bcbbd49b13591"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/L2/v21_beta_0p0/accepted_final.pt",
+      "scope": "formal_final_checkpoint",
+      "sha256": "67127b51139a3e44e17b6e5e65f50bf3c6dd25523f19b4c29a53c61928b3c410"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/L3/formal_audit_summary.json",
+      "scope": "formal_audit_summary",
+      "sha256": "69ba4cd72d2f2f680b4aa0908e14b1c29998e890fdf20d9ba9c63ea9ee2e5207"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/L3/paired_episode_metrics.csv",
+      "scope": "formal_paired_episodes",
+      "sha256": "c50742cce58ed1bf9d65e85a3de65f093a2df9f8d55b787319ddd9ec6509c3f8"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/L3/inline_mechanism_telemetry.csv",
+      "scope": "formal_inline_telemetry",
+      "sha256": "acee16edb94b2367ff6b2ff52fbf6f226348557cf5c8013c7dc2036e9b46b883"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/L3/control_beta_0/specialist_summary.json",
+      "scope": "formal_training_summary",
+      "sha256": "5a9983c0b405e2bca8ec548b7c029951150cf65c63633ad3384c64cd20c96a15"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/L3/control_beta_0/accepted_final.pt",
+      "scope": "formal_final_checkpoint",
+      "sha256": "2a1e99f3366422e07cbe728503dac5bc338d39dfe50ff2c2057ee92de6bcf2ca"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/L3/v21_beta_0p0/specialist_summary.json",
+      "scope": "formal_training_summary",
+      "sha256": "e531fbe7ad51c3e8a94fd3d7c33111cfe515dbff0fea2e0ca3f5bed30efaf206"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/L3/v21_beta_0p0/accepted_final.pt",
+      "scope": "formal_final_checkpoint",
+      "sha256": "f546e4677777115d9e707d48281bb9d3ab0bf792322c5a2939bc023fae91705f"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/L4/formal_audit_summary.json",
+      "scope": "formal_audit_summary",
+      "sha256": "e7cbf7bc52c4f08098bf9f93234d31b7254c0230783c5bc37998bd7a132f2a3e"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/L4/paired_episode_metrics.csv",
+      "scope": "formal_paired_episodes",
+      "sha256": "1891f58313f4f9bad64729222c957e1255c9e269d58a02d0bb7980fe56763252"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/L4/inline_mechanism_telemetry.csv",
+      "scope": "formal_inline_telemetry",
+      "sha256": "be268deee575d188830b1607e8d665c4119aba5dcc16e54c60a0a6490084dde0"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/L4/control_beta_0/specialist_summary.json",
+      "scope": "formal_training_summary",
+      "sha256": "ea06eb348a3e1ec4d78f1a98e5aed7b40cdb95cefc00b93e752d2d4c89ae07b8"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/L4/control_beta_0/accepted_final.pt",
+      "scope": "formal_final_checkpoint",
+      "sha256": "e990580b2a4f9fe0364f30ae0f84a2d25f27e8ca5f5eefae0ed81281dc78fc2b"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/L4/v21_beta_0p0/specialist_summary.json",
+      "scope": "formal_training_summary",
+      "sha256": "843ddaac4ecfbbcbfc0820729d37d6025060482915d68f2aa96422e3e8f19289"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/L4/v21_beta_0p0/accepted_final.pt",
+      "scope": "formal_final_checkpoint",
+      "sha256": "57f1219a2f5a58b689f2bf89556e0e791bdc42b457e5a950969e064350fb97d5"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/L5/formal_audit_summary.json",
+      "scope": "formal_audit_summary",
+      "sha256": "ce31b3fe207e2014ce1d37442c5dc5ff822905971a2308498233e87590c2c9c5"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/L5/paired_episode_metrics.csv",
+      "scope": "formal_paired_episodes",
+      "sha256": "ff3b3ecdb7097b6d2907504a9d39e549e9dcb02deb093e82a24e93a37f12e537"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/L5/inline_mechanism_telemetry.csv",
+      "scope": "formal_inline_telemetry",
+      "sha256": "dc3ee08e2ce53b5264dc1ce61e91d489c34d0acce670a3e96fd0a61e8931a748"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/L5/control_beta_0/specialist_summary.json",
+      "scope": "formal_training_summary",
+      "sha256": "b7baf67c9a7f2490f70f6fb8fcf240548c4685ed206a8131aee313f6f02608b6"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/L5/control_beta_0/accepted_final.pt",
+      "scope": "formal_final_checkpoint",
+      "sha256": "c12809f3a24fa12aea248af56108d9cc198bb64276083343305908299a314fa3"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/L5/v21_beta_0p0/specialist_summary.json",
+      "scope": "formal_training_summary",
+      "sha256": "7142dfd6287e72e740162c3dc3b7bd40f75c65a964d110605f34a478919e27ef"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/L5/v21_beta_0p0/accepted_final.pt",
+      "scope": "formal_final_checkpoint",
+      "sha256": "c48892928be7f7c60cc8c467dce2067104e06cad4fc047a8561b56925a00f52c"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/C1/formal_audit_summary.json",
+      "scope": "formal_audit_summary",
+      "sha256": "71e1542a86f487cb302526f2a815e32914c8b85582ce19d7a021a82b2eb10309"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/C1/paired_episode_metrics.csv",
+      "scope": "formal_paired_episodes",
+      "sha256": "886bf7e49b7b1cc229c239d7adafbbd81fbb5066460747feaaf242ee996be797"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/C1/inline_mechanism_telemetry.csv",
+      "scope": "formal_inline_telemetry",
+      "sha256": "f283d072f1aab6929e3aa60a919bc6bdbe108a6f6e329ab2864f2a0b39592db1"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/C1/control_beta_0/specialist_summary.json",
+      "scope": "formal_training_summary",
+      "sha256": "acefd157b3229c02863e148939e60f4740cbca8b2c331649643f353eebd70270"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/C1/control_beta_0/accepted_final.pt",
+      "scope": "formal_final_checkpoint",
+      "sha256": "385e3a9379cb0a27b814f7b3ab1e8f012d78eae4e1c5a1c11ac029ab7c2a34cb"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/C1/v21_beta_0p0/specialist_summary.json",
+      "scope": "formal_training_summary",
+      "sha256": "65de4b21574aa6f1b2fc0267dee5aa320ec523384b57962806e40caf66e686bf"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/C1/v21_beta_0p0/accepted_final.pt",
+      "scope": "formal_final_checkpoint",
+      "sha256": "3badc0097426f3c40153dc34f5188d0d8d90c3862b02546253d99770cfe39e2f"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/C2/formal_audit_summary.json",
+      "scope": "formal_audit_summary",
+      "sha256": "5b5b719c2b6c5ad4d4467462a6b05ee769d4a6d4a4990d5cad89b6e6674a1076"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/C2/paired_episode_metrics.csv",
+      "scope": "formal_paired_episodes",
+      "sha256": "2c7629346300e543e716f7089a728e2acc1235d521d1ae9977b5947caffd81c5"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/C2/inline_mechanism_telemetry.csv",
+      "scope": "formal_inline_telemetry",
+      "sha256": "b61165324f43d3add3a2d178d9614ce86b710232c2d0958c85610cbf9de9ce87"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/C2/control_beta_0/specialist_summary.json",
+      "scope": "formal_training_summary",
+      "sha256": "b42945db6c4369abde2a9f091e2db75d5a444419ed377cedb2134417f4e0a369"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/C2/control_beta_0/accepted_final.pt",
+      "scope": "formal_final_checkpoint",
+      "sha256": "ed844cb772b959dd5d8312b143e494f994535f633412204c7968accfd9150f7a"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/C2/v21_beta_0p0/specialist_summary.json",
+      "scope": "formal_training_summary",
+      "sha256": "e117ea323f03bb280dd7f56542d27f64675bb4dee2a824a9feb41eb70e2688c8"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/C2/v21_beta_0p0/accepted_final.pt",
+      "scope": "formal_final_checkpoint",
+      "sha256": "5ede71dd73021bc3e7d30940566a0ae648c44151dfd2d304ee9ad9156e8fe3bb"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/C3/formal_audit_summary.json",
+      "scope": "formal_audit_summary",
+      "sha256": "19c5f206c766af62c42ea16f3d230abfc1ad8bf0f0a60edc22081f4a95d5040c"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/C3/paired_episode_metrics.csv",
+      "scope": "formal_paired_episodes",
+      "sha256": "d679d544c1fd850769daea4495dcab5b22355f53bbce9e1105e850f6bcc57a18"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/C3/inline_mechanism_telemetry.csv",
+      "scope": "formal_inline_telemetry",
+      "sha256": "938d7383ef2ef80c88b15ec2c04731104bfca6d6be06bf0f10ef84b7a1fe4d09"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/C3/control_beta_0/specialist_summary.json",
+      "scope": "formal_training_summary",
+      "sha256": "6b8f59e0a2a7ea95c68969dc16d738ccfc1480fccb148b43926de1c01f3dfdd4"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/C3/control_beta_0/accepted_final.pt",
+      "scope": "formal_final_checkpoint",
+      "sha256": "092ac838756aa475aa4cd2a471060d0fcfc784064667342a38f95b399e230091"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/C3/v21_beta_0p0/specialist_summary.json",
+      "scope": "formal_training_summary",
+      "sha256": "42d0f07bfe7b87aedca679134896c3e1fce6feae0cedc8df844a03f09773f75e"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/C3/v21_beta_0p0/accepted_final.pt",
+      "scope": "formal_final_checkpoint",
+      "sha256": "06323ab594fc761c990a7d096c922fd73e6bcfd50dddabb62452cc2981368626"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/C4/formal_audit_summary.json",
+      "scope": "formal_audit_summary",
+      "sha256": "f6d67d4a1f24012c54d3b12883f287846c99f384ffce21692b0b9f343bb6ce25"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/C4/paired_episode_metrics.csv",
+      "scope": "formal_paired_episodes",
+      "sha256": "bac8610980cbd821ca7a04c8a2c23c6c3abd7cef94a4c011919df4e4b720c7ed"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/C4/inline_mechanism_telemetry.csv",
+      "scope": "formal_inline_telemetry",
+      "sha256": "f53507fad604134f321219c906a4d64bdca4fdc25f31da92709d6121e102d3b6"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/C4/control_beta_0/specialist_summary.json",
+      "scope": "formal_training_summary",
+      "sha256": "c7405c5e552c77c27b35d13f8cf6f69d2040f6ebbdea0043d0c932a561419ac5"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/C4/control_beta_0/accepted_final.pt",
+      "scope": "formal_final_checkpoint",
+      "sha256": "47db2dc5d7aea7000ff45c4ba0dc77026fe52709fa32e359a05c23b4548cb903"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/C4/v21_beta_0p0/specialist_summary.json",
+      "scope": "formal_training_summary",
+      "sha256": "7f0e0a11bd53deb37d2c3512e3cf8204a621dbe69e19a3fe93373fe1ca97f55d"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/C4/v21_beta_0p0/accepted_final.pt",
+      "scope": "formal_final_checkpoint",
+      "sha256": "e34156d68c01e8ace0296f79185318efd900a45129934259cc2a590cc9857262"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/C5/formal_audit_summary.json",
+      "scope": "formal_audit_summary",
+      "sha256": "834093c53ad2e25a817857c4f0b84774ef551f4c3765dfaef53b951dea2e6f7d"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/C5/paired_episode_metrics.csv",
+      "scope": "formal_paired_episodes",
+      "sha256": "6798d5baca765736f0553080081208e18724565eceb1be2c5e5325a156985774"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/audit/C5/inline_mechanism_telemetry.csv",
+      "scope": "formal_inline_telemetry",
+      "sha256": "525155878f6e87ad7156783a563a94add7c1d7ad4242063a6178a781583325fd"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/C5/control_beta_0/specialist_summary.json",
+      "scope": "formal_training_summary",
+      "sha256": "74a3d5d3a70e64b25163b3ed293fb6219bb6d2da40c8097280c3e1ebcfb1632c"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/C5/control_beta_0/accepted_final.pt",
+      "scope": "formal_final_checkpoint",
+      "sha256": "83384c6be39c22ee0c265f6ef992c3b4c069a378d996a53e69795b648e997480"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/C5/v21_beta_0p0/specialist_summary.json",
+      "scope": "formal_training_summary",
+      "sha256": "a719699b152c99971f4be8ad88b53cd88847f675c8abdd299896a169e136487d"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/training/C5/v21_beta_0p0/accepted_final.pt",
+      "scope": "formal_final_checkpoint",
+      "sha256": "ede3d9a08ab8f28ce94ccac61ba42d8705d5024d17c12962b3f559098c37a79c"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/L1/control/unseen_monitor_curve.json",
+      "scope": "unseen_monitor_summary",
+      "sha256": "8a48ff94034492e78bb5bd359d85fbe6f4a4677a67487422cea56cc398c2baa6"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/L1/control/unseen_monitor_curve.csv",
+      "scope": "unseen_monitor_curve",
+      "sha256": "4c3668dccacf8d276009192e7f2f4eeb63c845f9c4223087719667ebe2ccf446"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/L1/v21/unseen_monitor_curve.json",
+      "scope": "unseen_monitor_summary",
+      "sha256": "80b3316757cd5085e5ac0b53507d0686394f6c70c29958a56f9bbd8e3210da93"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/L1/v21/unseen_monitor_curve.csv",
+      "scope": "unseen_monitor_curve",
+      "sha256": "aacc2859ae785a459c5540679db9f2d606a85bfc83f1379d7bd628f6d1e069bc"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/L2/control/unseen_monitor_curve.json",
+      "scope": "unseen_monitor_summary",
+      "sha256": "0f27b25cc97b5043e007d680b0bcdeb84805581e665247024170380bd062ced0"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/L2/control/unseen_monitor_curve.csv",
+      "scope": "unseen_monitor_curve",
+      "sha256": "086a1b08139a4608b519577a519e79b1b6220524b38912f6828aa9dcfed62f5b"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/L2/v21/unseen_monitor_curve.json",
+      "scope": "unseen_monitor_summary",
+      "sha256": "6a88bd74d84895485fcba33c9e75a709d6f4e1d25eedb9f3cd6047aa1040845b"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/L2/v21/unseen_monitor_curve.csv",
+      "scope": "unseen_monitor_curve",
+      "sha256": "8bc68ba0ce42b3ee397e087d8e9058a005fa1e3f6f61576b0e2964291e608832"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/L3/control/unseen_monitor_curve.json",
+      "scope": "unseen_monitor_summary",
+      "sha256": "93feaeb174274f9983e5e26ec74122e4c02efa4b0164f0ee7406f4febf39f330"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/L3/control/unseen_monitor_curve.csv",
+      "scope": "unseen_monitor_curve",
+      "sha256": "aa187e425278d5ce4e54e9d4dc921e05c796f248712369c4984cbc78e0b03032"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/L3/v21/unseen_monitor_curve.json",
+      "scope": "unseen_monitor_summary",
+      "sha256": "aab3f04a40e76c285a146929f30699e351265da86d421cff18bb766ee2d42d01"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/L3/v21/unseen_monitor_curve.csv",
+      "scope": "unseen_monitor_curve",
+      "sha256": "0be2062248f8b6d506f9db15ed622fb5c4b969d590958582a4312df682a49f2c"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/L4/control/unseen_monitor_curve.json",
+      "scope": "unseen_monitor_summary",
+      "sha256": "963d3dbace93c394b88bb40200714bdfcb9237115ba8df47bd0af223e781b5bc"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/L4/control/unseen_monitor_curve.csv",
+      "scope": "unseen_monitor_curve",
+      "sha256": "e497abbad06b2e34b572b49884dd3614a6fc786f82a752fbe5f28535a8abb56f"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/L4/v21/unseen_monitor_curve.json",
+      "scope": "unseen_monitor_summary",
+      "sha256": "2c802d08710eab9857103659d951fab2399fa171333276554ed020487c61c9af"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/L4/v21/unseen_monitor_curve.csv",
+      "scope": "unseen_monitor_curve",
+      "sha256": "1a3c97d989342236b60d9172b1a240f3aae09ed5ee2218a803b6094f34e93bb9"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/L5/control/unseen_monitor_curve.json",
+      "scope": "unseen_monitor_summary",
+      "sha256": "a21c6adb0ba35e8113824790c63e6ca20b0595eea70cc4d53a2e4da0aeb5211d"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/L5/control/unseen_monitor_curve.csv",
+      "scope": "unseen_monitor_curve",
+      "sha256": "9e91b8dec90e41b7ee56983c4c71a58c461393c884ceec78468fa5d47f94e4de"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/L5/v21/unseen_monitor_curve.json",
+      "scope": "unseen_monitor_summary",
+      "sha256": "627d779133b2613415befe23fbb80ab31af48f2e54a74e710a343a853421a4ce"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/L5/v21/unseen_monitor_curve.csv",
+      "scope": "unseen_monitor_curve",
+      "sha256": "926f88a6b4bf4714e7fe7e966e13bd880f0fdf697b1c84faf04136c91e7f15d3"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/C1/control/unseen_monitor_curve.json",
+      "scope": "unseen_monitor_summary",
+      "sha256": "f75d7506bcaf9fcf138e783541472efe7eabab90076394947ccdb634a3184128"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/C1/control/unseen_monitor_curve.csv",
+      "scope": "unseen_monitor_curve",
+      "sha256": "83d6e719875717b12917fc9fbf69d89ea660dd0e6814e37729c2a1b3d21d54bf"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/C1/v21/unseen_monitor_curve.json",
+      "scope": "unseen_monitor_summary",
+      "sha256": "992f772a268d5c3c1654e988b02811801078834c44d8c97b5fc0458759f33cca"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/C1/v21/unseen_monitor_curve.csv",
+      "scope": "unseen_monitor_curve",
+      "sha256": "4737c2feb108a2afd8fc8971964eb5a5de9520efd41b438901611606ba5f5a1d"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/C2/control/unseen_monitor_curve.json",
+      "scope": "unseen_monitor_summary",
+      "sha256": "51a7d640c9e347a0f81770c37996660d4dc838130277a35257e8238968af0744"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/C2/control/unseen_monitor_curve.csv",
+      "scope": "unseen_monitor_curve",
+      "sha256": "3dce044ed5c5bcd565e2bcf42addb213eb7b3ad2f57ee0d4e3af5ea202c4d707"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/C2/v21/unseen_monitor_curve.json",
+      "scope": "unseen_monitor_summary",
+      "sha256": "27607670787fa0eae2b61bf4730547537c1c7bf00f96b0ab6584dff366475004"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/C2/v21/unseen_monitor_curve.csv",
+      "scope": "unseen_monitor_curve",
+      "sha256": "089887c30f0610dfc8d06e83a334fdfeec2f6e9ff919fddb7aa6d21d52bd4d41"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/C3/control/unseen_monitor_curve.json",
+      "scope": "unseen_monitor_summary",
+      "sha256": "2df9e48ee472c7dcb2122f34e3bcd8edc765c393daf91704ee0bdb79f81f46c4"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/C3/control/unseen_monitor_curve.csv",
+      "scope": "unseen_monitor_curve",
+      "sha256": "149923f5bc32f42e765585e002346326274c4583959fdef2ae9cf5276320f97c"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/C3/v21/unseen_monitor_curve.json",
+      "scope": "unseen_monitor_summary",
+      "sha256": "162098a9e54cd60c0385fd4330d351f90ed363ab2d054c97774ee7a6b652f870"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/C3/v21/unseen_monitor_curve.csv",
+      "scope": "unseen_monitor_curve",
+      "sha256": "22817b23e433e9d52f890a7187992a6d8bc92c59c4b702087b9c6acb1822e320"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/C4/control/unseen_monitor_curve.json",
+      "scope": "unseen_monitor_summary",
+      "sha256": "af3b78737f26d03a4fb143531b58fc602d5b3d656904df76a6bec82c079e4147"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/C4/control/unseen_monitor_curve.csv",
+      "scope": "unseen_monitor_curve",
+      "sha256": "caa8bd7b693ef23d2ea28bf9f6826004e8bc1696581bbf53686fa2acfdbc7c66"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/C4/v21/unseen_monitor_curve.json",
+      "scope": "unseen_monitor_summary",
+      "sha256": "e9f864ddc25cd12f18109f4012acb322e5ebf64f3be151f4660d905702d41fec"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/C4/v21/unseen_monitor_curve.csv",
+      "scope": "unseen_monitor_curve",
+      "sha256": "993e967bcd9f1e446bcb3c8e540f127a7a9a9ac83433e769df04d31cc3504895"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/C5/control/unseen_monitor_curve.json",
+      "scope": "unseen_monitor_summary",
+      "sha256": "473ccf139b2e438ba8c5a9b98cee04158d45bdd21ea567fc11291af6263c4cfe"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/C5/control/unseen_monitor_curve.csv",
+      "scope": "unseen_monitor_curve",
+      "sha256": "bf94a94b49c602e55d6648b6c7af0f9bc42a849e4babb833188def1930e5531c"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/C5/v21/unseen_monitor_curve.json",
+      "scope": "unseen_monitor_summary",
+      "sha256": "37598c9c7744b1a296054c5dc3ca67660695a103fac7c133169a1a2ee5a1707c"
+    },
+    {
+      "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v21_formal/monitor/C5/v21/unseen_monitor_curve.csv",
+      "scope": "unseen_monitor_curve",
+      "sha256": "7a511f19fdcb9c624c0f14d0c9af9b04a35abab3484611acc14f29985d139a2a"
+    }
+  ],
+  "protocol_id": "safe100-deployment-unit-local-matched-success-v21",
+  "published_compact_artifacts": [
+    {
+      "bytes": 34371,
+      "path": "results/online/specialist_v21/formal/formal_results.json",
+      "scope": "published_compact_evidence",
+      "sha256": "1d664ad127e4a4752ab70909859eedda80ac928899680c4752e5c735cec29972"
+    },
+    {
+      "bytes": 14661,
+      "path": "results/online/specialist_v21/formal/formal_context_metrics.csv",
+      "scope": "published_compact_evidence",
+      "sha256": "87152cb35c8fa496e2fa1911ec3a0b513ac27bb325f2368e7b7fdda87c8d387f"
+    },
+    {
+      "bytes": 4198,
+      "path": "results/online/specialist_v21/formal/formal_mode_metrics.csv",
+      "scope": "published_compact_evidence",
+      "sha256": "34d40b56ce07ccf986f75d6817e52588ed638c272956052b52b9172610b37e2d"
+    },
+    {
+      "bytes": 30393,
+      "path": "results/online/specialist_v21/formal/unseen_monitor_curves.csv",
+      "scope": "published_compact_evidence",
+      "sha256": "35039b1cc9a2559613072d9dda12937a406dc7f352fe0376d4b9d74bca48560d"
+    },
+    {
+      "bytes": 26358,
+      "path": "results/online/specialist_v21/formal/unseen_monitor_aggregate.csv",
+      "scope": "published_compact_evidence",
+      "sha256": "3e5d0a3dea47a544c1769be1a4e647acbd5920e59777fc2cbbf3dc88a05024aa"
+    },
+    {
+      "bytes": 73724,
+      "path": "results/online/specialist_v21/formal/mechanism_trace_metrics.csv",
+      "scope": "published_compact_evidence",
+      "sha256": "5d13703e51f422c5bc16ac57578dd1a2f56fc1519524d3f0fea3cdc62fb41ed1"
+    },
+    {
+      "bytes": 461869,
+      "path": "results/online/specialist_v21/formal/mechanism_normalized_curves.csv",
+      "scope": "published_compact_evidence",
+      "sha256": "b2247c38c3fa307c7c96da72a655c564ee1d6995d8970da780bb1cebc4a573e8"
+    }
+  ],
+  "schema_version": 1
+}

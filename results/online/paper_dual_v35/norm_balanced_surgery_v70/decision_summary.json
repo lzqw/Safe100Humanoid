@@ -1,0 +1,90 @@
+{
+  "schema_version": "paper_dual_v35.v70.decision.v1",
+  "candidate": "norm-balanced-task-priority-cbf-teacher-v70",
+  "decision": "rejected_at_training_gate",
+  "reason": "All rollout-aligned updated checkpoints underperformed the 71.76% base filter-off rate; the best updated rate was 68.99%, despite successful gradient norm balancing and larger teacher-target improvement.",
+  "source_commit": "03cf19c6e7e625c5bd788892e7c07e0291a14899",
+  "base_checkpoint_sha256": "3ec45cd196447901cf815d0fa1ff400af1b519ed2bb85c2fc179458ce3e81d3f",
+  "training": {
+    "seed": 201352617,
+    "num_envs": 128,
+    "filter_on_envs": 64,
+    "filter_off_envs": 64,
+    "rounds": 4,
+    "rollout_steps_per_round": 1024,
+    "elapsed_seconds": 138.0787313269684,
+    "actor_learning_rate": 2.5e-7,
+    "moving_kl_beta": 0.5,
+    "filter_group_balanced_advantages": true,
+    "split_filter_actor_objectives": true,
+    "task_priority_gradient_surgery": true,
+    "teacher_gradient_target_ratio": 0.5,
+    "teacher_gradient_maximum_scale": 4.0,
+    "domain_randomization": false
+  },
+  "rollout_checkpoint_alignment": "round_N_rollout_uses_round_N_minus_1_checkpoint",
+  "aligned_rollouts": [
+    {
+      "rollout_round": 1,
+      "checkpoint_round": 0,
+      "filter_off_success_count": 94,
+      "filter_off_episode_count": 131,
+      "filter_off_success_rate": 0.7175572519083969,
+      "filter_on_success_count": 93,
+      "filter_on_episode_count": 135,
+      "filter_on_success_rate": 0.6888888888888889
+    },
+    {
+      "rollout_round": 2,
+      "checkpoint_round": 1,
+      "filter_off_success_count": 84,
+      "filter_off_episode_count": 131,
+      "filter_off_success_rate": 0.6412213740458015,
+      "filter_on_success_count": 98,
+      "filter_on_episode_count": 135,
+      "filter_on_success_rate": 0.725925925925926
+    },
+    {
+      "rollout_round": 3,
+      "checkpoint_round": 2,
+      "filter_off_success_count": 84,
+      "filter_off_episode_count": 129,
+      "filter_off_success_rate": 0.6511627906976745,
+      "filter_on_success_count": 91,
+      "filter_on_episode_count": 143,
+      "filter_on_success_rate": 0.6363636363636364
+    },
+    {
+      "rollout_round": 4,
+      "checkpoint_round": 3,
+      "filter_off_success_count": 89,
+      "filter_off_episode_count": 129,
+      "filter_off_success_rate": 0.689922480620155,
+      "filter_on_success_count": 88,
+      "filter_on_episode_count": 134,
+      "filter_on_success_rate": 0.6567164179104478
+    }
+  ],
+  "best_updated_aligned_checkpoint": {
+    "checkpoint_round": 3,
+    "checkpoint_sha256": "e9730933da52f2e11b42f323c4c90a7d5ed8a39fdad430d123edd95341f5265b",
+    "actor_sha256": "4178fc1c74debe60b734e2265b581aaa673e6b4771bd58b73109595c31f766ef",
+    "filter_off_success_rate": 0.689922480620155,
+    "selected": false,
+    "uploaded": false
+  },
+  "gradient_diagnostics": {
+    "balance_scale_mean_by_round": [3.3027012646198273, 2.7075131237506866, 3.113949716091156, 2.5657415241003036],
+    "scale_cap_fraction_by_round": [0.25, 0.0, 0.125, 0.0],
+    "achieved_teacher_to_deployment_ratio_by_round": [0.49715814739465714, 0.4999999962747097, 0.4875323548913002, 0.5],
+    "actor_gradient_clipped_fraction_by_round": [1.0, 1.0, 1.0, 1.0]
+  },
+  "deployment_filter_off_gate": {
+    "planned_episode_count": 128,
+    "success_threshold": 0.75,
+    "run": false,
+    "reason": "training_gate_failed"
+  },
+  "current_best_changed": false,
+  "next_hypothesis": "Stop amplifying the supervised CBF teacher. Return to paper-style CBF-dual PPO with a lower filtered-environment fraction so most actor data follows the true filter-off deployment kernel."
+}

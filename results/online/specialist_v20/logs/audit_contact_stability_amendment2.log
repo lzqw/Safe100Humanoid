@@ -1,0 +1,652 @@
+Setting seed: 5500000
+Warp 1.12.0 initialized:
+   CUDA Toolkit 12.9, Driver 12.4
+   Devices:
+     "cpu"      : "x86_64"
+     "cuda:0"   : "NVIDIA GeForce RTX 4080 SUPER" (16 GiB, sm_89, mempool enabled)
+   Kernel cache:
+     /home/carla/.cache/warp/1.12.0
+Terrain generation took 0.0003 seconds.
+Warp DeprecationWarning: The symbol `warp.context.runtime` will soon be removed from the public API. It can still be accessed from `warp._src.context.runtime` but might be changed or removed without notice.
+Module mujoco_warp._src.smooth 12773d5 load on device 'cuda:0' took 0.34 ms  (cached)
+Module mujoco_warp._src.collision_driver 4d8b905 load on device 'cuda:0' took 0.14 ms  (cached)
+Module _nxn_broadphase__locals__kernel_551438e6 551438e load on device 'cuda:0' took 0.17 ms  (cached)
+Module _primitive_narrowphase__locals__primitive_narrowphase_80a8a49b 80a8a49 load on device 'cuda:0' took 0.25 ms  (cached)
+Module mujoco_warp._src.constraint abf7b17 load on device 'cuda:0' took 0.26 ms  (cached)
+Module _actuator_velocity__locals__actuator_velocity_912d2485 3577bae load on device 'cuda:0' took 0.18 ms  (cached)
+Module mujoco_warp._src.passive f6d4bb4 load on device 'cuda:0' took 0.20 ms  (cached)
+Module mujoco_warp._src.sensor a122b42 load on device 'cuda:0' took 0.28 ms  (cached)
+Module mujoco_warp._src.forward 6f039ed load on device 'cuda:0' took 0.19 ms  (cached)
+Module mujoco_warp._src.support 343d1ae load on device 'cuda:0' took 0.13 ms  (cached)
+Module mujoco_warp._src.solver f11a68d load on device 'cuda:0' took 0.23 ms  (cached)
+Module solve_init_jaref__locals__kernel_e167d4c9 e167d4c load on device 'cuda:0' took 0.15 ms  (cached)
+Module mul_m_sparse__locals___mul_m_sparse_3795f265 3795f26 load on device 'cuda:0' took 0.14 ms  (cached)
+Module update_constraint_gauss_cost__locals__kernel_6726cad8 6726cad load on device 'cuda:0' took 0.14 ms  (cached)
+Module update_gradient_JTDAJ_sparse_tiled__locals__kernel_a2c616cf 19b6aaf load on device 'cuda:0' took 13.11 ms  (cached)
+Module update_gradient_cholesky_blocked__locals__kernel_bb004999 fbd28cb load on device 'cuda:0' took 73.36 ms  (cached)
+Module linesearch_jv_fused__locals__kernel_b9e40014 b9e4001 load on device 'cuda:0' took 0.20 ms  (cached)
+Module linesearch_prepare_gauss__locals__kernel_00cb1ae5 00cb1ae load on device 'cuda:0' took 0.15 ms  (cached)
+Module _contact_sort__locals__contact_sort_458d762c 9ba336c load on device 'cuda:0' took 0.18 ms  (cached)
+Module mujoco_warp._src.derivative ed5cf13 load on device 'cuda:0' took 0.16 ms  (cached)
+Module reset_data__locals__reset_xfrc_applied_f86f0829 f86f082 load on device 'cuda:0' took 0.17 ms  (cached)
+Module reset_data__locals__reset_qM_1511185b 1511185 load on device 'cuda:0' took 0.14 ms  (cached)
+Module reset_data__locals__reset_mocap_11135362 1113536 load on device 'cuda:0' took 0.12 ms  (cached)
+Module reset_data__locals__reset_contact_76c1c25e 76c1c25 load on device 'cuda:0' took 0.12 ms  (cached)
+Module reset_data__locals__reset_nworld_d108b6ac d108b6a load on device 'cuda:0' took 0.16 ms  (cached)
+Module mujoco_warp._src.render_util f631443 load on device 'cuda:0' took 0.22 ms  (cached)
+Module mujoco_warp._src.bvh 4527052 load on device 'cuda:0' took 0.21 ms  (cached)
+Module mujoco_warp._src.ray 134c263 load on device 'cuda:0' took 0.27 ms  (cached)
+
++----------------------------------+
+|         Base Environment         |
++------------------------+---------+
+| Property               | Value   |
++------------------------+---------+
+| Number of environments | 1       |
+| Environment device     | cuda:0  |
+| Environment seed       | 5500000 |
+| Physics step-size      | 0.005   |
+| Environment step-size  | 0.02    |
++------------------------+---------+
+
+[INFO] <EventManager> contains 2 active terms.
++-------------------------------------+
+| Active Event Terms in Mode: 'reset' |
++--------+----------------------------+
+| Index  | Name                       |
++--------+----------------------------+
+|   0    | reset_base                 |
+|   1    | reset_robot_joints         |
++--------+----------------------------+
++---------------------------------------+
+| Active Event Terms in Mode: 'startup' |
++------------+--------------------------+
+|   Index    | Name                     |
++------------+--------------------------+
+|     0      | encoder_bias             |
++------------+--------------------------+
+
+[INFO] <CommandManager> contains 1 active terms.
++-----------------------------------------+
+|           Active Command Terms          |
++-------+-------+-------------------------+
+| Index | Name  |           Type          |
++-------+-------+-------------------------+
+|   0   | twist | JoystickVelocityCommand |
++-------+-------+-------------------------+
+
+[INFO] <ActionManager> contains 1 active terms.
++---------------------------------+
+| Active Action Terms (shape: 12) |
++-------+-----------+-------------+
+| Index | Name      |   Dimension |
++-------+-----------+-------------+
+|   0   | joint_pos |          12 |
++-------+-----------+-------------+
+
+[INFO] <ObservationManager> contains 4 groups.
++------------------------------------------------------------+
+| Active Observation Terms in Group: 'actor' (shape: (405,)) |
++--------+------------------------+--------------------------+
+| Index  | Name                   |          Shape           |
++--------+------------------------+--------------------------+
+|   0    | base_ang_vel           |     (15,)  ← 5×(3,)      |
+|   1    | projected_gravity      |     (15,)  ← 5×(3,)      |
+|   2    | command                |     (15,)  ← 5×(3,)      |
+|   3    | phase                  |     (10,)  ← 5×(2,)      |
+|   4    | joint_pos              |    (145,)  ← 5×(29,)     |
+|   5    | joint_vel              |    (145,)  ← 5×(29,)     |
+|   6    | actions                |     (60,)  ← 5×(12,)     |
++--------+------------------------+--------------------------+
++-------------------------------------------------------------+
+| Active Observation Terms in Group: 'critic' (shape: (283,)) |
++--------+-------------------------+--------------------------+
+| Index  | Name                    |          Shape           |
++--------+-------------------------+--------------------------+
+|   0    | base_ang_vel            |      (3,)  ← 1×(3,)      |
+|   1    | projected_gravity       |      (3,)  ← 1×(3,)      |
+|   2    | command                 |      (3,)  ← 1×(3,)      |
+|   3    | phase                   |      (2,)  ← 1×(2,)      |
+|   4    | joint_pos               |     (29,)  ← 1×(29,)     |
+|   5    | joint_vel               |     (29,)  ← 1×(29,)     |
+|   6    | actions                 |     (12,)  ← 1×(12,)     |
+|   7    | height_scan             |    (187,)  ← 1×(187,)    |
+|   8    | base_lin_vel            |      (3,)  ← 1×(3,)      |
+|   9    | foot_height             |      (2,)  ← 1×(2,)      |
+|   10   | foot_air_time           |      (2,)  ← 1×(2,)      |
+|   11   | foot_contact            |      (2,)  ← 1×(2,)      |
+|   12   | foot_contact_forces     |      (6,)  ← 1×(6,)      |
++--------+-------------------------+--------------------------+
++------------------------------------------------------------------------+
+| Active Observation Terms in Group: 'online_privileged' (shape: (150,)) |
++----------+----------------------------+--------------------------------+
+|  Index   | Name                       |             Shape              |
++----------+----------------------------+--------------------------------+
+|    0     | deployment_state           |       (150,)  ← 1×(150,)       |
++----------+----------------------------+--------------------------------+
++-----------------------------------------------------------------------+
+| Active Observation Terms in Group: 'deployable_failure' (shape: (5,)) |
++---------------+-------------------------------------+-----------------+
+|     Index     | Name                                |      Shape      |
++---------------+-------------------------------------+-----------------+
+|       0       | failure_state                       |       (5,)      |
++---------------+-------------------------------------+-----------------+
+
+[INFO] <TerminationManager> contains 3 active terms.
++--------------------------------+
+|    Active Termination Terms    |
++-------+-------------+----------+
+| Index | Name        | Time Out |
++-------+-------------+----------+
+|   0   | time_out    |   True   |
+|   1   | fell_over   |  False   |
+|   2   | reached_top |  False   |
++-------+-------------+----------+
+
+[INFO] <RewardManager> contains 25 active terms.
++----------------------------------------------+
+|             Active Reward Terms              |
++-------+---------------------------+----------+
+| Index | Name                      |   Weight |
++-------+---------------------------+----------+
+|   0   | track_linear_velocity     |      1.0 |
+|   1   | track_angular_velocity    |      1.0 |
+|   2   | body_orientation_l2       |     -1.0 |
+|   3   | pose                      |      1.0 |
+|   4   | body_ang_vel              |    -0.05 |
+|   5   | angular_momentum          |   -0.025 |
+|   6   | is_terminated             |      0.0 |
+|   7   | joint_acc_l2              | -2.5e-07 |
+|   8   | joint_pos_limits          |    -10.0 |
+|   9   | action_rate_l2            |    -0.05 |
+|   10  | foot_gait                 |      0.5 |
+|   11  | foot_clearance            |     -1.0 |
+|   12  | foot_slip                 |    -0.25 |
+|   13  | soft_landing              |   -0.001 |
+|   14  | stand_still               |     -1.0 |
+|   15  | self_collisions           |     -1.0 |
+|   16  | stair_progress            |     0.25 |
+|   17  | riser_crossing            |      0.5 |
+|   18  | top_completion            |      5.0 |
+|   19  | dont_wait                 |     -1.0 |
+|   20  | swing_foot_force          |   -0.001 |
+|   21  | online_safety_telemetry   |      1.0 |
+|   22  | cbf_dual                  |      1.0 |
+|   23  | fall_termination          |   -200.0 |
+|   24  | specialist_failure_signal |      1.0 |
++-------+---------------------------+----------+
+
+[INFO] <NullCurriculumManager> (inactive)
+[INFO] <MetricsManager> contains 1 active terms.
++-------------------------+
+|   Active Metrics Terms  |
++-------+-----------------+
+| Index | Name            |
++-------+-----------------+
+|   0   | mean_action_acc |
++-------+-----------------+
+
+--------------------------------------------------------------------------------
+Resolved observation sets: 
+	 actor :  ('actor', 'deployable_failure')
+	 critic :  ('actor', 'critic', 'online_privileged', 'deployable_failure')
+--------------------------------------------------------------------------------
+Actor Model: MLPModel(
+  (obs_normalizer): EmpiricalNormalization()
+  (distribution): GaussianDistribution()
+  (mlp): MLP(
+    (0): Linear(in_features=410, out_features=512, bias=True)
+    (1): ELU(alpha=1.0)
+    (2): Linear(in_features=512, out_features=256, bias=True)
+    (3): ELU(alpha=1.0)
+    (4): Linear(in_features=256, out_features=128, bias=True)
+    (5): ELU(alpha=1.0)
+    (6): Linear(in_features=128, out_features=12, bias=True)
+  )
+)
+Critic Model: MLPModel(
+  (obs_normalizer): EmpiricalNormalization()
+  (mlp): MLP(
+    (0): Linear(in_features=843, out_features=512, bias=True)
+    (1): ELU(alpha=1.0)
+    (2): Linear(in_features=512, out_features=256, bias=True)
+    (3): ELU(alpha=1.0)
+    (4): Linear(in_features=256, out_features=128, bias=True)
+    (5): ELU(alpha=1.0)
+    (6): Linear(in_features=128, out_features=1, bias=True)
+  )
+)
+{
+  "independent_claim": {
+    "D0_sanity": {
+      "paired_fall_delta_mean_lcb95_ucb95": [
+        0.0015625,
+        -0.0109375,
+        0.01484375
+      ],
+      "paired_success_delta_mean_lcb95_ucb95": [
+        -0.00703125,
+        -0.0375,
+        0.022675781249999714
+      ]
+    },
+    "claim_passed": false,
+    "gate": {
+      "criteria": {
+        "at_least_four_of_five_seed_gains_positive": false,
+        "d0_success_drop_at_most_5pp": true,
+        "diagonal_fall_increase_at_most_3pp": true,
+        "mean_diagonal_success_gain_positive": true
+      },
+      "passed": false,
+      "positive_adaptation_seed_count": 2,
+      "thresholds": {
+        "maximum_diagonal_fall_increase": 0.03,
+        "mean_diagonal_success_delta_strictly_above": 0.0,
+        "minimum_d0_success_delta": -0.05,
+        "minimum_positive_adaptation_seed_count": 4
+      }
+    },
+    "per_adaptation_seed": {
+      "173": {
+        "D0": {
+          "baseline_fall_rate": 0.01171875,
+          "baseline_success_rate": 0.92578125,
+          "final_fall_rate": 0.0078125,
+          "final_success_rate": 0.91015625,
+          "paired_fall_delta": -0.00390625,
+          "paired_success_delta": -0.015625
+        },
+        "target": {
+          "baseline_fall_rate": 0.302734375,
+          "baseline_success_rate": 0.697265625,
+          "final_fall_rate": 0.259765625,
+          "final_success_rate": 0.740234375,
+          "paired_fall_delta": -0.04296875,
+          "paired_success_delta": 0.04296875
+        }
+      },
+      "273": {
+        "D0": {
+          "baseline_fall_rate": 0.03125,
+          "baseline_success_rate": 0.890625,
+          "final_fall_rate": 0.0234375,
+          "final_success_rate": 0.91015625,
+          "paired_fall_delta": -0.0078125,
+          "paired_success_delta": 0.01953125
+        },
+        "target": {
+          "baseline_fall_rate": 0.30078125,
+          "baseline_success_rate": 0.69921875,
+          "final_fall_rate": 0.294921875,
+          "final_success_rate": 0.705078125,
+          "paired_fall_delta": -0.005859375,
+          "paired_success_delta": 0.005859375
+        }
+      },
+      "373": {
+        "D0": {
+          "baseline_fall_rate": 0.02734375,
+          "baseline_success_rate": 0.91796875,
+          "final_fall_rate": 0.03515625,
+          "final_success_rate": 0.91015625,
+          "paired_fall_delta": 0.0078125,
+          "paired_success_delta": -0.0078125
+        },
+        "target": {
+          "baseline_fall_rate": 0.2890625,
+          "baseline_success_rate": 0.7109375,
+          "final_fall_rate": 0.3125,
+          "final_success_rate": 0.6875,
+          "paired_fall_delta": 0.0234375,
+          "paired_success_delta": -0.0234375
+        }
+      },
+      "473": {
+        "D0": {
+          "baseline_fall_rate": 0.01171875,
+          "baseline_success_rate": 0.9296875,
+          "final_fall_rate": 0.02734375,
+          "final_success_rate": 0.8828125,
+          "paired_fall_delta": 0.015625,
+          "paired_success_delta": -0.046875
+        },
+        "target": {
+          "baseline_fall_rate": 0.2734375,
+          "baseline_success_rate": 0.7265625,
+          "final_fall_rate": 0.283203125,
+          "final_success_rate": 0.716796875,
+          "paired_fall_delta": 0.009765625,
+          "paired_success_delta": -0.009765625
+        }
+      },
+      "73": {
+        "D0": {
+          "baseline_fall_rate": 0.0234375,
+          "baseline_success_rate": 0.8828125,
+          "final_fall_rate": 0.01953125,
+          "final_success_rate": 0.8984375,
+          "paired_fall_delta": -0.00390625,
+          "paired_success_delta": 0.015625
+        },
+        "target": {
+          "baseline_fall_rate": 0.26953125,
+          "baseline_success_rate": 0.73046875,
+          "final_fall_rate": 0.27734375,
+          "final_success_rate": 0.72265625,
+          "paired_fall_delta": 0.0078125,
+          "paired_success_delta": -0.0078125
+        }
+      }
+    },
+    "question": "Does the sealed contact_stability v20 specialist improve its context?",
+    "strong_evidence_lcb95_positive": false,
+    "target": {
+      "confidence_interval_is_report_only": true,
+      "paired_fall_delta_mean_lcb95_ucb95": [
+        -0.0015625,
+        -0.034375,
+        0.028515625
+      ],
+      "paired_success_delta_mean_lcb95_ucb95": [
+        0.0015625,
+        -0.029296875,
+        0.03359375
+      ]
+    }
+  },
+  "output_path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/final_audit_summary.json",
+  "paired_csv": {
+    "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/paired_episode_metrics.csv",
+    "row_count": 3840,
+    "schema": [
+      "specialist_mode",
+      "evaluation_mode",
+      "evaluation_role",
+      "adaptation_seed",
+      "pair_index",
+      "evaluation_seed",
+      "environment_id",
+      "baseline_success",
+      "final_success",
+      "baseline_fell",
+      "final_fell",
+      "transition_class",
+      "baseline_failure_type",
+      "final_failure_type",
+      "baseline_return",
+      "final_return",
+      "baseline_max_riser",
+      "final_max_riser",
+      "baseline_intervention_per_riser",
+      "final_intervention_per_riser",
+      "baseline_correction_mean",
+      "final_correction_mean",
+      "baseline_mean_abs_centerline_error",
+      "final_mean_abs_centerline_error",
+      "baseline_max_abs_heading_error",
+      "final_max_abs_heading_error",
+      "baseline_max_left_slip_speed",
+      "final_max_left_slip_speed",
+      "baseline_max_right_slip_speed",
+      "final_max_right_slip_speed",
+      "baseline_contact_mismatch_fraction",
+      "final_contact_mismatch_fraction",
+      "baseline_max_roll_signal",
+      "final_max_roll_signal",
+      "baseline_max_pitch_signal",
+      "final_max_pitch_signal",
+      "baseline_max_angular_velocity_signal",
+      "final_max_angular_velocity_signal"
+    ],
+    "sha256": "e258f16a9049dac85439f2c0e494e318a6ef0979d2580f9d7ded8df67c1b7ae4"
+  },
+  "repairs_regressions": {
+    "failure_to_failure": 213,
+    "failure_to_success": 522,
+    "net_success_change": 4,
+    "per_adaptation_seed": {
+      "173": {
+        "failure_to_failure": 41,
+        "failure_to_success": 114,
+        "net_success_change": 22,
+        "regressions": 92,
+        "repairs": 114,
+        "success_to_failure": 92,
+        "success_to_success": 265
+      },
+      "273": {
+        "failure_to_failure": 45,
+        "failure_to_success": 109,
+        "net_success_change": 3,
+        "regressions": 106,
+        "repairs": 109,
+        "success_to_failure": 106,
+        "success_to_success": 252
+      },
+      "373": {
+        "failure_to_failure": 52,
+        "failure_to_success": 96,
+        "net_success_change": -12,
+        "regressions": 108,
+        "repairs": 96,
+        "success_to_failure": 108,
+        "success_to_success": 256
+      },
+      "473": {
+        "failure_to_failure": 32,
+        "failure_to_success": 108,
+        "net_success_change": -5,
+        "regressions": 113,
+        "repairs": 108,
+        "success_to_failure": 113,
+        "success_to_success": 259
+      },
+      "73": {
+        "failure_to_failure": 43,
+        "failure_to_success": 95,
+        "net_success_change": -4,
+        "regressions": 99,
+        "repairs": 95,
+        "success_to_failure": 99,
+        "success_to_success": 275
+      }
+    },
+    "regressions": 518,
+    "repairs": 522,
+    "success_to_failure": 518,
+    "success_to_success": 1307
+  }
+}
+{
+  "audit_implementation": {
+    "amendment_path": "results/online/specialist_v20/audit_amendment.json",
+    "amendment_sha256": "5700b77302093ce708a9be2aa264e36267f7220d05e5037ca4eff109c85377dc",
+    "git_commit": "1428f57ff58ad8bb76da8e6c2fd1f5a22d8bd21c",
+    "source_checks": {
+      "experiments/scripts/audit_specialist_diagonal_v20.py": true,
+      "experiments/scripts/audit_specialists_diagonal_v19.py": true,
+      "experiments/scripts/collect_mechanism_telemetry_v20.py": true,
+      "experiments/scripts/diagonal_audit_stats.py": true,
+      "experiments/scripts/evaluate_online_stairs.py": true,
+      "experiments/scripts/online_refine_stairs.py": true,
+      "experiments/scripts/run_specialist_diagonal_audit_v20.sh": true,
+      "experiments/scripts/run_specialist_queue_v20.sh": true,
+      "experiments/scripts/specialist_v20_protocol.py": true,
+      "experiments/scripts/verify_specialist_audit_v20.py": true,
+      "src/tasks/stairs_cbf/actions.py": true,
+      "src/tasks/stairs_cbf/command.py": true,
+      "src/tasks/stairs_cbf/config.py": true,
+      "src/tasks/stairs_cbf/deployment_context.py": true,
+      "src/tasks/stairs_cbf/mdp.py": true,
+      "src/tasks/stairs_cbf/online.py": true,
+      "src/tasks/velocity/mdp/observations.py": true
+    }
+  },
+  "independent_claim": {
+    "claim_passed": false,
+    "d0_success_mean_lcb95_ucb95": [
+      -0.00703125,
+      -0.0375,
+      0.022675781249999714
+    ],
+    "gate": {
+      "criteria": {
+        "at_least_four_of_five_seed_gains_positive": false,
+        "d0_success_drop_at_most_5pp": true,
+        "diagonal_fall_increase_at_most_3pp": true,
+        "mean_diagonal_success_gain_positive": true
+      },
+      "passed": false,
+      "positive_adaptation_seed_count": 2,
+      "thresholds": {
+        "maximum_diagonal_fall_increase": 0.03,
+        "mean_diagonal_success_delta_strictly_above": 0.0,
+        "minimum_d0_success_delta": -0.05,
+        "minimum_positive_adaptation_seed_count": 4
+      }
+    },
+    "per_adaptation_seed_success_delta": [
+      -0.0078125,
+      0.04296875,
+      0.005859375,
+      -0.0234375,
+      -0.009765625
+    ],
+    "strong_evidence_lcb95_positive": false,
+    "target_fall_mean_lcb95_ucb95": [
+      -0.0015625,
+      -0.034375,
+      0.028515625
+    ],
+    "target_success_mean_lcb95_ucb95": [
+      0.0015625,
+      -0.029296875,
+      0.03359375
+    ]
+  },
+  "no_joint_claim": true,
+  "paired_csv": {
+    "group_count": 10,
+    "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/paired_episode_metrics.csv",
+    "row_count": 3840,
+    "sha256": "e258f16a9049dac85439f2c0e494e318a6ef0979d2580f9d7ded8df67c1b7ae4"
+  },
+  "protocol": {
+    "git_commit": "1ded5b84f1c4b8605fd285ef3138c0363db20ee4",
+    "path": "results/online/specialist_v20/protocol.json",
+    "sha256": "74242b1131499f7163ef1985d25a94ca06b0758f6a3d5f2dea9f56ac200c28da"
+  },
+  "protocol_commit_source_checks": {
+    "experiments/scripts/evaluate_online_stairs.py": true,
+    "experiments/scripts/online_refine_stairs.py": true,
+    "experiments/scripts/refine_specialist_v20.py": true,
+    "experiments/scripts/specialist_v20_protocol.py": true,
+    "experiments/scripts/specialist_v20_tables.py": true,
+    "src/tasks/stairs_cbf/actions.py": true,
+    "src/tasks/stairs_cbf/command.py": true,
+    "src/tasks/stairs_cbf/config.py": true,
+    "src/tasks/stairs_cbf/deployment_context.py": true,
+    "src/tasks/stairs_cbf/hard_cases.py": true,
+    "src/tasks/stairs_cbf/mdp.py": true,
+    "src/tasks/stairs_cbf/online.py": true,
+    "src/tasks/velocity/mdp/observations.py": true
+  },
+  "repairs_regressions": {
+    "failure_to_failure": 213,
+    "failure_to_success": 522,
+    "net_success_change": 4,
+    "per_adaptation_seed": {
+      "173": {
+        "failure_to_failure": 41,
+        "failure_to_success": 114,
+        "net_success_change": 22,
+        "regressions": 92,
+        "repairs": 114,
+        "success_to_failure": 92,
+        "success_to_success": 265
+      },
+      "273": {
+        "failure_to_failure": 45,
+        "failure_to_success": 109,
+        "net_success_change": 3,
+        "regressions": 106,
+        "repairs": 109,
+        "success_to_failure": 106,
+        "success_to_success": 252
+      },
+      "373": {
+        "failure_to_failure": 52,
+        "failure_to_success": 96,
+        "net_success_change": -12,
+        "regressions": 108,
+        "repairs": 96,
+        "success_to_failure": 108,
+        "success_to_success": 256
+      },
+      "473": {
+        "failure_to_failure": 32,
+        "failure_to_success": 108,
+        "net_success_change": -5,
+        "regressions": 113,
+        "repairs": 108,
+        "success_to_failure": 113,
+        "success_to_success": 259
+      },
+      "73": {
+        "failure_to_failure": 43,
+        "failure_to_success": 95,
+        "net_success_change": -4,
+        "regressions": 99,
+        "repairs": 95,
+        "success_to_failure": 99,
+        "success_to_success": 275
+      }
+    },
+    "regressions": 518,
+    "repairs": 522,
+    "success_to_failure": 518,
+    "success_to_success": 1307
+  },
+  "specialist_mode": "contact_stability",
+  "summary": {
+    "path": "/home/carla/LZQW/SAFE100/humanoid/artifacts/specialist_v20/audit/contact_stability/final_audit_summary.json",
+    "sha256": "8bf00ce908c59147f834fc7e3fd7b560c315c69ea0767d6646f7a9afccc18bb1"
+  },
+  "top_level_conditions": {
+    "adaptation_seeds": true,
+    "audit_amendment_boundary": true,
+    "audit_amendment_hash": true,
+    "audit_amendment_status": true,
+    "audit_seed": true,
+    "audit_source_hashes": true,
+    "bootstrap_seed": true,
+    "brief_loader_semantics": true,
+    "cbf_independence_gate_absent": true,
+    "clean_formal_worktree": true,
+    "filter_free_absent": true,
+    "five_independent_runs": true,
+    "formal_protocol": true,
+    "joint_claim_absent": true,
+    "macro_absent": true,
+    "off_diagonal_absent": true,
+    "paired_csv_hash": true,
+    "paired_csv_rows": true,
+    "protocol_hash": true,
+    "protocol_id": true,
+    "runtime_cbf": true
+  },
+  "verified": true,
+  "verifier": "independent v20 one-specialist paired-CSV reconstruction v1"
+}
+Traceback (most recent call last):
+  File "/home/carla/LZQW/SAFE100/humanoid/worktrees/v20_audit_amendment/experiments/scripts/collect_mechanism_telemetry_v20.py", line 280, in <module>
+    main()
+  File "/home/carla/LZQW/SAFE100/humanoid/worktrees/v20_audit_amendment/experiments/scripts/collect_mechanism_telemetry_v20.py", line 209, in main
+    traces = [
+             ^
+  File "/home/carla/LZQW/SAFE100/humanoid/worktrees/v20_audit_amendment/experiments/scripts/collect_mechanism_telemetry_v20.py", line 210, in <listcomp>
+    _run_trace(
+  File "/home/carla/LZQW/SAFE100/humanoid/worktrees/v20_audit_amendment/experiments/scripts/collect_mechanism_telemetry_v20.py", line 155, in _run_trace
+    raise RuntimeError("mechanism rerun outcome differs from the formal audit")
+RuntimeError: mechanism rerun outcome differs from the formal audit

@@ -1,0 +1,66 @@
+{
+  "attempts": [
+    {
+      "base_policy_only": true,
+      "candidate_seed": 39408,
+      "candidate_severity": 0.0,
+      "context_family": "narrow_stair_lateral_clearance",
+      "context_id": "L2",
+      "evaluation_seed_start": 78130000,
+      "evaluation_seeds": [
+        78130000,
+        78130001,
+        78130002,
+        78130003
+      ],
+      "failure_type_counts": {
+        "contact_stability": 19,
+        "lateral_heading_drift": 91,
+        "non_lateral_balance_or_phase": 0,
+        "non_lateral_high_cbf_demand": 0,
+        "other_non_lateral": 0
+      },
+      "failure_type_fractions": {
+        "contact_stability": 0.17272727272727273,
+        "lateral_heading_drift": 0.8272727272727273,
+        "non_lateral_balance_or_phase": 0.0,
+        "non_lateral_high_cbf_demand": 0.0,
+        "other_non_lateral": 0.0
+      },
+      "fall_count": 110,
+      "fall_rate": 0.21484375,
+      "minimum_fall_count_gate": 100,
+      "num_episodes": 512,
+      "parameters_sha256": "0f4e9786504ceacd6074ef66369e01c6a6e26df249da36155e86ed6ccd174a73",
+      "qualifies": true,
+      "second_failure_fraction": 0.17272727272727273,
+      "success_rate": 0.78515625,
+      "target_failure_fraction": 0.8272727272727273,
+      "target_failure_type": "lateral_heading_drift"
+    }
+  ],
+  "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+  "base_policy_only": true,
+  "candidate_seeds": [
+    39408,
+    39409,
+    39410,
+    39411,
+    39412,
+    39413,
+    39414,
+    39415,
+    39416,
+    39417,
+    39418,
+    39419
+  ],
+  "context_id": "L2",
+  "exploratory": false,
+  "minimum_fall_count_gate": 100,
+  "mode": "lateral",
+  "policy_method": "Local Matched-Success Preservation v21",
+  "prospective_protocol_file_sha256": "af073b100c7446e2ffe34033ef24bff3905e770dd2cc77b3c89df9d3a83df23d",
+  "prospective_protocol_git_commit": "5dac6962a2a9b13053032477008c81cc9a82f269",
+  "protocol_id": "safe100-deployment-unit-local-matched-success-v21"
+}

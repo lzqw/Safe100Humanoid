@@ -1,0 +1,34 @@
+{
+  "evidence": {
+    "/home/carla/LZQW/SAFE100/GuardianFlowPaperResults/formal_5b5b47e/checkpoint_audit.json": {
+      "bytes": 194905,
+      "mtime_epoch": 1786537000,
+      "sha256": "a43bce7abba470fda9905cb0a765815554de42c71b04e6e34f8641413338a39f"
+    },
+    "/home/carla/LZQW/SAFE100/GuardianFlowPaperResults/formal_5b5b47e/completion_watcher.stdout.log": {
+      "bytes": 556,
+      "mtime_epoch": 1786537059,
+      "sha256": "ee43dc3c4a21488b15e3a6c9457aa18972fff2c4b82fe8088ee7303a031e9044"
+    },
+    "/home/carla/LZQW/SAFE100/GuardianFlowPaperResults/formal_5b5b47e/formal_watchdog.log": {
+      "bytes": 576127,
+      "mtime_epoch": 1786537030,
+      "sha256": "15d525de9a8db0c61ea79fe2aaf3ef86aabd7c8bd0f6bc465dd7e7855e30c7a9"
+    },
+    "/home/carla/LZQW/SAFE100/GuardianFlowPaperResults/formal_5b5b47e/suite_master.log": {
+      "bytes": 530344,
+      "mtime_epoch": 1786537059,
+      "sha256": "de191ec538b46afe60d0645d02b8b33df35647b4ee8105f84ee3ea7f6300cf8a"
+    }
+  },
+  "guardian_completed": false,
+  "guardian_suite_complete": false,
+  "keyboard_interrupt_observed": true,
+  "quiet_sample_count": 5,
+  "quiet_sample_seconds": 60,
+  "quiet_window_end_epoch": 1786539228,
+  "quiet_window_start_epoch": 1786538987,
+  "recorded_at": "2026-08-12T20:53:48+08:00",
+  "release_reason": "guardian_terminal_without_completed_summary",
+  "schema_version": 1
+}

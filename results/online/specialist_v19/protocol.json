@@ -1,0 +1,183 @@
+{
+  "adaptation_seeds": [
+    43,
+    143,
+    243,
+    343,
+    443
+  ],
+  "calibration": {
+    "adapted_policy_evaluations_used": false,
+    "base_policy_only": true,
+    "contact_stability_candidate_seeds": [
+      7217,
+      7218,
+      7219
+    ],
+    "contact_stability_evaluation_seed_base": 4710000,
+    "contact_stability_maximum_second_failure_fraction": 0.2,
+    "contact_stability_minimum_target_failure_fraction": 0.75,
+    "episodes_per_candidate": 512,
+    "eval_batch_size": 128,
+    "first_qualifying_candidate_is_frozen": true,
+    "lateral_candidate_seeds": [
+      7312,
+      7313,
+      7314,
+      7315,
+      7316,
+      7317,
+      7318,
+      7319
+    ],
+    "lateral_evaluation_seed_base": 4720000,
+    "lateral_maximum_second_failure_fraction": 0.3,
+    "lateral_minimum_target_failure_fraction": 0.8,
+    "minimum_fall_count": 100,
+    "success_rate_bounds_inclusive": [
+      0.7,
+      0.85
+    ],
+    "v18_audit_randomness_reused": false
+  },
+  "created_date": "2026-08-06",
+  "evaluation": {
+    "audit_seed": 5100000,
+    "bootstrap_samples": 10000,
+    "bootstrap_seed": 6000000,
+    "cbf_independence_gate": false,
+    "d0_paired_episodes_per_adaptation_seed": 256,
+    "eval_batch_size": 128,
+    "filter_free_evaluation": false,
+    "macro_average_computed": false,
+    "off_diagonal_evaluation": false,
+    "paired_baseline_and_final_randomness": true,
+    "runtime_cbf": true,
+    "target_paired_episodes_per_adaptation_seed": 512
+  },
+  "fresh_evidence_boundary": {
+    "calibration_must_follow_this_commit": true,
+    "formal_adaptation_must_follow_calibration": true,
+    "formal_audit_must_follow_all_ten_sealed_adaptations": true,
+    "historical_v17_and_v18_results_may_not_be_relabelled_as_v19": true,
+    "no_adapted_policy_or_formal_audit_outcomes_seen_before_revision_2_freeze": true,
+    "revision_1_base_only_calibration_failure_seen_before_revision_2_freeze": true,
+    "smoke_and_exploratory_results_are_not_formal_evidence": true
+  },
+  "failure_classification": {
+    "attitude_outcomes_are_not_primary_causes": true,
+    "contact_stability_context": "first sustained severe support-foot-slip or lateral event wins; contact therefore precedes later terminal lateral drift",
+    "lateral_context": "an observed geometric lateral or heading event is primary in the lateral-instrumented family even when stair slip is an earlier mediator; without a lateral event, contact instability remains contact",
+    "support_foot_slip_only": true
+  },
+  "independent_specialist_acceptance": {
+    "confidence_interval_is_a_gate": false,
+    "joint_two_specialist_claim_defined": false,
+    "lcb95_positive_is_strong_evidence_only": true,
+    "maximum_diagonal_fall_increase": 0.03,
+    "mean_diagonal_success_delta_strictly_above": 0.0,
+    "minimum_d0_success_delta": -0.05,
+    "minimum_positive_adaptation_seed_count": 4
+  },
+  "method_invariants": {
+    "actor_count": 1,
+    "actor_observation_width": 410,
+    "candidate_rollback": true,
+    "critic_count": 1,
+    "critic_observation_width": 843,
+    "deployable_failure_feature_count": 5,
+    "initial_policy_preservation": "legacy first-layer prefix copied exactly; five appended columns zero; appended normalizer state identity",
+    "privileged_critic": true,
+    "raw_policy_action_stored_for_ppo": true,
+    "runtime_cbf": true,
+    "scalar_reward": true
+  },
+  "policy_method": "Observable Failure-Conditioned Brief PPO v19",
+  "protocol_id": "safe100-observable-failure-conditioned-v19",
+  "protocol_revision": 2,
+  "revision_history": [
+    {
+      "commit": "45aca13add2f03a09e5783f4624bf3a681c740e3",
+      "outcome": "all six declared lateral contexts failed the 80% mechanism-purity gate; no context was selected and no adaptation began",
+      "revision": 1,
+      "scope": "base-policy-only calibration preflight"
+    },
+    {
+      "changes": "make failure-event precedence explicit by perturbation family and replace lateral candidates/evaluation randomness with unseen values",
+      "revision": 2
+    }
+  ],
+  "removed_conditions": {
+    "cbf_specialist": true,
+    "cross_specialist_all_pass_requirement": true,
+    "filter_free_evaluation": true,
+    "macro_gate": true,
+    "off_diagonal_evaluation": true
+  },
+  "sealed_inputs": {
+    "base_policy_checkpoint_sha256": "cb875d571e126d418c1908dcb4a2ef97851e6aa9e0a50dfcf7c42eabf5a892a8",
+    "source_files": [
+      "src/tasks/velocity/mdp/observations.py",
+      "src/tasks/stairs_cbf/actions.py",
+      "src/tasks/stairs_cbf/command.py",
+      "src/tasks/stairs_cbf/config.py",
+      "src/tasks/stairs_cbf/deployment_context.py",
+      "src/tasks/stairs_cbf/hard_cases.py",
+      "src/tasks/stairs_cbf/mdp.py",
+      "src/tasks/stairs_cbf/online.py",
+      "experiments/scripts/evaluate_online_stairs.py",
+      "experiments/scripts/online_refine_stairs.py",
+      "experiments/scripts/calibrate_specialist_contexts_v19.py",
+      "experiments/scripts/run_specialist_calibration_v19.sh",
+      "experiments/scripts/refine_specialist_v19.py",
+      "experiments/scripts/run_specialist_v19.sh",
+      "experiments/scripts/diagonal_audit_stats.py",
+      "experiments/scripts/audit_specialists_diagonal_v19.py",
+      "experiments/scripts/run_specialist_diagonal_audit_v19.sh",
+      "experiments/scripts/verify_diagonal_audit_v19.py"
+    ]
+  },
+  "specialist_modes": [
+    "lateral",
+    "contact_stability"
+  ],
+  "status": "refrozen_after_revision1_base_only_calibration_failure_before_adaptation",
+  "training": {
+    "actor_layer_learning_rate_multipliers": [
+      0.1,
+      0.25,
+      0.5,
+      1.0
+    ],
+    "actor_learning_rate": 5e-06,
+    "advantage_normalization": "separate normal/failure/success across both rollout batches, then apply weights",
+    "candidate_confirmation_paired_episodes": 128,
+    "candidate_fractions": [
+      0.5,
+      1.0,
+      1.5
+    ],
+    "candidate_screen_paired_episodes_per_fraction": 64,
+    "candidate_total_paired_episodes_per_round": 320,
+    "clip": 0.05,
+    "critic_learning_rate": 0.0001,
+    "failure_policy_weight": 1.0,
+    "hard_kl_ceiling": 0.01,
+    "loss_combination": "arithmetic mean of two frozen-policy rollout losses",
+    "maximum_rounds": 8,
+    "minimum_accepted_updates": 3,
+    "ppo_epochs": 1,
+    "ppo_minibatches": 4,
+    "rejection_patience_after_minimum": 2,
+    "rollout_batches_per_round": 2,
+    "rollout_environments_per_batch": 64,
+    "rollout_steps_per_environment": 1024,
+    "start_mixture_per_batch": {
+      "failure": 12,
+      "normal": 40,
+      "success": 12
+    },
+    "success_policy_weight": 1.25,
+    "target_kl": 0.003
+  }
+}

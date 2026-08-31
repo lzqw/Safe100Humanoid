@@ -1,0 +1,147 @@
+{
+  "method": "CBF-Guided Brief PPO Refinement v14",
+  "evidence_role": "training integrity and diagnostic evaluations only; final claims require final_audit/final_audit_summary.json",
+  "runtime_cbf": true,
+  "formal_training_seeds": [
+    42,
+    142,
+    242
+  ],
+  "protocol_checks": {
+    "actor_learning_rate": 2e-06,
+    "candidate_fractions": [
+      0.5,
+      1.0
+    ],
+    "candidate_paired_episodes": 128,
+    "hard_case_actor_weight": 0.5,
+    "hard_case_transition_fraction": 0.203125,
+    "hard_update_kl_limit": 0.01,
+    "online_rounds": 5,
+    "ppo_clip": 0.05,
+    "ppo_epochs": 1,
+    "target_kl": 0.005
+  },
+  "training_runs": {
+    "42": {
+      "accepted_sequence": [
+        0.5,
+        1.0,
+        "rollback",
+        1.0,
+        1.0
+      ],
+      "checkpoint_sha256": "b292de27bf93a0350ae3e707ce08f02d6c707d63e38d95e707c1b263d021af3b",
+      "diagnostic_baseline": {
+        "D0": {
+          "fall_rate": 0.0234375,
+          "success_rate": 0.890625
+        },
+        "DQH": {
+          "fall_rate": 0.0859375,
+          "success_rate": 0.9140625
+        }
+      },
+      "diagnostic_final": {
+        "D0": {
+          "fall_rate": 0.0234375,
+          "success_rate": 0.9296875
+        },
+        "DQH": {
+          "fall_rate": 0.078125,
+          "success_rate": 0.921875
+        },
+        "DQNH": {
+          "fall_rate": 0.09375,
+          "success_rate": 0.90625
+        }
+      },
+      "executed_action_routing_max_abs_error": 0.0,
+      "hard_case_transition_fraction_max": 0.203125,
+      "hard_case_transition_fraction_min": 0.203125,
+      "maximum_preupdate_minibatch_kl": 0.0006310335011221468,
+      "policy_storage_max_abs_error": 0.0,
+      "summary_sha256": "f5257075e30692543505c9693bebf47203dbe58db0ccd3cb10d0cc2b9664a127"
+    },
+    "142": {
+      "accepted_sequence": [
+        0.5,
+        1.0,
+        0.5,
+        0.5,
+        "rollback"
+      ],
+      "checkpoint_sha256": "e3b54b5ceb36321289d82569395b0e8f27b8dba02af2b85bd4cb49cb9b4b1511",
+      "diagnostic_baseline": {
+        "D0": {
+          "fall_rate": 0.03125,
+          "success_rate": 0.8046875
+        },
+        "DQH": {
+          "fall_rate": 0.1015625,
+          "success_rate": 0.8984375
+        }
+      },
+      "diagnostic_final": {
+        "D0": {
+          "fall_rate": 0.03125,
+          "success_rate": 0.875
+        },
+        "DQH": {
+          "fall_rate": 0.1015625,
+          "success_rate": 0.8984375
+        },
+        "DQNH": {
+          "fall_rate": 0.0859375,
+          "success_rate": 0.9140625
+        }
+      },
+      "executed_action_routing_max_abs_error": 0.0,
+      "hard_case_transition_fraction_max": 0.203125,
+      "hard_case_transition_fraction_min": 0.203125,
+      "maximum_preupdate_minibatch_kl": 0.0006250660517252982,
+      "policy_storage_max_abs_error": 0.0,
+      "summary_sha256": "45eea14c076adf1c7642bdb0139998123a431d587f979c14a889f6fcb1996da5"
+    },
+    "242": {
+      "accepted_sequence": [
+        0.5,
+        0.5,
+        "rollback",
+        1.0,
+        0.5
+      ],
+      "checkpoint_sha256": "3c5c8da2c25acb29abedc49c91c8b77e2eaa43a09f3ad46f0114dd67a6cf40b5",
+      "diagnostic_baseline": {
+        "D0": {
+          "fall_rate": 0.0,
+          "success_rate": 0.9296875
+        },
+        "DQH": {
+          "fall_rate": 0.140625,
+          "success_rate": 0.859375
+        }
+      },
+      "diagnostic_final": {
+        "D0": {
+          "fall_rate": 0.015625,
+          "success_rate": 0.9453125
+        },
+        "DQH": {
+          "fall_rate": 0.0703125,
+          "success_rate": 0.9296875
+        },
+        "DQNH": {
+          "fall_rate": 0.0859375,
+          "success_rate": 0.9140625
+        }
+      },
+      "executed_action_routing_max_abs_error": 0.0,
+      "hard_case_transition_fraction_max": 0.203125,
+      "hard_case_transition_fraction_min": 0.203125,
+      "maximum_preupdate_minibatch_kl": 0.0006177600589580834,
+      "policy_storage_max_abs_error": 0.0,
+      "summary_sha256": "e8262f3afe9f4eecb49cd8dad6c9b2456e266e31cfbbafb35d36bd6369197425"
+    }
+  }
+}

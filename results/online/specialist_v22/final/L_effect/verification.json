@@ -1,0 +1,91 @@
+{
+  "all_checks_passed": true,
+  "checks": {
+    "D0_fall_rates_match": true,
+    "D0_row_count": true,
+    "D0_success_rates_match": true,
+    "D0_transition_counts_match": true,
+    "D0_unique_pair_identities": true,
+    "context_id_all_lateral": true,
+    "exactly_four_figure_categories": true,
+    "gate_conditions_match": true,
+    "gate_pass_matches": true,
+    "paired_csv_sha256_matches_final_json": true,
+    "paired_row_count_matches_final_json": true,
+    "strict_zero_fall_match": true,
+    "target_fall_rates_match": true,
+    "target_row_count": true,
+    "target_success_rates_match": true,
+    "target_transition_counts_match": true,
+    "target_unique_pair_identities": true
+  },
+  "computed": {
+    "D0": {
+      "base_fall_count": 5,
+      "base_fall_rate": 0.01953125,
+      "base_success_count": 238,
+      "base_success_rate": 0.9296875,
+      "best_fall_count": 1,
+      "best_fall_rate": 0.00390625,
+      "best_success_count": 240,
+      "best_success_rate": 0.9375,
+      "evaluation_seeds": [
+        106000000,
+        106000001
+      ],
+      "fall_delta": -0.015625,
+      "fall_delta_count": -4,
+      "net_repairs": 2,
+      "paired_rows": 256,
+      "regression_count": 13,
+      "repair_count": 15,
+      "success_delta": 0.0078125,
+      "success_delta_count": 2,
+      "unique_identities": 256
+    },
+    "target": {
+      "base_fall_count": 153,
+      "base_fall_rate": 0.298828125,
+      "base_success_count": 359,
+      "base_success_rate": 0.701171875,
+      "best_fall_count": 156,
+      "best_fall_rate": 0.3046875,
+      "best_success_count": 356,
+      "best_success_rate": 0.6953125,
+      "evaluation_seeds": [
+        105000000,
+        105000001,
+        105000002,
+        105000003
+      ],
+      "fall_delta": 0.005859375,
+      "fall_delta_count": 3,
+      "net_repairs": -3,
+      "paired_rows": 512,
+      "regression_count": 96,
+      "repair_count": 93,
+      "success_delta": -0.005859375,
+      "success_delta_count": -3,
+      "unique_identities": 512
+    }
+  },
+  "confidence_intervals_reconstruction": "not repeated; report-only intervals remain in authoritative final_test.json",
+  "evidence_role": "independent compact reconstruction from committed paired rows",
+  "input_sha256": {
+    "external_artifact_manifest": "a054b8ac6512041efa338b81be90191348e7732faf26260aebd4ce0db70bc27a",
+    "final_test": "b3c7960fcb96a66cd13740f3bcef187c12bcebc3887ebee3940aa1d25fc309ab",
+    "paired_episode_metrics": "b63ff97d1d01cd7fdaf43e38d552dc32aa80bfb21e0c6de336bed6d3200cf43d",
+    "training_summary": "c661ea76b0721dea8f458ad80dc369623f25c36b28f48b2e2cf6223c3d3ea7e0"
+  },
+  "protocol_id": "safe100-effect-first-development-v22",
+  "recomputed_gate": {
+    "conditions": {
+      "d0_success_delta_at_least_minus_five_pp": true,
+      "target_fall_delta_at_most_one_pp": true,
+      "target_success_delta_at_least_three_pp": false
+    },
+    "passed": false,
+    "strict_zero_fall_increase_passed": false
+  },
+  "schema_version": 1
+}

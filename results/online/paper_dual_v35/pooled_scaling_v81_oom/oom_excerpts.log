@@ -1,0 +1,18 @@
+2026-08-27 23:03:23 +08:00 | 256 environments
+failure: first-round actor full-batch forward; actor optimizer steps: 0
+location: src/tasks/stairs_cbf/teacher_v30.py:485
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 406.00 MiB.
+GPU 0 total capacity: 15.69 GiB; free at error: 504.94 MiB.
+Training process memory: 3.96 GiB; PyTorch allocated: 2.71 GiB;
+PyTorch reserved but unallocated: 674.12 MiB.
+
+2026-08-27 23:04:42 +08:00 | 192 environments
+failure: first-round actor full-batch forward; actor optimizer steps: 0
+location: src/tasks/stairs_cbf/teacher_v30.py:485
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 630.00 MiB.
+GPU 0 total capacity: 15.69 GiB; free at error: 944.75 MiB.
+Training process memory: 4.17 GiB; PyTorch allocated: 3.36 GiB;
+PyTorch reserved but unallocated: 279.10 MiB.
+
+No proposal checkpoint or training_summary.json was produced by either attempt.
+The round_00.pt files are startup copies of the input actor, not trained candidates.
