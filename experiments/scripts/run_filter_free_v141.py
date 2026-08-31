@@ -505,6 +505,7 @@ class DevelopmentDriver:
                 actor_learning_rate_multiplier=2.0,
                 actor_epochs=4,
                 rounds=6,
+                moving_kl_beta=0.25,
             )
             add(
                 "would_coverage_eta025",
@@ -515,6 +516,7 @@ class DevelopmentDriver:
                 actor_learning_rate_multiplier=2.0,
                 actor_epochs=4,
                 rounds=6,
+                moving_kl_beta=0.25,
             )
             add(
                 "would_low_noise",
@@ -526,6 +528,7 @@ class DevelopmentDriver:
                 actor_epochs=4,
                 rounds=6,
                 exploration_std=0.03,
+                moving_kl_beta=0.25,
             )
         # Internalization bottleneck: task performance has transferred, but the
         # nominal actor still asks the runtime CBF to intervene too often. Use
