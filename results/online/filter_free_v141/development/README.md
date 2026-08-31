@@ -1,13 +1,13 @@
 # v141 Filter-Free Refinement — Development Status
 
-Status at 2026-08-31 12:43 CST: corrected successive-halving Generation 1 is
-running on the RTX 4080 SUPER. Five valid F2 candidates had completed at this
-snapshot; the provisional leader reached 70.3125% target CBF-off success,
-73.4375% F1-retention CBF-off success, 71.8750% target CBF-on success, and a
-1.5625 percentage-point shield gap. Its would-intervene fraction was 10.3886%,
-so it is not yet a development pass. Fresh Frozen baseline evaluation and all
-F3 candidates are still pending. CARLA is not running; unrelated GuardianFlow
-jobs remain untouched.
+Status at 2026-08-31 12:56 CST: all eight corrected F2 Generation-1 candidates
+and the fresh paired Frozen baseline are complete; F3 Generation 1 is running.
+The F2 leader reached 72.65625% target CBF-off success versus Frozen's 67.1875%
+(+5.46875 percentage points), retained F1 at 73.4375%, and met the shield-gap
+gate. Its would-intervene fraction was 9.9764% versus Frozen's 9.9775%, so the
+required 25% internalization reduction remains the only failed F2 gate. The
+next stages include stronger/longer allowed actor updates targeted at this
+bottleneck. CARLA is not running; unrelated GuardianFlow jobs remain untouched.
 
 Implemented method: Intervention-Aware CBF Distillation PPO. Training always
 executes the CBF-safe action, attenuates nominal-action PPO credit on corrected
