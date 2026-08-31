@@ -10,6 +10,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+from cbf_teacher_v31_protocol import PROTOCOL_ID as EVALUATION_PROTOCOL_ID
 from filter_free_v141_protocol import (
     BASE_ACTOR_LEARNING_RATE,
     BASE_CHECKPOINT_SHA256,
@@ -339,6 +340,30 @@ class FormalDriver:
         job = f"eval_{method}_{specialist}_{seed_name}_{context}_{condition}"
         self.run_job(job, command, summary)
         result = json.loads(summary.read_text())
+        expected_summary = {
+            "protocol_id": EVALUATION_PROTOCOL_ID,
+            "context": context,
+            "seed": FORMAL_EVALUATION_SEED,
+            "num_envs": FORMAL_EVALUATION_EPISODES,
+            "num_episodes": FORMAL_EVALUATION_EPISODES,
+            "runtime_filter": condition == "on",
+            "deterministic_policy_mean": True,
+            "one_initial_episode_per_env": True,
+            "original_observation_interface": True,
+            "actor_observation_dim": 405,
+        }
+        mismatches = {
+            key: (result.get(key), value)
+            for key, value in expected_summary.items()
+            if result.get(key) != value
+        }
+        initial_state_signature = result.get("initial_state_signature")
+        if mismatches or not isinstance(initial_state_signature, str) or len(
+            initial_state_signature
+        ) != 64:
+            raise RuntimeError(
+                f"formal v141 evaluation protocol differs for {job}: {mismatches}"
+            )
         return {
             "method": method,
             "specialist": specialist,
@@ -348,6 +373,10 @@ class FormalDriver:
             "runtime_filter": condition,
             "checkpoint": str(checkpoint),
             "checkpoint_sha256": result["checkpoint_sha256"],
+            "initial_state_signature": initial_state_signature,
+            "deterministic_policy_mean": True,
+            "evaluation_seed": FORMAL_EVALUATION_SEED,
+            "evaluation_episodes": FORMAL_EVALUATION_EPISODES,
             "summary": str(summary),
             "episodes": str(episodes),
             "metrics": {
@@ -444,6 +473,23 @@ class FormalDriver:
             "best_so_far_selection": False,
             "training_summaries": training_summaries,
             "evaluation_records": records,
+        }
+        paired_signatures = {
+            context: sorted(
+                {
+                    item["initial_state_signature"]
+                    for item in records
+                    if item["context"] == context
+                }
+            )
+            for context in (RETENTION_CONTEXT, *SPECIALISTS)
+        }
+        if any(len(values) != 1 for values in paired_signatures.values()):
+            raise RuntimeError(
+                f"formal v141 paired initial states differ: {paired_signatures}"
+            )
+        raw["paired_initial_state_signatures"] = {
+            context: values[0] for context, values in paired_signatures.items()
         }
         raw_path = self.output / "formal_raw_results.json"
         _atomic_json(raw_path, raw)

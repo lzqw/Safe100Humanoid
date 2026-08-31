@@ -103,6 +103,10 @@ def _flatten_record(record: dict[str, Any]) -> dict[str, Any]:
         "context_role": record["context_role"],
         "runtime_filter": record["runtime_filter"],
         "checkpoint_sha256": record["checkpoint_sha256"],
+        "initial_state_signature": record["initial_state_signature"],
+        "deterministic_policy_mean": record["deterministic_policy_mean"],
+        "evaluation_seed": record["evaluation_seed"],
+        "evaluation_episodes": record["evaluation_episodes"],
         **record["metrics"],
     }
 
@@ -183,10 +187,33 @@ def _validate_raw(raw: dict[str, Any]) -> None:
     }
     if actual_evaluations != expected_evaluations or len(records) != len(expected_evaluations):
         raise RuntimeError("v141 formal evaluation matrix is incomplete or duplicated")
+    signatures: dict[str, set[str]] = {
+        context: set() for context in (RETENTION_CONTEXT, *SPECIALISTS)
+    }
     for item in records:
+        if (
+            item.get("deterministic_policy_mean") is not True
+            or item.get("evaluation_seed") != FORMAL_EVALUATION_SEED
+            or item.get("evaluation_episodes") != FORMAL_EVALUATION_EPISODES
+        ):
+            raise RuntimeError("v141 formal evaluation identity differs")
+        signature = item.get("initial_state_signature")
+        if not isinstance(signature, str) or len(signature) != 64:
+            raise RuntimeError("v141 formal initial-state signature is invalid")
+        signatures[item["context"]].add(signature)
         for name, value in item.get("metrics", {}).items():
             if not math.isfinite(float(value)):
                 raise RuntimeError(f"non-finite formal metric {name}")
+    expected_signatures = {
+        context: next(iter(values))
+        for context, values in signatures.items()
+        if len(values) == 1
+    }
+    if (
+        len(expected_signatures) != len(signatures)
+        or raw.get("paired_initial_state_signatures") != expected_signatures
+    ):
+        raise RuntimeError("v141 formal paired initial-state identities differ")
 
 
 def _select(
@@ -568,6 +595,9 @@ def main() -> None:
         "formal_evaluation_seed": raw["formal_evaluation_seed"],
         "formal_evaluation_episodes": raw["formal_evaluation_episodes"],
         "paired_initial_conditions": raw["paired_initial_conditions"],
+        "paired_initial_state_signatures": raw[
+            "paired_initial_state_signatures"
+        ],
         "fixed_final_round_checkpoint": raw["fixed_final_round_checkpoint"],
         "best_so_far_selection": raw["best_so_far_selection"],
         "formal_checks": checks,
