@@ -291,7 +291,16 @@ class DevelopmentDriver:
             / "candidate_result.json"
         )
         if result_path.is_file():
-            return json.loads(result_path.read_text())
+            cached = json.loads(result_path.read_text())
+            if self.configuration_signature(
+                cached["configuration"]
+            ) != self.configuration_signature(configuration):
+                raise RuntimeError(
+                    "cached v141 candidate configuration differs from the "
+                    f"requested configuration: generation={generation} "
+                    f"specialist={specialist} candidate={candidate}"
+                )
+            return cached
         checkpoint = self.train_candidate(generation, specialist, configuration)
         if checkpoint is None:
             return None
@@ -660,6 +669,103 @@ class DevelopmentDriver:
             - DEVELOPMENT_THRESHOLDS["f1_off_retention_loss_pp"] / 100.0,
         }
 
+    @classmethod
+    def select_adaptive_parent(
+        cls,
+        history: list[dict[str, Any]],
+        baseline: dict[str, dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Choose the candidate closest to satisfying every development gate.
+
+        ``J_dev`` remains the prescribed within-generation ranking score.  For
+        mechanism refinement, however, continuing to mutate a high-score
+        candidate that fails more gates can move the search away from its
+        actual stopping condition.  Prefer the number of gates already met,
+        then the normalized residual gate deficit, and use ``J_dev`` only as
+        the final tie-breaker.
+        """
+        if not history:
+            raise ValueError("v141 adaptive parent selection requires history")
+
+        target_floor = float(baseline["target_off"]["success_rate"]) + (
+            DEVELOPMENT_THRESHOLDS["target_off_improvement_pp"] / 100.0
+        )
+        base_gap = abs(
+            float(baseline["target_on"]["success_rate"])
+            - float(baseline["target_off"]["success_rate"])
+        )
+        gap_limit = max(
+            DEVELOPMENT_THRESHOLDS["shield_gap_pp"] / 100.0,
+            base_gap
+            * (
+                1.0
+                - DEVELOPMENT_THRESHOLDS[
+                    "shield_gap_reduction_fraction"
+                ]
+            ),
+        )
+        would_limit = float(
+            baseline["target_off"][
+                "counterfactual_would_intervene_fraction"
+            ]
+        ) * (
+            1.0
+            - DEVELOPMENT_THRESHOLDS[
+                "would_intervene_reduction_fraction"
+            ]
+        )
+        retention_floor = float(baseline["f1_off"]["success_rate"]) - (
+            DEVELOPMENT_THRESHOLDS["f1_off_retention_loss_pp"] / 100.0
+        )
+
+        def key(result: dict[str, Any]) -> tuple[int, float, float]:
+            checks = result.get("development_success_checks")
+            if not isinstance(checks, dict):
+                checks = cls.success_checks(result, baseline)
+            passed = sum(bool(value) for value in checks.values())
+            deficit = (
+                max(0.0, target_floor - float(result["target_off_success"]))
+                / max(1.0e-8, target_floor)
+                + max(0.0, abs(float(result["shield_gap"])) - gap_limit)
+                / max(1.0e-8, gap_limit)
+                + max(
+                    0.0,
+                    float(result["would_intervene_fraction"])
+                    - would_limit,
+                )
+                / max(1.0e-8, would_limit)
+                + max(
+                    0.0,
+                    retention_floor
+                    - float(result["f1_retention_off_success"]),
+                )
+                / max(1.0e-8, retention_floor)
+            )
+            return passed, -deficit, float(result["development_score"])
+
+        return max(history, key=key)
+
+    def load_generation_summary(
+        self, generation: int, specialist: str
+    ) -> dict[str, Any] | None:
+        """Load a completed adaptive generation instead of recomputing it."""
+        path = (
+            self.output
+            / f"generation_{generation}"
+            / specialist
+            / "development_summary.json"
+        )
+        if not path.is_file():
+            return None
+        summary = json.loads(path.read_text())
+        if (
+            int(summary.get("generation", -1)) != generation
+            or summary.get("specialist") != specialist
+            or not isinstance(summary.get("ranking"), list)
+        ):
+            raise RuntimeError(f"invalid cached v141 generation summary: {path}")
+        return summary
+
     def summarize_generation(
         self,
         generation: int,
@@ -745,6 +851,31 @@ class DevelopmentDriver:
         while True:
             selected: dict[str, dict[str, Any]] = {}
             for specialist in SPECIALISTS:
+                existing_summary = self.load_generation_summary(
+                    generation, specialist
+                )
+                if existing_summary is not None:
+                    summaries[(generation, specialist)] = existing_summary
+                    history[specialist].extend(existing_summary["ranking"])
+                    successful = [
+                        item
+                        for item in history[specialist]
+                        if item.get("development_success", False)
+                        and int(item.get("generation", 0)) > success_cutoff
+                    ]
+                    selected[specialist] = (
+                        max(
+                            successful,
+                            key=lambda item: item["development_score"],
+                        )
+                        if successful
+                        else self.select_adaptive_parent(
+                            history[specialist],
+                            summaries[(1, specialist)]["baseline"],
+                        )
+                    )
+                    continue
+
                 successful = [
                     item
                     for item in history[specialist]
@@ -758,9 +889,9 @@ class DevelopmentDriver:
                     )
                     continue
 
-                best = max(
+                best = self.select_adaptive_parent(
                     history[specialist],
-                    key=lambda item: item["development_score"],
+                    summaries[(1, specialist)]["baseline"],
                 )
                 tried = {
                     self.configuration_signature(item["configuration"])
@@ -801,9 +932,9 @@ class DevelopmentDriver:
                 selected[specialist] = (
                     max(successful, key=lambda item: item["development_score"])
                     if successful
-                    else max(
+                    else self.select_adaptive_parent(
                         history[specialist],
-                        key=lambda item: item["development_score"],
+                        summaries[(1, specialist)]["baseline"],
                     )
                 )
 
